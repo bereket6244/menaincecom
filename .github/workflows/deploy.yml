@@ -1,4 +1,4 @@
-name: Build & Deploy
+name: Deploy Shop
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,40 +15,52 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install & build client
+      - name: Build client for /shop
         working-directory: client
+        env:
+          VITE_APP_BASE_PATH: /shop
         run: |
           npm ci
           npm run build
 
-      - name: Install server deps
-        working-directory: server
-        run: npm ci --omit=dev
-
-      - name: Package release
+      - name: Package shop files
         run: |
-          mkdir -p release
-          cp -r client/dist release/client-dist
-          cp -r server release/server
-          rm -rf release/server/uploads
-          tar -czf mena-inc-release.tar.gz -C release .
+          cd client/dist
+          zip -r ../../shop-deploy.zip .
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: mena-inc-release
-          path: mena-inc-release.tar.gz
+      - name: Upload archive to cPanel
+        env:
+          CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
+          CPANEL_USER: ${{ secrets.CPANEL_USER }}
+          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
+          CPANEL_TARGET_DIR: ${{ secrets.CPANEL_TARGET_DIR }}
+        run: |
+          curl --fail-with-body --show-error --silent \
+            -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+            -F "dir=${CPANEL_TARGET_DIR}" \
+            -F "overwrite=1" \
+            -F "file=@shop-deploy.zip;filename=shop-deploy.zip" \
+            "https://${CPANEL_HOST}:2083/execute/Fileman/upload_files"
 
-      # Deployment: hosting already exists — uncomment and fill in the transfer
-      # step that matches it (SSH/rsync shown as the common case).
-      #
-      # - name: Deploy over SSH
-      #   uses: appleboy/scp-action@v0.1.7
-      #   with:
-      #     host: ${{ secrets.DEPLOY_HOST }}
-      #     username: ${{ secrets.DEPLOY_USER }}
-      #     key: ${{ secrets.DEPLOY_SSH_KEY }}
-      #     source: mena-inc-release.tar.gz
-      #     target: /var/www/mena-inc
-      #
-      # Then on the server:  tar -xzf mena-inc-release.tar.gz && cd server &&
-      # npm ci --omit=dev && pm2 restart mena-inc-api
+      - name: Extract archive on cPanel
+        env:
+          CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
+          CPANEL_USER: ${{ secrets.CPANEL_USER }}
+          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
+          CPANEL_TARGET_DIR: ${{ secrets.CPANEL_TARGET_DIR }}
+        run: |
+          curl --fail-with-body --show-error --silent --get \
+            -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+            --data-urlencode "cpanel_jsonapi_user=${CPANEL_USER}" \
+            --data-urlencode "cpanel_jsonapi_apiversion=2" \
+            --data-urlencode "cpanel_jsonapi_module=Fileman" \
+            --data-urlencode "cpanel_jsonapi_func=fileop" \
+            --data-urlencode "op=extract" \
+            --data-urlencode "sourcefiles=${CPANEL_TARGET_DIR}/shop-deploy.zip" \
+            --data-urlencode "destfiles=${CPANEL_TARGET_DIR}" \
+            "https://${CPANEL_HOST}:2083/json-api/cpanel"
+
+      - name: Verify live shop
+        run: |
+          curl --fail --show-error --silent --head https://menaincet.com/shop/
+          curl --fail --show-error --silent --head https://menaincet.com/shop/catalog

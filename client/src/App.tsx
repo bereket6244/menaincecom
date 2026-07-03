@@ -14,6 +14,7 @@ import { CategoriesAdmin } from './admin/CategoriesAdmin';
 import { GalleryAdmin } from './admin/GalleryAdmin';
 import { HomepageAdmin } from './admin/HomepageAdmin';
 import { LeadsAdmin } from './admin/LeadsAdmin';
+import { AdminsAdmin } from './admin/AdminsAdmin';
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="gallery" element={<GalleryAdmin />} />
         <Route path="homepage" element={<HomepageAdmin />} />
         <Route path="leads" element={<LeadsAdmin />} />
+        <Route path="admins" element={<AdminsAdmin />} />
       </Route>
       <Route
         path="*"

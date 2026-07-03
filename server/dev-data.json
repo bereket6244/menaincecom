@@ -8,6 +8,33 @@
       "id": "10cda666-7a37-40ea-b667-e1c060fbdf9f",
       "createdAt": "2026-07-02T07:36:19.369Z",
       "updatedAt": "2026-07-02T07:36:19.369Z"
+    },
+    {
+      "identifier": "secondary@menainc.local",
+      "name": "Secondary Admin",
+      "role": "admin",
+      "passwordHash": "$2b$10$XfCPEX0Ji18D3layLwYJOu0kaWagDA/G4w8kqdV7tZOBbrdnSzDAK",
+      "id": "c9c41114-1589-42e1-ae5a-0112fb47cc7f",
+      "createdAt": "2026-07-03T06:33:10.882Z",
+      "updatedAt": "2026-07-03T06:33:10.882Z"
+    },
+    {
+      "identifier": "bereketgirma6244@gmail.com",
+      "name": "bereket",
+      "role": "customer",
+      "passwordHash": "$2b$10$/AUTVQSK2K5GQC2Rs0LpsO4QRIY2LMvgLCh9P08hwpd8CZ3KfHfhy",
+      "id": "78f3c74d-a55c-4427-9df6-7a3eac2cd390",
+      "createdAt": "2026-07-03T08:06:03.142Z",
+      "updatedAt": "2026-07-03T08:06:03.142Z"
+    },
+    {
+      "identifier": "superadmin@menaincet.com",
+      "name": "Mena Superadmin",
+      "role": "admin",
+      "passwordHash": "$2b$10$4ARcbWRn/vuFkpOnAMY7P.wdEhI606j/yls5QrwdWjg726YDkMqyq",
+      "id": "84ac4697-62bb-4dd9-9f12-773209542d13",
+      "createdAt": "2026-07-03T09:06:24.059Z",
+      "updatedAt": "2026-07-03T09:06:24.059Z"
     }
   ],
   "categories": [

@@ -36,7 +36,13 @@ export function requireAuth(req, res, next) {
 export function requireAdmin(req, res, next) {
   requireAuth(req, res, () => {
     if (req.auth.role !== 'admin') return res.status(403).json({ error: 'forbidden' });
-    next();
+    records.get('users', req.auth.id)
+      .then((user) => {
+        if (!user || user.role !== 'admin') return res.status(403).json({ error: 'forbidden' });
+        req.admin = publicUser(user);
+        next();
+      })
+      .catch(next);
   });
 }
 

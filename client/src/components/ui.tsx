@@ -29,10 +29,10 @@ export function Button({
 }) {
   const styles = {
     primary: 'bg-pink text-white hover:bg-pink-dim',
-    green: 'bg-green text-black hover:brightness-110',
+    green: 'bg-green text-white hover:brightness-110',
     ghost: 'bg-transparent text-muted hover:bg-surface2 hover:text-ink',
-    outline: 'border border-edge bg-surface text-ink hover:border-pink/50',
-    danger: 'bg-rose-700/80 text-white hover:bg-rose-700',
+    outline: 'border border-ink bg-white text-ink hover:bg-ink hover:text-white',
+    danger: 'bg-rose-600 text-white hover:bg-rose-700',
   } as const;
   return (
     <button
@@ -41,7 +41,7 @@ export function Button({
       onClick={onClick}
       disabled={disabled || busy}
       className={cx(
-        'inline-flex items-center justify-center gap-1.5 rounded px-3 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40',
+        'inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40',
         styles[variant],
         className
       )}
@@ -68,8 +68,8 @@ export function IconButton({
       aria-label={title}
       onClick={onClick}
       className={cx(
-        'inline-flex h-7 w-7 items-center justify-center rounded border border-transparent text-muted transition-colors hover:border-edge hover:bg-surface2',
-        danger ? 'hover:text-rose-400' : 'hover:text-ink',
+        'inline-flex h-7 w-7 items-center justify-center rounded-full border border-transparent text-muted transition-colors hover:border-edge hover:bg-surface2',
+        danger ? 'hover:text-rose-500' : 'hover:text-ink',
         className
       )}
     >
@@ -93,7 +93,7 @@ export function Modal({
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center sm:p-4"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -106,7 +106,7 @@ export function Modal({
             exit={{ y: 48, opacity: 0 }}
             transition={{ type: 'tween', duration: 0.18 }}
             className={cx(
-              'flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-lg border border-edge bg-surface sm:rounded-lg',
+              'flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl border border-edge bg-surface shadow-xl sm:rounded-2xl',
               wide ? 'sm:max-w-2xl' : 'sm:max-w-md'
             )}
           >
@@ -128,7 +128,7 @@ export function Toasts() {
   const { toasts, dismissToast } = useApp();
   const icons = {
     success: <CheckCircle2 className="h-4 w-4 shrink-0 text-green" />,
-    error: <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />,
+    error: <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />,
     info: <Info className="h-4 w-4 shrink-0 text-muted" />,
   };
   return (
@@ -141,7 +141,7 @@ export function Toasts() {
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="pointer-events-auto flex max-w-sm items-center gap-2 rounded border border-edge bg-surface2 px-3 py-2 text-left text-xs text-ink shadow-lg"
+            className="pointer-events-auto flex max-w-sm items-center gap-2 rounded-lg border border-edge bg-surface px-3 py-2 text-left text-xs text-ink shadow-lg"
           >
             {icons[t.kind]}
             <span>{t.message}</span>
@@ -160,13 +160,13 @@ export function StatusBanners() {
   return (
     <div className="sticky top-0 z-40">
       {!online && (
-        <div className="flex items-center gap-2 border-b border-amber-700/40 bg-amber-950/80 px-3 py-1.5 text-xs text-amber-200">
+        <div className="flex items-center gap-2 border-b border-amber-300 bg-amber-50 px-3 py-1.5 text-xs text-amber-800">
           <WifiOff className="h-3.5 w-3.5 shrink-0" />
           {OFFLINE_MESSAGE}
         </div>
       )}
       {online && dbDown && (
-        <div className="flex items-center gap-2 border-b border-rose-800/40 bg-rose-950/80 px-3 py-1.5 text-xs text-rose-200">
+        <div className="flex items-center gap-2 border-b border-rose-300 bg-rose-50 px-3 py-1.5 text-xs text-rose-700">
           <DatabaseZap className="h-3.5 w-3.5 shrink-0" />
           Database connection issue: the server could not reach MySQL. Data shown may be cached; changes cannot be saved right now.
         </div>
@@ -177,7 +177,7 @@ export function StatusBanners() {
 
 export function EmptyState({ children }: { children: ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-1 rounded border border-dashed border-edge py-10 text-center text-xs text-muted">
+    <div className="flex flex-col items-center gap-1 rounded-xl border border-dashed border-edge py-10 text-center text-xs text-muted">
       {children}
     </div>
   );

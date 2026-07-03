@@ -1,0 +1,9 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /shop/
+  RewriteRule ^index\.html$ - [L]
+  RewriteRule ^(api|uploads)/ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /shop/index.html [L]
+</IfModule>

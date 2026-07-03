@@ -17,6 +17,9 @@ export function onDbStatus(fn: StatusListener) {
   statusListener = fn;
 }
 
+const APP_BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+const apiUrl = (path: string) => `${APP_BASE}/api${path}`;
+
 function token(): string | null {
   return localStorage.getItem('mena_token');
 }
@@ -79,7 +82,7 @@ export async function apiGet<T>(path: string): Promise<T> {
     throw new ApiError('offline', OFFLINE_MESSAGE);
   }
   try {
-    const res = await fetch(`/api${path}`, { headers: headers(false) });
+    const res = await fetch(apiUrl(path), { headers: headers(false) });
     if (!res.ok) throw await parseError(res);
     const data = (await res.json()) as T;
     writeCache(path, data);
@@ -104,7 +107,7 @@ export async function apiSend<T>(method: string, path: string, body?: unknown): 
   if (!navigator.onLine) throw new ApiError('offline', OFFLINE_MESSAGE);
   let res: Response;
   try {
-    res = await fetch(`/api${path}`, {
+    res = await fetch(apiUrl(path), {
       method,
       headers: headers(true),
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -122,7 +125,7 @@ export async function apiUpload(files: File[]): Promise<string[]> {
   if (!navigator.onLine) throw new ApiError('offline', OFFLINE_MESSAGE);
   const form = new FormData();
   files.forEach((f) => form.append('files', f));
-  const res = await fetch('/api/admin/upload', {
+  const res = await fetch(apiUrl('/admin/upload'), {
     method: 'POST',
     headers: headers(false),
     body: form,

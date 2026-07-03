@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet, Link } from 'react-router-dom';
 import {
-  Inbox, Package, FolderTree, Images, LayoutTemplate, Users, Bell, ExternalLink, LogOut,
+  Inbox, Package, FolderTree, Images, LayoutTemplate, Users, ShieldCheck, Bell, ExternalLink, LogOut,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { apiGet, apiSend } from '../lib/api';
@@ -15,6 +15,7 @@ const TABS = [
   { to: '/admin/gallery', label: 'Gallery', icon: Images },
   { to: '/admin/homepage', label: 'Homepage', icon: LayoutTemplate },
   { to: '/admin/leads', label: 'Leads', icon: Users },
+  { to: '/admin/admins', label: 'Admins', icon: ShieldCheck },
 ];
 
 function urlBase64ToUint8Array(base64: string) {
@@ -151,7 +152,7 @@ export function AdminShell() {
       </main>
 
       {/* Mobile bottom navigation */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-edge bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-7 border-t border-edge bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
         {TABS.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}

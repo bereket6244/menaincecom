@@ -1,21 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Figtree:wght@400;500;600;700;800&family=Pinyon+Script&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #0a0a0a;
-  --color-surface: #121212;
-  --color-surface2: #181818;
-  --color-edge: #262626;
+  --color-bg: #faf8f6;
+  --color-surface: #ffffff;
+  --color-surface2: #f4f0ec;
+  --color-edge: #ece7e2;
   --color-pink: #ee317b;
   --color-pink-dim: #c2185b;
-  --color-green: #71b536;
-  --color-ink: #fafafa;
-  --color-muted: #a8a29e;
-  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --color-green: #5a9e2e;
+  --color-ink: #1c1a19;
+  --color-muted: #8a8580;
+  --font-sans: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-script: "Pinyon Script", cursive;
 }
 
 html {
   background: var(--color-bg);
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
@@ -26,29 +29,28 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Dense, admin-tool scrollbars */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+::-webkit-scrollbar-thumb { background: #ddd6d1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #cfc7c0; }
 
 /* Small uppercase system label */
 .syslabel {
   @apply text-[10px] font-semibold uppercase tracking-[0.12em] text-muted;
 }
 
-/* Spreadsheet-style table */
+/* Spreadsheet-style table (admin) */
 .sheet th {
   @apply sticky top-0 z-10 border-b border-edge bg-surface2 px-2 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wider text-muted whitespace-nowrap;
 }
 .sheet td {
   @apply border-b border-edge/60 px-2 py-1.5 text-xs whitespace-nowrap align-middle;
 }
-.sheet tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
+.sheet tbody tr:hover { background: rgba(0, 0, 0, 0.025); }
 
 /* Compact form field */
 .field {
-  @apply w-full rounded border border-edge bg-surface2 px-2.5 py-1.5 text-sm text-ink outline-none placeholder:text-muted/50 focus:border-pink/60;
+  @apply w-full rounded-lg border border-edge bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-muted/60 focus:border-pink;
 }
 
 input[type="number"]::-webkit-inner-spin-button { opacity: 1; }

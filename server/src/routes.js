@@ -11,6 +11,19 @@ import { formatOrderMessage, sendTelegram, sendWhatsApp, pushToAdmins } from './
 
 export const api = Router();
 
+const STRONG_PASSWORD_MESSAGE =
+  'Password must be at least 14 characters and include uppercase, lowercase, a number and a symbol.';
+
+function isStrongAdminPassword(password) {
+  return (
+    password.length >= 14
+    && /[a-z]/.test(password)
+    && /[A-Z]/.test(password)
+    && /\d/.test(password)
+    && /[^A-Za-z0-9]/.test(password)
+  );
+}
+
 /* ---------------------------------- health --------------------------------- */
 
 api.get('/health', async (_req, res) => {
@@ -59,6 +72,38 @@ api.get('/auth/me', optionalAuth, dbRoute(async (req, res) => {
   const user = await records.get('users', req.auth.id);
   if (!user) return res.status(401).json({ error: 'unauthorized' });
   res.json({ user: publicUser(user) });
+}));
+
+/* ------------------------------- admin users ------------------------------- */
+
+api.get('/admin/users/admins', requireAdmin, dbRoute(async (_req, res) => {
+  const users = await records.list('users');
+  res.json(users.filter((u) => u.role === 'admin').map(publicUser));
+}));
+
+api.post('/admin/users/admins', requireAdmin, dbRoute(async (req, res) => {
+  const { identifier, password, name } = req.body || {};
+  const norm = String(identifier || '').trim().toLowerCase();
+  const cleanName = String(name || '').trim();
+  const cleanPassword = String(password || '');
+
+  if (!norm || !cleanName || !cleanPassword) {
+    return res.status(400).json({ error: 'bad_request', message: 'Name, email/phone and password are required.' });
+  }
+  if (!isStrongAdminPassword(cleanPassword)) {
+    return res.status(400).json({ error: 'bad_request', message: STRONG_PASSWORD_MESSAGE });
+  }
+  if (await records.find('users', (u) => u.identifier === norm)) {
+    return res.status(409).json({ error: 'exists', message: 'An account with this email/phone already exists.' });
+  }
+
+  const user = await records.insert('users', {
+    identifier: norm,
+    name: cleanName,
+    role: 'admin',
+    passwordHash: await hashPassword(cleanPassword),
+  });
+  res.status(201).json({ user: publicUser(user) });
 }));
 
 /* ------------------------------ public catalog ----------------------------- */
