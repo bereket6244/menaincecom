@@ -16,8 +16,17 @@ export function cx(...parts: (string | false | null | undefined)[]): string {
   return parts.filter(Boolean).join(' ');
 }
 
-const MAX_DIMENSION = 1600;
-const QUALITY = 0.82;
+const APP_BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+export function assetUrl(src: string | undefined): string {
+  if (!src) return '';
+  if (/^(https?:|data:|blob:)/i.test(src)) return src;
+  if (src.startsWith('/uploads/')) return `${APP_BASE}${src}`;
+  return src;
+}
+
+const MAX_DIMENSION = 1200;
+const QUALITY = 0.74;
 
 /**
  * Client-side photo compression: downscales to a web-friendly size and

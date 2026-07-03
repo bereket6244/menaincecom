@@ -19,6 +19,21 @@ export function onDbStatus(fn: StatusListener) {
 
 const APP_BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 const apiUrl = (path: string) => `${APP_BASE}/api${path}`;
+const mediaUrl = (value: string) => {
+  if (!value.startsWith('/uploads/')) return value;
+  return `${APP_BASE}${value}`;
+};
+
+function normalizeMediaUrls<T>(value: T): T {
+  if (typeof value === 'string') return mediaUrl(value) as T;
+  if (Array.isArray(value)) return value.map((item) => normalizeMediaUrls(item)) as T;
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, normalizeMediaUrls(item)])
+    ) as T;
+  }
+  return value;
+}
 
 function token(): string | null {
   return localStorage.getItem('mena_token');
@@ -42,7 +57,7 @@ const CACHE_PREFIX = 'mena_cache:';
 export function readCache<T>(path: string): T | null {
   try {
     const raw = localStorage.getItem(CACHE_PREFIX + path);
-    return raw ? (JSON.parse(raw) as T) : null;
+    return raw ? normalizeMediaUrls(JSON.parse(raw) as T) : null;
   } catch {
     return null;
   }
@@ -84,7 +99,7 @@ export async function apiGet<T>(path: string): Promise<T> {
   try {
     const res = await fetch(apiUrl(path), { headers: headers(false) });
     if (!res.ok) throw await parseError(res);
-    const data = (await res.json()) as T;
+    const data = normalizeMediaUrls((await res.json()) as T);
     writeCache(path, data);
     statusListener?.(false);
     return data;
@@ -132,5 +147,5 @@ export async function apiUpload(files: File[]): Promise<string[]> {
   });
   if (!res.ok) throw await parseError(res);
   const data = (await res.json()) as { urls: string[] };
-  return data.urls;
+  return data.urls.map(mediaUrl);
 }
