@@ -3,34 +3,40 @@ import express from 'express';
 import cors from 'cors';
 import path from 'node:path';
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { ensureSchema, records } from './db.js';
 import { ensureAdminSeed } from './auth.js';
 import { api } from './routes.js';
 
+const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const app = express();
+app.set('deployVersion', 'shop-backend-20260703-01');
 app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || true }));
 app.use(express.json({ limit: '2mb' }));
 
 const basePath = `/${(process.env.APP_BASE_PATH || '').replace(/^\/+|\/+$/g, '')}`.replace(/\/$/, '');
 const mountPath = basePath === '' ? '/' : basePath;
+const uploadsDir = path.join(serverRoot, 'uploads');
 
-fs.mkdirSync(path.resolve('uploads'), { recursive: true });
-app.use('/uploads', express.static(path.resolve('uploads'), { maxAge: '30d', immutable: true }));
+fs.mkdirSync(uploadsDir, { recursive: true });
+app.use('/uploads', express.static(uploadsDir, { maxAge: '30d', immutable: true }));
 if (mountPath !== '/') {
-  app.use(`${mountPath}/uploads`, express.static(path.resolve('uploads'), { maxAge: '30d', immutable: true }));
+  app.use(`${mountPath}/uploads`, express.static(uploadsDir, { maxAge: '30d', immutable: true }));
 }
 
 app.use('/api', api);
 if (mountPath !== '/') app.use(`${mountPath}/api`, api);
 
 // Production: serve the built client if present.
-const clientDist = path.resolve('../client/dist');
-if (fs.existsSync(clientDist)) {
-  app.use(mountPath, express.static(clientDist));
-  app.get(`${mountPath}/*`, (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
-  if (mountPath === '/') {
-    app.get(/^(?!\/(api|uploads)\/).*/, (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
-  }
+const clientDist = process.env.CLIENT_DIST_DIR || path.resolve(serverRoot, '../client/dist');
+app.use(mountPath, express.static(clientDist));
+app.get(`${mountPath}/*`, (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
+if (mountPath !== '/') {
+  app.use(express.static(clientDist));
+  app.get(/^(?!\/(api|uploads)\/).*/, (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
+}
+if (mountPath === '/') {
+  app.get(/^(?!\/(api|uploads)\/).*/, (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
 }
 
 const DEFAULT_CATEGORIES = ['Wedding Invitations', 'Save-the-Dates', 'Thank-You Cards', 'Full Suites'];

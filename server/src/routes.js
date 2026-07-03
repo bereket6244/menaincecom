@@ -26,14 +26,15 @@ function isStrongAdminPassword(password) {
 
 /* ---------------------------------- health --------------------------------- */
 
-api.get('/health', async (_req, res) => {
-  if (isUsingLocalStore()) return res.json({ ok: true, db: false, localStore: true });
+api.get('/health', async (req, res) => {
+  const version = req.app.get('deployVersion');
+  if (isUsingLocalStore()) return res.json({ ok: true, db: false, localStore: true, version });
 
   try {
     await pool.query('SELECT 1');
-    res.json({ ok: true, db: true });
+    res.json({ ok: true, db: true, version });
   } catch {
-    res.status(503).json({ ok: false, db: false, error: 'db_unavailable' });
+    res.status(503).json({ ok: false, db: false, error: 'db_unavailable', version });
   }
 });
 
