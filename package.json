@@ -1,0 +1,12 @@
+{
+  "name": "mena-inc-eccomerce",
+  "version": "1.0.0",
+  "description": "Lead-generation storefront + operations admin panel for **Mena INK Trading PLC** (Addis Ababa). Customers browse the catalog, build an order summary, and send it in one tap via **WhatsApp** or **Telegram** — no online payment. Every order lands in the database, is delivered to the team on the chosen channel, and triggers an admin push notification.",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

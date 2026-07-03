@@ -1,0 +1,88 @@
+export type PricingMode = 'exact' | 'starting' | 'quote';
+
+export interface VariantGroup {
+  name: string; // e.g. "Material", "Finish", "Color"
+  options: { label: string; photo?: string }[];
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  categoryId: string;
+  description: string;
+  photos: string[];
+  pricingMode: PricingMode;
+  price: number | null; // ETB; used by 'exact' and 'starting'
+  variants: VariantGroup[];
+  isAddon: boolean; // complimentary/add-on item (entrance cards, schedule cards…)
+  suggestedAddonIds: string[];
+  featured: boolean;
+  createdAt?: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  photo?: string;
+  sortOrder: number;
+}
+
+export interface GalleryItem {
+  id: string;
+  photo: string;
+  caption: string;
+  sortOrder: number;
+}
+
+export interface CartItem {
+  key: string; // productId + variant hash
+  productId: string;
+  name: string;
+  photo: string;
+  isAddon: boolean;
+  pricingMode: PricingMode;
+  priceEach: number | null;
+  variantSelections: Record<string, string>;
+  qty: number;
+  note: string;
+}
+
+export interface OrderRecord {
+  id: string;
+  items: CartItem[];
+  customer: { name: string; phone: string; email: string };
+  channel: 'whatsapp' | 'telegram';
+  note: string;
+  estimatedTotal: number | null;
+  status: 'new' | 'contacted' | 'closed';
+  userId: string | null;
+  createdAt: string;
+}
+
+export interface Lead {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  source: 'guest' | 'account';
+  lastChannel?: string;
+  orderCount: number;
+  createdAt: string;
+}
+
+export interface User {
+  id: string;
+  identifier: string;
+  name: string;
+  role: 'customer' | 'admin';
+}
+
+export interface HomepageContent {
+  id?: string;
+  key: 'homepage';
+  heroTitle: string;
+  heroSubtitle: string;
+  heroImage: string;
+  heroCta: string;
+  noticeText: string;
+}

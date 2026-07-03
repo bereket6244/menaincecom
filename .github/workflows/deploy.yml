@@ -1,0 +1,54 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install & build client
+        working-directory: client
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install server deps
+        working-directory: server
+        run: npm ci --omit=dev
+
+      - name: Package release
+        run: |
+          mkdir -p release
+          cp -r client/dist release/client-dist
+          cp -r server release/server
+          rm -rf release/server/uploads
+          tar -czf mena-inc-release.tar.gz -C release .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mena-inc-release
+          path: mena-inc-release.tar.gz
+
+      # Deployment: hosting already exists — uncomment and fill in the transfer
+      # step that matches it (SSH/rsync shown as the common case).
+      #
+      # - name: Deploy over SSH
+      #   uses: appleboy/scp-action@v0.1.7
+      #   with:
+      #     host: ${{ secrets.DEPLOY_HOST }}
+      #     username: ${{ secrets.DEPLOY_USER }}
+      #     key: ${{ secrets.DEPLOY_SSH_KEY }}
+      #     source: mena-inc-release.tar.gz
+      #     target: /var/www/mena-inc
+      #
+      # Then on the server:  tar -xzf mena-inc-release.tar.gz && cd server &&
+      # npm ci --omit=dev && pm2 restart mena-inc-api

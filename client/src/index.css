@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0a0a0a;
+  --color-surface: #121212;
+  --color-surface2: #181818;
+  --color-edge: #262626;
+  --color-pink: #ee317b;
+  --color-pink-dim: #c2185b;
+  --color-green: #71b536;
+  --color-ink: #fafafa;
+  --color-muted: #a8a29e;
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+html {
+  background: var(--color-bg);
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Dense, admin-tool scrollbars */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
+/* Small uppercase system label */
+.syslabel {
+  @apply text-[10px] font-semibold uppercase tracking-[0.12em] text-muted;
+}
+
+/* Spreadsheet-style table */
+.sheet th {
+  @apply sticky top-0 z-10 border-b border-edge bg-surface2 px-2 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wider text-muted whitespace-nowrap;
+}
+.sheet td {
+  @apply border-b border-edge/60 px-2 py-1.5 text-xs whitespace-nowrap align-middle;
+}
+.sheet tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
+
+/* Compact form field */
+.field {
+  @apply w-full rounded border border-edge bg-surface2 px-2.5 py-1.5 text-sm text-ink outline-none placeholder:text-muted/50 focus:border-pink/60;
+}
+
+input[type="number"]::-webkit-inner-spin-button { opacity: 1; }
