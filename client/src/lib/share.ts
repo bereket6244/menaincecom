@@ -34,7 +34,9 @@ export function buildOrderMessage(order: OrderRecord, business: BusinessSettings
     const hasQuote = order.items.some((i) => i.priceEach == null);
     lines.push(`Estimated total: ${order.estimatedTotal.toLocaleString()} ETB${hasQuote ? ' (plus items priced on request)' : ''}`);
   }
-  lines.push(`Name: ${order.customer.name}`, `Phone: ${order.customer.phone}`);
+  // Contact lines only when known — guests check out without credentials.
+  if (order.customer.name && order.customer.name !== 'Guest') lines.push(`Name: ${order.customer.name}`);
+  if (order.customer.phone) lines.push(`Phone: ${order.customer.phone}`);
   if (order.customer.email) lines.push(`Email: ${order.customer.email}`);
   if (order.note) lines.push(`Order note: ${order.note}`);
 
@@ -59,6 +61,11 @@ export function telegramOrderUrl(business: BusinessSettings | null, text: string
   // Phone-number targets need the "+"; usernames are used as-is.
   const target = handle.startsWith('+') ? `+${digitsOnly(handle)}` : handle;
   return `https://t.me/${target}?text=${encodeURIComponent(text)}`;
+}
+
+export function smsOrderUrl(business: BusinessSettings | null, text: string): string {
+  const number = digitsOnly(business?.phone || '') || FALLBACK_WHATSAPP;
+  return `sms:+${number}?body=${encodeURIComponent(text)}`;
 }
 
 export function isValidPhone(value: string): boolean {

@@ -165,14 +165,13 @@ api.post('/orders', optionalAuth, dbRoute(async (req, res) => {
   if (!Array.isArray(rawItems) || rawItems.length === 0) {
     return res.status(400).json({ error: 'bad_request', message: 'Order has no items.' });
   }
-  if (!customer?.name || !customer?.phone) {
-    return res.status(400).json({ error: 'bad_request', message: 'Name and phone number are required.' });
-  }
-  const phone = normalizePhone(customer.phone);
-  if (!PHONE_RE.test(phone)) {
+  // Credentials are optional — guests check out straight to chat. Contact
+  // details are attached automatically for signed-in customers.
+  const phone = normalizePhone(customer?.phone);
+  if (phone && !PHONE_RE.test(phone)) {
     return res.status(400).json({ error: 'bad_request', message: 'Please enter a valid phone number, e.g. 09… or +2519…' });
   }
-  if (!['whatsapp', 'telegram'].includes(channel)) {
+  if (!['whatsapp', 'telegram', 'sms'].includes(channel)) {
     return res.status(400).json({ error: 'bad_request', message: 'Invalid channel.' });
   }
 
@@ -232,9 +231,9 @@ api.post('/orders', optionalAuth, dbRoute(async (req, res) => {
   const order = await records.insert('orders', {
     items,
     customer: {
-      name: String(customer.name).trim(),
+      name: customer?.name ? String(customer.name).trim() : 'Guest',
       phone,
-      email: customer.email ? String(customer.email).trim() : '',
+      email: customer?.email ? String(customer.email).trim() : '',
     },
     channel,
     note: note ? String(note) : '',
@@ -243,27 +242,35 @@ api.post('/orders', optionalAuth, dbRoute(async (req, res) => {
     userId: req.auth?.id || null,
   });
 
-  // Lead capture: one record per phone number, updated on repeat orders.
-  const existingLead = await records.find('leads', (l) => l.phone === order.customer.phone);
-  if (existingLead) {
-    await records.update('leads', existingLead.id, {
-      name: order.customer.name,
-      email: order.customer.email || existingLead.email,
-      lastChannel: channel,
-      orderCount: (existingLead.orderCount || 0) + 1,
-      lastOrderId: order.id,
-    });
-  } else {
-    await records.insert('leads', {
-      name: order.customer.name,
-      phone: order.customer.phone,
-      email: order.customer.email,
-      source: req.auth ? 'account' : 'guest',
-      userId: req.auth?.id || null,
-      lastChannel: channel,
-      orderCount: 1,
-      lastOrderId: order.id,
-    });
+  // Lead capture: one record per phone number (or email for email-only
+  // accounts), updated on repeat orders. Guests without contact info skip it —
+  // they reach out themselves on the chat channel.
+  const contactKey = order.customer.phone || order.customer.email;
+  if (contactKey) {
+    const existingLead = await records.find(
+      'leads',
+      (l) => (order.customer.phone ? l.phone === order.customer.phone : l.email === order.customer.email)
+    );
+    if (existingLead) {
+      await records.update('leads', existingLead.id, {
+        name: order.customer.name,
+        email: order.customer.email || existingLead.email,
+        lastChannel: channel,
+        orderCount: (existingLead.orderCount || 0) + 1,
+        lastOrderId: order.id,
+      });
+    } else {
+      await records.insert('leads', {
+        name: order.customer.name,
+        phone: order.customer.phone,
+        email: order.customer.email,
+        source: req.auth ? 'account' : 'guest',
+        userId: req.auth?.id || null,
+        lastChannel: channel,
+        orderCount: 1,
+        lastOrderId: order.id,
+      });
+    }
   }
 
   // Outbound delivery + admin push run in the background; the customer gets
@@ -273,7 +280,7 @@ api.post('/orders', optionalAuth, dbRoute(async (req, res) => {
   deliver.catch((err) => console.error(`[${channel}] delivery error:`, err));
   pushToAdmins({
     title: 'New order — MENA INC.',
-    body: `${order.customer.name} (${order.customer.phone}) via ${channel} — ${items.length} item(s)`,
+    body: `${order.customer.name}${order.customer.phone ? ` (${order.customer.phone})` : ''} via ${channel} — ${items.length} item(s)`,
     url: '/admin',
   }).catch((err) => console.error('[push] error:', err));
 

@@ -70,7 +70,7 @@ export function BusinessAdmin() {
       <div className="space-y-3 rounded-lg border border-edge bg-surface p-4">
         <SysLabel>Contact page</SysLabel>
         <div className="grid gap-3 sm:grid-cols-2">
-          {field('Phone', 'phone', { placeholder: '+251 92 963 9939' })}
+          {field('Phone', 'phone', { placeholder: '+251 92 963 9939', hint: 'Also the number customers\' SMS orders are sent to.' })}
           {field('Email', 'email', { placeholder: 'hello@menainc.com' })}
         </div>
         {field('Studio address', 'address', { textarea: true })}

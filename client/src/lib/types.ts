@@ -52,7 +52,7 @@ export interface OrderRecord {
   id: string;
   items: CartItem[];
   customer: { name: string; phone: string; email: string };
-  channel: 'whatsapp' | 'telegram';
+  channel: 'whatsapp' | 'telegram' | 'sms';
   note: string;
   estimatedTotal: number | null;
   status: 'new' | 'contacted' | 'closed';

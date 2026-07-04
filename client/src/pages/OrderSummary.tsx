@@ -1,25 +1,31 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Trash2, Minus, Plus, Send, MessageCircle, CheckCircle2, PlusCircle } from 'lucide-react';
+import { Trash2, Send, MessageCircle, MessageSquareText, CheckCircle2, PlusCircle } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { useData } from '../lib/useData';
 import { apiSend, OFFLINE_MESSAGE } from '../lib/api';
 import type { BusinessSettings, OrderRecord, Product } from '../lib/types';
-import { buildOrderMessage, isValidPhone, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
+import { buildOrderMessage, smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
 import { Button, EmptyState, IconButton } from '../components/ui';
+import { QuantityPicker } from '../components/QuantityPicker';
 import { formatPrice } from '../lib/utils';
+
+type Channel = 'whatsapp' | 'telegram' | 'sms';
+
+const CHANNEL_LABEL: Record<Channel, string> = {
+  whatsapp: 'WhatsApp',
+  telegram: 'Telegram',
+  sms: 'SMS',
+};
 
 export function OrderSummary() {
   const { cart, updateCartItem, removeFromCart, clearCart, user, toast, online } = useApp();
   const { data: products } = useData<Product[]>('/products');
   const { data: business } = useData<BusinessSettings>('/content/business');
 
-  const [name, setName] = useState(user?.name || '');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState(user?.identifier.includes('@') ? user.identifier : '');
   const [orderNote, setOrderNote] = useState('');
-  const [sending, setSending] = useState<'whatsapp' | 'telegram' | null>(null);
-  const [sent, setSent] = useState<{ ref: string; channel: 'whatsapp' | 'telegram'; chatUrl: string } | null>(null);
+  const [sending, setSending] = useState<Channel | null>(null);
+  const [sent, setSent] = useState<{ ref: string; channel: Channel; chatUrl: string } | null>(null);
 
   const estimatedTotal = useMemo(() => {
     const priced = cart.filter((i) => i.priceEach != null);
@@ -40,32 +46,44 @@ export function OrderSummary() {
       .slice(0, 4);
   }, [products, cart]);
 
-  const send = async (channel: 'whatsapp' | 'telegram') => {
+  const send = async (channel: Channel) => {
     if (!online) { toast('error', OFFLINE_MESSAGE); return; }
-    if (!name.trim() || !phone.trim()) { toast('error', 'Please enter your name and phone number.'); return; }
-    if (!isValidPhone(phone)) { toast('error', 'Please enter a valid phone number, e.g. 09… or +2519…'); return; }
     if (cart.length === 0) return;
     setSending(channel);
-    // Open the tab inside the click gesture so popup blockers allow it; the
-    // chat URL is filled in once the order is saved.
-    const chatTab = window.open('', '_blank');
+    // sms: links are handled by the OS in the current tab; https chat links get
+    // a tab opened inside the click gesture so popup blockers allow it.
+    const chatTab = channel === 'sms' ? null : window.open('', '_blank');
     try {
+      // No credentials required — signed-in customers get their contact
+      // details attached automatically, guests just send the chat message.
+      const identifier = user?.identifier || '';
       const res = await apiSend<{ ok: boolean; id: string; order: OrderRecord }>('POST', '/orders', {
         items: cart,
-        customer: { name: name.trim(), phone: phone.trim(), email: email.trim() },
+        customer: {
+          name: user?.name || '',
+          phone: identifier && !identifier.includes('@') ? identifier : '',
+          email: identifier.includes('@') ? identifier : '',
+        },
         channel,
         note: orderNote.trim(),
       });
       const message = buildOrderMessage(res.order, business);
-      const chatUrl = channel === 'whatsapp' ? whatsappOrderUrl(business, message) : telegramOrderUrl(business, message);
-      if (chatTab) chatTab.location.replace(chatUrl);
+      const chatUrl =
+        channel === 'whatsapp' ? whatsappOrderUrl(business, message)
+        : channel === 'telegram' ? telegramOrderUrl(business, message)
+        : smsOrderUrl(business, message);
       setSent({ ref: res.id, channel, chatUrl });
       clearCart();
+      if (channel === 'sms') {
+        window.location.href = chatUrl;
+      } else if (chatTab) {
+        chatTab.location.replace(chatUrl);
+      }
       toast(
         'success',
-        chatTab
-          ? `${channel === 'whatsapp' ? 'WhatsApp' : 'Telegram'} opened with your order summary — just press send.`
-          : `Order saved. Tap "Open ${channel === 'whatsapp' ? 'WhatsApp' : 'Telegram'}" to send the summary.`
+        channel === 'sms' || chatTab
+          ? `${CHANNEL_LABEL[channel]} opened with your order summary — just press send.`
+          : `Order saved. Tap "Open ${CHANNEL_LABEL[channel]}" to send the summary.`
       );
     } catch (err) {
       chatTab?.close();
@@ -83,19 +101,19 @@ export function OrderSummary() {
         </div>
         <h1 className="mt-4 font-serif text-3xl font-semibold">Order saved</h1>
         <p className="mt-2 text-sm text-muted">
-          Reference <span className="font-mono font-semibold text-ink">{sent.ref.slice(0, 8).toUpperCase()}</span>. A{' '}
-          {sent.channel === 'whatsapp' ? 'WhatsApp' : 'Telegram'} chat with the summary should have opened — press send
-          there to forward it to our studio. If it did not open, use the button below.
+          Reference <span className="font-mono font-semibold text-ink">{sent.ref.slice(0, 8).toUpperCase()}</span>.{' '}
+          {CHANNEL_LABEL[sent.channel]} should have opened with the summary — press send there to forward it to our
+          studio. If it did not open, use the button below.
         </p>
         <div className="mt-6 flex flex-col items-center gap-3">
           <a
             href={sent.chatUrl}
-            target="_blank"
+            target={sent.channel === 'sms' ? undefined : '_blank'}
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-full bg-pink px-6 py-2.5 text-sm font-bold text-white hover:bg-pink-dim"
           >
-            {sent.channel === 'whatsapp' ? <MessageCircle className="h-4 w-4" /> : <Send className="h-4 w-4" />}
-            Open {sent.channel === 'whatsapp' ? 'WhatsApp' : 'Telegram'}
+            {sent.channel === 'whatsapp' ? <MessageCircle className="h-4 w-4" /> : sent.channel === 'telegram' ? <Send className="h-4 w-4" /> : <MessageSquareText className="h-4 w-4" />}
+            Open {CHANNEL_LABEL[sent.channel]}
           </a>
           <Link to="/catalog" className="text-sm font-semibold text-pink hover:underline">
             Continue browsing
@@ -121,7 +139,9 @@ export function OrderSummary() {
     <div className="space-y-6">
       <div>
         <h1 className="font-serif text-4xl font-semibold">Your order</h1>
-        <p className="mt-1 text-sm text-muted">Review your selection, then send it to our studio — we reply on your chosen channel.</p>
+        <p className="mt-1 text-sm text-muted">
+          Review your selection, then send it to our studio on WhatsApp, Telegram or SMS — no signup needed.
+        </p>
       </div>
 
       <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
@@ -150,15 +170,7 @@ export function OrderSummary() {
                     </span>
                   </div>
                   <div className="mt-3 flex items-center gap-4">
-                    <div className="flex items-center overflow-hidden rounded-full border border-edge">
-                      <button onClick={() => updateCartItem(item.key, { qty: Math.max(1, item.qty - 1) })} className="flex h-8 w-8 items-center justify-center text-ink/70 hover:bg-surface2" aria-label="Decrease">
-                        <Minus className="h-3.5 w-3.5" />
-                      </button>
-                      <span className="w-8 text-center text-sm font-bold">{item.qty}</span>
-                      <button onClick={() => updateCartItem(item.key, { qty: item.qty + 1 })} className="flex h-8 w-8 items-center justify-center text-ink/70 hover:bg-surface2" aria-label="Increase">
-                        <Plus className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+                    <QuantityPicker size="sm" value={item.qty} onChange={(qty) => updateCartItem(item.key, { qty })} />
                     <IconButton icon={<Trash2 className="h-4 w-4" />} title="Remove" danger onClick={() => removeFromCart(item.key)} />
                   </div>
                   <input
@@ -197,7 +209,7 @@ export function OrderSummary() {
           <div className="space-y-2 border-b border-edge pb-4 text-sm">
             <div className="flex justify-between text-muted">
               <span>Items</span>
-              <span className="font-semibold text-ink">{cart.reduce((n, i) => n + i.qty, 0)}</span>
+              <span className="font-semibold text-ink">{cart.reduce((n, i) => n + i.qty, 0).toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-muted">
               <span>Estimated total</span>
@@ -211,15 +223,16 @@ export function OrderSummary() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold">Your details</h3>
-            <p className="text-[12px] text-muted">We use your phone number to confirm the order and discuss details.</p>
+            <h3 className="text-sm font-semibold">Anything extra?</h3>
+            <p className="text-[12px] text-muted">Wording, colours, deadlines — it will be included in your message.</p>
           </div>
-          <div className="space-y-2.5">
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name *" className="field" />
-            <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number *" type="tel" className="field" />
-            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email (optional)" type="email" className="field" />
-            <textarea value={orderNote} onChange={(e) => setOrderNote(e.target.value)} rows={2} placeholder="Anything else we should know?" className="field resize-y" />
-          </div>
+          <textarea
+            value={orderNote}
+            onChange={(e) => setOrderNote(e.target.value)}
+            rows={2}
+            placeholder="Anything else we should know?"
+            className="field resize-y"
+          />
 
           <div className="space-y-2.5 border-t border-edge pt-4">
             <Button variant="primary" className="w-full py-3" busy={sending === 'whatsapp'} disabled={!online || sending !== null} onClick={() => send('whatsapp')}>
@@ -227,6 +240,9 @@ export function OrderSummary() {
             </Button>
             <Button variant="outline" className="w-full py-3" busy={sending === 'telegram'} disabled={!online || sending !== null} onClick={() => send('telegram')}>
               <Send className="h-4 w-4" /> Send via Telegram
+            </Button>
+            <Button variant="outline" className="w-full py-3" busy={sending === 'sms'} disabled={!online || sending !== null} onClick={() => send('sms')}>
+              <MessageSquareText className="h-4 w-4" /> Send via SMS
             </Button>
             {!online && <p className="text-[12px] text-amber-700">{OFFLINE_MESSAGE}</p>}
             <p className="text-center text-[11px] text-muted">

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageCircle, Send, RefreshCw } from 'lucide-react';
+import { MessageCircle, MessageSquareText, Send, RefreshCw } from 'lucide-react';
 import { useData } from '../lib/useData';
 import { apiSend } from '../lib/api';
 import type { OrderRecord } from '../lib/types';
@@ -53,12 +53,16 @@ export function OrdersAdmin() {
       render: (o) => <span className="font-mono text-[10px] text-muted">{o.id.slice(0, 8).toUpperCase()}</span>,
     },
     { key: 'name', label: 'Customer', render: (o) => <span className="font-semibold">{o.customer.name}</span>, sortValue: (o) => o.customer.name },
-    { key: 'phone', label: 'Phone', render: (o) => o.customer.phone },
+    { key: 'phone', label: 'Phone', render: (o) => o.customer.phone || '—' },
     {
       key: 'channel', label: 'Channel',
       render: (o) => (
         <span className="inline-flex items-center gap-1 text-[10px] uppercase text-muted">
-          {o.channel === 'whatsapp' ? <MessageCircle className="h-3 w-3 text-green" /> : <Send className="h-3 w-3 text-sky-400" />}
+          {o.channel === 'whatsapp'
+            ? <MessageCircle className="h-3 w-3 text-green" />
+            : o.channel === 'telegram'
+              ? <Send className="h-3 w-3 text-sky-400" />
+              : <MessageSquareText className="h-3 w-3 text-amber-400" />}
           {o.channel}
         </span>
       ),
@@ -95,7 +99,14 @@ export function OrdersAdmin() {
           <div className="space-y-4 text-sm">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div><SysLabel>Customer</SysLabel><div>{open.customer.name}</div></div>
-              <div><SysLabel>Phone</SysLabel><div><a className="text-pink hover:underline" href={`tel:${open.customer.phone}`}>{open.customer.phone}</a></div></div>
+              <div>
+                <SysLabel>Phone</SysLabel>
+                <div>
+                  {open.customer.phone
+                    ? <a className="text-pink hover:underline" href={`tel:${open.customer.phone}`}>{open.customer.phone}</a>
+                    : '—'}
+                </div>
+              </div>
               <div><SysLabel>Email</SysLabel><div>{open.customer.email || '—'}</div></div>
               <div><SysLabel>Channel</SysLabel><div className="uppercase">{open.channel}</div></div>
             </div>

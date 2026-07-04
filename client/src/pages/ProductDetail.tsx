@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Minus, Plus, ShoppingBag, Clock } from 'lucide-react';
+import { ChevronLeft, ShoppingBag, Clock } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { BusinessSettings, Product } from '../lib/types';
 import { useApp } from '../store/AppContext';
 import { Button, Spinner, SysLabel, EmptyState } from '../components/ui';
+import { QuantityPicker } from '../components/QuantityPicker';
 import { cx, formatPrice } from '../lib/utils';
 
 export function ProductDetail() {
@@ -136,7 +137,7 @@ export function ProductDetail() {
             <h1 className="mt-1.5 font-serif text-4xl font-semibold leading-tight">{product.name}</h1>
             <div className="mt-2 text-2xl font-bold text-ink">
               {formatPrice(product)}
-              {!isQuote && <span className="ml-1 text-sm font-medium text-muted">/ 100 cards</span>}
+              {!isQuote && <span className="ml-1 text-sm font-medium text-muted">each</span>}
             </div>
           </div>
 
@@ -168,18 +169,8 @@ export function ProductDetail() {
 
           <div>
             <div className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.08em] text-muted">Quantity</div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center overflow-hidden rounded-full border border-edge">
-                <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="flex h-11 w-11 items-center justify-center text-ink/70 hover:bg-surface2" aria-label="Decrease">
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="w-10 text-center text-[15px] font-bold">{qty}</span>
-                <button onClick={() => setQty((q) => q + 1)} className="flex h-11 w-11 items-center justify-center text-ink/70 hover:bg-surface2" aria-label="Increase">
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-              <span className="text-sm text-muted">packs of 100</span>
-            </div>
+            <QuantityPicker value={qty} onChange={setQty} presets={[100, 250, 500, 1000]} />
+            <p className="mt-2 text-[12px] text-muted">Tap a preset, type the exact amount, or use − / +.</p>
           </div>
 
           <div>
@@ -203,7 +194,7 @@ export function ProductDetail() {
 
           <div className="flex items-start gap-2.5 rounded-xl bg-surface2 p-4 text-[13.5px] text-ink/70">
             <Clock className="mt-0.5 h-4 w-4 shrink-0 text-pink" />
-            Send your order on WhatsApp or Telegram — no online payment. Our studio confirms every detail with you first.
+            Send your order on WhatsApp, Telegram or SMS — no signup, no online payment. Our studio confirms every detail with you first.
           </div>
         </div>
       </div>
