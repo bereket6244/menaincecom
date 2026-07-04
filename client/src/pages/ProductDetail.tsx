@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, ShoppingBag, Clock } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, Clock, MessageCircle, ShoppingBag, Store, X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { BusinessSettings, Product } from '../lib/types';
 import { useApp } from '../store/AppContext';
@@ -13,6 +13,8 @@ type OrderNotice = {
   kind: AddToCartResult;
   message: string;
 };
+
+type PurchaseMode = 'cart' | 'buy';
 
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +32,7 @@ export function ProductDetail() {
   const [qty, setQty] = useState(1);
   const [note, setNote] = useState('');
   const [orderNotice, setOrderNotice] = useState<OrderNotice | null>(null);
+  const [purchaseMode, setPurchaseMode] = useState<PurchaseMode | null>(null);
   const noticeTimer = useRef<number | null>(null);
 
   useEffect(() => () => {
@@ -45,6 +48,11 @@ export function ProductDetail() {
     setOrderNotice({ kind: result, message });
     noticeTimer.current = window.setTimeout(() => setOrderNotice(null), 3600);
     toast(result === 'updated' ? 'info' : 'success', message);
+  };
+
+  const openPurchaseSheet = (mode: PurchaseMode) => {
+    setPurchaseMode(mode);
+    setOrderNotice(null);
   };
 
   if (loading && !product) return <div className="flex justify-center py-20"><Spinner /></div>;
@@ -90,6 +98,18 @@ export function ProductDetail() {
     showOrderNotice(product.name, result);
   };
 
+  const handleContinue = () => {
+    if (missingVariant) {
+      toast('error', `Please choose a ${missingVariant.name.toLowerCase()}.`);
+      return;
+    }
+    const result = add(product, selections, qty, note);
+    showOrderNotice(product.name, result);
+    if (purchaseMode === 'buy') {
+      window.setTimeout(() => navigate('/order'), 650);
+    }
+  };
+
   const orderSample = () => {
     const result = addToCart({
       productId: product.id,
@@ -107,7 +127,7 @@ export function ProductDetail() {
   };
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 pb-28 md:pb-0">
       <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
         <ChevronLeft className="h-4 w-4" /> Back to catalog
       </button>
@@ -269,6 +289,163 @@ export function ProductDetail() {
             ))}
           </div>
         </section>
+      )}
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-edge bg-surface/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-10px_30px_rgba(28,26,25,0.08)] backdrop-blur md:hidden">
+        <div className="mx-auto flex max-w-6xl items-center gap-3">
+          <Link to="/catalog" className="flex w-12 flex-col items-center gap-0.5 text-[10px] font-semibold text-muted">
+            <Store className="h-5 w-5" />
+            Shop
+          </Link>
+          <Link to="/contact" className="flex w-12 flex-col items-center gap-0.5 text-[10px] font-semibold text-muted">
+            <MessageCircle className="h-5 w-5" />
+            Chat
+          </Link>
+          <Link to="/order" className="flex w-12 flex-col items-center gap-0.5 text-[10px] font-semibold text-muted">
+            <ShoppingBag className="h-5 w-5" />
+            Order
+          </Link>
+          <button
+            type="button"
+            onClick={() => openPurchaseSheet('cart')}
+            className="h-12 flex-1 rounded-full border-2 border-ink bg-white px-4 text-sm font-extrabold text-ink"
+          >
+            Add to order
+          </button>
+          <button
+            type="button"
+            onClick={() => openPurchaseSheet('buy')}
+            className="h-12 flex-1 rounded-full bg-pink px-4 text-sm font-extrabold text-white shadow-lg shadow-pink/20"
+          >
+            Order now
+          </button>
+        </div>
+      </div>
+
+      {purchaseMode && (
+        <div className="fixed inset-0 z-50 flex items-end bg-ink/45 md:hidden" onClick={() => setPurchaseMode(null)}>
+          <div
+            className="relative max-h-[88vh] w-full overflow-y-auto rounded-t-3xl bg-surface pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 z-10 flex items-start gap-3 border-b border-edge bg-surface px-4 py-4">
+              <div className="h-16 w-14 shrink-0 overflow-hidden rounded-lg border border-edge bg-surface2">
+                {selectedPhoto ? (
+                  <img src={selectedPhoto} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full items-center justify-center font-script text-xl text-pink">M</div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-base font-extrabold text-ink">{product.name}</div>
+                <div className="mt-1 text-sm text-muted">
+                  {Object.entries(selections).length > 0
+                    ? Object.entries(selections).map(([k, v]) => `${k}: ${v}`).join(', ')
+                    : 'Choose your options'}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPurchaseMode(null)}
+                className="rounded-full p-1 text-ink/70 hover:bg-surface2"
+                aria-label="Close options"
+              >
+                <X className="h-7 w-7" />
+              </button>
+            </div>
+
+            <div className="space-y-6 px-4 py-5">
+              <div className="rounded-2xl border border-pink/20 bg-pink/5 p-4">
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-pink">Mena order price</div>
+                    <div className="mt-1 text-3xl font-extrabold text-ink">{formatPrice(product)}</div>
+                  </div>
+                  {!isQuote && <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-muted">each</span>}
+                </div>
+                <p className="mt-2 text-xs font-semibold text-pink-dim">
+                  No online payment. Send the order summary and our studio confirms details with you.
+                </p>
+              </div>
+
+              {product.variants.map((group) => (
+                <div key={group.name}>
+                  <div className="mb-3 flex items-center justify-between">
+                    <h3 className="text-lg font-extrabold text-ink">{group.name}: {selections[group.name] || 'Select'}</h3>
+                  </div>
+                  <div className={cx('flex gap-3 overflow-x-auto pb-1', group.options.some((opt) => opt.photo) ? '' : 'flex-wrap overflow-visible')}>
+                    {group.options.map((opt) => {
+                      const active = selections[group.name] === opt.label;
+                      return (
+                        <button
+                          key={opt.label}
+                          type="button"
+                          onClick={() => { setSelections((s) => ({ ...s, [group.name]: opt.label })); setPhotoPinned(false); }}
+                          className={cx(
+                            'relative shrink-0 rounded-xl border bg-white text-sm font-bold transition-colors',
+                            opt.photo ? 'w-24 overflow-hidden pb-2' : 'min-w-20 px-5 py-3',
+                            active ? 'border-2 border-ink text-ink' : 'border-edge text-ink/75'
+                          )}
+                        >
+                          {opt.photo && (
+                            <div className="mb-2 aspect-square bg-surface2">
+                              <img src={opt.photo} alt="" className="h-full w-full object-cover" />
+                            </div>
+                          )}
+                          <span className="block truncate px-1">{opt.label}</span>
+                          {active && <span className="absolute right-1.5 top-1.5 rounded-full bg-pink px-1.5 py-0.5 text-[10px] text-white">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              <div>
+                <h3 className="mb-3 text-lg font-extrabold text-ink">Qty</h3>
+                <QuantityPicker value={qty} onChange={setQty} presets={[100, 250, 500, 1000]} />
+                <p className="mt-2 text-xs text-muted">Type the exact amount in the quantity box.</p>
+              </div>
+
+              <div>
+                <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.08em] text-muted">Customization notes</h3>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  rows={2}
+                  placeholder="Names, date, wording, colours..."
+                  className="field resize-y"
+                />
+              </div>
+            </div>
+
+            {orderNotice && (
+              <div className="pointer-events-none absolute inset-x-7 top-[40%] z-20 rounded-xl bg-ink/80 px-5 py-6 text-center text-white shadow-2xl">
+                <CheckCircle2 className="mx-auto h-9 w-9 text-green" />
+                <div className="mt-2 text-2xl font-extrabold">
+                  {orderNotice.kind === 'updated' ? 'Already in order' : 'Added to order!'}
+                </div>
+                <div className="mt-1 text-sm text-white/80">{orderNotice.message}</div>
+                <Link
+                  to="/order"
+                  className="pointer-events-auto mt-4 inline-flex rounded-full border border-white px-8 py-2 text-sm font-extrabold text-white"
+                >
+                  Check order
+                </Link>
+              </div>
+            )}
+
+            <div className="sticky bottom-0 border-t border-edge bg-surface px-4 py-3">
+              <button
+                type="button"
+                onClick={handleContinue}
+                className="h-14 w-full rounded-full border-2 border-ink bg-white text-base font-extrabold text-ink transition-colors active:bg-surface2"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
