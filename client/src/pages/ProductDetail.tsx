@@ -4,7 +4,7 @@ import { CheckCircle2, ChevronLeft, Clock, MessageCircle, ShoppingBag, Store, X 
 import { useData } from '../lib/useData';
 import type { BusinessSettings, Product } from '../lib/types';
 import { useApp } from '../store/AppContext';
-import { Button, Spinner, SysLabel, EmptyState } from '../components/ui';
+import { Spinner, SysLabel, EmptyState } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { cx, formatPrice } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
@@ -105,9 +105,16 @@ export function ProductDetail() {
     }
     const result = add(product, selections, qty, note);
     showOrderNotice(product.name, result);
-    if (purchaseMode === 'buy') {
-      window.setTimeout(() => navigate('/order'), 650);
+  };
+
+  const handleOrderNow = () => {
+    if (missingVariant) {
+      toast('error', `Please choose a ${missingVariant.name.toLowerCase()}.`);
+      return;
     }
+    add(product, selections, qty, note);
+    sessionStorage.setItem('mena_open_channel_popup', '1');
+    navigate('/order');
   };
 
   const orderSample = () => {
@@ -178,7 +185,7 @@ export function ProductDetail() {
               <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">Wedding Cards</div>
             )}
             <h1 className="mt-1.5 font-serif text-4xl font-semibold leading-tight">{product.name}</h1>
-            <div className="mt-2 text-2xl font-bold text-ink">
+            <div className="mt-2 text-3xl font-extrabold text-[#ee0a24]">
               {formatPrice(product)}
               {!isQuote && <span className="ml-1 text-sm font-medium text-muted">each</span>}
             </div>
@@ -227,10 +234,21 @@ export function ProductDetail() {
             />
           </div>
 
-          <Button onClick={handleAdd} className="w-full py-3.5 text-sm sm:w-auto sm:px-10">
-            <ShoppingBag className="h-4 w-4" />
-            Add to order
-          </Button>
+          <div className="flex flex-col gap-2.5 sm:flex-row">
+            <button
+              onClick={handleAdd}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ffb100] to-[#ff6a00] px-8 py-3.5 text-sm font-extrabold text-white shadow-sm transition-transform active:scale-[0.98]"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              Add to cart
+            </button>
+            <button
+              onClick={handleOrderNow}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#ff6a00] to-[#ee0a24] px-8 py-3.5 text-sm font-extrabold text-white shadow-sm transition-transform active:scale-[0.98]"
+            >
+              Buy now
+            </button>
+          </div>
           {orderNotice && (
             <div
               role="status"
@@ -308,16 +326,16 @@ export function ProductDetail() {
           <button
             type="button"
             onClick={() => openPurchaseSheet('cart')}
-            className="h-12 flex-1 rounded-full border-2 border-ink bg-white px-4 text-sm font-extrabold text-ink"
+            className="h-12 flex-1 rounded-full bg-gradient-to-r from-[#ffb100] to-[#ff6a00] px-4 text-sm font-extrabold text-white shadow-md"
           >
-            Add to order
+            Add to cart
           </button>
           <button
             type="button"
             onClick={() => openPurchaseSheet('buy')}
-            className="h-12 flex-1 rounded-full bg-pink px-4 text-sm font-extrabold text-white shadow-lg shadow-pink/20"
+            className="h-12 flex-1 rounded-full bg-gradient-to-r from-[#ff6a00] to-[#ee0a24] px-4 text-sm font-extrabold text-white shadow-md"
           >
-            Order now
+            Buy now
           </button>
         </div>
       </div>
@@ -359,7 +377,7 @@ export function ProductDetail() {
                 <div className="flex items-end justify-between gap-3">
                   <div>
                     <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-pink">Mena order price</div>
-                    <div className="mt-1 text-3xl font-extrabold text-ink">{formatPrice(product)}</div>
+                    <div className="mt-1 text-3xl font-extrabold text-[#ee0a24]">{formatPrice(product)}</div>
                   </div>
                   {!isQuote && <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-muted">each</span>}
                 </div>
@@ -435,13 +453,20 @@ export function ProductDetail() {
               </div>
             )}
 
-            <div className="sticky bottom-0 border-t border-edge bg-surface px-4 py-3">
+            <div className="sticky bottom-0 flex gap-3 border-t border-edge bg-surface px-4 py-3">
               <button
                 type="button"
                 onClick={handleContinue}
-                className="h-14 w-full rounded-full border-2 border-ink bg-white text-base font-extrabold text-ink transition-colors active:bg-surface2"
+                className="h-14 flex-1 rounded-full bg-gradient-to-r from-[#ffb100] to-[#ff6a00] text-base font-extrabold text-white transition-transform active:scale-[0.98]"
               >
-                Continue
+                Add to cart
+              </button>
+              <button
+                type="button"
+                onClick={handleOrderNow}
+                className="h-14 flex-1 rounded-full bg-gradient-to-r from-[#ff6a00] to-[#ee0a24] text-base font-extrabold text-white transition-transform active:scale-[0.98]"
+              >
+                Buy now
               </button>
             </div>
           </div>
