@@ -22,7 +22,7 @@ const CHANNELS: { id: Channel; label: string; desc: string; icon: typeof Send }[
 ];
 
 /* AliExpress-style commerce accents. */
-const CTA = 'bg-gradient-to-r from-[#ff6a00] to-[#ee0a24] text-white';
+const CTA = 'bg-[linear-gradient(90deg,#70c72b_0%,#c89b5d_48%,#ec2f7a_100%)] text-white';
 const PRICE = 'text-[#ee0a24]';
 
 export function OrderSummary() {
