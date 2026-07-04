@@ -64,7 +64,7 @@ export function OrdersAdmin() {
       ),
       sortValue: (o) => o.channel,
     },
-    { key: 'items', label: 'Items', render: (o) => o.items.reduce((n, i) => n + i.qty, 0), sortValue: (o) => o.items.length },
+    { key: 'items', label: 'Items', render: (o) => o.items.reduce((n, i) => n + i.qty, 0), sortValue: (o) => o.items.reduce((n, i) => n + i.qty, 0) },
     {
       key: 'total', label: 'Est. Total',
       render: (o) => (o.estimatedTotal != null ? `${o.estimatedTotal.toLocaleString()} ETB` : '—'),

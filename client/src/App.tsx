@@ -13,6 +13,7 @@ import { ProductsAdmin } from './admin/ProductsAdmin';
 import { CategoriesAdmin } from './admin/CategoriesAdmin';
 import { GalleryAdmin } from './admin/GalleryAdmin';
 import { HomepageAdmin } from './admin/HomepageAdmin';
+import { BusinessAdmin } from './admin/BusinessAdmin';
 import { LeadsAdmin } from './admin/LeadsAdmin';
 import { AdminsAdmin } from './admin/AdminsAdmin';
 
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="categories" element={<CategoriesAdmin />} />
         <Route path="gallery" element={<GalleryAdmin />} />
         <Route path="homepage" element={<HomepageAdmin />} />
+        <Route path="business" element={<BusinessAdmin />} />
         <Route path="leads" element={<LeadsAdmin />} />
         <Route path="admins" element={<AdminsAdmin />} />
       </Route>

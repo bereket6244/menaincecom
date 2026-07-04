@@ -64,14 +64,22 @@ export function Catalog() {
       const s = query.trim().toLowerCase();
       list = list.filter((p) => p.name.toLowerCase().includes(s) || p.description.toLowerCase().includes(s));
     }
+    // Quote-priced designs have no listed price, so price filters keep them
+    // visible instead of silently hiding them.
     if (bands.length) {
       const active = PRICE_BANDS.filter((b) => bands.includes(b.id));
-      list = list.filter((p) => p.price != null && active.some((b) => b.test(p.price as number)));
+      list = list.filter((p) => p.price == null || active.some((b) => b.test(p.price as number)));
     }
     const mn = parseFloat(min);
     const mx = parseFloat(max);
-    if (!isNaN(mn)) list = list.filter((p) => p.price != null && (p.price as number) >= mn);
-    if (!isNaN(mx)) list = list.filter((p) => p.price != null && (p.price as number) <= mx);
+    if (!isNaN(mn)) list = list.filter((p) => p.price == null || (p.price as number) >= mn);
+    if (!isNaN(mx)) list = list.filter((p) => p.price == null || (p.price as number) <= mx);
+    if (sort === 'featured')
+      list = [...list].sort(
+        (a, b) =>
+          Number(b.featured) - Number(a.featured) ||
+          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+      );
     if (sort === 'low') list = [...list].sort((a, b) => (a.price ?? 1e9) - (b.price ?? 1e9));
     if (sort === 'high') list = [...list].sort((a, b) => (b.price ?? -1) - (a.price ?? -1));
     if (sort === 'new')

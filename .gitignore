@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .env
+server/dev-data.json
 server/uploads/*
 !server/uploads/.gitkeep
 *.log

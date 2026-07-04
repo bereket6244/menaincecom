@@ -16,9 +16,15 @@ type Draft = {
 
 const EMPTY: Draft = { name: '', identifier: '', password: '' };
 
+// Mirrors the server rule so the form doesn't promise less than the API enforces.
+const STRONG_PASSWORD_MESSAGE =
+  'Password must be at least 14 characters and include uppercase, lowercase, a number and a symbol.';
+const isStrongPassword = (p: string) =>
+  p.length >= 14 && /[a-z]/.test(p) && /[A-Z]/.test(p) && /\d/.test(p) && /[^A-Za-z0-9]/.test(p);
+
 export function AdminsAdmin() {
   const { data: admins, loading, reload } = useData<User[]>('/admin/users/admins');
-  const { toast, online } = useApp();
+  const { toast, online, user } = useApp();
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -28,8 +34,8 @@ export function AdminsAdmin() {
       toast('error', 'Name, email/phone and password are required.');
       return;
     }
-    if (draft.password.length < 6) {
-      toast('error', 'Password must be at least 6 characters.');
+    if (!isStrongPassword(draft.password)) {
+      toast('error', STRONG_PASSWORD_MESSAGE);
       return;
     }
 
@@ -44,6 +50,21 @@ export function AdminsAdmin() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const bulkDelete = async (ids: string[]) => {
+    let deleted = 0;
+    try {
+      for (const id of ids) {
+        if (id === user?.id) { toast('error', 'You cannot delete your own admin account.'); continue; }
+        await apiSend('DELETE', `/admin/users/admins/${id}`);
+        deleted += 1;
+      }
+    } catch (err) {
+      toast('error', (err as Error).message);
+    }
+    if (deleted > 0) toast('success', `${deleted} admin account(s) deleted.`);
+    reload();
   };
 
   const columns: Column<User>[] = [
@@ -70,6 +91,7 @@ export function AdminsAdmin() {
         columns={columns}
         loading={loading}
         searchText={(u) => `${u.name} ${u.identifier}`}
+        onBulkDelete={bulkDelete}
         toolbar={
           <Button onClick={() => setDraft({ ...EMPTY })} disabled={!online}>
             <Plus className="h-3.5 w-3.5" /> New admin
@@ -106,8 +128,9 @@ export function AdminsAdmin() {
                 value={draft.password}
                 onChange={(e) => setDraft({ ...draft, password: e.target.value })}
                 className="field mt-1"
-                placeholder="At least 6 characters"
+                placeholder="At least 14 characters"
               />
+              <p className="mt-1 text-[10px] text-muted">{STRONG_PASSWORD_MESSAGE}</p>
             </div>
 
             <div className="flex justify-end gap-2 border-t border-edge pt-3">

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, Minus, Plus, ShoppingBag, Clock } from 'lucide-react';
 import { useData } from '../lib/useData';
-import type { Product } from '../lib/types';
+import type { BusinessSettings, Product } from '../lib/types';
 import { useApp } from '../store/AppContext';
 import { Button, Spinner, SysLabel, EmptyState } from '../components/ui';
 import { cx, formatPrice } from '../lib/utils';
@@ -12,9 +12,13 @@ export function ProductDetail() {
   const navigate = useNavigate();
   const { addToCart, toast, online } = useApp();
   const { data: products, loading } = useData<Product[]>('/products');
+  const { data: business } = useData<BusinessSettings>('/content/business');
 
   const product = useMemo(() => (products || []).find((p) => p.id === id) || null, [products, id]);
   const [photoIdx, setPhotoIdx] = useState(0);
+  // A clicked thumbnail pins the main photo; picking a variant unpins it so
+  // the variant's own photo can take over.
+  const [photoPinned, setPhotoPinned] = useState(false);
   const [selections, setSelections] = useState<Record<string, string>>({});
   const [qty, setQty] = useState(1);
   const [note, setNote] = useState('');
@@ -23,16 +27,18 @@ export function ProductDetail() {
   if (!product)
     return <EmptyState>Product not found. <Link to="/catalog" className="font-semibold text-pink underline">Back to catalog</Link></EmptyState>;
 
+  const suggestedAddonIds = product.suggestedAddonIds || [];
   const addons = (products || [])
-    .filter((p) => p.isAddon && (product.suggestedAddonIds.includes(p.id) || product.suggestedAddonIds.length === 0))
+    .filter((p) => p.isAddon && (suggestedAddonIds.includes(p.id) || suggestedAddonIds.length === 0))
     .slice(0, 4);
 
+  const variantPhoto = product.variants
+    .flatMap((v) => v.options)
+    .find((o) => Object.values(selections).includes(o.label) && o.photo)?.photo;
   const selectedPhoto =
-    product.variants
-      .flatMap((v) => v.options)
-      .find((o) => Object.values(selections).includes(o.label) && o.photo)?.photo ||
-    product.photos[photoIdx] ||
-    product.photos[0];
+    (photoPinned ? product.photos[photoIdx] : variantPhoto || product.photos[photoIdx]) || product.photos[0];
+
+  const samplePrice = business?.samplePriceEtb ?? 120;
 
   const missingVariant = product.variants.find((v) => !selections[v.name]);
   const isQuote = product.pricingMode === 'quote';
@@ -60,6 +66,22 @@ export function ProductDetail() {
     toast('success', `${product.name} added to your order.`);
   };
 
+  const orderSample = () => {
+    addToCart({
+      productId: product.id,
+      name: `Printed sample — ${product.name}`,
+      photo: product.photos[0] || '',
+      isAddon: false,
+      isSample: true,
+      pricingMode: 'exact',
+      priceEach: samplePrice,
+      variantSelections: {},
+      qty: 1,
+      note: '',
+    });
+    toast('success', `Printed sample of ${product.name} added to your order.`);
+  };
+
   return (
     <div className="space-y-12">
       <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
@@ -84,7 +106,7 @@ export function ProductDetail() {
               {product.photos.map((ph, i) => (
                 <button
                   key={ph}
-                  onClick={() => setPhotoIdx(i)}
+                  onClick={() => { setPhotoIdx(i); setPhotoPinned(true); }}
                   className={cx(
                     'h-16 w-14 shrink-0 overflow-hidden rounded-md border-2',
                     i === photoIdx ? 'border-pink' : 'border-edge opacity-70'
@@ -95,7 +117,12 @@ export function ProductDetail() {
               ))}
             </div>
           )}
-          <p className="max-w-md text-center text-sm font-semibold text-pink">Order a printed sample — 120 ETB</p>
+          <button
+            onClick={orderSample}
+            className="block w-full max-w-md text-center text-sm font-semibold text-pink underline-offset-2 hover:underline"
+          >
+            Order a printed sample — {samplePrice} ETB
+          </button>
         </div>
 
         {/* Details */}
@@ -124,7 +151,7 @@ export function ProductDetail() {
                 {group.options.map((opt) => (
                   <button
                     key={opt.label}
-                    onClick={() => setSelections((s) => ({ ...s, [group.name]: opt.label }))}
+                    onClick={() => { setSelections((s) => ({ ...s, [group.name]: opt.label })); setPhotoPinned(false); }}
                     className={cx(
                       'rounded-full border px-4 py-2 text-sm font-medium transition-colors',
                       selections[group.name] === opt.label

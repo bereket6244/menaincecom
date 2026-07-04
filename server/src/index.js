@@ -61,6 +61,23 @@ async function seed() {
     });
     console.log('[seed] homepage content created');
   }
+  const business = await records.find('content', (c) => c.key === 'business');
+  if (!business) {
+    await records.insert('content', {
+      key: 'business',
+      phone: '+251 92 963 9939',
+      email: 'hello@menainc.com',
+      address: 'Reality Plaza, 1st Floor, Office No. 104, Bole (next to Yougo Church), Addis Ababa',
+      hours: 'Mon–Sat, 9:00–18:00',
+      whatsappNumber: '251929639939',
+      telegramHandle: '+251929639939',
+      paymentAccountName: 'CBE (Bereket Girma)',
+      paymentAccountNumber: '1000530092732',
+      pickupLocation: 'Reality Plaza, 1st Floor, Office No. 104\nBole, next to Yougo Church',
+      samplePriceEtb: 120,
+    });
+    console.log('[seed] business settings created');
+  }
 }
 
 const port = Number(process.env.PORT || 4000);

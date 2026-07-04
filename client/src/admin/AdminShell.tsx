@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet, Link } from 'react-router-dom';
 import {
-  Inbox, Package, FolderTree, Images, LayoutTemplate, Users, ShieldCheck, Bell, ExternalLink, LogOut,
+  Inbox, Package, FolderTree, Images, LayoutTemplate, Users, ShieldCheck, Bell, ExternalLink, LogOut, Building2,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { apiGet, apiSend } from '../lib/api';
@@ -14,6 +14,7 @@ const TABS = [
   { to: '/admin/categories', label: 'Categories', icon: FolderTree },
   { to: '/admin/gallery', label: 'Gallery', icon: Images },
   { to: '/admin/homepage', label: 'Homepage', icon: LayoutTemplate },
+  { to: '/admin/business', label: 'Business', icon: Building2 },
   { to: '/admin/leads', label: 'Leads', icon: Users },
   { to: '/admin/admins', label: 'Admins', icon: ShieldCheck },
 ];
@@ -78,7 +79,7 @@ export function AdminShell() {
       if (!key) { toast('error', 'Push is not configured on the server (VAPID keys missing).'); return; }
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') { toast('info', 'Notification permission was not granted.'); return; }
-      const reg = await navigator.serviceWorker.register('/sw.js');
+      const reg = await navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`);
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(key),
@@ -152,7 +153,7 @@ export function AdminShell() {
       </main>
 
       {/* Mobile bottom navigation */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-7 border-t border-edge bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-8 border-t border-edge bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
         {TABS.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}

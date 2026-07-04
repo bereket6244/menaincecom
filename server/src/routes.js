@@ -24,6 +24,12 @@ function isStrongAdminPassword(password) {
   );
 }
 
+const PHONE_RE = /^\+?\d{9,15}$/;
+
+function normalizePhone(value) {
+  return String(value || '').replace(/[\s\-().]/g, '');
+}
+
 /* ---------------------------------- health --------------------------------- */
 
 api.get('/health', async (req, res) => {
@@ -107,6 +113,19 @@ api.post('/admin/users/admins', requireAdmin, dbRoute(async (req, res) => {
   res.status(201).json({ user: publicUser(user) });
 }));
 
+api.delete('/admin/users/admins/:id', requireAdmin, dbRoute(async (req, res) => {
+  if (req.params.id === req.auth.id) {
+    return res.status(400).json({ error: 'bad_request', message: 'You cannot delete your own admin account.' });
+  }
+  const user = await records.get('users', req.params.id);
+  if (!user || user.role !== 'admin') return res.status(404).json({ error: 'not_found' });
+  const admins = (await records.list('users')).filter((u) => u.role === 'admin');
+  if (admins.length <= 1) {
+    return res.status(400).json({ error: 'bad_request', message: 'At least one admin account must remain.' });
+  }
+  res.json({ ok: await records.remove('users', req.params.id) });
+}));
+
 /* ------------------------------ public catalog ----------------------------- */
 
 api.get('/categories', dbRoute(async (_req, res) => {
@@ -134,18 +153,75 @@ api.get('/content/homepage', dbRoute(async (_req, res) => {
   res.json(doc || { key: 'homepage' });
 }));
 
+api.get('/content/business', dbRoute(async (_req, res) => {
+  const doc = await records.find('content', (c) => c.key === 'business');
+  res.json(doc || { key: 'business' });
+}));
+
 /* ---------------------------------- orders --------------------------------- */
 
 api.post('/orders', optionalAuth, dbRoute(async (req, res) => {
-  const { items, customer, channel, note } = req.body || {};
-  if (!Array.isArray(items) || items.length === 0) {
+  const { items: rawItems, customer, channel, note } = req.body || {};
+  if (!Array.isArray(rawItems) || rawItems.length === 0) {
     return res.status(400).json({ error: 'bad_request', message: 'Order has no items.' });
   }
   if (!customer?.name || !customer?.phone) {
     return res.status(400).json({ error: 'bad_request', message: 'Name and phone number are required.' });
   }
+  const phone = normalizePhone(customer.phone);
+  if (!PHONE_RE.test(phone)) {
+    return res.status(400).json({ error: 'bad_request', message: 'Please enter a valid phone number, e.g. 09… or +2519…' });
+  }
   if (!['whatsapp', 'telegram'].includes(channel)) {
     return res.status(400).json({ error: 'bad_request', message: 'Invalid channel.' });
+  }
+
+  const [products, business] = await Promise.all([
+    records.list('products'),
+    records.find('content', (c) => c.key === 'business'),
+  ]);
+  const productById = new Map(products.map((p) => [p.id, p]));
+  const samplePrice = Number(business?.samplePriceEtb) > 0 ? Number(business.samplePriceEtb) : 120;
+
+  // Prices always come from the catalog — never trust amounts sent by the browser.
+  const items = rawItems
+    .map((raw) => {
+      const product = productById.get(String(raw?.productId || ''));
+      const qty = Math.min(100000, Math.max(1, Math.floor(Number(raw?.qty)) || 1));
+      const variantSelections = Object.fromEntries(
+        Object.entries(raw?.variantSelections || {})
+          .filter(([k, v]) => typeof k === 'string' && typeof v === 'string')
+          .slice(0, 12)
+      );
+      const base = { qty, note: raw?.note ? String(raw.note).slice(0, 500) : '', variantSelections };
+      if (raw?.isSample) {
+        return {
+          ...base,
+          productId: product?.id || '',
+          name: product ? `Printed sample — ${product.name}` : 'Printed sample',
+          photo: product?.photos?.[0] || '',
+          isAddon: false,
+          isSample: true,
+          pricingMode: 'exact',
+          priceEach: samplePrice,
+        };
+      }
+      if (!product) return null;
+      return {
+        ...base,
+        productId: product.id,
+        name: product.name,
+        photo: product.photos?.[0] || '',
+        isAddon: !!product.isAddon,
+        isSample: false,
+        pricingMode: product.pricingMode,
+        priceEach: product.pricingMode === 'exact' && product.price != null ? product.price : null,
+      };
+    })
+    .filter(Boolean);
+
+  if (items.length === 0) {
+    return res.status(400).json({ error: 'bad_request', message: 'The items in your order are no longer available.' });
   }
 
   const priced = items.filter((i) => i.priceEach != null);
@@ -157,7 +233,7 @@ api.post('/orders', optionalAuth, dbRoute(async (req, res) => {
     items,
     customer: {
       name: String(customer.name).trim(),
-      phone: String(customer.phone).trim(),
+      phone,
       email: customer.email ? String(customer.email).trim() : '',
     },
     channel,
@@ -174,7 +250,7 @@ api.post('/orders', optionalAuth, dbRoute(async (req, res) => {
       name: order.customer.name,
       email: order.customer.email || existingLead.email,
       lastChannel: channel,
-      orderCount: (existingLead.orderCount || 1) + 1,
+      orderCount: (existingLead.orderCount || 0) + 1,
       lastOrderId: order.id,
     });
   } else {
@@ -201,7 +277,9 @@ api.post('/orders', optionalAuth, dbRoute(async (req, res) => {
     url: '/admin',
   }).catch((err) => console.error('[push] error:', err));
 
-  res.json({ ok: true, id: order.id });
+  // The client builds the WhatsApp/Telegram message from this sanitized order,
+  // so the forwarded summary always matches catalog prices.
+  res.json({ ok: true, id: order.id, order });
 }));
 
 /* ------------------------------- admin: CRUD -------------------------------- */
@@ -262,6 +340,14 @@ api.put('/admin/content/homepage', requireAdmin, dbRoute(async (req, res) => {
   const doc = existing
     ? await records.update('content', existing.id, { ...req.body, key: 'homepage' })
     : await records.insert('content', { ...req.body, key: 'homepage' });
+  res.json(doc);
+}));
+
+api.put('/admin/content/business', requireAdmin, dbRoute(async (req, res) => {
+  const existing = await records.find('content', (c) => c.key === 'business');
+  const doc = existing
+    ? await records.update('content', existing.id, { ...req.body, key: 'business' })
+    : await records.insert('content', { ...req.body, key: 'business' });
   res.json(doc);
 }));
 

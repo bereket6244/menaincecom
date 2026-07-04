@@ -96,11 +96,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addToCart = useCallback((item: Omit<CartItem, 'key'>) => {
-    const key = item.productId + '|' + JSON.stringify(item.variantSelections);
+    const key = `${item.productId}|${item.isSample ? 'sample' : 'item'}|${JSON.stringify(item.variantSelections)}`;
     setCart((c) => {
       const existing = c.find((x) => x.key === key);
       if (existing) {
-        return c.map((x) => (x.key === key ? { ...x, qty: x.qty + item.qty } : x));
+        const note =
+          existing.note && item.note && existing.note !== item.note
+            ? `${existing.note} | ${item.note}`
+            : existing.note || item.note;
+        return c.map((x) => (x.key === key ? { ...x, qty: x.qty + item.qty, note } : x));
       }
       return [...c, { ...item, key }];
     });

@@ -40,6 +40,7 @@ export interface CartItem {
   name: string;
   photo: string;
   isAddon: boolean;
+  isSample?: boolean; // printed sample of the design, priced from business settings
   pricingMode: PricingMode;
   priceEach: number | null;
   variantSelections: Record<string, string>;
@@ -85,4 +86,19 @@ export interface HomepageContent {
   heroImage: string;
   heroCta: string;
   noticeText: string;
+}
+
+export interface BusinessSettings {
+  id?: string;
+  key: 'business';
+  phone: string;
+  email: string;
+  address: string;
+  hours: string;
+  whatsappNumber: string; // digits with country code, e.g. 251929639939
+  telegramHandle: string; // @username or +2519… phone
+  paymentAccountName: string;
+  paymentAccountNumber: string;
+  pickupLocation: string;
+  samplePriceEtb: number | null;
 }

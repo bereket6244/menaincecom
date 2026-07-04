@@ -4,20 +4,22 @@ import { Trash2, Minus, Plus, Send, MessageCircle, CheckCircle2, PlusCircle } fr
 import { useApp } from '../store/AppContext';
 import { useData } from '../lib/useData';
 import { apiSend, OFFLINE_MESSAGE } from '../lib/api';
-import type { Product } from '../lib/types';
+import type { BusinessSettings, OrderRecord, Product } from '../lib/types';
+import { buildOrderMessage, isValidPhone, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
 import { Button, EmptyState, IconButton } from '../components/ui';
 import { formatPrice } from '../lib/utils';
 
 export function OrderSummary() {
   const { cart, updateCartItem, removeFromCart, clearCart, user, toast, online } = useApp();
   const { data: products } = useData<Product[]>('/products');
+  const { data: business } = useData<BusinessSettings>('/content/business');
 
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState(user?.identifier.includes('@') ? user.identifier : '');
   const [orderNote, setOrderNote] = useState('');
   const [sending, setSending] = useState<'whatsapp' | 'telegram' | null>(null);
-  const [sentRef, setSentRef] = useState<string | null>(null);
+  const [sent, setSent] = useState<{ ref: string; channel: 'whatsapp' | 'telegram'; chatUrl: string } | null>(null);
 
   const estimatedTotal = useMemo(() => {
     const priced = cart.filter((i) => i.priceEach != null);
@@ -41,39 +43,64 @@ export function OrderSummary() {
   const send = async (channel: 'whatsapp' | 'telegram') => {
     if (!online) { toast('error', OFFLINE_MESSAGE); return; }
     if (!name.trim() || !phone.trim()) { toast('error', 'Please enter your name and phone number.'); return; }
+    if (!isValidPhone(phone)) { toast('error', 'Please enter a valid phone number, e.g. 09… or +2519…'); return; }
     if (cart.length === 0) return;
     setSending(channel);
+    // Open the tab inside the click gesture so popup blockers allow it; the
+    // chat URL is filled in once the order is saved.
+    const chatTab = window.open('', '_blank');
     try {
-      const res = await apiSend<{ ok: boolean; id: string }>('POST', '/orders', {
+      const res = await apiSend<{ ok: boolean; id: string; order: OrderRecord }>('POST', '/orders', {
         items: cart,
         customer: { name: name.trim(), phone: phone.trim(), email: email.trim() },
         channel,
         note: orderNote.trim(),
       });
-      setSentRef(res.id);
+      const message = buildOrderMessage(res.order, business);
+      const chatUrl = channel === 'whatsapp' ? whatsappOrderUrl(business, message) : telegramOrderUrl(business, message);
+      if (chatTab) chatTab.location.replace(chatUrl);
+      setSent({ ref: res.id, channel, chatUrl });
       clearCart();
-      toast('success', `Order sent via ${channel === 'whatsapp' ? 'WhatsApp' : 'Telegram'}. We will contact you shortly.`);
+      toast(
+        'success',
+        chatTab
+          ? `${channel === 'whatsapp' ? 'WhatsApp' : 'Telegram'} opened with your order summary — just press send.`
+          : `Order saved. Tap "Open ${channel === 'whatsapp' ? 'WhatsApp' : 'Telegram'}" to send the summary.`
+      );
     } catch (err) {
+      chatTab?.close();
       toast('error', (err as Error).message);
     } finally {
       setSending(null);
     }
   };
 
-  if (sentRef) {
+  if (sent) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green">
           <CheckCircle2 className="h-8 w-8 text-white" />
         </div>
-        <h1 className="mt-4 font-serif text-3xl font-semibold">Order received</h1>
+        <h1 className="mt-4 font-serif text-3xl font-semibold">Order saved</h1>
         <p className="mt-2 text-sm text-muted">
-          Reference <span className="font-mono font-semibold text-ink">{sentRef.slice(0, 8).toUpperCase()}</span>. The Mena Inc.
-          team has your order summary and will reach out on the number you provided.
+          Reference <span className="font-mono font-semibold text-ink">{sent.ref.slice(0, 8).toUpperCase()}</span>. A{' '}
+          {sent.channel === 'whatsapp' ? 'WhatsApp' : 'Telegram'} chat with the summary should have opened — press send
+          there to forward it to our studio. If it did not open, use the button below.
         </p>
-        <Link to="/catalog" className="mt-6 inline-block rounded-full bg-pink px-6 py-2.5 text-sm font-bold text-white hover:bg-pink-dim">
-          Continue browsing
-        </Link>
+        <div className="mt-6 flex flex-col items-center gap-3">
+          <a
+            href={sent.chatUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-full bg-pink px-6 py-2.5 text-sm font-bold text-white hover:bg-pink-dim"
+          >
+            {sent.channel === 'whatsapp' ? <MessageCircle className="h-4 w-4" /> : <Send className="h-4 w-4" />}
+            Open {sent.channel === 'whatsapp' ? 'WhatsApp' : 'Telegram'}
+          </a>
+          <Link to="/catalog" className="text-sm font-semibold text-pink hover:underline">
+            Continue browsing
+          </Link>
+        </div>
       </div>
     );
   }
@@ -202,7 +229,9 @@ export function OrderSummary() {
               <Send className="h-4 w-4" /> Send via Telegram
             </Button>
             {!online && <p className="text-[12px] text-amber-700">{OFFLINE_MESSAGE}</p>}
-            <p className="text-center text-[11px] text-muted">One tap sends everything — no copy-pasting needed. No payment is taken online.</p>
+            <p className="text-center text-[11px] text-muted">
+              One tap opens your chat app with the full summary pre-filled — just press send. No payment is taken online.
+            </p>
           </div>
         </div>
       </div>

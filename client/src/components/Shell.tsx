@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Home, LayoutGrid, Images, ShoppingBag, User, Phone, Search, Bookmark } from 'lucide-react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Home, LayoutGrid, Images, ShoppingBag, User, Phone, Search } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useApp } from '../store/AppContext';
+import { useData } from '../lib/useData';
+import type { Category } from '../lib/types';
 import { cx } from '../lib/utils';
 import { StatusBanners, Toasts } from './ui';
 
@@ -13,17 +15,24 @@ const NAV = [
   { to: '/contact', label: 'Contact', icon: Phone },
 ];
 
-const QUICK = ['Collections', 'Save the Dates', 'Invitations', 'Programs', 'Thank Yous'];
-
 export function Shell({ children }: { children: ReactNode }) {
   const { cart, user } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { data: categories } = useData<Category[]>('/categories');
   const [q, setQ] = useState('');
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
 
-  const runSearch = (value: string) => {
+  // Live-filter only while already on the catalog (keeping the category param);
+  // from any other page, search navigates only on submit.
+  const applySearch = (value: string, live = false) => {
     setQ(value);
-    navigate(`/catalog${value.trim() ? `?q=${encodeURIComponent(value.trim())}` : ''}`, { replace: true });
+    const onCatalog = location.pathname === '/catalog';
+    if (live && !onCatalog) return;
+    const next = new URLSearchParams(onCatalog ? location.search : '');
+    if (value.trim()) next.set('q', value.trim());
+    else next.delete('q');
+    navigate(`/catalog${next.toString() ? `?${next.toString()}` : ''}`, { replace: live });
   };
 
   return (
@@ -33,8 +42,8 @@ export function Shell({ children }: { children: ReactNode }) {
 
       {/* Announcement banner */}
       <div className="bg-pink/10 px-4 py-2 text-center text-[13px] text-pink-dim">
-        Order 3 free samples before you buy — see your cards in real life first.{' '}
-        <Link to="/contact" className="font-semibold underline underline-offset-2">Personalize yours now</Link>
+        Order a printed sample of any design before you commit — see your cards in real life first.{' '}
+        <Link to="/catalog" className="font-semibold underline underline-offset-2">Browse designs</Link>
       </div>
 
       {/* White brand header */}
@@ -77,12 +86,14 @@ export function Shell({ children }: { children: ReactNode }) {
             >
               {user ? user.name.split(' ')[0] : 'Log in'}
             </Link>
-            <Link
-              to="/login"
-              className="rounded-full bg-pink px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-pink-dim"
-            >
-              Sign up
-            </Link>
+            {!user && (
+              <Link
+                to="/login?mode=signup"
+                className="rounded-full bg-pink px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-pink-dim"
+              >
+                Sign up
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -91,27 +102,31 @@ export function Shell({ children }: { children: ReactNode }) {
       <div className="bg-ink text-white">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
           <nav className="hidden items-center gap-5 lg:flex">
-            {QUICK.map((label) => (
-              <Link key={label} to="/catalog" className="whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
-                {label}
+            <Link to="/catalog" className="whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
+              All designs
+            </Link>
+            {(categories || []).slice(0, 4).map((c) => (
+              <Link
+                key={c.id}
+                to={`/catalog?category=${c.id}`}
+                className="whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white"
+              >
+                {c.name}
               </Link>
             ))}
           </nav>
           <form
-            onSubmit={(e) => { e.preventDefault(); runSearch(q); }}
+            onSubmit={(e) => { e.preventDefault(); applySearch(q); }}
             className="relative min-w-0 flex-1 lg:max-w-md"
           >
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
             <input
               value={q}
-              onChange={(e) => runSearch(e.target.value)}
+              onChange={(e) => applySearch(e.target.value, true)}
               placeholder="Search rustic, modern, floral…"
               className="w-full rounded-full border-none bg-white py-2.5 pl-10 pr-4 text-sm text-ink outline-none placeholder:text-muted/70"
             />
           </form>
-          <Link to="/account" aria-label="Saved" className="hidden text-white/90 hover:text-white sm:block">
-            <Bookmark className="h-5 w-5" />
-          </Link>
           <Link to="/order" aria-label="Order" className="relative text-white hover:text-white/80">
             <ShoppingBag className="h-5 w-5" />
             {cartCount > 0 && (
