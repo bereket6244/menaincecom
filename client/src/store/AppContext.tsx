@@ -9,6 +9,8 @@ export interface Toast {
   message: string;
 }
 
+export type AddToCartResult = 'added' | 'updated';
+
 interface AppState {
   online: boolean;
   dbDown: boolean;
@@ -17,7 +19,7 @@ interface AppState {
   signup: (name: string, identifier: string, password: string) => Promise<void>;
   logout: () => void;
   cart: CartItem[];
-  addToCart: (item: Omit<CartItem, 'key'>) => void;
+  addToCart: (item: Omit<CartItem, 'key'>) => AddToCartResult;
   updateCartItem: (key: string, patch: Partial<CartItem>) => void;
   removeFromCart: (key: string) => void;
   clearCart: () => void;
@@ -97,9 +99,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addToCart = useCallback((item: Omit<CartItem, 'key'>) => {
     const key = `${item.productId}|${item.isSample ? 'sample' : 'item'}|${JSON.stringify(item.variantSelections)}`;
+    let result: AddToCartResult = 'added';
     setCart((c) => {
       const existing = c.find((x) => x.key === key);
       if (existing) {
+        result = 'updated';
         const note =
           existing.note && item.note && existing.note !== item.note
             ? `${existing.note} | ${item.note}`
@@ -108,6 +112,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return [...c, { ...item, key }];
     });
+    return result;
   }, []);
 
   const updateCartItem = useCallback((key: string, patch: Partial<CartItem>) => {

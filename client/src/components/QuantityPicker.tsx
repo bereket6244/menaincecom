@@ -49,16 +49,19 @@ export function QuantityPicker({
         <motion.div key={pulse} animate={{ scale: [1, 1.14, 1] }} transition={{ duration: 0.18, ease: 'easeOut' }}>
           <input
             value={text}
+            type="text"
             inputMode="numeric"
+            placeholder="Qty"
+            title="Type quantity directly"
             onChange={(e) => setText(e.target.value.replace(/\D/g, '').slice(0, 6))}
             onBlur={commit}
             onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
             onFocus={(e) => e.target.select()}
             className={cx(
-              'bg-transparent text-center font-bold text-ink outline-none',
-              size === 'sm' ? 'w-12 text-sm' : 'w-16 text-[15px]'
+              'rounded-md bg-white/80 text-center font-bold text-ink outline-none ring-1 ring-edge/80 transition-shadow placeholder:text-muted/60 focus:ring-2 focus:ring-pink',
+              size === 'sm' ? 'mx-0.5 h-7 w-12 text-sm' : 'mx-1 h-9 w-20 text-[15px]'
             )}
-            aria-label="Quantity"
+            aria-label="Quantity. You can type the amount directly."
           />
         </motion.div>
         <motion.button type="button" whileTap={{ scale: 0.8 }} onClick={() => set(value + 1)} className={btnCls} aria-label="Increase">

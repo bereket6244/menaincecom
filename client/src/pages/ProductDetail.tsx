@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, ShoppingBag, Clock } from 'lucide-react';
 import { useData } from '../lib/useData';
@@ -7,6 +7,12 @@ import { useApp } from '../store/AppContext';
 import { Button, Spinner, SysLabel, EmptyState } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { cx, formatPrice } from '../lib/utils';
+import type { AddToCartResult } from '../store/AppContext';
+
+type OrderNotice = {
+  kind: AddToCartResult;
+  message: string;
+};
 
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +29,23 @@ export function ProductDetail() {
   const [selections, setSelections] = useState<Record<string, string>>({});
   const [qty, setQty] = useState(1);
   const [note, setNote] = useState('');
+  const [orderNotice, setOrderNotice] = useState<OrderNotice | null>(null);
+  const noticeTimer = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
+  }, []);
+
+  const showOrderNotice = (name: string, result: AddToCartResult) => {
+    if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
+    const message =
+      result === 'updated'
+        ? `${name} is already in your order. Quantity updated.`
+        : `${name} added to your order.`;
+    setOrderNotice({ kind: result, message });
+    noticeTimer.current = window.setTimeout(() => setOrderNotice(null), 3600);
+    toast(result === 'updated' ? 'info' : 'success', message);
+  };
 
   if (loading && !product) return <div className="flex justify-center py-20"><Spinner /></div>;
   if (!product)
@@ -45,7 +68,7 @@ export function ProductDetail() {
   const isQuote = product.pricingMode === 'quote';
 
   const add = (p: Product, selectedVariants: Record<string, string>, quantity: number, itemNote: string) => {
-    addToCart({
+    return addToCart({
       productId: p.id,
       name: p.name,
       photo: p.photos[0] || '',
@@ -63,12 +86,12 @@ export function ProductDetail() {
       toast('error', `Please choose a ${missingVariant.name.toLowerCase()}.`);
       return;
     }
-    add(product, selections, qty, note);
-    toast('success', `${product.name} added to your order.`);
+    const result = add(product, selections, qty, note);
+    showOrderNotice(product.name, result);
   };
 
   const orderSample = () => {
-    addToCart({
+    const result = addToCart({
       productId: product.id,
       name: `Printed sample — ${product.name}`,
       photo: product.photos[0] || '',
@@ -80,7 +103,7 @@ export function ProductDetail() {
       qty: 1,
       note: '',
     });
-    toast('success', `Printed sample of ${product.name} added to your order.`);
+    showOrderNotice(`Printed sample of ${product.name}`, result);
   };
 
   return (
@@ -170,7 +193,7 @@ export function ProductDetail() {
           <div>
             <div className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.08em] text-muted">Quantity</div>
             <QuantityPicker value={qty} onChange={setQty} presets={[100, 250, 500, 1000]} />
-            <p className="mt-2 text-[12px] text-muted">Tap a preset, type the exact amount, or use − / +.</p>
+            <p className="mt-2 text-[12px] text-muted">Type the exact amount in the quantity box, tap a preset, or use - / +.</p>
           </div>
 
           <div>
@@ -188,6 +211,20 @@ export function ProductDetail() {
             <ShoppingBag className="h-4 w-4" />
             Add to order
           </Button>
+          {orderNotice && (
+            <div
+              role="status"
+              aria-live="polite"
+              className={cx(
+                'w-full rounded-lg border px-3 py-2 text-sm font-semibold sm:max-w-sm',
+                orderNotice.kind === 'updated'
+                  ? 'border-amber-200 bg-amber-50 text-amber-800'
+                  : 'border-green/30 bg-green/10 text-ink'
+              )}
+            >
+              {orderNotice.message}
+            </div>
+          )}
           {!online && (
             <p className="text-[12px] text-amber-700">You are offline — you can browse, but sending an order requires a connection.</p>
           )}
@@ -220,8 +257,8 @@ export function ProductDetail() {
                   <button
                     onClick={() => {
                       if (a.variants.length > 0) { navigate(`/product/${a.id}`); return; }
-                      add(a, {}, 1, '');
-                      toast('success', `${a.name} added to your order.`);
+                      const result = add(a, {}, 1, '');
+                      showOrderNotice(a.name, result);
                     }}
                     className="mt-2.5 w-full rounded-lg bg-surface2 py-2 text-[13px] font-bold text-ink transition-colors hover:bg-edge"
                   >
