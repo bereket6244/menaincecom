@@ -242,37 +242,6 @@ api.post('/orders', optionalAuth, dbRoute(async (req, res) => {
     userId: req.auth?.id || null,
   });
 
-  // Lead capture: one record per phone number (or email for email-only
-  // accounts), updated on repeat orders. Guests without contact info skip it —
-  // they reach out themselves on the chat channel.
-  const contactKey = order.customer.phone || order.customer.email;
-  if (contactKey) {
-    const existingLead = await records.find(
-      'leads',
-      (l) => (order.customer.phone ? l.phone === order.customer.phone : l.email === order.customer.email)
-    );
-    if (existingLead) {
-      await records.update('leads', existingLead.id, {
-        name: order.customer.name,
-        email: order.customer.email || existingLead.email,
-        lastChannel: channel,
-        orderCount: (existingLead.orderCount || 0) + 1,
-        lastOrderId: order.id,
-      });
-    } else {
-      await records.insert('leads', {
-        name: order.customer.name,
-        phone: order.customer.phone,
-        email: order.customer.email,
-        source: req.auth ? 'account' : 'guest',
-        userId: req.auth?.id || null,
-        lastChannel: channel,
-        orderCount: 1,
-        lastOrderId: order.id,
-      });
-    }
-  }
-
   // Outbound delivery + admin push run in the background; the customer gets
   // an immediate confirmation once the order is safely in the database.
   const message = formatOrderMessage(order);

@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import { Trash2, Send, MessageCircle, MessageSquareText, CheckCircle2, PlusCircle } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { useData } from '../lib/useData';
-import { apiSend, OFFLINE_MESSAGE } from '../lib/api';
-import type { BusinessSettings, OrderRecord, Product } from '../lib/types';
-import { buildOrderMessage, smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
+import { OFFLINE_MESSAGE } from '../lib/api';
+import type { BusinessSettings, Product } from '../lib/types';
+import { buildCartOrderMessage, smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
 import { Button, EmptyState, IconButton } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { formatPrice } from '../lib/utils';
@@ -19,13 +19,13 @@ const CHANNEL_LABEL: Record<Channel, string> = {
 };
 
 export function OrderSummary() {
-  const { cart, updateCartItem, removeFromCart, clearCart, user, toast, online } = useApp();
+  const { cart, updateCartItem, removeFromCart, clearCart, toast, online } = useApp();
   const { data: products } = useData<Product[]>('/products');
   const { data: business } = useData<BusinessSettings>('/content/business');
 
   const [orderNote, setOrderNote] = useState('');
   const [sending, setSending] = useState<Channel | null>(null);
-  const [sent, setSent] = useState<{ ref: string; channel: Channel; chatUrl: string } | null>(null);
+  const [sent, setSent] = useState<{ channel: Channel; chatUrl: string } | null>(null);
 
   const estimatedTotal = useMemo(() => {
     const priced = cart.filter((i) => i.priceEach != null);
@@ -56,23 +56,12 @@ export function OrderSummary() {
     try {
       // No credentials required — signed-in customers get their contact
       // details attached automatically, guests just send the chat message.
-      const identifier = user?.identifier || '';
-      const res = await apiSend<{ ok: boolean; id: string; order: OrderRecord }>('POST', '/orders', {
-        items: cart,
-        customer: {
-          name: user?.name || '',
-          phone: identifier && !identifier.includes('@') ? identifier : '',
-          email: identifier.includes('@') ? identifier : '',
-        },
-        channel,
-        note: orderNote.trim(),
-      });
-      const message = buildOrderMessage(res.order, business);
+      const message = buildCartOrderMessage(cart, orderNote, window.location.origin);
       const chatUrl =
         channel === 'whatsapp' ? whatsappOrderUrl(business, message)
         : channel === 'telegram' ? telegramOrderUrl(business, message)
         : smsOrderUrl(business, message);
-      setSent({ ref: res.id, channel, chatUrl });
+      setSent({ channel, chatUrl });
       clearCart();
       if (channel === 'sms') {
         window.location.href = chatUrl;
@@ -83,7 +72,7 @@ export function OrderSummary() {
         'success',
         channel === 'sms' || chatTab
           ? `${CHANNEL_LABEL[channel]} opened with your order summary — just press send.`
-          : `Order saved. Tap "Open ${CHANNEL_LABEL[channel]}" to send the summary.`
+          : `Tap "Open ${CHANNEL_LABEL[channel]}" to send the summary.`
       );
     } catch (err) {
       chatTab?.close();
@@ -99,9 +88,8 @@ export function OrderSummary() {
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green">
           <CheckCircle2 className="h-8 w-8 text-white" />
         </div>
-        <h1 className="mt-4 font-serif text-3xl font-semibold">Order saved</h1>
+        <h1 className="mt-4 font-serif text-3xl font-semibold">Order ready</h1>
         <p className="mt-2 text-sm text-muted">
-          Reference <span className="font-mono font-semibold text-ink">{sent.ref.slice(0, 8).toUpperCase()}</span>.{' '}
           {CHANNEL_LABEL[sent.channel]} should have opened with the summary — press send there to forward it to our
           studio. If it did not open, use the button below.
         </p>

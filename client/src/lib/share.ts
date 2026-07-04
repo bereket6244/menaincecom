@@ -1,7 +1,7 @@
-import type { BusinessSettings, OrderRecord } from './types';
+import type { BusinessSettings, CartItem, OrderRecord } from './types';
 
 const FALLBACK_WHATSAPP = '251929639939';
-const FALLBACK_TELEGRAM = '+251929639939';
+const TELEGRAM_ORDER_URL = 'https://t.me/+251929639939';
 
 const digitsOnly = (value: string) => (value || '').replace(/\D/g, '');
 
@@ -51,16 +51,47 @@ export function buildOrderMessage(order: OrderRecord, business: BusinessSettings
   return lines.join('\n');
 }
 
+function fullImageUrl(photo: string, origin: string): string {
+  if (!photo) return '';
+  try {
+    return new URL(photo, origin).toString();
+  } catch {
+    return photo;
+  }
+}
+
+function itemPriceLine(item: CartItem): string {
+  const price =
+    item.priceEach != null
+      ? `at a price of ${item.priceEach.toLocaleString()} birr`
+      : 'with price to be confirmed';
+  return `the above ${item.qty.toLocaleString()} pcs ${price}`;
+}
+
+export function buildCartOrderMessage(items: CartItem[], note: string, origin: string): string {
+  const lines = ['hello there, i would like to order these', ''];
+
+  for (const item of items) {
+    const imageUrl = fullImageUrl(item.photo, origin);
+    if (imageUrl) lines.push(imageUrl);
+    else lines.push(item.name);
+    lines.push(itemPriceLine(item));
+    if (item.note) lines.push(`note: ${item.note}`);
+    lines.push('');
+  }
+
+  if (note.trim()) lines.push(`order note: ${note.trim()}`, '');
+  lines.push('please contact me');
+  return lines.join('\n');
+}
+
 export function whatsappOrderUrl(business: BusinessSettings | null, text: string): string {
   const number = digitsOnly(business?.whatsappNumber || '') || FALLBACK_WHATSAPP;
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
 
-export function telegramOrderUrl(business: BusinessSettings | null, text: string): string {
-  const handle = (business?.telegramHandle || FALLBACK_TELEGRAM).trim().replace(/^@/, '');
-  // Phone-number targets need the "+"; usernames are used as-is.
-  const target = handle.startsWith('+') ? `+${digitsOnly(handle)}` : handle;
-  return `https://t.me/${target}?text=${encodeURIComponent(text)}`;
+export function telegramOrderUrl(_business: BusinessSettings | null, text: string): string {
+  return `${TELEGRAM_ORDER_URL}?text=${encodeURIComponent(text)}`;
 }
 
 export function smsOrderUrl(business: BusinessSettings | null, text: string): string {
