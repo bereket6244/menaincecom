@@ -52,10 +52,12 @@ export function buildOrderMessage(order: OrderRecord, business: BusinessSettings
 }
 
 function productUrl(productId: string, origin: string): string {
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  const path = `${base}/product/${encodeURIComponent(productId)}`;
   try {
-    return new URL(`/product/${productId}`, origin).toString();
+    return new URL(path, origin).toString();
   } catch {
-    return `/product/${productId}`;
+    return path;
   }
 }
 
@@ -94,4 +96,3 @@ export function smsOrderUrl(business: BusinessSettings | null, text: string): st
 export function isValidPhone(value: string): boolean {
   return /^\+?\d{9,15}$/.test((value || '').replace(/[\s\-().]/g, ''));
 }
-
