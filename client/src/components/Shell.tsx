@@ -7,6 +7,7 @@ import { useData } from '../lib/useData';
 import type { Category } from '../lib/types';
 import { cx } from '../lib/utils';
 import { StatusBanners, Toasts } from './ui';
+import menaIcon from '../assets/menainc-icon.png';
 
 const NAV = [
   { to: '/', label: 'Home', icon: Home, end: true },
@@ -48,7 +49,7 @@ export function Shell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4">
           <Link to="/" className="flex shrink-0 items-center">
             <img
-              src="/menainc-icon.png"
+              src={menaIcon}
               alt="Mena Inc."
               className="h-8 w-auto object-contain sm:h-9"
             />
@@ -174,4 +175,3 @@ export function Shell({ children }: { children: ReactNode }) {
     </div>
   );
 }
-
