@@ -23,9 +23,8 @@ export function Shell({ children }: { children: ReactNode }) {
   const { data: categories } = useData<Category[]>('/categories');
   const [q, setQ] = useState('');
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
-  // Product and cart/checkout pages have their own sticky action bars — the
-  // global tab bar would stack under them and eat half the screen.
-  const hideBottomNav = location.pathname.startsWith('/product/') || location.pathname === '/order';
+  // Product pages have their own sticky action bar; keep cart navigation visible.
+  const hideBottomNav = location.pathname.startsWith('/product/');
 
   // Live-filter only while already on the catalog (keeping the category param);
   // from any other page, search navigates only on submit.
