@@ -51,45 +51,28 @@ export function buildOrderMessage(order: OrderRecord, business: BusinessSettings
   return lines.join('\n');
 }
 
-function fullImageUrl(photo: string, origin: string): string {
-  if (!photo) return '';
+function productUrl(productId: string, origin: string): string {
   try {
-    return new URL(photo, origin).toString();
+    return new URL(`/product/${productId}`, origin).toString();
   } catch {
-    return photo;
+    return `/product/${productId}`;
   }
 }
 
 export function buildCartOrderMessage(items: CartItem[], note: string, origin: string): string {
   const lines = ['hello there, i would like to order these', ''];
 
-  let total = 0;
-  let hasPriced = false;
-  let hasQuote = false;
-
   items.forEach((item, idx) => {
     const variants = Object.entries(item.variantSelections || {})
-      .map(([k, v]) => `${k}: ${v}`)
+      .map(([k, v]) => k + ': ' + v)
       .join(', ');
-    lines.push(`${idx + 1}) ${item.name}${variants ? ` — ${variants}` : ''}`);
-    if (item.priceEach != null) {
-      hasPriced = true;
-      total += item.priceEach * item.qty;
-      lines.push(`${item.qty.toLocaleString()} pcs × ${item.priceEach.toLocaleString()} birr = ${(item.priceEach * item.qty).toLocaleString()} birr`);
-    } else {
-      hasQuote = true;
-      lines.push(`${item.qty.toLocaleString()} pcs — price to be confirmed`);
-    }
-    if (item.note) lines.push(`note: ${item.note}`);
-    const imageUrl = fullImageUrl(item.photo, origin);
-    if (imageUrl) lines.push(`photo: ${imageUrl}`);
+    lines.push((idx + 1) + ') ' + item.name + (variants ? ' - ' + variants : ''));
+    lines.push(item.qty.toLocaleString() + ' pcs');
+    lines.push('link: ' + productUrl(item.productId, origin));
     lines.push('');
   });
 
-  if (hasPriced) {
-    lines.push(`estimated total: ${total.toLocaleString()} birr${hasQuote ? ' (plus items priced on request)' : ''}`, '');
-  }
-  if (note.trim()) lines.push(`order note: ${note.trim()}`, '');
+  if (note.trim()) lines.push('order note: ' + note.trim(), '');
   lines.push('please contact me');
   return lines.join('\n');
 }
@@ -111,3 +94,4 @@ export function smsOrderUrl(business: BusinessSettings | null, text: string): st
 export function isValidPhone(value: string): boolean {
   return /^\+?\d{9,15}$/.test((value || '').replace(/[\s\-().]/g, ''));
 }
+

@@ -26,7 +26,6 @@ export function ProductDetail() {
   const [photoPinned, setPhotoPinned] = useState(false);
   const [selections, setSelections] = useState<Record<string, string>>({});
   const [qty, setQty] = useState(1);
-  const [note, setNote] = useState('');
   const [sheetOpen, setSheetOpen] = useState(false);
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
 
@@ -61,7 +60,7 @@ export function ProductDetail() {
   const missingVariant = product.variants.find((v) => !selections[v.name]);
   const isQuote = product.pricingMode === 'quote';
 
-  const add = (p: Product, selectedVariants: Record<string, string>, quantity: number, itemNote: string, mode: 'increment' | 'replace' = 'increment') => {
+  const add = (p: Product, selectedVariants: Record<string, string>, quantity: number, mode: 'increment' | 'replace' = 'increment') => {
     return addToCart({
       productId: p.id,
       name: p.name,
@@ -71,7 +70,7 @@ export function ProductDetail() {
       priceEach: p.pricingMode === 'exact' ? p.price : null,
       variantSelections: selectedVariants,
       qty: quantity,
-      note: itemNote,
+      note: '',
     }, mode);
   };
 
@@ -81,7 +80,7 @@ export function ProductDetail() {
       toast('error', `Please choose a ${missingVariant.name.toLowerCase()}.`);
       return;
     }
-    const result = add(product, selections, qty, note);
+    const result = add(product, selections, qty);
     setSheetOpen(false);
     notifyAdded(product.name, result);
   };
@@ -93,7 +92,7 @@ export function ProductDetail() {
       toast('error', `Please choose a ${missingVariant.name.toLowerCase()}.`);
       return;
     }
-    add(product, selections, qty, note, 'replace');
+    add(product, selections, qty, 'replace');
     sessionStorage.setItem('mena_go_checkout', '1');
     navigate('/order');
   };
@@ -106,6 +105,14 @@ export function ProductDetail() {
       return;
     }
     handleOrderNow();
+  };
+
+  const handleBarAdd = () => {
+    if (product.variants.length === 0) {
+      handleAdd();
+      return;
+    }
+    setSheetOpen(true);
   };
 
   return (
@@ -200,16 +207,6 @@ export function ProductDetail() {
             <p className="mt-2 text-[12px] text-muted">Type the exact amount in the quantity box, tap a preset, or use - / +.</p>
           </div>
 
-          <div>
-            <div className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.08em] text-muted">Customization notes (optional)</div>
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={2}
-              placeholder="Names, date, wording, colours…"
-              className="field resize-y"
-            />
-          </div>
 
           <div className="flex flex-col gap-2.5 sm:flex-row">
             <button
@@ -258,7 +255,7 @@ export function ProductDetail() {
                   <button
                     onClick={() => {
                       if (a.variants.length > 0) { navigate(`/product/${a.id}`); return; }
-                      const result = add(a, {}, 1, '');
+                      const result = add(a, {}, 1);
                       notifyAdded(a.name, result);
                     }}
                     className="mt-2.5 w-full rounded-lg bg-surface2 py-2 text-[13px] font-bold text-ink transition-colors hover:bg-edge"
@@ -296,7 +293,7 @@ export function ProductDetail() {
           <div className="flex h-14 flex-1 overflow-hidden rounded-full border-2 border-pink bg-white shadow-sm">
             <button
               type="button"
-              onClick={() => setSheetOpen(true)}
+              onClick={handleBarAdd}
               className="flex-1 bg-white px-4 text-base font-extrabold text-pink transition-colors hover:bg-pink/5"
             >
               Add to cart
@@ -401,16 +398,6 @@ export function ProductDetail() {
                 <p className="mt-2 text-xs text-muted">Type the exact amount in the quantity box.</p>
               </div>
 
-              <div>
-                <h3 className="mb-2 text-sm font-bold uppercase tracking-[0.08em] text-muted">Customization notes</h3>
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  rows={2}
-                  placeholder="Names, date, wording, colours..."
-                  className="field resize-y"
-                />
-              </div>
             </div>
 
             <div className="sticky bottom-0 flex gap-3 border-t border-edge bg-surface px-4 py-3">
@@ -435,5 +422,3 @@ export function ProductDetail() {
     </div>
   );
 }
-
-

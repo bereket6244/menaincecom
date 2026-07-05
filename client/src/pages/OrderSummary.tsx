@@ -213,7 +213,6 @@ export function OrderSummary() {
                           {Object.entries(item.variantSelections).map(([k, v]) => `${k}: ${v}`).join(' · ')}
                         </div>
                       )}
-                      {item.note && <div className="mt-0.5 truncate text-[12px] italic text-muted">“{item.note}”</div>}
                       <div className="mt-1 flex items-center justify-between">
                         <span className={cx('text-sm font-bold', PRICE)}>
                           {item.priceEach != null ? `${(item.priceEach * item.qty).toLocaleString()} ETB` : 'Quote'}
@@ -379,7 +378,6 @@ export function OrderSummary() {
                       <QuantityPicker size="sm" value={item.qty} onChange={(qty) => updateCartItem(item.key, { qty })} />
                       <IconButton icon={<Trash2 className="h-4 w-4" />} title="Remove" danger onClick={() => removeFromCart(item.key)} />
                     </div>
-                    {item.note && <p className="mt-2 text-[12px] italic text-muted">“{item.note}”</p>}
                   </div>
                 </div>
               );

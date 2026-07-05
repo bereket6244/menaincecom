@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { PointerEvent } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cx } from '../lib/utils';
@@ -21,12 +22,39 @@ export function QuantityPicker({
 }) {
   const [text, setText] = useState(String(value));
   const [pulse, setPulse] = useState(0);
+  const valueRef = useRef(value);
+  const holdDelayRef = useRef<number | null>(null);
+  const holdIntervalRef = useRef<number | null>(null);
 
-  useEffect(() => { setText(String(value)); }, [value]);
+  useEffect(() => {
+    valueRef.current = value;
+    setText(String(value));
+  }, [value]);
+
+  useEffect(() => () => stopHold(), []);
 
   const set = (n: number) => {
     onChange(clamp(n));
     setPulse((p) => p + 1);
+  };
+
+  const stopHold = () => {
+    if (holdDelayRef.current) window.clearTimeout(holdDelayRef.current);
+    if (holdIntervalRef.current) window.clearInterval(holdIntervalRef.current);
+    holdDelayRef.current = null;
+    holdIntervalRef.current = null;
+  };
+
+  const startHold = (delta: number) => (e: PointerEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    stopHold();
+    set(valueRef.current + delta);
+    holdDelayRef.current = window.setTimeout(() => {
+      holdIntervalRef.current = window.setInterval(() => {
+        set(valueRef.current + delta);
+      }, 55);
+    }, 240);
   };
 
   const commit = () => {
@@ -36,14 +64,23 @@ export function QuantityPicker({
   };
 
   const btnCls = cx(
-    'flex items-center justify-center text-ink/70 transition-colors hover:bg-surface2 active:bg-edge',
+    'flex touch-none select-none items-center justify-center text-ink/70 transition-colors hover:bg-surface2 active:bg-edge',
     size === 'sm' ? 'h-8 w-8' : 'h-11 w-11'
   );
 
   return (
     <div className={cx('space-y-2.5', className)}>
-      <div className="flex w-fit items-center overflow-hidden rounded-full border border-edge bg-surface">
-        <motion.button type="button" whileTap={{ scale: 0.8 }} onClick={() => set(value - 1)} className={btnCls} aria-label="Decrease">
+      <div className="flex w-fit select-none items-center overflow-hidden rounded-full border border-edge bg-surface">
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.8 }}
+          onPointerDown={startHold(-1)}
+          onPointerUp={stopHold}
+          onPointerCancel={stopHold}
+          onPointerLeave={stopHold}
+          className={btnCls}
+          aria-label="Decrease"
+        >
           <Minus className={size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
         </motion.button>
         <motion.div key={pulse} animate={{ scale: [1, 1.14, 1] }} transition={{ duration: 0.18, ease: 'easeOut' }}>
@@ -64,7 +101,16 @@ export function QuantityPicker({
             aria-label="Quantity. You can type the amount directly."
           />
         </motion.div>
-        <motion.button type="button" whileTap={{ scale: 0.8 }} onClick={() => set(value + 1)} className={btnCls} aria-label="Increase">
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.8 }}
+          onPointerDown={startHold(1)}
+          onPointerUp={stopHold}
+          onPointerCancel={stopHold}
+          onPointerLeave={stopHold}
+          className={btnCls}
+          aria-label="Increase"
+        >
           <Plus className={size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
         </motion.button>
       </div>
