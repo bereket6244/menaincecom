@@ -11,8 +11,22 @@ import { api } from './routes.js';
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const app = express();
 app.set('deployVersion', 'shop-backend-20260703-01');
-app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || true }));
-app.use(express.json({ limit: '2mb' }));
+app.disable('x-powered-by');
+
+// Only origins listed in CORS_ORIGIN may call the API cross-origin; with none
+// configured the API is same-origin only (the server serves the client itself).
+const corsOrigins = (process.env.CORS_ORIGIN || '').split(',').map((s) => s.trim()).filter(Boolean);
+app.use(cors({ origin: corsOrigins.length ? corsOrigins : false }));
+
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
+
+app.use(express.json({ limit: '1mb' }));
 
 const basePath = `/${(process.env.APP_BASE_PATH || '').replace(/^\/+|\/+$/g, '')}`.replace(/\/$/, '');
 const mountPath = basePath === '' ? '/' : basePath;
@@ -78,6 +92,17 @@ async function seed() {
     console.log('[seed] business settings created');
   }
 }
+
+// Final safety net: uncaught errors (e.g. multer rejections) become clean
+// JSON instead of an HTML stack trace that leaks internals.
+app.use((err, _req, res, _next) => {
+  console.error('[server] error:', err.message);
+  if (res.headersSent) return;
+  if (err.name === 'MulterError') {
+    return res.status(400).json({ error: 'upload_failed', message: `Upload failed: ${err.message}` });
+  }
+  res.status(err.status || 500).json({ error: 'server_error', message: 'Unexpected server error.' });
+});
 
 const port = Number(process.env.PORT || 4000);
 

@@ -30,6 +30,47 @@ function normalizePhone(value) {
   return String(value || '').replace(/[\s\-().]/g, '');
 }
 
+/**
+ * Minimal in-memory rate limiter (per IP, fixed window). Protects the
+ * password endpoints from brute force and the public order/upload endpoints
+ * from flooding without any extra dependency.
+ */
+function rateLimit({ windowMs, max, message }) {
+  const hits = new Map();
+  return (req, res, next) => {
+    const now = Date.now();
+    // Opportunistic cleanup so the map can't grow without bound.
+    if (hits.size > 5000) {
+      for (const [k, v] of hits) if (v.reset < now) hits.delete(k);
+    }
+    const key = req.ip || 'unknown';
+    let entry = hits.get(key);
+    if (!entry || entry.reset < now) {
+      entry = { count: 0, reset: now + windowMs };
+      hits.set(key, entry);
+    }
+    entry.count += 1;
+    if (entry.count > max) {
+      res.set('Retry-After', String(Math.ceil((entry.reset - now) / 1000)));
+      return res.status(429).json({ error: 'rate_limited', message });
+    }
+    next();
+  };
+}
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60_000, max: 20,
+  message: 'Too many login attempts. Please try again in a few minutes.',
+});
+const signupLimiter = rateLimit({
+  windowMs: 60 * 60_000, max: 20,
+  message: 'Too many accounts created from this connection. Please try again later.',
+});
+const orderLimiter = rateLimit({
+  windowMs: 10 * 60_000, max: 30,
+  message: 'Too many orders in a short time. Please wait a moment and try again.',
+});
+
 /* ---------------------------------- health --------------------------------- */
 
 api.get('/health', async (req, res) => {
@@ -46,29 +87,40 @@ api.get('/health', async (req, res) => {
 
 /* ----------------------------------- auth ---------------------------------- */
 
-api.post('/auth/signup', dbRoute(async (req, res) => {
+api.post('/auth/signup', signupLimiter, dbRoute(async (req, res) => {
   const { identifier, password, name } = req.body || {};
   if (!identifier || !password || !name) {
     return res.status(400).json({ error: 'bad_request', message: 'Name, email/phone and password are required.' });
   }
   const norm = String(identifier).trim().toLowerCase();
+  const cleanName = String(name).trim();
+  const cleanPassword = String(password);
+  if (norm.length < 3 || norm.length > 190 || cleanName.length > 100) {
+    return res.status(400).json({ error: 'bad_request', message: 'Please enter a valid name and email/phone.' });
+  }
+  if (cleanPassword.length < 8 || cleanPassword.length > 128) {
+    return res.status(400).json({ error: 'bad_request', message: 'Password must be 8–128 characters.' });
+  }
   if (await records.find('users', (u) => u.identifier === norm)) {
     return res.status(409).json({ error: 'exists', message: 'An account with this email/phone already exists.' });
   }
   const user = await records.insert('users', {
     identifier: norm,
-    name: String(name).trim(),
+    name: cleanName,
     role: 'customer',
-    passwordHash: await hashPassword(String(password)),
+    passwordHash: await hashPassword(cleanPassword),
   });
   res.json({ token: signToken(user), user: publicUser(user) });
 }));
 
-api.post('/auth/login', dbRoute(async (req, res) => {
+api.post('/auth/login', loginLimiter, dbRoute(async (req, res) => {
   const { identifier, password } = req.body || {};
   const norm = String(identifier || '').trim().toLowerCase();
   const user = await records.find('users', (u) => u.identifier === norm);
-  if (!user || !(await verifyPassword(String(password || ''), user.passwordHash))) {
+  // Always run the hash comparison so unknown accounts take the same time as
+  // wrong passwords (no user enumeration through timing).
+  const valid = await verifyPassword(String(password || ''), user?.passwordHash);
+  if (!valid) {
     return res.status(401).json({ error: 'invalid_credentials', message: 'Wrong email/phone or password.' });
   }
   res.json({ token: signToken(user), user: publicUser(user) });
@@ -160,10 +212,10 @@ api.get('/content/business', dbRoute(async (_req, res) => {
 
 /* ---------------------------------- orders --------------------------------- */
 
-api.post('/orders', optionalAuth, dbRoute(async (req, res) => {
+api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
   const { items: rawItems, customer, channel, note } = req.body || {};
-  if (!Array.isArray(rawItems) || rawItems.length === 0) {
-    return res.status(400).json({ error: 'bad_request', message: 'Order has no items.' });
+  if (!Array.isArray(rawItems) || rawItems.length === 0 || rawItems.length > 60) {
+    return res.status(400).json({ error: 'bad_request', message: 'Order has no items (or too many).' });
   }
   // Credentials are optional — guests check out straight to chat. Contact
   // details are attached automatically for signed-in customers.
@@ -214,12 +266,12 @@ api.post('/orders', optionalAuth, dbRoute(async (req, res) => {
   const order = await records.insert('orders', {
     items,
     customer: {
-      name: customer?.name ? String(customer.name).trim() : 'Guest',
+      name: customer?.name ? String(customer.name).trim().slice(0, 100) : 'Guest',
       phone,
-      email: customer?.email ? String(customer.email).trim() : '',
+      email: customer?.email ? String(customer.email).trim().slice(0, 254) : '',
     },
     channel,
-    note: note ? String(note) : '',
+    note: note ? String(note).slice(0, 1000) : '',
     estimatedTotal,
     status: 'new',
     userId: req.auth?.id || null,
@@ -312,16 +364,24 @@ api.put('/admin/content/business', requireAdmin, dbRoute(async (req, res) => {
 
 /* --------------------------------- uploads --------------------------------- */
 
+// Raster images only. SVG is deliberately excluded: an uploaded SVG served
+// from /uploads executes scripts in the visitor's browser (stored XSS).
+const IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif']);
+const IMAGE_MIME_RE = /^image\/(jpeg|png|webp|gif|avif)$/;
+
 const upload = multer({
   storage: multer.diskStorage({
     destination: path.resolve('uploads'),
     filename: (_req, file, cb) => {
-      const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
-      cb(null, `${crypto.randomUUID()}${ext}`);
+      const ext = path.extname(file.originalname).toLowerCase();
+      cb(null, `${crypto.randomUUID()}${IMAGE_EXTENSIONS.has(ext) ? ext : '.jpg'}`);
     },
   }),
-  limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => cb(null, /^image\//.test(file.mimetype)),
+  limits: { fileSize: 10 * 1024 * 1024, files: 12 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, IMAGE_MIME_RE.test(file.mimetype) && (ext === '' || IMAGE_EXTENSIONS.has(ext)));
+  },
 });
 
 api.post('/admin/upload', requireAdmin, upload.array('files', 12), (req, res) => {

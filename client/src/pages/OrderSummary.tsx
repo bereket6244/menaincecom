@@ -110,6 +110,8 @@ export function OrderSummary() {
     // sms: handled by the OS in the current tab; https chat links get a tab
     // opened inside the click gesture so popup blockers allow it.
     const chatTab = channel === 'sms' ? null : window.open('', '_blank');
+    // The chat tab must never be able to script or redirect this page.
+    if (chatTab) chatTab.opener = null;
     try {
       const message = buildCartOrderMessage(items, orderNote, window.location.origin);
       const chatUrl =

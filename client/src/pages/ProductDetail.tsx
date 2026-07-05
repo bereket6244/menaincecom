@@ -116,7 +116,7 @@ export function ProductDetail() {
   };
 
   return (
-    <div className="space-y-12 pb-28 md:pb-0">
+    <div className="space-y-12 pb-44 md:pb-0">
       <button onClick={goBack} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
         <ChevronLeft className="h-4 w-4" /> Back to catalog
       </button>
@@ -270,41 +270,51 @@ export function ProductDetail() {
       )}
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-edge bg-surface/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-10px_30px_rgba(28,26,25,0.08)] backdrop-blur md:hidden">
-        <div className="mx-auto flex max-w-6xl items-center gap-2.5">
-          <Link
-            to="/"
-            aria-label="Home"
-            className="flex h-12 w-10 shrink-0 items-center justify-center text-ink"
-          >
-            <Home className="h-5 w-5" />
-          </Link>
-          <Link
-            to="/order"
-            aria-label={`Order cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
-            className="relative flex h-12 w-10 shrink-0 items-center justify-center text-ink"
-          >
-            <ShoppingBag className="h-5 w-5" />
-            {cartCount > 0 && (
-              <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[9px] font-extrabold text-white">
-                {cartCount > 99 ? '99+' : cartCount}
-              </span>
-            )}
-          </Link>
-          <div className="flex h-14 flex-1 overflow-hidden rounded-full border-2 border-pink bg-white shadow-sm">
-            <button
-              type="button"
-              onClick={handleBarAdd}
-              className="flex-1 bg-white px-4 text-base font-extrabold text-pink transition-colors hover:bg-pink/5"
+        <div className="mx-auto max-w-6xl space-y-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="truncate text-sm font-extrabold text-ink">{product.name}</div>
+              <div className="text-base font-extrabold text-[#ee0a24]">{formatPrice(product)}</div>
+            </div>
+            <QuantityPicker size="sm" value={qty} onChange={setQty} />
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <Link
+              to="/"
+              aria-label="Home"
+              className="flex h-12 w-10 shrink-0 items-center justify-center text-ink"
             >
-              Add to cart
-            </button>
-            <button
-              type="button"
-              onClick={handleBarOrderNow}
-              className="flex-1 bg-pink px-4 text-base font-extrabold text-white transition-colors hover:bg-pink-dim"
+              <Home className="h-5 w-5" />
+            </Link>
+            <Link
+              to="/order"
+              aria-label={`Order cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
+              className="relative flex h-12 w-10 shrink-0 items-center justify-center text-ink"
             >
-              Buy now
-            </button>
+              <ShoppingBag className="h-5 w-5" />
+              {cartCount > 0 && (
+                <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[9px] font-extrabold text-white">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </Link>
+            <div className="flex h-14 flex-1 overflow-hidden rounded-full border-2 border-pink bg-white shadow-sm">
+              <button
+                type="button"
+                onClick={handleBarAdd}
+                className="flex-1 bg-white px-4 text-base font-extrabold text-pink transition-colors hover:bg-pink/5"
+              >
+                Add to cart
+              </button>
+              <button
+                type="button"
+                onClick={handleBarOrderNow}
+                className="flex-1 bg-pink px-4 text-base font-extrabold text-white transition-colors hover:bg-pink-dim"
+              >
+                Buy now
+              </button>
+            </div>
           </div>
         </div>
       </div>
