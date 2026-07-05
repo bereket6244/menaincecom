@@ -98,17 +98,6 @@ export function BusinessAdmin() {
           {field('Account number', 'paymentAccountNumber', { placeholder: '1000530092732' })}
         </div>
         {field('Pickup location', 'pickupLocation', { textarea: true })}
-        <div>
-          <SysLabel>Printed sample price (ETB)</SysLabel>
-          <input
-            type="number"
-            min={0}
-            value={draft.samplePriceEtb ?? ''}
-            onChange={(e) => setDraft({ ...draft, samplePriceEtb: e.target.value === '' ? null : Number(e.target.value) })}
-            className="field mt-1"
-            placeholder="120"
-          />
-        </div>
       </div>
     </div>
   );

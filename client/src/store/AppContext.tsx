@@ -98,7 +98,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addToCart = useCallback((item: Omit<CartItem, 'key'>) => {
-    const key = `${item.productId}|${item.isSample ? 'sample' : 'item'}|${JSON.stringify(item.variantSelections)}`;
+    const key = `${item.productId}|${JSON.stringify(item.variantSelections)}`;
     let result: AddToCartResult = 'added';
     setCart((c) => {
       const existing = c.find((x) => x.key === key);

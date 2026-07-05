@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Heart } from 'lucide-react';
 import type { Product } from '../lib/types';
-import { cx, formatPrice } from '../lib/utils';
+import { cx, cssColor, findVariantGroup, formatPrice } from '../lib/utils';
 
 /* Lightweight, self-contained wishlist persisted in localStorage. */
 const WKEY = 'mena_wishlist';
@@ -19,9 +19,6 @@ function toggleWish(id: string): boolean {
   localStorage.setItem(WKEY, JSON.stringify(next));
   return next.includes(id);
 }
-
-/* Decorative colour swatches shown under each card, à la The Knot. */
-const SWATCHES = ['#efe9df', '#ffffff', '#1f2937', '#c2185b', '#5e7a3b'];
 
 export function ProductCard({ product }: { product: Product }) {
   const navigate = useNavigate();
@@ -71,22 +68,62 @@ export function ProductCard({ product }: { product: Product }) {
         </button>
       </div>
 
-      <div className="mt-3 flex gap-1.5">
-        {SWATCHES.slice(0, 4).map((c) => (
-          <span
-            key={c}
-            className="h-3.5 w-3.5 rounded-full ring-1 ring-black/10"
-            style={{ background: c }}
-          />
-        ))}
-      </div>
+      {(() => {
+        // Real Size/Color variants from the admin panel, shown on the card.
+        const colorGroup = findVariantGroup(product, 'color');
+        const sizeGroup = findVariantGroup(product, 'size');
+        if (!colorGroup?.options.length && !sizeGroup?.options.length) return null;
+        return (
+          <div className="mt-3 space-y-1.5">
+            {colorGroup && colorGroup.options.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {colorGroup.options.slice(0, 5).map((opt) => {
+                  const swatch = cssColor(opt.label);
+                  return opt.photo ? (
+                    <img
+                      key={opt.label}
+                      src={opt.photo}
+                      alt={opt.label}
+                      title={opt.label}
+                      className="h-3.5 w-3.5 rounded-full object-cover ring-1 ring-black/10"
+                    />
+                  ) : swatch ? (
+                    <span
+                      key={opt.label}
+                      title={opt.label}
+                      className="h-3.5 w-3.5 rounded-full ring-1 ring-black/10"
+                      style={{ background: swatch }}
+                    />
+                  ) : (
+                    <span key={opt.label} className="rounded-full border border-edge bg-surface px-1.5 py-0.5 text-[9px] font-medium text-muted">
+                      {opt.label}
+                    </span>
+                  );
+                })}
+                {colorGroup.options.length > 5 && (
+                  <span className="text-[10px] font-medium text-muted">+{colorGroup.options.length - 5}</span>
+                )}
+              </div>
+            )}
+            {sizeGroup && sizeGroup.options.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1">
+                {sizeGroup.options.slice(0, 4).map((opt) => (
+                  <span key={opt.label} className="rounded border border-edge bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-ink/70">
+                    {opt.label}
+                  </span>
+                ))}
+                {sizeGroup.options.length > 4 && (
+                  <span className="text-[10px] font-medium text-muted">+{sizeGroup.options.length - 4}</span>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       <div className="mt-2.5 text-[11px] uppercase tracking-[0.08em] text-muted">Wedding Cards</div>
       <button onClick={open} className="mt-0.5 text-left text-base font-semibold text-ink transition-colors hover:text-pink">
         {product.name}
-      </button>
-      <button onClick={open} className="mt-1.5 self-start text-[13px] font-semibold text-pink hover:underline">
-        Order a sample
       </button>
       <div className="mt-2 text-[15px] font-bold text-[#ee0a24]">{formatPrice(product)}</div>
     </div>

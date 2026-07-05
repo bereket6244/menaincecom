@@ -2,11 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CheckCircle2, ChevronLeft, Clock, Home, ShoppingBag, X } from 'lucide-react';
 import { useData } from '../lib/useData';
-import type { BusinessSettings, Product } from '../lib/types';
+import type { Product } from '../lib/types';
 import { useApp } from '../store/AppContext';
 import { Spinner, SysLabel, EmptyState } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
-import { cx, formatPrice } from '../lib/utils';
+import { cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
 
 type OrderNotice = {
@@ -24,7 +24,6 @@ export function ProductDetail() {
   const navigate = useNavigate();
   const { addToCart, cart, toast, online } = useApp();
   const { data: products, loading } = useData<Product[]>('/products');
-  const { data: business } = useData<BusinessSettings>('/content/business');
 
   const product = useMemo(() => (products || []).find((p) => p.id === id) || null, [products, id]);
   const [photoIdx, setPhotoIdx] = useState(0);
@@ -74,8 +73,6 @@ export function ProductDetail() {
   const selectedPhoto =
     (photoPinned ? product.photos[photoIdx] : variantPhoto || product.photos[photoIdx]) || product.photos[0];
 
-  const samplePrice = business?.samplePriceEtb ?? 120;
-
   const missingVariant = product.variants.find((v) => !selections[v.name]);
   const isQuote = product.pricingMode === 'quote';
 
@@ -121,22 +118,6 @@ export function ProductDetail() {
     navigate('/order');
   };
 
-  const orderSample = () => {
-    const result = addToCart({
-      productId: product.id,
-      name: `Printed sample — ${product.name}`,
-      photo: product.photos[0] || '',
-      isAddon: false,
-      isSample: true,
-      pricingMode: 'exact',
-      priceEach: samplePrice,
-      variantSelections: {},
-      qty: 1,
-      note: '',
-    });
-    showOrderNotice(`Printed sample of ${product.name}`, result);
-  };
-
   return (
     <div className="space-y-12 pb-28 md:pb-0">
       <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
@@ -172,12 +153,7 @@ export function ProductDetail() {
               ))}
             </div>
           )}
-          <button
-            onClick={orderSample}
-            className="block w-full max-w-md text-center text-sm font-semibold text-pink underline-offset-2 hover:underline"
-          >
-            Order a printed sample — {samplePrice} ETB
-          </button>
+
         </div>
 
         {/* Details */}
@@ -199,27 +175,34 @@ export function ProductDetail() {
             <p className="max-w-prose whitespace-pre-line text-[15px] leading-relaxed text-ink/70">{product.description}</p>
           )}
 
-          {product.variants.map((group) => (
-            <div key={group.name}>
-              <div className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.08em] text-muted">{group.name}</div>
-              <div className="flex flex-wrap gap-2.5">
-                {group.options.map((opt) => (
-                  <button
-                    key={opt.label}
-                    onClick={() => { setSelections((s) => ({ ...s, [group.name]: opt.label })); setPhotoPinned(false); }}
-                    className={cx(
-                      'rounded-full border px-4 py-2 text-sm font-medium transition-colors',
-                      selections[group.name] === opt.label
-                        ? 'border-pink bg-pink/10 text-ink'
-                        : 'border-edge bg-surface text-ink/70 hover:border-ink/40'
-                    )}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+          {product.variants.map((group) => {
+            const isColor = isColorGroupName(group.name);
+            return (
+              <div key={group.name}>
+                <div className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.08em] text-muted">{group.name}</div>
+                <div className="flex flex-wrap gap-2.5">
+                  {group.options.map((opt) => {
+                    const swatch = isColor ? cssColor(opt.label) : null;
+                    return (
+                      <button
+                        key={opt.label}
+                        onClick={() => { setSelections((s) => ({ ...s, [group.name]: opt.label })); setPhotoPinned(false); }}
+                        className={cx(
+                          'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors',
+                          selections[group.name] === opt.label
+                            ? 'border-pink bg-pink/10 text-ink'
+                            : 'border-edge bg-surface text-ink/70 hover:border-ink/40'
+                        )}
+                      >
+                        {swatch && <span className="h-3.5 w-3.5 shrink-0 rounded-full ring-1 ring-black/15" style={{ background: swatch }} />}
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           <div>
             <div className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.08em] text-muted">Quantity</div>
@@ -344,7 +327,7 @@ export function ProductDetail() {
             </button>
             <button
               type="button"
-              onClick={() => openPurchaseSheet('buy')}
+              onClick={handleOrderNow}
               className="flex-1 bg-pink px-4 text-base font-extrabold text-white transition-colors hover:bg-pink-dim"
             >
               Buy now
@@ -407,6 +390,7 @@ export function ProductDetail() {
                   <div className={cx('flex gap-3 overflow-x-auto pb-1', group.options.some((opt) => opt.photo) ? '' : 'flex-wrap overflow-visible')}>
                     {group.options.map((opt) => {
                       const active = selections[group.name] === opt.label;
+                      const swatch = !opt.photo && isColorGroupName(group.name) ? cssColor(opt.label) : null;
                       return (
                         <button
                           key={opt.label}
@@ -423,7 +407,10 @@ export function ProductDetail() {
                               <img src={opt.photo} alt="" className="h-full w-full object-cover" />
                             </div>
                           )}
-                          <span className="block truncate px-1">{opt.label}</span>
+                          <span className="flex items-center justify-center gap-1.5 truncate px-1">
+                            {swatch && <span className="h-3.5 w-3.5 shrink-0 rounded-full ring-1 ring-black/15" style={{ background: swatch }} />}
+                            {opt.label}
+                          </span>
                           {active && <span className="absolute right-1.5 top-1.5 rounded-full bg-pink px-1.5 py-0.5 text-[10px] text-white">✓</span>}
                         </button>
                       );
@@ -488,3 +475,5 @@ export function ProductDetail() {
     </div>
   );
 }
+
+

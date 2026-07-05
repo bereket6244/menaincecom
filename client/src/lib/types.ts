@@ -40,7 +40,6 @@ export interface CartItem {
   name: string;
   photo: string;
   isAddon: boolean;
-  isSample?: boolean; // printed sample of the design, priced from business settings
   pricingMode: PricingMode;
   priceEach: number | null;
   variantSelections: Record<string, string>;
@@ -100,5 +99,4 @@ export interface BusinessSettings {
   paymentAccountName: string;
   paymentAccountNumber: string;
   pickupLocation: string;
-  samplePriceEtb: number | null;
 }

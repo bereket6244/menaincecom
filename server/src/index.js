@@ -74,7 +74,6 @@ async function seed() {
       paymentAccountName: 'CBE (Bereket Girma)',
       paymentAccountNumber: '1000530092732',
       pickupLocation: 'Reality Plaza, 1st Floor, Office No. 104\nBole, next to Yougo Church',
-      samplePriceEtb: 120,
     });
     console.log('[seed] business settings created');
   }

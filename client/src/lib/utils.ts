@@ -16,6 +16,29 @@ export function cx(...parts: (string | false | null | undefined)[]): string {
   return parts.filter(Boolean).join(' ');
 }
 
+const COLOR_GROUP_NAMES = ['color', 'colour', 'colors', 'colours'];
+const SIZE_GROUP_NAMES = ['size', 'sizes'];
+
+export function isColorGroupName(name: string): boolean {
+  return COLOR_GROUP_NAMES.includes(name.trim().toLowerCase());
+}
+
+export function isSizeGroupName(name: string): boolean {
+  return SIZE_GROUP_NAMES.includes(name.trim().toLowerCase());
+}
+
+export function findVariantGroup(product: Pick<Product, 'variants'>, kind: 'color' | 'size') {
+  const match = kind === 'color' ? isColorGroupName : isSizeGroupName;
+  return (product.variants || []).find((g) => match(g.name)) || null;
+}
+
+/** CSS colour for a variant label like "ivory" or "#c2185b", or null if the browser can't render it. */
+export function cssColor(label: string): string | null {
+  const value = label.trim().toLowerCase();
+  if (!value) return null;
+  return typeof CSS !== 'undefined' && CSS.supports?.('color', value) ? value : null;
+}
+
 const APP_BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 export function assetUrl(src: string | undefined): string {

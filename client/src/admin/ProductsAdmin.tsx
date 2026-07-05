@@ -8,7 +8,7 @@ import type { Column } from './DataTable';
 import { Button, IconButton, Modal, SysLabel } from '../components/ui';
 import { PhotoUpload } from './PhotoUpload';
 import { useApp } from '../store/AppContext';
-import { cx, formatPrice } from '../lib/utils';
+import { cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 
 type Draft = Omit<Product, 'id' | 'createdAt'> & { id?: string };
 
@@ -19,51 +19,72 @@ const EMPTY: Draft = {
 };
 
 function VariantsEditor({ variants, onChange }: { variants: VariantGroup[]; onChange: (v: VariantGroup[]) => void }) {
+  const hasGroup = (name: string) => variants.some((g) => g.name.trim().toLowerCase() === name);
+  const addGroup = (name: string) => onChange([...variants, { name, options: [] }]);
+
   return (
     <div className="space-y-2">
-      {variants.map((group, gi) => (
-        <div key={gi} className="rounded border border-edge bg-surface2 p-2">
-          <div className="flex items-center gap-2">
-            <input
-              value={group.name}
-              onChange={(e) => onChange(variants.map((g, i) => (i === gi ? { ...g, name: e.target.value } : g)))}
-              placeholder="Variant name (e.g. Material)"
-              className="field py-1 text-[11px]"
-            />
-            <IconButton icon={<X className="h-3.5 w-3.5" />} title="Remove variant group" danger onClick={() => onChange(variants.filter((_, i) => i !== gi))} />
+      {variants.map((group, gi) => {
+        const isColor = isColorGroupName(group.name);
+        return (
+          <div key={gi} className="rounded border border-edge bg-surface2 p-2">
+            <div className="flex items-center gap-2">
+              <input
+                value={group.name}
+                onChange={(e) => onChange(variants.map((g, i) => (i === gi ? { ...g, name: e.target.value } : g)))}
+                placeholder="Variant name (e.g. Material)"
+                className="field py-1 text-[11px]"
+              />
+              <IconButton icon={<X className="h-3.5 w-3.5" />} title="Remove variant group" danger onClick={() => onChange(variants.filter((_, i) => i !== gi))} />
+            </div>
+            <div className="mt-1.5 flex flex-wrap items-center gap-1">
+              {group.options.map((opt, oi) => {
+                const swatch = isColor ? cssColor(opt.label) : null;
+                return (
+                  <span key={oi} className="inline-flex items-center gap-1 rounded border border-edge bg-surface px-2 py-0.5 text-[11px]">
+                    {swatch && <span className="h-3 w-3 shrink-0 rounded-full ring-1 ring-black/15" style={{ background: swatch }} />}
+                    {opt.label}
+                    <button
+                      type="button"
+                      onClick={() => onChange(variants.map((g, i) => (i === gi ? { ...g, options: g.options.filter((_, j) => j !== oi) } : g)))}
+                      className="text-muted hover:text-rose-400"
+                      aria-label={`Remove ${opt.label}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                );
+              })}
+              <input
+                placeholder={isColor ? 'e.g. ivory, gold, #c2185b + Enter' : 'Add option + Enter'}
+                className="field w-44 py-1 text-[11px]"
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter') return;
+                  e.preventDefault();
+                  const value = (e.target as HTMLInputElement).value.trim();
+                  if (!value) return;
+                  onChange(variants.map((g, i) => (i === gi ? { ...g, options: [...g.options, { label: value }] } : g)));
+                  (e.target as HTMLInputElement).value = '';
+                }}
+              />
+            </div>
           </div>
-          <div className="mt-1.5 flex flex-wrap items-center gap-1">
-            {group.options.map((opt, oi) => (
-              <span key={oi} className="inline-flex items-center gap-1 rounded border border-edge bg-surface px-2 py-0.5 text-[11px]">
-                {opt.label}
-                <button
-                  type="button"
-                  onClick={() => onChange(variants.map((g, i) => (i === gi ? { ...g, options: g.options.filter((_, j) => j !== oi) } : g)))}
-                  className="text-muted hover:text-rose-400"
-                  aria-label={`Remove ${opt.label}`}
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            ))}
-            <input
-              placeholder="Add option + Enter"
-              className="field w-36 py-1 text-[11px]"
-              onKeyDown={(e) => {
-                if (e.key !== 'Enter') return;
-                e.preventDefault();
-                const value = (e.target as HTMLInputElement).value.trim();
-                if (!value) return;
-                onChange(variants.map((g, i) => (i === gi ? { ...g, options: [...g.options, { label: value }] } : g)));
-                (e.target as HTMLInputElement).value = '';
-              }}
-            />
-          </div>
-        </div>
-      ))}
-      <Button variant="outline" onClick={() => onChange([...variants, { name: '', options: [] }])}>
-        <Plus className="h-3 w-3" /> Add variant group
-      </Button>
+        );
+      })}
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" disabled={hasGroup('size')} onClick={() => addGroup('Size')}>
+          <Plus className="h-3 w-3" /> Size
+        </Button>
+        <Button variant="outline" disabled={hasGroup('color')} onClick={() => addGroup('Color')}>
+          <Plus className="h-3 w-3" /> Color
+        </Button>
+        <Button variant="outline" onClick={() => addGroup('')}>
+          <Plus className="h-3 w-3" /> Custom group
+        </Button>
+      </div>
+      <p className="text-[10px] text-muted">
+        Size and Color options also show on the product card in the catalog — colour names or hex codes become swatches.
+      </p>
     </div>
   );
 }

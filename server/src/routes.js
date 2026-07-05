@@ -175,12 +175,8 @@ api.post('/orders', optionalAuth, dbRoute(async (req, res) => {
     return res.status(400).json({ error: 'bad_request', message: 'Invalid channel.' });
   }
 
-  const [products, business] = await Promise.all([
-    records.list('products'),
-    records.find('content', (c) => c.key === 'business'),
-  ]);
+  const products = await records.list('products');
   const productById = new Map(products.map((p) => [p.id, p]));
-  const samplePrice = Number(business?.samplePriceEtb) > 0 ? Number(business.samplePriceEtb) : 120;
 
   // Prices always come from the catalog — never trust amounts sent by the browser.
   const items = rawItems
@@ -193,18 +189,6 @@ api.post('/orders', optionalAuth, dbRoute(async (req, res) => {
           .slice(0, 12)
       );
       const base = { qty, note: raw?.note ? String(raw.note).slice(0, 500) : '', variantSelections };
-      if (raw?.isSample) {
-        return {
-          ...base,
-          productId: product?.id || '',
-          name: product ? `Printed sample — ${product.name}` : 'Printed sample',
-          photo: product?.photos?.[0] || '',
-          isAddon: false,
-          isSample: true,
-          pricingMode: 'exact',
-          priceEach: samplePrice,
-        };
-      }
       if (!product) return null;
       return {
         ...base,
@@ -212,7 +196,6 @@ api.post('/orders', optionalAuth, dbRoute(async (req, res) => {
         name: product.name,
         photo: product.photos?.[0] || '',
         isAddon: !!product.isAddon,
-        isSample: false,
         pricingMode: product.pricingMode,
         priceEach: product.pricingMode === 'exact' && product.price != null ? product.price : null,
       };
@@ -358,3 +341,4 @@ api.post('/admin/push/subscribe', requireAdmin, dbRoute(async (req, res) => {
   if (!existing) await records.insert('push_subscriptions', { subscription, userId: req.auth.id });
   res.json({ ok: true });
 }));
+
