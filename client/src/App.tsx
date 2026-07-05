@@ -1,8 +1,7 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Navigate, Routes, Route } from 'react-router-dom';
 import { Shell } from './components/Shell';
 
-const Home = lazy(() => import('./pages/Home').then((m) => ({ default: m.Home })));
 const Catalog = lazy(() => import('./pages/Catalog').then((m) => ({ default: m.Catalog })));
 const ProductDetail = lazy(() => import('./pages/ProductDetail').then((m) => ({ default: m.ProductDetail })));
 const Gallery = lazy(() => import('./pages/Gallery').then((m) => ({ default: m.Gallery })));
@@ -15,7 +14,6 @@ const OrdersAdmin = lazy(() => import('./admin/OrdersAdmin').then((m) => ({ defa
 const ProductsAdmin = lazy(() => import('./admin/ProductsAdmin').then((m) => ({ default: m.ProductsAdmin })));
 const CategoriesAdmin = lazy(() => import('./admin/CategoriesAdmin').then((m) => ({ default: m.CategoriesAdmin })));
 const GalleryAdmin = lazy(() => import('./admin/GalleryAdmin').then((m) => ({ default: m.GalleryAdmin })));
-const HomepageAdmin = lazy(() => import('./admin/HomepageAdmin').then((m) => ({ default: m.HomepageAdmin })));
 const BusinessAdmin = lazy(() => import('./admin/BusinessAdmin').then((m) => ({ default: m.BusinessAdmin })));
 const LeadsAdmin = lazy(() => import('./admin/LeadsAdmin').then((m) => ({ default: m.LeadsAdmin })));
 const AdminsAdmin = lazy(() => import('./admin/AdminsAdmin').then((m) => ({ default: m.AdminsAdmin })));
@@ -37,7 +35,6 @@ export default function App() {
           <Route path="products" element={<ProductsAdmin />} />
           <Route path="categories" element={<CategoriesAdmin />} />
           <Route path="gallery" element={<GalleryAdmin />} />
-          <Route path="homepage" element={<HomepageAdmin />} />
           <Route path="business" element={<BusinessAdmin />} />
           <Route path="leads" element={<LeadsAdmin />} />
           <Route path="admins" element={<AdminsAdmin />} />
@@ -47,7 +44,7 @@ export default function App() {
           element={
             <Shell>
               <Routes>
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<Navigate to="/catalog" replace />} />
                 <Route path="/catalog" element={<Catalog />} />
                 <Route path="/product/:id" element={<ProductDetail />} />
                 <Route path="/gallery" element={<Gallery />} />
@@ -55,7 +52,7 @@ export default function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/account" element={<Account />} />
                 <Route path="/contact" element={<Contact />} />
-                <Route path="*" element={<Home />} />
+                <Route path="*" element={<Navigate to="/catalog" replace />} />
               </Routes>
             </Shell>
           }

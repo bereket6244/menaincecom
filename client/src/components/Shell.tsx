@@ -1,14 +1,20 @@
 import { useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Home, LayoutGrid, Images, ShoppingBag, User, Phone, Search } from 'lucide-react';
+import { LayoutGrid, Images, ShoppingBag, User, Phone, Search } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useApp } from '../store/AppContext';
 import { cx } from '../lib/utils';
 import { StatusBanners, Toasts } from './ui';
 import menaIcon from '../assets/menainc-icon.png';
 
-const NAV = [
-  { to: '/', label: 'Home', icon: Home, end: true },
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutGrid;
+  end?: boolean;
+};
+
+const NAV: NavItem[] = [
   { to: '/catalog', label: 'Wedding Cards', icon: LayoutGrid },
   { to: '/gallery', label: 'Gallery', icon: Images },
   { to: '/contact', label: 'Contact', icon: Phone },
@@ -46,7 +52,7 @@ export function Shell({ children }: { children: ReactNode }) {
       {/* White brand header */}
       <header className="sticky top-0 z-30 border-b border-edge bg-surface/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4">
-          <Link to="/" className="flex shrink-0 items-center">
+          <Link to="/catalog" className="flex shrink-0 items-center">
             <img
               src={menaIcon}
               alt="Mena Inc."
@@ -143,8 +149,8 @@ export function Shell({ children }: { children: ReactNode }) {
       </footer>
 
       {/* Mobile bottom navigation */}
-      {!hideBottomNav && <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-edge bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-        {[...NAV.slice(0, 3), { to: '/order', label: 'Order', icon: ShoppingBag }, { to: '/contact', label: 'Chat', icon: Phone }].map(
+      {!hideBottomNav && <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-edge bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+        {[NAV[0], NAV[1], { to: '/order', label: 'Order', icon: ShoppingBag }, NAV[2]].map(
           ({ to, label, icon: Icon, ...rest }) => (
             <NavLink
               key={to}

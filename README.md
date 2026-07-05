@@ -132,7 +132,6 @@ Public:
 - `GET /api/products`
 - `GET /api/products/:id`
 - `GET /api/gallery`
-- `GET /api/content/homepage`
 - `POST /api/orders`
 
 Admin only:
@@ -143,7 +142,6 @@ Admin only:
 - `GET /api/admin/orders`
 - `PUT /api/admin/orders/:id`
 - `GET /api/admin/leads`
-- `PUT /api/admin/content/homepage`
 - `POST /api/admin/upload`
 - `GET /api/admin/push/key`
 - `POST /api/admin/push/subscribe`

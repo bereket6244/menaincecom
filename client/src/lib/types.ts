@@ -77,23 +77,6 @@ export interface User {
   role: 'customer' | 'admin';
 }
 
-export interface HomepageContent {
-  id?: string;
-  key: 'homepage';
-  heroTitle: string;
-  heroSubtitle: string;
-  heroImage: string;
-  heroCta: string;
-  noticeText: string;
-}
-
-export interface HomeSummary {
-  content: HomepageContent | null;
-  categories: Category[];
-  products: Product[];
-  gallery: GalleryItem[];
-}
-
 export interface BusinessSettings {
   id?: string;
   key: 'business';

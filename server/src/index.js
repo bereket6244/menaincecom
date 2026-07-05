@@ -80,18 +80,6 @@ async function seed() {
     }
     console.log('[seed] default categories created');
   }
-  const home = await records.find('content', (c) => c.key === 'homepage');
-  if (!home) {
-    await records.insert('content', {
-      key: 'homepage',
-      heroTitle: 'Wedding cards, crafted to order.',
-      heroSubtitle: 'Invitations, save-the-dates and full stationery suites — designed and printed in Addis Ababa by Mena INK Trading PLC.',
-      heroImage: '',
-      heroCta: 'Browse the catalog',
-      noticeText: '',
-    });
-    console.log('[seed] homepage content created');
-  }
   const business = await records.find('content', (c) => c.key === 'business');
   if (!business) {
     await records.insert('content', {
@@ -99,7 +87,7 @@ async function seed() {
       phone: '+251 92 963 9939',
       email: 'hello@menainc.com',
       address: 'Reality Plaza, 1st Floor, Office No. 104, Bole (next to Yougo Church), Addis Ababa',
-      hours: 'Mon–Sat, 9:00–18:00',
+      hours: 'Mon-Sat, 9:00-18:00',
       whatsappNumber: '251929639939',
       telegramHandle: '+251929639939',
       paymentAccountName: 'CBE (Bereket Girma)',

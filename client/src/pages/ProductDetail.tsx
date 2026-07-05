@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Clock, Home, ShoppingBag, X } from 'lucide-react';
+import { ChevronLeft, Clock, LayoutGrid, ShoppingBag, X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { Product } from '../lib/types';
 import { useApp } from '../store/AppContext';
@@ -281,11 +281,11 @@ export function ProductDetail() {
 
           <div className="flex items-center gap-2.5">
             <Link
-              to="/"
-              aria-label="Home"
+              to="/catalog"
+              aria-label="Catalog"
               className="flex h-12 w-10 shrink-0 items-center justify-center text-ink"
             >
-              <Home className="h-5 w-5" />
+              <LayoutGrid className="h-5 w-5" />
             </Link>
             <Link
               to="/order"
