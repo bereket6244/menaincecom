@@ -1,4 +1,3 @@
-import { AnimatePresence, motion } from 'framer-motion';
 import { X, Loader2, WifiOff, DatabaseZap, CheckCircle2, AlertCircle, Info } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useApp } from '../store/AppContext';
@@ -89,36 +88,27 @@ export function Modal({
   children: ReactNode;
   wide?: boolean;
 }) {
+  if (!open) return null;
+
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-        >
-          <motion.div
-            onClick={(e) => e.stopPropagation()}
-            initial={{ y: 48, opacity: 0.8 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 48, opacity: 0 }}
-            transition={{ type: 'tween', duration: 0.18 }}
-            className={cx(
-              'flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl border border-edge bg-surface shadow-xl sm:rounded-2xl',
-              wide ? 'sm:max-w-2xl' : 'sm:max-w-md'
-            )}
-          >
-            <div className="flex items-center justify-between border-b border-edge px-4 py-2.5">
-              <h2 className="text-sm font-semibold">{title}</h2>
-              <IconButton icon={<X className="h-4 w-4" />} title="Close" onClick={onClose} />
-            </div>
-            <div className="overflow-y-auto p-4">{children}</div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={cx(
+          'modal-panel flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl border border-edge bg-surface shadow-xl sm:rounded-2xl',
+          wide ? 'sm:max-w-2xl' : 'sm:max-w-md'
+        )}
+      >
+        <div className="flex items-center justify-between border-b border-edge px-4 py-2.5">
+          <h2 className="text-sm font-semibold">{title}</h2>
+          <IconButton icon={<X className="h-4 w-4" />} title="Close" onClick={onClose} />
+        </div>
+        <div className="overflow-y-auto p-4">{children}</div>
+      </div>
+    </div>
   );
 }
 
@@ -133,21 +123,16 @@ export function Toasts() {
   };
   return (
     <div className="pointer-events-none fixed inset-x-0 top-2 z-[60] flex flex-col items-center gap-1.5 px-3 sm:items-end sm:px-4">
-      <AnimatePresence>
-        {toasts.map((t) => (
-          <motion.button
-            key={t.id}
-            onClick={() => dismissToast(t.id)}
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="pointer-events-auto flex max-w-sm items-center gap-2 rounded-lg border border-edge bg-surface px-3 py-2 text-left text-xs text-ink shadow-lg"
-          >
-            {icons[t.kind]}
-            <span>{t.message}</span>
-          </motion.button>
-        ))}
-      </AnimatePresence>
+      {toasts.map((t) => (
+        <button
+          key={t.id}
+          onClick={() => dismissToast(t.id)}
+          className="toast-enter pointer-events-auto flex max-w-sm items-center gap-2 rounded-lg border border-edge bg-surface px-3 py-2 text-left text-xs text-ink shadow-lg"
+        >
+          {icons[t.kind]}
+          <span>{t.message}</span>
+        </button>
+      ))}
     </div>
   );
 }

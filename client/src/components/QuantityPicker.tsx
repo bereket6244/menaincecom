@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PointerEvent } from 'react';
 import { Minus, Plus } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { cx } from '../lib/utils';
 
 const MAX_QTY = 100000;
@@ -71,9 +70,8 @@ export function QuantityPicker({
   return (
     <div className={cx('space-y-2.5', className)}>
       <div className="flex w-fit select-none items-center overflow-hidden rounded-full border border-edge bg-surface">
-        <motion.button
+        <button
           type="button"
-          whileTap={{ scale: 0.8 }}
           onPointerDown={startHold(-1)}
           onPointerUp={stopHold}
           onPointerCancel={stopHold}
@@ -82,8 +80,8 @@ export function QuantityPicker({
           aria-label="Decrease"
         >
           <Minus className={size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
-        </motion.button>
-        <motion.div key={pulse} animate={{ scale: [1, 1.14, 1] }} transition={{ duration: 0.18, ease: 'easeOut' }}>
+        </button>
+        <div key={pulse} className="qty-pulse">
           <input
             value={text}
             type="text"
@@ -100,10 +98,9 @@ export function QuantityPicker({
             )}
             aria-label="Quantity. You can type the amount directly."
           />
-        </motion.div>
-        <motion.button
+        </div>
+        <button
           type="button"
-          whileTap={{ scale: 0.8 }}
           onPointerDown={startHold(1)}
           onPointerUp={stopHold}
           onPointerCancel={stopHold}
@@ -112,16 +109,15 @@ export function QuantityPicker({
           aria-label="Increase"
         >
           <Plus className={size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
-        </motion.button>
+        </button>
       </div>
 
       {presets && presets.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {presets.map((p) => (
-            <motion.button
+            <button
               key={p}
               type="button"
-              whileTap={{ scale: 0.88 }}
               onClick={() => set(p)}
               className={cx(
                 'rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition-colors',
@@ -131,7 +127,7 @@ export function QuantityPicker({
               )}
             >
               {p.toLocaleString()}
-            </motion.button>
+            </button>
           ))}
         </div>
       )}
