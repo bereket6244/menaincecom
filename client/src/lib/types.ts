@@ -87,6 +87,13 @@ export interface HomepageContent {
   noticeText: string;
 }
 
+export interface HomeSummary {
+  content: HomepageContent | null;
+  categories: Category[];
+  products: Product[];
+  gallery: GalleryItem[];
+}
+
 export interface BusinessSettings {
   id?: string;
   key: 'business';

@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -17,6 +18,7 @@ app.disable('x-powered-by');
 // configured the API is same-origin only (the server serves the client itself).
 const corsOrigins = (process.env.CORS_ORIGIN || '').split(',').map((s) => s.trim()).filter(Boolean);
 app.use(cors({ origin: corsOrigins.length ? corsOrigins : false }));
+app.use(compression({ threshold: 1024 }));
 
 app.use((_req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -43,14 +45,29 @@ if (mountPath !== '/') app.use(`${mountPath}/api`, api);
 
 // Production: serve the built client if present.
 const clientDist = process.env.CLIENT_DIST_DIR || path.resolve(serverRoot, '../client/dist');
-app.use(mountPath, express.static(clientDist));
-app.get(`${mountPath}/*`, (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
+const staticOptions = {
+  maxAge: '1y',
+  immutable: true,
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('.html') || filePath.endsWith('sw.js')) {
+      res.setHeader('Cache-Control', 'no-cache');
+      return;
+    }
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  },
+};
+app.use(mountPath, express.static(clientDist, staticOptions));
+const sendClientIndex = (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache');
+  res.sendFile(path.join(clientDist, 'index.html'));
+};
+app.get(`${mountPath}/*`, sendClientIndex);
 if (mountPath !== '/') {
-  app.use(express.static(clientDist));
-  app.get(/^(?!\/(api|uploads)\/).*/, (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
+  app.use(express.static(clientDist, staticOptions));
+  app.get(/^(?!\/(api|uploads)\/).*/, sendClientIndex);
 }
 if (mountPath === '/') {
-  app.get(/^(?!\/(api|uploads)\/).*/, (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
+  app.get(/^(?!\/(api|uploads)\/).*/, sendClientIndex);
 }
 
 const DEFAULT_CATEGORIES = ['Wedding Invitations', 'Save-the-Dates', 'Thank-You Cards', 'Full Suites'];

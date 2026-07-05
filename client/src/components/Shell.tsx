@@ -3,8 +3,6 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Home, LayoutGrid, Images, ShoppingBag, User, Phone, Search } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useApp } from '../store/AppContext';
-import { useData } from '../lib/useData';
-import type { Category } from '../lib/types';
 import { cx } from '../lib/utils';
 import { StatusBanners, Toasts } from './ui';
 import menaIcon from '../assets/menainc-icon.png';
@@ -20,7 +18,6 @@ export function Shell({ children }: { children: ReactNode }) {
   const { cart, user } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
-  const { data: categories } = useData<Category[]>('/categories');
   const [q, setQ] = useState('');
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
   // Product pages and focused Buy now checkout have their own sticky actions;
@@ -106,15 +103,12 @@ export function Shell({ children }: { children: ReactNode }) {
             <Link to="/catalog" className="whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
               All designs
             </Link>
-            {(categories || []).slice(0, 4).map((c) => (
-              <Link
-                key={c.id}
-                to={`/catalog?category=${c.id}`}
-                className="whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white"
-              >
-                {c.name}
-              </Link>
-            ))}
+            <Link to="/gallery" className="whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
+              Portfolio
+            </Link>
+            <Link to="/contact" className="whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
+              Studio
+            </Link>
           </nav>
           <form
             onSubmit={(e) => { e.preventDefault(); applySearch(q); }}

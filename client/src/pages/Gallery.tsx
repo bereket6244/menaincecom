@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { useData } from '../lib/useData';
 import type { GalleryItem } from '../lib/types';
 import { EmptyState, Spinner } from '../components/ui';
@@ -31,25 +30,20 @@ export function Gallery() {
         </div>
       )}
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
-            onClick={() => setOpen(null)}
-          >
-            <button className="absolute right-4 top-4 text-muted hover:text-ink" aria-label="Close">
-              <X className="h-6 w-6" />
-            </button>
-            <div className="max-h-full max-w-3xl">
-              <img src={open.photo} alt={open.caption} className="max-h-[85vh] w-auto rounded" />
-              {open.caption && <p className="mt-2 text-center text-xs text-muted">{open.caption}</p>}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {open && (
+        <div
+          className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setOpen(null)}
+        >
+          <button className="absolute right-4 top-4 text-white/80 hover:text-white" aria-label="Close">
+            <X className="h-6 w-6" />
+          </button>
+          <div className="max-h-full max-w-3xl">
+            <img src={open.photo} alt={open.caption} className="max-h-[85vh] w-auto rounded" />
+            {open.caption && <p className="mt-2 text-center text-xs text-white/70">{open.caption}</p>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

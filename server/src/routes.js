@@ -11,6 +11,10 @@ import { formatOrderMessage, sendTelegram, sendWhatsApp, pushToAdmins } from './
 
 export const api = Router();
 
+function publicCache(res, seconds = 60) {
+  res.set('Cache-Control', `private, max-age=${seconds}, stale-while-revalidate=300`);
+}
+
 const STRONG_PASSWORD_MESSAGE =
   'Password must be at least 14 characters and include uppercase, lowercase, a number and a symbol.';
 
@@ -84,6 +88,30 @@ api.get('/health', async (req, res) => {
     res.status(503).json({ ok: false, db: false, error: 'db_unavailable', version });
   }
 });
+
+api.get('/home', dbRoute(async (_req, res) => {
+  publicCache(res, 60);
+  const [content, categories, products, gallery] = await Promise.all([
+    records.find('content', (c) => c.key === 'homepage'),
+    records.list('categories'),
+    records.list('products'),
+    records.list('gallery'),
+  ]);
+
+  const sortedCategories = categories.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  const publicProducts = products.filter((p) => !p.isAddon);
+  const byNewest = (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+  const featured = publicProducts.filter((p) => p.featured).sort(byNewest).slice(0, 8);
+  const latest = featured.length ? featured : publicProducts.sort(byNewest).slice(0, 8);
+  const portfolio = gallery.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)).slice(0, 10);
+
+  res.json({
+    content: content || null,
+    categories: sortedCategories,
+    products: latest,
+    gallery: portfolio,
+  });
+}));
 
 /* ----------------------------------- auth ---------------------------------- */
 
@@ -181,11 +209,13 @@ api.delete('/admin/users/admins/:id', requireAdmin, dbRoute(async (req, res) => 
 /* ------------------------------ public catalog ----------------------------- */
 
 api.get('/categories', dbRoute(async (_req, res) => {
+  publicCache(res);
   const cats = await records.list('categories');
   res.json(cats.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)));
 }));
 
 api.get('/products', dbRoute(async (_req, res) => {
+  publicCache(res, 30);
   res.json(await records.list('products'));
 }));
 
@@ -196,16 +226,19 @@ api.get('/products/:id', dbRoute(async (req, res) => {
 }));
 
 api.get('/gallery', dbRoute(async (_req, res) => {
+  publicCache(res);
   const items = await records.list('gallery');
   res.json(items.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)));
 }));
 
 api.get('/content/homepage', dbRoute(async (_req, res) => {
+  publicCache(res);
   const doc = await records.find('content', (c) => c.key === 'homepage');
   res.json(doc || { key: 'homepage' });
 }));
 
 api.get('/content/business', dbRoute(async (_req, res) => {
+  publicCache(res);
   const doc = await records.find('content', (c) => c.key === 'business');
   res.json(doc || { key: 'business' });
 }));
