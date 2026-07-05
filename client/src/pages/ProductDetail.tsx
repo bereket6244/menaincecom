@@ -126,7 +126,7 @@ export function ProductDetail() {
         <div className="space-y-4">
           <div className="aspect-[5/7] max-w-md overflow-hidden rounded-lg border border-edge bg-surface2 shadow-md">
             {selectedPhoto ? (
-              <img src={selectedPhoto} alt={product.name} className="h-full w-full object-cover" />
+              <img src={selectedPhoto} alt={product.name} loading="eager" decoding="async" className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full flex-col items-center justify-center bg-[#f4f0ec] p-8 text-center">
                 <span className="font-script text-5xl leading-none text-pink">{product.name}</span>
@@ -145,7 +145,7 @@ export function ProductDetail() {
                     i === photoIdx ? 'border-pink' : 'border-edge opacity-70'
                   )}
                 >
-                  <img src={ph} alt="" className="h-full w-full object-cover" />
+                  <img src={ph} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>
@@ -244,7 +244,7 @@ export function ProductDetail() {
               <div key={a.id} className="overflow-hidden rounded-xl border border-edge bg-surface">
                 <Link to={`/product/${a.id}`} className="block aspect-square bg-surface2">
                   {a.photos[0] ? (
-                    <img src={a.photos[0]} alt={a.name} loading="lazy" className="h-full w-full object-cover" />
+                    <img src={a.photos[0]} alt={a.name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full items-center justify-center font-script text-2xl text-pink">{a.name}</div>
                   )}
@@ -328,7 +328,7 @@ export function ProductDetail() {
             <div className="sticky top-0 z-10 flex items-start gap-3 border-b border-edge bg-surface px-4 py-4">
               <div className="h-16 w-14 shrink-0 overflow-hidden rounded-lg border border-edge bg-surface2">
                 {selectedPhoto ? (
-                  <img src={selectedPhoto} alt="" className="h-full w-full object-cover" />
+                  <img src={selectedPhoto} alt="" loading="eager" decoding="async" className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex h-full items-center justify-center font-script text-xl text-pink">M</div>
                 )}
@@ -387,7 +387,7 @@ export function ProductDetail() {
                         >
                           {opt.photo && (
                             <div className="mb-2 aspect-square bg-surface2">
-                              <img src={opt.photo} alt="" className="h-full w-full object-cover" />
+                              <img src={opt.photo} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                             </div>
                           )}
                           <span className="flex items-center justify-center gap-1.5 truncate px-1">

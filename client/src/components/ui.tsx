@@ -153,7 +153,7 @@ export function StatusBanners() {
       {online && dbDown && (
         <div className="flex items-center gap-2 border-b border-rose-300 bg-rose-50 px-3 py-1.5 text-xs text-rose-700">
           <DatabaseZap className="h-3.5 w-3.5 shrink-0" />
-          Database connection issue: the server could not reach MySQL. Data shown may be cached; changes cannot be saved right now.
+          Server connection issue: live data may be cached, and changes cannot be saved until the API is reachable.
         </div>
       )}
     </div>

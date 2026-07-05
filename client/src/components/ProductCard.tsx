@@ -20,7 +20,7 @@ function toggleWish(id: string): boolean {
   return next.includes(id);
 }
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
   const navigate = useNavigate();
   const [wished, setWished] = useState(false);
   useEffect(() => {
@@ -41,7 +41,8 @@ export function ProductCard({ product }: { product: Product }) {
               <img
                 src={product.photos[0]}
                 alt={product.name}
-                loading="lazy"
+                loading={priority ? 'eager' : 'lazy'}
+                decoding="async"
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
               />
             ) : (
@@ -85,6 +86,8 @@ export function ProductCard({ product }: { product: Product }) {
                       src={opt.photo}
                       alt={opt.label}
                       title={opt.label}
+                      loading="lazy"
+                      decoding="async"
                       className="h-3.5 w-3.5 rounded-full object-cover ring-1 ring-black/10"
                     />
                   ) : swatch ? (

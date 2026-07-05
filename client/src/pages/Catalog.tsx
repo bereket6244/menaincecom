@@ -143,7 +143,7 @@ export function Catalog() {
                 style={{ background: c.photo ? undefined : CIRCLE_TINTS[i % CIRCLE_TINTS.length] }}
               >
                 {c.photo ? (
-                  <img src={c.photo} alt={c.name} className="h-full w-full object-cover" />
+                  <img src={c.photo} alt={c.name} loading={i < 4 ? 'eager' : 'lazy'} decoding="async" className="h-full w-full object-cover" />
                 ) : (
                   <span className="font-serif text-3xl italic text-ink/45">{c.name.slice(0, 1)}</span>
                 )}
@@ -216,8 +216,8 @@ export function Catalog() {
             <EmptyState>No designs found{query ? ` for “${query}”` : ''}.</EmptyState>
           ) : (
             <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:gap-x-6 lg:grid-cols-3">
-              {visible.map((p) => (
-                <ProductCard key={p.id} product={p} />
+              {visible.map((p, i) => (
+                <ProductCard key={p.id} product={p} priority={i < 6} />
               ))}
             </div>
           )}

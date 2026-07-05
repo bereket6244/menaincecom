@@ -2,7 +2,8 @@ import { Router } from 'express';
 import multer from 'multer';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { records, pool, dbRoute, isUsingLocalStore } from './db.js';
+import { fileURLToPath } from 'node:url';
+import { records, dbRoute, ensureWritablePersistence } from './db.js';
 import {
   signToken, publicUser, hashPassword, verifyPassword,
   requireAdmin, optionalAuth,
@@ -10,6 +11,8 @@ import {
 import { formatOrderMessage, sendTelegram, sendWhatsApp, pushToAdmins } from './notify.js';
 
 export const api = Router();
+const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const uploadsDir = path.join(serverRoot, 'uploads');
 
 function publicCache(res, seconds = 60) {
   res.set('Cache-Control', `private, max-age=${seconds}, stale-while-revalidate=300`);
@@ -79,13 +82,11 @@ const orderLimiter = rateLimit({
 
 api.get('/health', async (req, res) => {
   const version = req.app.get('deployVersion');
-  if (isUsingLocalStore()) return res.json({ ok: true, db: false, localStore: true, version });
-
   try {
-    await pool.query('SELECT 1');
-    res.json({ ok: true, db: true, version });
+    const persistence = await ensureWritablePersistence();
+    res.json({ ok: true, db: persistence.primary === 'mysql', version, ...persistence });
   } catch {
-    res.status(503).json({ ok: false, db: false, error: 'db_unavailable', version });
+    res.status(503).json({ ok: false, db: false, writable: false, error: 'db_unavailable', version });
   }
 });
 
@@ -404,7 +405,7 @@ const IMAGE_MIME_RE = /^image\/(jpeg|png|webp|gif|avif)$/;
 
 const upload = multer({
   storage: multer.diskStorage({
-    destination: path.resolve('uploads'),
+    destination: uploadsDir,
     filename: (_req, file, cb) => {
       const ext = path.extname(file.originalname).toLowerCase();
       cb(null, `${crypto.randomUUID()}${IMAGE_EXTENSIONS.has(ext) ? ext : '.jpg'}`);

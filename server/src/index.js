@@ -130,8 +130,8 @@ async function start() {
     await seed();
     console.log('[db] schema ready');
   } catch (err) {
-    // Boot anyway: /api/health reports the outage and the client shows its
-    // database-connection notice instead of the whole API being down.
+    // Boot anyway: /api/health reports whether writes are available instead
+    // of taking the whole storefront down.
     console.error('[db] not reachable at boot:', err.code || err.message);
   }
   app.listen(port, () => console.log(`MENA INC. API listening on http://localhost:${port}`));

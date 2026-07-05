@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { CartItem, User } from '../lib/types';
-import { apiGet, apiSend, onDbStatus, setToken } from '../lib/api';
+import { apiGet, apiSend, checkApiHealth, onDbStatus, setToken } from '../lib/api';
 
 export interface Toast {
   id: number;
@@ -48,7 +48,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const toastId = useRef(0);
 
   useEffect(() => {
-    const up = () => setOnline(true);
+    const up = () => {
+      setOnline(true);
+      void checkApiHealth();
+    };
     const down = () => setOnline(false);
     window.addEventListener('online', up);
     window.addEventListener('offline', down);
@@ -57,6 +60,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('online', up);
       window.removeEventListener('offline', down);
     };
+  }, []);
+
+  useEffect(() => {
+    const refreshHealth = () => {
+      if (navigator.onLine) void checkApiHealth();
+    };
+    refreshHealth();
+    const id = window.setInterval(refreshHealth, 30_000);
+    return () => window.clearInterval(id);
   }, []);
 
   // Restore session on load.

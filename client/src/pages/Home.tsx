@@ -35,7 +35,7 @@ export function Home() {
                   style={{ background: c.photo ? undefined : CIRCLE_TINTS[i % CIRCLE_TINTS.length] }}
                 >
                   {c.photo ? (
-                    <img src={c.photo} alt="" loading="lazy" className="h-full w-full object-cover" />
+                    <img src={c.photo} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                   ) : (
                     <span className="font-serif text-3xl italic text-ink/45">{c.name.slice(0, 1)}</span>
                   )}
@@ -57,7 +57,7 @@ export function Home() {
           <div className="flex justify-center py-10"><Spinner /></div>
         ) : (
           <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:gap-x-6 lg:grid-cols-4">
-            {latest.map((p) => <ProductCard key={p.id} product={p} />)}
+            {latest.map((p, i) => <ProductCard key={p.id} product={p} priority={i < 4} />)}
           </div>
         )}
       </section>
@@ -72,7 +72,7 @@ export function Home() {
           <div className="flex gap-3 overflow-x-auto pb-1">
             {gallery.map((g) => (
               <Link key={g.id} to="/gallery" className="h-36 w-48 shrink-0 overflow-hidden rounded-xl border border-edge">
-                <img src={g.photo} alt={g.caption} loading="lazy" className="h-full w-full object-cover" />
+                <img src={g.photo} alt={g.caption} loading="lazy" decoding="async" className="h-full w-full object-cover" />
               </Link>
             ))}
           </div>

@@ -2,12 +2,39 @@ import mysql from 'mysql2/promise';
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const localStorePath = path.resolve('dev-data.json');
+const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const localStorePath = path.join(serverRoot, 'dev-data.json');
 let useLocalStore = process.env.USE_LOCAL_STORE === 'true';
+let localStoreCache;
 
 export function isUsingLocalStore() {
   return useLocalStore;
+}
+
+export function persistenceStatus() {
+  return {
+    primary: useLocalStore ? 'local' : 'mysql',
+    writable: true,
+    localStore: useLocalStore,
+  };
+}
+
+export async function ensureWritablePersistence() {
+  if (useLocalStore) {
+    await readLocalStore();
+    return persistenceStatus();
+  }
+
+  try {
+    await pool.query('SELECT 1');
+    return persistenceStatus();
+  } catch (err) {
+    if (!isDbUnavailable(err)) throw err;
+    await switchToLocalStore(err);
+    return persistenceStatus();
+  }
 }
 
 export const pool = mysql.createPool({
@@ -40,9 +67,8 @@ export async function ensureSchema() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
   } catch (err) {
-    useLocalStore = true;
-    await readLocalStore();
-    console.warn('[db] MySQL unavailable; using local dev-data.json store');
+    if (!isDbUnavailable(err)) throw err;
+    await switchToLocalStore(err);
   }
 }
 
@@ -58,21 +84,49 @@ function rowToDoc(row) {
 
 function isDbUnavailable(err) {
   return err && (
-    err.code?.startsWith?.('ER_') ||
-    ['ECONNREFUSED', 'ETIMEDOUT', 'PROTOCOL_CONNECTION_LOST', 'ENOTFOUND'].includes(err.code)
+    [
+      'ECONNREFUSED',
+      'ETIMEDOUT',
+      'PROTOCOL_CONNECTION_LOST',
+      'ENOTFOUND',
+      'ER_ACCESS_DENIED_ERROR',
+      'ER_BAD_DB_ERROR',
+      'ER_CON_COUNT_ERROR',
+      'ER_DBACCESS_DENIED_ERROR',
+    ].includes(err.code)
   );
 }
 
-async function readLocalStore() {
+async function switchToLocalStore(err) {
+  useLocalStore = true;
+  await readLocalStore();
+  console.warn(`[db] MySQL unavailable (${err.code || err.message}); using local dev-data.json store`);
+}
+
+async function withDbFallback(dbOperation, localOperation) {
+  if (useLocalStore) return localOperation();
   try {
-    return JSON.parse(await fs.readFile(localStorePath, 'utf8'));
+    return await dbOperation();
   } catch (err) {
-    if (err.code !== 'ENOENT') throw err;
-    return {};
+    if (!isDbUnavailable(err)) throw err;
+    await switchToLocalStore(err);
+    return localOperation();
   }
 }
 
+async function readLocalStore() {
+  if (localStoreCache) return localStoreCache;
+  try {
+    localStoreCache = JSON.parse(await fs.readFile(localStorePath, 'utf8'));
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err;
+    localStoreCache = {};
+  }
+  return localStoreCache;
+}
+
 async function writeLocalStore(store) {
+  localStoreCache = store;
   await fs.writeFile(localStorePath, JSON.stringify(store, null, 2));
 }
 
@@ -89,32 +143,42 @@ async function mutateLocalStore(mutator) {
 
 export const records = {
   async list(collection) {
-    if (useLocalStore) {
+    const localOperation = async () => {
       const store = await readLocalStore();
       return (store[collection] || [])
         .map(localDoc)
         .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-    }
+    };
 
-    const [rows] = await pool.query(
-      'SELECT * FROM app_records WHERE collection = ? ORDER BY created_at DESC',
-      [collection]
+    return withDbFallback(
+      async () => {
+        const [rows] = await pool.query(
+          'SELECT * FROM app_records WHERE collection = ? ORDER BY created_at DESC',
+          [collection]
+        );
+        return rows.map(rowToDoc);
+      },
+      localOperation
     );
-    return rows.map(rowToDoc);
   },
 
   async get(collection, id) {
-    if (useLocalStore) {
+    const localOperation = async () => {
       const store = await readLocalStore();
       const doc = (store[collection] || []).find((item) => item.id === id);
       return doc ? localDoc(doc) : null;
-    }
+    };
 
-    const [rows] = await pool.query(
-      'SELECT * FROM app_records WHERE collection = ? AND id = ? LIMIT 1',
-      [collection, id]
+    return withDbFallback(
+      async () => {
+        const [rows] = await pool.query(
+          'SELECT * FROM app_records WHERE collection = ? AND id = ? LIMIT 1',
+          [collection, id]
+        );
+        return rows.length ? rowToDoc(rows[0]) : null;
+      },
+      localOperation
     );
-    return rows.length ? rowToDoc(rows[0]) : null;
   },
 
   async find(collection, predicate) {
@@ -124,26 +188,30 @@ export const records = {
 
   async insert(collection, data) {
     const id = crypto.randomUUID();
-    if (useLocalStore) {
-      return mutateLocalStore((store) => {
+    const localOperation = () =>
+      mutateLocalStore((store) => {
         const now = new Date().toISOString();
         const doc = { ...data, id, createdAt: now, updatedAt: now };
         store[collection] ||= [];
         store[collection].push(doc);
         return localDoc(doc);
       });
-    }
 
-    await pool.query(
-      'INSERT INTO app_records (id, collection, data) VALUES (?, ?, ?)',
-      [id, collection, JSON.stringify({ ...data, id })]
+    return withDbFallback(
+      async () => {
+        await pool.query(
+          'INSERT INTO app_records (id, collection, data) VALUES (?, ?, ?)',
+          [id, collection, JSON.stringify({ ...data, id })]
+        );
+        return this.get(collection, id);
+      },
+      localOperation
     );
-    return this.get(collection, id);
   },
 
   async update(collection, id, patch) {
-    if (useLocalStore) {
-      return mutateLocalStore((store) => {
+    const localOperation = () =>
+      mutateLocalStore((store) => {
         const items = store[collection] || [];
         const index = items.findIndex((item) => item.id === id);
         if (index === -1) return null;
@@ -151,37 +219,45 @@ export const records = {
         items[index] = next;
         return localDoc(next);
       });
-    }
 
-    const existing = await this.get(collection, id);
-    if (!existing) return null;
-    const { createdAt, updatedAt, ...doc } = existing;
-    const next = { ...doc, ...patch, id };
-    await pool.query(
-      'UPDATE app_records SET data = ? WHERE collection = ? AND id = ?',
-      [JSON.stringify(next), collection, id]
+    return withDbFallback(
+      async () => {
+        const existing = await this.get(collection, id);
+        if (!existing) return null;
+        const { createdAt, updatedAt, ...doc } = existing;
+        const next = { ...doc, ...patch, id };
+        await pool.query(
+          'UPDATE app_records SET data = ? WHERE collection = ? AND id = ?',
+          [JSON.stringify(next), collection, id]
+        );
+        return this.get(collection, id);
+      },
+      localOperation
     );
-    return this.get(collection, id);
   },
 
   async remove(collection, id) {
-    if (useLocalStore) {
-      return mutateLocalStore((store) => {
+    const localOperation = () =>
+      mutateLocalStore((store) => {
         const before = store[collection] || [];
         store[collection] = before.filter((item) => item.id !== id);
         return before.length !== store[collection].length;
       });
-    }
 
-    const [res] = await pool.query(
-      'DELETE FROM app_records WHERE collection = ? AND id = ?',
-      [collection, id]
+    return withDbFallback(
+      async () => {
+        const [res] = await pool.query(
+          'DELETE FROM app_records WHERE collection = ? AND id = ?',
+          [collection, id]
+        );
+        return res.affectedRows > 0;
+      },
+      localOperation
     );
-    return res.affectedRows > 0;
   },
 };
 
-/** Wrap an async route handler; MySQL failures become a 503 the client understands. */
+/** Wrap an async route handler; storage failures become a clean error the client understands. */
 export function dbRoute(handler) {
   return async (req, res) => {
     try {

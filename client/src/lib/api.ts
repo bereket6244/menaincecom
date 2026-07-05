@@ -11,10 +11,20 @@ export class ApiError extends Error {
   }
 }
 
-type StatusListener = (dbDown: boolean) => void;
+type StatusListener = (writesUnavailable: boolean) => void;
 let statusListener: StatusListener | null = null;
 export function onDbStatus(fn: StatusListener) {
   statusListener = fn;
+}
+
+export interface ApiHealth {
+  ok: boolean;
+  db: boolean;
+  writable: boolean;
+  localStore?: boolean;
+  primary?: 'mysql' | 'local';
+  version?: string;
+  error?: string;
 }
 
 const APP_BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -42,6 +52,30 @@ function token(): string | null {
 export function setToken(t: string | null) {
   if (t) localStorage.setItem('mena_token', t);
   else localStorage.removeItem('mena_token');
+}
+
+export async function checkApiHealth(): Promise<ApiHealth> {
+  try {
+    const res = await fetch(apiUrl('/health'), {
+      headers: headers(false),
+      cache: 'no-store',
+    });
+    const body = await res.json().catch(() => ({})) as Partial<ApiHealth>;
+    const writable = res.ok && body.writable !== false;
+    statusListener?.(!writable);
+    return {
+      ok: res.ok && body.ok !== false,
+      db: Boolean(body.db),
+      writable,
+      localStore: body.localStore,
+      primary: body.primary,
+      version: body.version,
+      error: body.error,
+    };
+  } catch {
+    statusListener?.(true);
+    return { ok: false, db: false, writable: false, error: 'server_unreachable' };
+  }
 }
 
 function headers(json = true): Record<string, string> {
