@@ -28,28 +28,65 @@ jobs:
           cd client/dist
           zip -r ../../shop-deploy.zip .
 
-      - name: Upload archive to cPanel
+      - name: Resolve cPanel endpoint
         env:
           CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
+          CPANEL_URL: ${{ secrets.CPANEL_URL }}
+          CPANEL_PORT: ${{ secrets.CPANEL_PORT }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "${CPANEL_URL}" ]; then
+            base_url="${CPANEL_URL%/}"
+          else
+            host="${CPANEL_HOST#https://}"
+            host="${host#http://}"
+            host="${host%/}"
+            port="${CPANEL_PORT:-2083}"
+            if [[ "${host}" == *:* ]]; then
+              base_url="https://${host}"
+            else
+              base_url="https://${host}:${port}"
+            fi
+          fi
+
+          echo "CPANEL_BASE_URL=${base_url}" >> "$GITHUB_ENV"
+
+          curl --show-error --silent --head \
+            --connect-timeout 15 \
+            --max-time 30 \
+            --retry 2 \
+            --retry-all-errors \
+            "${base_url}/" >/dev/null
+
+      - name: Upload archive to cPanel
+        env:
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
           CPANEL_TARGET_DIR: ${{ secrets.CPANEL_TARGET_DIR }}
         run: |
           curl --fail-with-body --show-error --silent \
+            --connect-timeout 20 \
+            --max-time 120 \
+            --retry 2 \
+            --retry-all-errors \
             -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
             -F "dir=${CPANEL_TARGET_DIR}" \
             -F "overwrite=1" \
             -F "file=@shop-deploy.zip;filename=shop-deploy.zip" \
-            "https://${CPANEL_HOST}:2083/execute/Fileman/upload_files"
+            "${CPANEL_BASE_URL}/execute/Fileman/upload_files"
 
       - name: Extract archive on cPanel
         env:
-          CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
           CPANEL_TARGET_DIR: ${{ secrets.CPANEL_TARGET_DIR }}
         run: |
           curl --fail-with-body --show-error --silent --get \
+            --connect-timeout 20 \
+            --max-time 120 \
+            --retry 2 \
+            --retry-all-errors \
             -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
             --data-urlencode "cpanel_jsonapi_user=${CPANEL_USER}" \
             --data-urlencode "cpanel_jsonapi_apiversion=2" \
@@ -58,7 +95,7 @@ jobs:
             --data-urlencode "op=extract" \
             --data-urlencode "sourcefiles=${CPANEL_TARGET_DIR}/shop-deploy.zip" \
             --data-urlencode "destfiles=${CPANEL_TARGET_DIR}" \
-            "https://${CPANEL_HOST}:2083/json-api/cpanel"
+            "${CPANEL_BASE_URL}/json-api/cpanel"
 
       - name: Verify live shop
         run: |
