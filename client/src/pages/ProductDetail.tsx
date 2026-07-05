@@ -94,7 +94,7 @@ export function ProductDetail() {
     }
     add(product, selections, qty, 'replace');
     sessionStorage.setItem('mena_go_checkout', '1');
-    navigate('/order');
+    navigate('/order?checkout=1');
   };
 
   // Sticky-bar Buy now on mobile: if options still need choosing, open the

@@ -23,8 +23,11 @@ export function Shell({ children }: { children: ReactNode }) {
   const { data: categories } = useData<Category[]>('/categories');
   const [q, setQ] = useState('');
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
-  // Product pages have their own sticky action bar; keep cart navigation visible.
-  const hideBottomNav = location.pathname.startsWith('/product/');
+  // Product pages and focused Buy now checkout have their own sticky actions;
+  // keep normal cart navigation visible.
+  const hideBottomNav =
+    location.pathname.startsWith('/product/')
+    || (location.pathname === '/order' && new URLSearchParams(location.search).get('checkout') === '1');
 
   // Live-filter only while already on the catalog (keeping the category param);
   // from any other page, search navigates only on submit.

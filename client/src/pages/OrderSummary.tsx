@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Trash2, Send, MessageCircle, MessageSquareText, CheckCircle2, PlusCircle, ChevronLeft, Check, ShieldCheck,
 } from 'lucide-react';
@@ -28,6 +28,7 @@ const PRICE = 'text-[#ee0a24]';
 export function OrderSummary() {
   const { cart, addToCart, updateCartItem, removeFromCart, toast, online } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
   const { data: products } = useData<Product[]>('/products');
   const { data: business } = useData<BusinessSettings>('/content/business');
 
@@ -94,7 +95,9 @@ export function OrderSummary() {
 
   // Buy now lands directly on the checkout step — one screen, no flashing.
   useEffect(() => {
-    const flagged = sessionStorage.getItem('mena_go_checkout') === '1';
+    const flagged =
+      sessionStorage.getItem('mena_go_checkout') === '1'
+      || new URLSearchParams(location.search).get('checkout') === '1';
     sessionStorage.removeItem('mena_go_checkout');
     if (!flagged || cart.length === 0) return;
     setStep('checkout');
@@ -192,7 +195,7 @@ export function OrderSummary() {
   if (step === 'checkout') {
     return (
       <div className="pb-28">
-        <button onClick={() => setStep('cart')} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
+        <button onClick={() => { setStep('cart'); navigate('/order', { replace: true }); }} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
           <ChevronLeft className="h-4 w-4" /> Back to cart
         </button>
         <h1 className="mt-2 font-serif text-3xl font-semibold">Checkout</h1>
