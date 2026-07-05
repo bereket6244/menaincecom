@@ -88,7 +88,7 @@ export function ProductCard({ product }: { product: Product }) {
       <button onClick={open} className="mt-1.5 self-start text-[13px] font-semibold text-pink hover:underline">
         Order a sample
       </button>
-      <div className="mt-2 text-[15px] font-bold text-ink">{formatPrice(product)}</div>
+      <div className="mt-2 text-[15px] font-bold text-[#ee0a24]">{formatPrice(product)}</div>
     </div>
   );
 }

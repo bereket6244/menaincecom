@@ -40,20 +40,15 @@ export function Shell({ children }: { children: ReactNode }) {
       <StatusBanners />
       <Toasts />
 
-      {/* Announcement banner */}
-      <div className="bg-pink/10 px-4 py-2 text-center text-[13px] text-pink-dim">
-        Order a printed sample of any design before you commit — see your cards in real life first.{' '}
-        <Link to="/catalog" className="font-semibold underline underline-offset-2">Browse designs</Link>
-      </div>
-
       {/* White brand header */}
       <header className="sticky top-0 z-30 border-b border-edge bg-surface/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4">
-          <Link to="/" className="flex flex-col leading-none">
-            <span className="text-xl font-extrabold tracking-tight text-ink">
-              Mena <span className="text-pink">Inc.</span>
-            </span>
-            <span className="font-script text-sm text-muted">wedding stationery</span>
+          <Link to="/" className="flex shrink-0 items-center">
+            <img
+              src="/menainc-icon.png"
+              alt="Mena Inc."
+              className="h-8 w-auto object-contain sm:h-9"
+            />
           </Link>
 
           <nav className="hidden items-center gap-6 md:flex">
@@ -176,3 +171,4 @@ export function Shell({ children }: { children: ReactNode }) {
     </div>
   );
 }
+

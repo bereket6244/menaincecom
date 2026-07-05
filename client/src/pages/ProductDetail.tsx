@@ -16,7 +16,8 @@ type OrderNotice = {
 
 type PurchaseMode = 'cart' | 'buy';
 
-const ACTION_GRADIENT = 'bg-[linear-gradient(90deg,#70c72b_0%,#c89b5d_48%,#ec2f7a_100%)]';
+const ADD_TO_CART_BUTTON = 'border-2 border-pink bg-white text-pink hover:bg-pink/5';
+const BUY_NOW_BUTTON = 'bg-pink text-white shadow-sm hover:bg-pink-dim';
 
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -239,14 +240,14 @@ export function ProductDetail() {
           <div className="flex flex-col gap-2.5 sm:flex-row">
             <button
               onClick={handleAdd}
-              className={cx('inline-flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-sm font-extrabold text-white shadow-sm transition-transform active:scale-[0.98]', ACTION_GRADIENT)}
+              className={cx('inline-flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-sm font-extrabold transition-colors active:scale-[0.98]', ADD_TO_CART_BUTTON)}
             >
               <ShoppingBag className="h-4 w-4" />
               Add to cart
             </button>
             <button
               onClick={handleOrderNow}
-              className={cx('inline-flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-sm font-extrabold text-white shadow-sm transition-transform active:scale-[0.98]', ACTION_GRADIENT)}
+              className={cx('inline-flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-sm font-extrabold transition-colors active:scale-[0.98]', BUY_NOW_BUTTON)}
             >
               Buy now
             </button>
@@ -328,14 +329,14 @@ export function ProductDetail() {
           <button
             type="button"
             onClick={() => openPurchaseSheet('cart')}
-            className={cx('h-12 flex-1 rounded-full px-4 text-sm font-extrabold text-white shadow-md', ACTION_GRADIENT)}
+            className={cx('h-12 flex-1 rounded-full px-4 text-sm font-extrabold transition-colors', ADD_TO_CART_BUTTON)}
           >
             Add to cart
           </button>
           <button
             type="button"
             onClick={() => openPurchaseSheet('buy')}
-            className={cx('h-12 flex-1 rounded-full px-4 text-sm font-extrabold text-white shadow-md', ACTION_GRADIENT)}
+            className={cx('h-12 flex-1 rounded-full px-4 text-sm font-extrabold transition-colors', BUY_NOW_BUTTON)}
           >
             Buy now
           </button>
@@ -459,14 +460,14 @@ export function ProductDetail() {
               <button
                 type="button"
                 onClick={handleContinue}
-                className={cx('h-14 flex-1 rounded-full text-base font-extrabold text-white transition-transform active:scale-[0.98]', ACTION_GRADIENT)}
+                className={cx('h-14 flex-1 rounded-full text-base font-extrabold transition-colors active:scale-[0.98]', ADD_TO_CART_BUTTON)}
               >
                 Add to cart
               </button>
               <button
                 type="button"
                 onClick={handleOrderNow}
-                className={cx('h-14 flex-1 rounded-full text-base font-extrabold text-white transition-transform active:scale-[0.98]', ACTION_GRADIENT)}
+                className={cx('h-14 flex-1 rounded-full text-base font-extrabold transition-colors active:scale-[0.98]', BUY_NOW_BUTTON)}
               >
                 Buy now
               </button>

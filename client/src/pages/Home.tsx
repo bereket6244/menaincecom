@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Images } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { Category, GalleryItem, HomepageContent, Product } from '../lib/types';
 import { ProductCard } from '../components/ProductCard';
@@ -18,49 +17,6 @@ export function Home() {
 
   return (
     <div className="space-y-12">
-      {/* Hero */}
-      <section className="overflow-hidden rounded-2xl border border-edge bg-surface">
-        <div className="grid md:grid-cols-2">
-          <div className="flex flex-col justify-center gap-4 p-6 sm:p-10">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-              Mena INK Trading PLC · Addis Ababa
-            </span>
-            <h1 className="font-serif text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl">
-              {content?.heroTitle || 'Wedding cards, crafted to order.'}
-            </h1>
-            <p className="max-w-md text-[15px] leading-relaxed text-ink/70">
-              {content?.heroSubtitle ||
-                'Invitations, save-the-dates and full stationery suites — designed and printed in Ethiopia.'}
-            </p>
-            <div className="mt-2 flex flex-wrap gap-3">
-              <Link
-                to="/catalog"
-                className="inline-flex items-center gap-2 rounded-full bg-pink px-6 py-3 text-sm font-bold text-white hover:bg-pink-dim"
-              >
-                {content?.heroCta || 'Browse the catalog'}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                to="/gallery"
-                className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-ink px-6 py-3 text-sm font-bold text-ink hover:bg-ink hover:text-white"
-              >
-                <Images className="h-4 w-4" />
-                Past work
-              </Link>
-            </div>
-          </div>
-          <div className="hidden aspect-[3/2] bg-surface2 md:block">
-            {content?.heroImage ? (
-              <img src={content.heroImage} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full items-center justify-center">
-                <span className="font-script text-6xl text-pink/60">Mena Inc.</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
       {content?.noticeText && (
         <div className="rounded-xl border border-pink/30 bg-pink/10 px-4 py-3 text-sm text-ink">{content.noticeText}</div>
       )}
@@ -126,3 +82,4 @@ export function Home() {
     </div>
   );
 }
+
