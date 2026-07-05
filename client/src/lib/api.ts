@@ -78,6 +78,10 @@ export async function checkApiHealth(): Promise<ApiHealth> {
   }
 }
 
+function refreshWriteStatus() {
+  void checkApiHealth();
+}
+
 function headers(json = true): Record<string, string> {
   const h: Record<string, string> = {};
   if (json) h['Content-Type'] = 'application/json';
@@ -114,7 +118,6 @@ async function parseError(res: Response): Promise<ApiError> {
     if (body.error === 'db_unavailable') dbDown = true;
   } catch { /* non-JSON error body */ }
   if (dbDown || res.status === 503) {
-    statusListener?.(true);
     return new ApiError('db', 'Database connection failed. Please try again shortly.', res.status);
   }
   return new ApiError('http', message, res.status);
@@ -140,13 +143,20 @@ export async function apiGet<T>(path: string): Promise<T> {
   } catch (err) {
     if (err instanceof ApiError) {
       const cached = readCache<T>(path);
-      if (err.kind === 'db' && cached !== null) return cached;
+      if (err.kind === 'db' && cached !== null) {
+        refreshWriteStatus();
+        return cached;
+      }
+      if (err.kind === 'db') await checkApiHealth();
       throw err;
     }
     // Network-level failure while the browser still reports online.
-    statusListener?.(true);
     const cached = readCache<T>(path);
-    if (cached !== null) return cached;
+    if (cached !== null) {
+      refreshWriteStatus();
+      return cached;
+    }
+    await checkApiHealth();
     throw new ApiError('db', 'Could not reach the server.');
   }
 }
