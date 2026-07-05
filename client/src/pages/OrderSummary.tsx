@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
-  Trash2, Send, MessageCircle, MessageSquareText, CheckCircle2, PlusCircle, ChevronLeft, Check, ShieldCheck, X,
+  Trash2, Send, MessageCircle, MessageSquareText, CheckCircle2, PlusCircle, ChevronLeft, Check, ShieldCheck,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { useData } from '../lib/useData';
@@ -26,7 +26,8 @@ const CTA = 'bg-[linear-gradient(90deg,#70c72b_0%,#c89b5d_48%,#ec2f7a_100%)] tex
 const PRICE = 'text-[#ee0a24]';
 
 export function OrderSummary() {
-  const { cart, updateCartItem, removeFromCart, toast, online } = useApp();
+  const { cart, addToCart, updateCartItem, removeFromCart, toast, online } = useApp();
+  const navigate = useNavigate();
   const { data: products } = useData<Product[]>('/products');
   const { data: business } = useData<BusinessSettings>('/content/business');
 
@@ -34,9 +35,10 @@ export function OrderSummary() {
   const [selected, setSelected] = useState<Set<string>>(() => new Set(cart.map((i) => i.key)));
   const [orderNote, setOrderNote] = useState('');
   const [channel, setChannel] = useState<Channel>('whatsapp');
-  const [channelModalOpen, setChannelModalOpen] = useState(false);
   const [sending, setSending] = useState<Channel | null>(null);
-  const [sent, setSent] = useState<{ channel: Channel; chatUrl: string } | null>(null);
+  // keys: the cart lines this order covers — kept in the cart until the
+  // customer confirms they're done, so a failed send never loses the order.
+  const [sent, setSent] = useState<{ channel: Channel; chatUrl: string; keys: string[] } | null>(null);
   const prevKeys = useRef<Set<string>>(new Set());
 
   // Keep selection in sync with the cart: newly added items start selected,
@@ -90,19 +92,15 @@ export function OrderSummary() {
     window.scrollTo({ top: 0 });
   };
 
+  // Buy now lands directly on the checkout step — one screen, no flashing.
   useEffect(() => {
-    if (cart.length === 0 || sessionStorage.getItem('mena_open_channel_popup') !== '1') return;
-    sessionStorage.removeItem('mena_open_channel_popup');
+    const flagged = sessionStorage.getItem('mena_go_checkout') === '1';
+    sessionStorage.removeItem('mena_go_checkout');
+    if (!flagged || cart.length === 0) return;
     setStep('checkout');
-    setChannelModalOpen(true);
     window.scrollTo({ top: 0 });
-  }, [cart.length]);
-
-  const openChannelModal = () => {
-    if (!online) { toast('error', OFFLINE_MESSAGE); return; }
-    if (selectedItems.length === 0) { toast('error', 'Select at least one item to check out.'); return; }
-    setChannelModalOpen(true);
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const placeOrder = () => {
     if (!online) { toast('error', OFFLINE_MESSAGE); return; }
@@ -118,9 +116,9 @@ export function OrderSummary() {
         channel === 'whatsapp' ? whatsappOrderUrl(business, message)
         : channel === 'telegram' ? telegramOrderUrl(business, message)
         : smsOrderUrl(business, message);
-      setSent({ channel, chatUrl });
-      setChannelModalOpen(false);
-      items.forEach((i) => removeFromCart(i.key));
+      // Cart stays intact until the customer confirms on the success screen —
+      // if the chat app never opens or they change their mind, nothing is lost.
+      setSent({ channel, chatUrl, keys: items.map((i) => i.key) });
       if (channel === 'sms') window.location.href = chatUrl;
       else if (chatTab) chatTab.location.replace(chatUrl);
     } catch (err) {
@@ -130,6 +128,12 @@ export function OrderSummary() {
     } finally {
       setSending(null);
     }
+  };
+
+  const finishOrder = () => {
+    sent?.keys.forEach((key) => removeFromCart(key));
+    setSent(null);
+    navigate('/catalog');
   };
 
   /* ------------------------------ success screen ----------------------------- */
@@ -156,7 +160,12 @@ export function OrderSummary() {
             {sent.channel === 'whatsapp' ? <MessageCircle className="h-4 w-4" /> : sent.channel === 'telegram' ? <Send className="h-4 w-4" /> : <MessageSquareText className="h-4 w-4" />}
             Open {label}
           </a>
-          <Link to="/catalog" className="text-sm font-semibold text-pink hover:underline">Continue browsing</Link>
+          <button onClick={finishOrder} className="text-sm font-semibold text-pink hover:underline">
+            Done — continue browsing
+          </button>
+          <button onClick={() => setSent(null)} className="text-[12px] font-medium text-muted hover:text-ink">
+            Something went wrong? Your items are still in the cart — go back
+          </button>
         </div>
       </div>
     );
@@ -232,9 +241,36 @@ export function OrderSummary() {
 
             {/* Send channel */}
             <div className="rounded-2xl border border-edge bg-surface p-4">
-              <h2 className="text-sm font-bold uppercase tracking-[0.06em] text-muted">Send order via</h2>
-              <p className="mt-1 text-sm text-ink/70">
-                Tap Place order and choose WhatsApp, Telegram, or SMS in a popup. The background will blur while you choose.
+              <h2 className="mb-3 text-sm font-bold uppercase tracking-[0.06em] text-muted">Send order via</h2>
+              <div className="space-y-2.5">
+                {CHANNELS.map(({ id, label, desc, icon: Icon }) => {
+                  const active = channel === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setChannel(id)}
+                      className={cx(
+                        'flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition-colors',
+                        active ? 'border-[#ee0a24] bg-[#ee0a24]/5 shadow-sm' : 'border-edge bg-surface hover:border-ink/30'
+                      )}
+                    >
+                      <span className={cx('flex h-10 w-10 shrink-0 items-center justify-center rounded-full', active ? 'bg-[#ee0a24] text-white' : 'bg-surface2 text-muted')}>
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-extrabold text-ink">{label}</span>
+                        <span className="block truncate text-[12px] text-muted">{desc}</span>
+                      </span>
+                      <span className={cx('flex h-5 w-5 items-center justify-center rounded-full border-2', active ? 'border-[#ee0a24] bg-[#ee0a24]' : 'border-edge')}>
+                        {active && <Check className="h-3 w-3 text-white" />}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-3 flex items-center gap-1.5 text-[11px] text-muted">
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0" /> Your order opens pre-filled in the app you pick — just press send. No online payment.
               </p>
             </div>
           </div>
@@ -259,11 +295,11 @@ export function OrderSummary() {
             {hasQuoteItems && <p className="text-[12px] text-muted">Some items are quoted on request — the studio confirms them with you.</p>}
             <button
               type="button"
-              onClick={openChannelModal}
+              onClick={placeOrder}
               disabled={!online || sending !== null}
               className={cx('hidden h-12 w-full items-center justify-center rounded-full text-sm font-extrabold disabled:opacity-50 lg:flex', CTA)}
             >
-              Place order
+              {sending ? 'Opening…' : `Place order via ${CHANNELS.find((c) => c.id === channel)?.label}`}
             </button>
             <p className="hidden items-center justify-center gap-1.5 text-center text-[11px] text-muted lg:flex">
               <ShieldCheck className="h-3.5 w-3.5" /> No online payment — the studio confirms every detail first.
@@ -272,7 +308,7 @@ export function OrderSummary() {
         </div>
 
         {/* Sticky place-order bar (mobile) */}
-        <div className="fixed inset-x-0 bottom-16 z-30 border-t border-edge bg-surface/95 px-4 py-3 backdrop-blur lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-edge bg-surface/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur lg:hidden">
           <div className="mx-auto flex max-w-6xl items-center gap-3">
             <div className="min-w-0 flex-1">
               <div className="text-[11px] text-muted">Total</div>
@@ -280,87 +316,14 @@ export function OrderSummary() {
             </div>
             <button
               type="button"
-              onClick={openChannelModal}
+              onClick={placeOrder}
               disabled={!online || sending !== null}
-              className={cx('h-12 rounded-full px-8 text-sm font-extrabold disabled:opacity-50', CTA)}
+              className={cx('h-12 rounded-full px-6 text-sm font-extrabold disabled:opacity-50', CTA)}
             >
-              Place order
+              {sending ? 'Opening…' : 'Place order'}
             </button>
           </div>
         </div>
-
-        {channelModalOpen && (
-          <div
-            className="fixed inset-0 z-50 flex items-end justify-center bg-ink/45 p-0 backdrop-blur-md sm:items-center sm:p-4"
-            onClick={() => setChannelModalOpen(false)}
-          >
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="send-channel-title"
-              className="w-full rounded-t-3xl border border-edge bg-surface p-5 shadow-2xl sm:max-w-md sm:rounded-3xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-pink">Choose send option</p>
-                  <h2 id="send-channel-title" className="mt-1 font-serif text-3xl font-semibold text-ink">Place order</h2>
-                  <p className="mt-1 text-sm text-muted">
-                    Your order summary opens pre-filled. Just press send in your app.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setChannelModalOpen(false)}
-                  className="rounded-full p-1 text-ink/70 hover:bg-surface2"
-                  aria-label="Close send options"
-                >
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-
-              <div className="mt-5 space-y-2.5">
-                {CHANNELS.map(({ id, label, desc, icon: Icon }) => {
-                  const active = channel === id;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setChannel(id)}
-                      className={cx(
-                        'flex w-full items-center gap-3 rounded-2xl border p-4 text-left transition-colors',
-                        active ? 'border-[#ee0a24] bg-[#ee0a24]/5 shadow-sm' : 'border-edge bg-surface hover:border-ink/30'
-                      )}
-                    >
-                      <span className={cx('flex h-11 w-11 shrink-0 items-center justify-center rounded-full', active ? 'bg-[#ee0a24] text-white' : 'bg-surface2 text-muted')}>
-                        <Icon className="h-5 w-5" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-extrabold text-ink">{label}</span>
-                        <span className="block truncate text-[12px] text-muted">{desc}</span>
-                      </span>
-                      <span className={cx('flex h-5 w-5 items-center justify-center rounded-full border-2', active ? 'border-[#ee0a24] bg-[#ee0a24]' : 'border-edge')}>
-                        {active && <Check className="h-3 w-3 text-white" />}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <button
-                type="button"
-                onClick={placeOrder}
-                disabled={!online || sending !== null}
-                className={cx('mt-5 flex h-12 w-full items-center justify-center rounded-full text-sm font-extrabold disabled:opacity-50', CTA)}
-              >
-                {sending ? 'Opening...' : `Continue with ${CHANNELS.find((c) => c.id === channel)?.label}`}
-              </button>
-              <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-muted">
-                <ShieldCheck className="h-3.5 w-3.5" /> No online payment. We confirm details first.
-              </p>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -416,12 +379,7 @@ export function OrderSummary() {
                       <QuantityPicker size="sm" value={item.qty} onChange={(qty) => updateCartItem(item.key, { qty })} />
                       <IconButton icon={<Trash2 className="h-4 w-4" />} title="Remove" danger onClick={() => removeFromCart(item.key)} />
                     </div>
-                    <input
-                      value={item.note}
-                      onChange={(e) => updateCartItem(item.key, { note: e.target.value })}
-                      placeholder="Notes for this item…"
-                      className="field mt-3 py-1.5 text-[13px]"
-                    />
+                    {item.note && <p className="mt-2 text-[12px] italic text-muted">“{item.note}”</p>}
                   </div>
                 </div>
               );
@@ -436,9 +394,29 @@ export function OrderSummary() {
                   <div key={a.id} className="rounded-xl border border-edge bg-surface p-3">
                     <div className="truncate text-sm font-semibold">{a.name}</div>
                     <div className="text-[13px] text-muted">{formatPrice(a)}</div>
-                    <Link to={`/product/${a.id}`} className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-pink hover:underline">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // Items with options need the product page; everything
+                        // else adds right here without leaving the cart.
+                        if ((a.variants || []).length > 0) { navigate(`/product/${a.id}`); return; }
+                        addToCart({
+                          productId: a.id,
+                          name: a.name,
+                          photo: a.photos[0] || '',
+                          isAddon: a.isAddon,
+                          pricingMode: a.pricingMode,
+                          priceEach: a.pricingMode === 'exact' ? a.price : null,
+                          variantSelections: {},
+                          qty: 1,
+                          note: '',
+                        });
+                        toast('success', `${a.name} added to your cart.`);
+                      }}
+                      className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-pink hover:underline"
+                    >
                       <PlusCircle className="h-3.5 w-3.5" /> Add
-                    </Link>
+                    </button>
                   </div>
                 ))}
               </div>
@@ -472,7 +450,7 @@ export function OrderSummary() {
       </div>
 
       {/* Sticky cart bar (mobile) */}
-      <div className="fixed inset-x-0 bottom-16 z-30 border-t border-edge bg-surface/95 px-4 py-3 backdrop-blur lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-edge bg-surface/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-6xl items-center gap-3">
           <button type="button" onClick={toggleAll} className="flex shrink-0 items-center gap-2 text-sm font-semibold text-ink">
             <span className={cx('flex h-5 w-5 items-center justify-center rounded-full border-2', allSelected ? 'border-[#ee0a24] bg-[#ee0a24]' : 'border-edge')}>

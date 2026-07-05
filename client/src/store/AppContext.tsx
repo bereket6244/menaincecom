@@ -19,7 +19,8 @@ interface AppState {
   signup: (name: string, identifier: string, password: string) => Promise<void>;
   logout: () => void;
   cart: CartItem[];
-  addToCart: (item: Omit<CartItem, 'key'>) => AddToCartResult;
+  /** 'increment' stacks qty onto an existing identical line; 'replace' sets it (used by Buy now so double-taps never double the order). */
+  addToCart: (item: Omit<CartItem, 'key'>, mode?: 'increment' | 'replace') => AddToCartResult;
   updateCartItem: (key: string, patch: Partial<CartItem>) => void;
   removeFromCart: (key: string) => void;
   clearCart: () => void;
@@ -97,18 +98,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  const addToCart = useCallback((item: Omit<CartItem, 'key'>) => {
+  const addToCart = useCallback((item: Omit<CartItem, 'key'>, mode: 'increment' | 'replace' = 'increment') => {
     const key = `${item.productId}|${JSON.stringify(item.variantSelections)}`;
     let result: AddToCartResult = 'added';
     setCart((c) => {
       const existing = c.find((x) => x.key === key);
       if (existing) {
         result = 'updated';
+        const qty = mode === 'replace' ? item.qty : existing.qty + item.qty;
         const note =
           existing.note && item.note && existing.note !== item.note
             ? `${existing.note} | ${item.note}`
             : existing.note || item.note;
-        return c.map((x) => (x.key === key ? { ...x, qty: x.qty + item.qty, note } : x));
+        return c.map((x) => (x.key === key ? { ...x, qty, note } : x));
       }
       return [...c, { ...item, key }];
     });

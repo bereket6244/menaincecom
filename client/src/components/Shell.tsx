@@ -22,7 +22,9 @@ export function Shell({ children }: { children: ReactNode }) {
   const { data: categories } = useData<Category[]>('/categories');
   const [q, setQ] = useState('');
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
-  const isProductPage = location.pathname.startsWith('/product/');
+  // Product and cart/checkout pages have their own sticky action bars — the
+  // global tab bar would stack under them and eat half the screen.
+  const hideBottomNav = location.pathname.startsWith('/product/') || location.pathname === '/order';
 
   // Live-filter only while already on the catalog (keeping the category param);
   // from any other page, search navigates only on submit.
@@ -82,14 +84,14 @@ export function Shell({ children }: { children: ReactNode }) {
             >
               {user ? user.name.split(' ')[0] : 'Log in'}
             </Link>
-            {!user && (
-              <Link
-                to="/login?mode=signup"
-                className="rounded-full bg-pink px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-pink-dim"
-              >
-                Sign up
-              </Link>
-            )}
+            {/* Ordering needs no account — keep the entry point quiet. */}
+            <Link
+              to={user ? '/account' : '/login'}
+              aria-label={user ? 'Account' : 'Log in'}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-ink/70 hover:bg-surface2 hover:text-ink sm:hidden"
+            >
+              <User className="h-5 w-5" />
+            </Link>
           </div>
         </div>
       </header>
@@ -144,8 +146,8 @@ export function Shell({ children }: { children: ReactNode }) {
       </footer>
 
       {/* Mobile bottom navigation */}
-      {!isProductPage && <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-edge bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-        {[...NAV.slice(0, 3), { to: '/order', label: 'Order', icon: ShoppingBag }, { to: user ? '/account' : '/login', label: user ? 'Account' : 'Log in', icon: User }].map(
+      {!hideBottomNav && <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-edge bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+        {[...NAV.slice(0, 3), { to: '/order', label: 'Order', icon: ShoppingBag }, { to: '/contact', label: 'Chat', icon: Phone }].map(
           ({ to, label, icon: Icon, ...rest }) => (
             <NavLink
               key={to}

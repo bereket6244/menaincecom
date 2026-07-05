@@ -60,26 +60,35 @@ function fullImageUrl(photo: string, origin: string): string {
   }
 }
 
-function itemPriceLine(item: CartItem): string {
-  const price =
-    item.priceEach != null
-      ? `at a price of ${item.priceEach.toLocaleString()} birr`
-      : 'with price to be confirmed';
-  return `the above ${item.qty.toLocaleString()} pcs ${price}`;
-}
-
 export function buildCartOrderMessage(items: CartItem[], note: string, origin: string): string {
   const lines = ['hello there, i would like to order these', ''];
 
-  for (const item of items) {
-    const imageUrl = fullImageUrl(item.photo, origin);
-    if (imageUrl) lines.push(imageUrl);
-    else lines.push(item.name);
-    lines.push(itemPriceLine(item));
-    if (item.note) lines.push(`note: ${item.note}`);
-    lines.push('');
-  }
+  let total = 0;
+  let hasPriced = false;
+  let hasQuote = false;
 
+  items.forEach((item, idx) => {
+    const variants = Object.entries(item.variantSelections || {})
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(', ');
+    lines.push(`${idx + 1}) ${item.name}${variants ? ` — ${variants}` : ''}`);
+    if (item.priceEach != null) {
+      hasPriced = true;
+      total += item.priceEach * item.qty;
+      lines.push(`${item.qty.toLocaleString()} pcs × ${item.priceEach.toLocaleString()} birr = ${(item.priceEach * item.qty).toLocaleString()} birr`);
+    } else {
+      hasQuote = true;
+      lines.push(`${item.qty.toLocaleString()} pcs — price to be confirmed`);
+    }
+    if (item.note) lines.push(`note: ${item.note}`);
+    const imageUrl = fullImageUrl(item.photo, origin);
+    if (imageUrl) lines.push(`photo: ${imageUrl}`);
+    lines.push('');
+  });
+
+  if (hasPriced) {
+    lines.push(`estimated total: ${total.toLocaleString()} birr${hasQuote ? ' (plus items priced on request)' : ''}`, '');
+  }
   if (note.trim()) lines.push(`order note: ${note.trim()}`, '');
   lines.push('please contact me');
   return lines.join('\n');

@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { CheckCircle2, ChevronLeft, Clock, Home, ShoppingBag, X } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { ChevronLeft, Clock, Home, ShoppingBag, X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { Product } from '../lib/types';
 import { useApp } from '../store/AppContext';
@@ -9,19 +9,13 @@ import { QuantityPicker } from '../components/QuantityPicker';
 import { cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
 
-type OrderNotice = {
-  kind: AddToCartResult;
-  message: string;
-};
-
-type PurchaseMode = 'cart' | 'buy';
-
 const ADD_TO_CART_BUTTON = 'border-2 border-pink bg-white text-pink hover:bg-pink/5';
 const BUY_NOW_BUTTON = 'bg-pink text-white shadow-sm hover:bg-pink-dim';
 
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { addToCart, cart, toast, online } = useApp();
   const { data: products, loading } = useData<Product[]>('/products');
 
@@ -33,29 +27,20 @@ export function ProductDetail() {
   const [selections, setSelections] = useState<Record<string, string>>({});
   const [qty, setQty] = useState(1);
   const [note, setNote] = useState('');
-  const [orderNotice, setOrderNotice] = useState<OrderNotice | null>(null);
-  const [purchaseMode, setPurchaseMode] = useState<PurchaseMode | null>(null);
-  const noticeTimer = useRef<number | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
 
-  useEffect(() => () => {
-    if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
-  }, []);
-
-  const showOrderNotice = (name: string, result: AddToCartResult) => {
-    if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
-    const message =
-      result === 'updated'
-        ? `${name} is already in your order. Quantity updated.`
-        : `${name} added to your order.`;
-    setOrderNotice({ kind: result, message });
-    noticeTimer.current = window.setTimeout(() => setOrderNotice(null), 3600);
-    toast(result === 'updated' ? 'info' : 'success', message);
+  const notifyAdded = (name: string, result: AddToCartResult) => {
+    toast(
+      result === 'updated' ? 'info' : 'success',
+      result === 'updated' ? `${name} is already in your cart — quantity updated.` : `${name} added to your cart.`
+    );
   };
 
-  const openPurchaseSheet = (mode: PurchaseMode) => {
-    setPurchaseMode(mode);
-    setOrderNotice(null);
+  const goBack = () => {
+    // Direct visits (shared links) have no in-app history — don't exit the site.
+    if (location.key === 'default') navigate('/catalog');
+    else navigate(-1);
   };
 
   if (loading && !product) return <div className="flex justify-center py-20"><Spinner /></div>;
@@ -76,7 +61,7 @@ export function ProductDetail() {
   const missingVariant = product.variants.find((v) => !selections[v.name]);
   const isQuote = product.pricingMode === 'quote';
 
-  const add = (p: Product, selectedVariants: Record<string, string>, quantity: number, itemNote: string) => {
+  const add = (p: Product, selectedVariants: Record<string, string>, quantity: number, itemNote: string, mode: 'increment' | 'replace' = 'increment') => {
     return addToCart({
       productId: p.id,
       name: p.name,
@@ -87,40 +72,45 @@ export function ProductDetail() {
       variantSelections: selectedVariants,
       qty: quantity,
       note: itemNote,
-    });
+    }, mode);
   };
 
+  // Add to cart: stacks quantity, closes the sheet, stays on this product.
   const handleAdd = () => {
     if (missingVariant) {
       toast('error', `Please choose a ${missingVariant.name.toLowerCase()}.`);
       return;
     }
     const result = add(product, selections, qty, note);
-    showOrderNotice(product.name, result);
+    setSheetOpen(false);
+    notifyAdded(product.name, result);
   };
 
-  const handleContinue = () => {
-    if (missingVariant) {
-      toast('error', `Please choose a ${missingVariant.name.toLowerCase()}.`);
-      return;
-    }
-    const result = add(product, selections, qty, note);
-    showOrderNotice(product.name, result);
-  };
-
+  // Buy now: takes the current selection straight to checkout. 'replace' keeps
+  // an earlier "Add to cart" tap from doubling the quantity.
   const handleOrderNow = () => {
     if (missingVariant) {
       toast('error', `Please choose a ${missingVariant.name.toLowerCase()}.`);
       return;
     }
-    add(product, selections, qty, note);
-    sessionStorage.setItem('mena_open_channel_popup', '1');
+    add(product, selections, qty, note, 'replace');
+    sessionStorage.setItem('mena_go_checkout', '1');
     navigate('/order');
+  };
+
+  // Sticky-bar Buy now on mobile: if options still need choosing, open the
+  // sheet where they can be chosen instead of erroring at the bottom of the page.
+  const handleBarOrderNow = () => {
+    if (missingVariant) {
+      setSheetOpen(true);
+      return;
+    }
+    handleOrderNow();
   };
 
   return (
     <div className="space-y-12 pb-28 md:pb-0">
-      <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
+      <button onClick={goBack} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
         <ChevronLeft className="h-4 w-4" /> Back to catalog
       </button>
 
@@ -236,20 +226,6 @@ export function ProductDetail() {
               Buy now
             </button>
           </div>
-          {orderNotice && (
-            <div
-              role="status"
-              aria-live="polite"
-              className={cx(
-                'w-full rounded-lg border px-3 py-2 text-sm font-semibold sm:max-w-sm',
-                orderNotice.kind === 'updated'
-                  ? 'border-amber-200 bg-amber-50 text-amber-800'
-                  : 'border-green/30 bg-green/10 text-ink'
-              )}
-            >
-              {orderNotice.message}
-            </div>
-          )}
           {!online && (
             <p className="text-[12px] text-amber-700">You are offline — you can browse, but sending an order requires a connection.</p>
           )}
@@ -283,7 +259,7 @@ export function ProductDetail() {
                     onClick={() => {
                       if (a.variants.length > 0) { navigate(`/product/${a.id}`); return; }
                       const result = add(a, {}, 1, '');
-                      showOrderNotice(a.name, result);
+                      notifyAdded(a.name, result);
                     }}
                     className="mt-2.5 w-full rounded-lg bg-surface2 py-2 text-[13px] font-bold text-ink transition-colors hover:bg-edge"
                   >
@@ -320,14 +296,14 @@ export function ProductDetail() {
           <div className="flex h-14 flex-1 overflow-hidden rounded-full border-2 border-pink bg-white shadow-sm">
             <button
               type="button"
-              onClick={() => openPurchaseSheet('cart')}
+              onClick={() => setSheetOpen(true)}
               className="flex-1 bg-white px-4 text-base font-extrabold text-pink transition-colors hover:bg-pink/5"
             >
               Add to cart
             </button>
             <button
               type="button"
-              onClick={handleOrderNow}
+              onClick={handleBarOrderNow}
               className="flex-1 bg-pink px-4 text-base font-extrabold text-white transition-colors hover:bg-pink-dim"
             >
               Buy now
@@ -336,8 +312,8 @@ export function ProductDetail() {
         </div>
       </div>
 
-      {purchaseMode && (
-        <div className="fixed inset-0 z-50 flex items-end bg-ink/45 md:hidden" onClick={() => setPurchaseMode(null)}>
+      {sheetOpen && (
+        <div className="fixed inset-0 z-50 flex items-end bg-ink/45 md:hidden" onClick={() => setSheetOpen(false)}>
           <div
             className="relative max-h-[88vh] w-full overflow-y-auto rounded-t-3xl bg-surface pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-2xl"
             onClick={(e) => e.stopPropagation()}
@@ -360,7 +336,7 @@ export function ProductDetail() {
               </div>
               <button
                 type="button"
-                onClick={() => setPurchaseMode(null)}
+                onClick={() => setSheetOpen(false)}
                 className="rounded-full p-1 text-ink/70 hover:bg-surface2"
                 aria-label="Close options"
               >
@@ -437,26 +413,10 @@ export function ProductDetail() {
               </div>
             </div>
 
-            {orderNotice && (
-              <div className="pointer-events-none absolute inset-x-7 top-[40%] z-20 rounded-xl bg-ink/80 px-5 py-6 text-center text-white shadow-2xl">
-                <CheckCircle2 className="mx-auto h-9 w-9 text-green" />
-                <div className="mt-2 text-2xl font-extrabold">
-                  {orderNotice.kind === 'updated' ? 'Already in order' : 'Added to order!'}
-                </div>
-                <div className="mt-1 text-sm text-white/80">{orderNotice.message}</div>
-                <Link
-                  to="/order"
-                  className="pointer-events-auto mt-4 inline-flex rounded-full border border-white px-8 py-2 text-sm font-extrabold text-white"
-                >
-                  Check order
-                </Link>
-              </div>
-            )}
-
             <div className="sticky bottom-0 flex gap-3 border-t border-edge bg-surface px-4 py-3">
               <button
                 type="button"
-                onClick={handleContinue}
+                onClick={handleAdd}
                 className={cx('h-14 flex-1 rounded-full text-base font-extrabold transition-colors active:scale-[0.98]', ADD_TO_CART_BUTTON)}
               >
                 Add to cart
