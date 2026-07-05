@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { CheckCircle2, ChevronLeft, Clock, MessageCircle, ShoppingBag, Store, X } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, Clock, Home, ShoppingBag, X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { BusinessSettings, Product } from '../lib/types';
 import { useApp } from '../store/AppContext';
@@ -22,7 +22,7 @@ const BUY_NOW_BUTTON = 'bg-pink text-white shadow-sm hover:bg-pink-dim';
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { addToCart, toast, online } = useApp();
+  const { addToCart, cart, toast, online } = useApp();
   const { data: products, loading } = useData<Product[]>('/products');
   const { data: business } = useData<BusinessSettings>('/content/business');
 
@@ -37,6 +37,7 @@ export function ProductDetail() {
   const [orderNotice, setOrderNotice] = useState<OrderNotice | null>(null);
   const [purchaseMode, setPurchaseMode] = useState<PurchaseMode | null>(null);
   const noticeTimer = useRef<number | null>(null);
+  const cartCount = cart.reduce((n, i) => n + i.qty, 0);
 
   useEffect(() => () => {
     if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
@@ -313,33 +314,42 @@ export function ProductDetail() {
       )}
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-edge bg-surface/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-10px_30px_rgba(28,26,25,0.08)] backdrop-blur md:hidden">
-        <div className="mx-auto flex max-w-6xl items-center gap-3">
-          <Link to="/catalog" className="flex w-12 flex-col items-center gap-0.5 text-[10px] font-semibold text-muted">
-            <Store className="h-5 w-5" />
-            Shop
+        <div className="mx-auto flex max-w-6xl items-center gap-2.5">
+          <Link
+            to="/"
+            aria-label="Home"
+            className="flex h-12 w-10 shrink-0 items-center justify-center text-ink"
+          >
+            <Home className="h-5 w-5" />
           </Link>
-          <Link to="/contact" className="flex w-12 flex-col items-center gap-0.5 text-[10px] font-semibold text-muted">
-            <MessageCircle className="h-5 w-5" />
-            Chat
-          </Link>
-          <Link to="/order" className="flex w-12 flex-col items-center gap-0.5 text-[10px] font-semibold text-muted">
+          <Link
+            to="/order"
+            aria-label={`Order cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
+            className="relative flex h-12 w-10 shrink-0 items-center justify-center text-ink"
+          >
             <ShoppingBag className="h-5 w-5" />
-            Order
+            {cartCount > 0 && (
+              <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[9px] font-extrabold text-white">
+                {cartCount > 99 ? '99+' : cartCount}
+              </span>
+            )}
           </Link>
-          <button
-            type="button"
-            onClick={() => openPurchaseSheet('cart')}
-            className={cx('h-12 flex-1 rounded-full px-4 text-sm font-extrabold transition-colors', ADD_TO_CART_BUTTON)}
-          >
-            Add to cart
-          </button>
-          <button
-            type="button"
-            onClick={() => openPurchaseSheet('buy')}
-            className={cx('h-12 flex-1 rounded-full px-4 text-sm font-extrabold transition-colors', BUY_NOW_BUTTON)}
-          >
-            Buy now
-          </button>
+          <div className="flex h-14 flex-1 overflow-hidden rounded-full border-2 border-pink bg-white shadow-sm">
+            <button
+              type="button"
+              onClick={() => openPurchaseSheet('cart')}
+              className="flex-1 bg-white px-4 text-base font-extrabold text-pink transition-colors hover:bg-pink/5"
+            >
+              Add to cart
+            </button>
+            <button
+              type="button"
+              onClick={() => openPurchaseSheet('buy')}
+              className="flex-1 bg-pink px-4 text-base font-extrabold text-white transition-colors hover:bg-pink-dim"
+            >
+              Buy now
+            </button>
+          </div>
         </div>
       </div>
 

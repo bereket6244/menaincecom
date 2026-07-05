@@ -22,6 +22,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const { data: categories } = useData<Category[]>('/categories');
   const [q, setQ] = useState('');
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
+  const isProductPage = location.pathname.startsWith('/product/');
 
   // Live-filter only while already on the catalog (keeping the category param);
   // from any other page, search navigates only on submit.
@@ -143,7 +144,7 @@ export function Shell({ children }: { children: ReactNode }) {
       </footer>
 
       {/* Mobile bottom navigation */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-edge bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      {!isProductPage && <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-edge bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
         {[...NAV.slice(0, 3), { to: '/order', label: 'Order', icon: ShoppingBag }, { to: user ? '/account' : '/login', label: user ? 'Account' : 'Log in', icon: User }].map(
           ({ to, label, icon: Icon, ...rest }) => (
             <NavLink
@@ -167,7 +168,7 @@ export function Shell({ children }: { children: ReactNode }) {
             </NavLink>
           )
         )}
-      </nav>
+      </nav>}
     </div>
   );
 }
