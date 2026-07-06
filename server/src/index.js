@@ -122,7 +122,13 @@ async function start() {
     // of taking the whole storefront down.
     console.error('[db] not reachable at boot:', err.code || err.message);
   }
-  app.listen(port, () => console.log(`MENA INC. API listening on http://localhost:${port}`));
+  const server = app.listen(port, () => console.log(`MENA INC. API listening on http://localhost:${port}`));
+  server.on('error', (listenErr) => {
+    console.error('[server] listen error:', listenErr.code || listenErr.message);
+    process.exitCode = 1;
+  });
 }
 
 start();
+
+export { app };
