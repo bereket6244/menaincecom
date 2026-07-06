@@ -93,6 +93,13 @@ export function MobileOrderSummary() {
     ...item,
     complimentaryItems: freebiesFor(item),
   }));
+  const complimentaryRows = selectedItems.flatMap((item) =>
+    freebiesFor(item).map((freeItem) => ({
+      key: `${item.key}:${freeItem.name}`,
+      productName: item.name,
+      ...freeItem,
+    }))
+  );
 
   const suggestions = useMemo(() => {
     if (!products) return [];
@@ -244,6 +251,27 @@ export function MobileOrderSummary() {
                 </div>
               ))}
             </div>
+          </section>
+
+          <section className="rounded-2xl border border-green/30 bg-green/10 p-4">
+            <h2 className="mb-3 text-sm font-extrabold uppercase tracking-[0.06em] text-green">Complimentary items</h2>
+            {complimentaryRows.length > 0 ? (
+              <div className="space-y-2">
+                {complimentaryRows.map((item) => (
+                  <div key={item.key} className="flex items-start justify-between gap-3 rounded-xl bg-white/70 px-3 py-2">
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-extrabold text-ink">{item.name}</div>
+                      <div className="truncate text-[12px] text-muted">Included with {item.productName}</div>
+                    </div>
+                    <div className="shrink-0 text-sm font-extrabold text-green">{item.qty.toLocaleString()}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[12px] font-semibold text-green">
+                No complimentary items are configured for the selected item(s).
+              </p>
+            )}
           </section>
 
           <section className="rounded-2xl border border-edge bg-surface p-4">
