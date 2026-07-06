@@ -8,6 +8,7 @@ import type { Column } from './DataTable';
 import { Button, IconButton, Modal, SysLabel } from '../components/ui';
 import { PhotoUpload } from './PhotoUpload';
 import { useApp } from '../store/AppContext';
+import { COMPLIMENTARY_MAX_MULTIPLIER } from '../lib/complimentary';
 import { cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 
 type Draft = Omit<Product, 'id' | 'createdAt'> & { id?: string };
@@ -15,7 +16,7 @@ type Draft = Omit<Product, 'id' | 'createdAt'> & { id?: string };
 const EMPTY: Draft = {
   name: '', categoryId: '', description: '', photos: [],
   pricingMode: 'exact', price: null, variants: [],
-  isAddon: false, suggestedAddonIds: [], featured: false,
+  isAddon: false, suggestedAddonIds: [], complimentaryItems: [], featured: false,
 };
 
 function VariantsEditor({ variants, onChange }: { variants: VariantGroup[]; onChange: (v: VariantGroup[]) => void }) {
@@ -99,6 +100,30 @@ export function ProductsAdmin() {
   const catName = (id: string) => (categories || []).find((c) => c.id === id)?.name || '—';
   const addonOptions = (products || []).filter((p) => p.isAddon && p.id !== editing?.id);
 
+  const updateComplimentaryItem = (
+    id: string,
+    patch: Partial<NonNullable<Draft['complimentaryItems']>[number]>
+  ) => {
+    if (!editing) return;
+    setEditing({
+      ...editing,
+      complimentaryItems: (editing.complimentaryItems || []).map((item) =>
+        item.id === id ? { ...item, ...patch } : item
+      ),
+    });
+  };
+
+  const addComplimentaryItem = () => {
+    if (!editing) return;
+    setEditing({
+      ...editing,
+      complimentaryItems: [
+        ...(editing.complimentaryItems || []),
+        { id: crypto.randomUUID?.() || String(Date.now()), enabled: true, name: '', qty: 2 },
+      ],
+    });
+  };
+
   const save = async () => {
     if (!editing) return;
     if (!editing.name.trim()) { toast('error', 'Product name is required.'); return; }
@@ -113,6 +138,16 @@ export function ProductsAdmin() {
         ...editing,
         price: editing.pricingMode === 'quote' ? null : editing.price,
         variants: editing.variants.filter((v) => v.name.trim() && v.options.length > 0),
+        complimentaryItems: editing.isAddon
+          ? []
+          : (editing.complimentaryItems || [])
+              .map((item) => ({
+                id: item.id,
+                enabled: !!item.enabled,
+                name: item.name.trim(),
+                qty: Math.max(1, Math.floor(Number(item.qty) || 1)),
+              }))
+              .filter((item) => item.name),
       };
       if (editing.id) await apiSend('PUT', `/admin/products/${editing.id}`, payload);
       else await apiSend('POST', '/admin/products', payload);
@@ -286,6 +321,68 @@ export function ProductsAdmin() {
                 Featured on homepage
               </label>
             </div>
+
+            {!editing.isAddon && (
+              <div className="rounded border border-edge bg-surface2 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <SysLabel>Complimentary items</SysLabel>
+                    <p className="mt-0.5 text-[10px] text-muted">
+                      Free extras included with this product. At checkout each free item is capped at {COMPLIMENTARY_MAX_MULTIPLIER}x the selected main-card amount.
+                    </p>
+                  </div>
+                  <Button variant="outline" onClick={addComplimentaryItem}>
+                    <Plus className="h-3 w-3" /> Add free item
+                  </Button>
+                </div>
+
+                {(editing.complimentaryItems || []).length === 0 ? (
+                  <p className="mt-3 text-[11px] text-muted">No complimentary items for this product.</p>
+                ) : (
+                  <div className="mt-3 space-y-2">
+                    {(editing.complimentaryItems || []).map((item) => (
+                      <div key={item.id} className="grid gap-2 rounded border border-edge bg-surface p-2 sm:grid-cols-[auto_1fr_120px_auto] sm:items-center">
+                        <label className="flex items-center gap-2 text-xs font-semibold">
+                          <input
+                            type="checkbox"
+                            checked={item.enabled}
+                            onChange={(e) => updateComplimentaryItem(item.id, { enabled: e.target.checked })}
+                            className="accent-pink"
+                          />
+                          On
+                        </label>
+                        <input
+                          value={item.name}
+                          onChange={(e) => updateComplimentaryItem(item.id, { name: e.target.value })}
+                          placeholder="Entrance cards, schedule cards..."
+                          className="field py-1 text-[12px]"
+                        />
+                        <input
+                          type="number"
+                          min={1}
+                          step={1}
+                          value={item.qty}
+                          onChange={(e) => updateComplimentaryItem(item.id, { qty: Number(e.target.value) })}
+                          className="field py-1 text-[12px]"
+                          aria-label="Complimentary quantity"
+                        />
+                        <IconButton
+                          icon={<X className="h-3.5 w-3.5" />}
+                          title="Remove complimentary item"
+                          danger
+                          onClick={() =>
+                            setEditing({
+                              ...editing,
+                              complimentaryItems: (editing.complimentaryItems || []).filter((freeItem) => freeItem.id !== item.id),
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {!editing.isAddon && addonOptions.length > 0 && (
               <div>

@@ -247,6 +247,21 @@ api.get('/content/business', dbRoute(async (_req, res) => {
 
 /* ---------------------------------- orders --------------------------------- */
 
+const COMPLIMENTARY_MAX_MULTIPLIER = 2.5;
+
+function complimentaryForProduct(product, qty) {
+  if (!product || product.isAddon) return [];
+  const limit = Math.max(0, Math.floor((Number(qty) || 0) * COMPLIMENTARY_MAX_MULTIPLIER));
+  if (limit <= 0) return [];
+  return (product.complimentaryItems || [])
+    .filter((item) => item?.enabled && String(item.name || '').trim() && Number(item.qty) > 0)
+    .map((item) => ({
+      name: String(item.name).trim().slice(0, 100),
+      qty: Math.min(Math.floor(Number(item.qty) || 0), limit),
+    }))
+    .filter((item) => item.qty > 0);
+}
+
 api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
   const { items: rawItems, customer, channel, note } = req.body || {};
   if (!Array.isArray(rawItems) || rawItems.length === 0 || rawItems.length > 60) {
@@ -285,6 +300,7 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
         isAddon: !!product.isAddon,
         pricingMode: product.pricingMode,
         priceEach: product.pricingMode === 'exact' && product.price != null ? product.price : null,
+        complimentaryItems: complimentaryForProduct(product, qty),
       };
     })
     .filter(Boolean);

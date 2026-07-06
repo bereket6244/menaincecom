@@ -1,4 +1,5 @@
 import type { BusinessSettings, CartItem, OrderRecord } from './types';
+import { complimentarySummary } from './complimentary';
 
 const FALLBACK_WHATSAPP = '251929639939';
 const TELEGRAM_ORDER_URL = 'https://t.me/+251929639939';
@@ -26,6 +27,8 @@ export function buildOrderMessage(order: OrderRecord, business: BusinessSettings
         ? `${item.priceEach.toLocaleString()} ETB each = ${(item.priceEach * item.qty).toLocaleString()} ETB`
         : 'price on request';
     lines.push(`• ${item.qty} × ${item.name}${variants ? ` (${variants})` : ''} — ${price}`);
+    const freebies = complimentarySummary(item.complimentaryItems);
+    if (freebies) lines.push(`  Complimentary: ${freebies}`);
     if (item.note) lines.push(`  Note: ${item.note}`);
   }
 
@@ -70,6 +73,8 @@ export function buildCartOrderMessage(items: CartItem[], note: string, origin: s
       .join(', ');
     lines.push((idx + 1) + ') ' + item.name + (variants ? ' - ' + variants : ''));
     lines.push(item.qty.toLocaleString() + ' pcs');
+    const freebies = complimentarySummary(item.complimentaryItems);
+    if (freebies) lines.push('complimentary: ' + freebies);
     lines.push('link: ' + productUrl(item.productId, origin));
     lines.push('');
   });

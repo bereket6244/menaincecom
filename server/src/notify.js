@@ -24,6 +24,11 @@ export function formatOrderMessage(order) {
       .map(([k, v]) => `${k}: ${v}`)
       .join(', ');
     lines.push(`• ${item.qty} × ${item.name}${item.isAddon ? ' (add-on)' : ''}${variants ? ` [${variants}]` : ''}${item.priceEach != null ? ` — ${item.priceEach * item.qty} ETB` : ' — quote'}`);
+    const freebies = (item.complimentaryItems || [])
+      .filter((freeItem) => freeItem?.qty > 0 && freeItem?.name)
+      .map((freeItem) => `${Number(freeItem.qty).toLocaleString()} ${freeItem.name}`)
+      .join(', ');
+    if (freebies) lines.push(`  Complimentary: ${freebies}`);
     if (item.note) lines.push(`  Note: ${item.note}`);
   }
   if (order.note) lines.push('', `Order note: ${order.note}`);

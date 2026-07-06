@@ -7,6 +7,7 @@ import { useApp } from '../store/AppContext';
 import { EmptyState, Spinner } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { mobileProductTint } from '../components/MobileProductCard';
+import { complimentaryForProduct, complimentarySummary } from '../lib/complimentary';
 import { cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
 
@@ -92,6 +93,8 @@ export function MobileProductDetail() {
   const missingVariant = product.variants.find((variant) => !selections[variant.name]);
   const tint = mobileProductTint(product);
   const isQuote = product.pricingMode === 'quote';
+  const complimentaryItems = complimentaryForProduct(product, qty);
+  const complimentaryText = complimentarySummary(complimentaryItems);
 
   const notifyAdded = (result: AddToCartResult) => {
     toast(
@@ -110,6 +113,7 @@ export function MobileProductDetail() {
     variantSelections: selections,
     qty,
     note: '',
+    complimentaryItems,
   }, mode);
 
   const requireOptions = () => {
@@ -224,6 +228,14 @@ export function MobileProductDetail() {
           <div className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">Amount</div>
           <QuantityPicker value={qty} onChange={setQty} presets={[100, 250, 500, 1000]} />
         </section>
+
+        {complimentaryText && (
+          <section className="px-[18px] pt-4">
+            <div className="rounded-2xl border border-green/30 bg-green/10 p-4 text-[13px] font-extrabold text-green">
+              Complimentary: {complimentaryText}
+            </div>
+          </section>
+        )}
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[430px] border-t border-edge bg-white/95 px-3.5 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-8px_24px_rgba(28,26,25,0.07)] backdrop-blur">

@@ -10,6 +10,7 @@ import type { BusinessSettings, Product } from '../lib/types';
 import { buildCartOrderMessage, smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
 import { EmptyState, IconButton } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
+import { complimentaryForProduct, complimentarySummary } from '../lib/complimentary';
 import { cx, formatPrice } from '../lib/utils';
 
 type Channel = 'whatsapp' | 'telegram' | 'sms';
@@ -55,6 +56,7 @@ export function DesktopOrderSummary() {
   }, [cart]);
 
   const selectedItems = useMemo(() => cart.filter((i) => selected.has(i.key)), [cart, selected]);
+  const productById = useMemo(() => new Map((products || []).map((product) => [product.id, product])), [products]);
   const allSelected = cart.length > 0 && selectedItems.length === cart.length;
 
   const selectedTotal = useMemo(() => {
@@ -65,6 +67,16 @@ export function DesktopOrderSummary() {
 
   const hasQuoteItems = selectedItems.some((i) => i.priceEach == null);
   const selectedCount = selectedItems.reduce((n, i) => n + i.qty, 0);
+
+  const freebiesFor = (item: typeof cart[number]) => {
+    const product = productById.get(item.productId);
+    return product ? complimentaryForProduct(product, item.qty) : item.complimentaryItems || [];
+  };
+
+  const selectedItemsForMessage = selectedItems.map((item) => ({
+    ...item,
+    complimentaryItems: freebiesFor(item),
+  }));
 
   const suggestions = useMemo(() => {
     if (!products) return [];
@@ -115,7 +127,7 @@ export function DesktopOrderSummary() {
     // The chat tab must never be able to script or redirect this page.
     if (chatTab) chatTab.opener = null;
     try {
-      const message = buildCartOrderMessage(items, orderNote, window.location.origin);
+      const message = buildCartOrderMessage(selectedItemsForMessage, orderNote, window.location.origin);
       const chatUrl =
         channel === 'whatsapp' ? whatsappOrderUrl(business, message)
         : channel === 'telegram' ? telegramOrderUrl(business, message)
@@ -218,6 +230,11 @@ export function DesktopOrderSummary() {
                       {Object.entries(item.variantSelections).length > 0 && (
                         <div className="mt-0.5 truncate text-[12px] text-muted">
                           {Object.entries(item.variantSelections).map(([k, v]) => `${k}: ${v}`).join(' · ')}
+                        </div>
+                      )}
+                      {complimentarySummary(freebiesFor(item)) && (
+                        <div className="mt-0.5 truncate text-[12px] font-semibold text-green">
+                          Complimentary: {complimentarySummary(freebiesFor(item))}
                         </div>
                       )}
                       <div className="mt-1 flex items-center justify-between">
@@ -362,18 +379,34 @@ export function DesktopOrderSummary() {
                           {item.name}
                           {item.isAddon && <span className="ml-2 rounded bg-surface2 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-muted">add-on</span>}
                         </div>
-                        {Object.entries(item.variantSelections).length > 0 && (
-                          <div className="mt-1 text-[13px] text-muted">
-                            {Object.entries(item.variantSelections).map(([k, v]) => `${k}: ${v}`).join(' · ')}
-                          </div>
-                        )}
+                      {Object.entries(item.variantSelections).length > 0 && (
+                        <div className="mt-1 text-[13px] text-muted">
+                          {Object.entries(item.variantSelections).map(([k, v]) => `${k}: ${v}`).join(' · ')}
+                        </div>
+                      )}
+                      {complimentarySummary(freebiesFor(item)) && (
+                        <div className="mt-1 text-[13px] font-semibold text-green">
+                          Complimentary: {complimentarySummary(freebiesFor(item))}
+                        </div>
+                      )}
                       </div>
                       <span className={cx('whitespace-nowrap text-[15px] font-bold', PRICE)}>
                         {item.priceEach != null ? `${(item.priceEach * item.qty).toLocaleString()} ETB` : 'Quote'}
                       </span>
                     </div>
                     <div className="mt-3 flex items-center gap-4">
-                      <QuantityPicker size="sm" value={item.qty} onChange={(qty) => updateCartItem(item.key, { qty })} />
+                      <QuantityPicker
+                        size="sm"
+                        value={item.qty}
+                        onChange={(qty) =>
+                          updateCartItem(item.key, {
+                            qty,
+                            complimentaryItems: productById.get(item.productId)
+                              ? complimentaryForProduct(productById.get(item.productId)!, qty)
+                              : item.complimentaryItems,
+                          })
+                        }
+                      />
                       <IconButton icon={<Trash2 className="h-4 w-4" />} title="Remove" danger onClick={() => removeFromCart(item.key)} />
                     </div>
                   </div>

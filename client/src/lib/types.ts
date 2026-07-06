@@ -5,6 +5,18 @@ export interface VariantGroup {
   options: { label: string; photo?: string }[];
 }
 
+export interface ComplimentaryItemConfig {
+  id: string;
+  enabled: boolean;
+  name: string;
+  qty: number;
+}
+
+export interface ComplimentaryCartItem {
+  name: string;
+  qty: number;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -16,6 +28,7 @@ export interface Product {
   variants: VariantGroup[];
   isAddon: boolean; // complimentary/add-on item (entrance cards, schedule cards…)
   suggestedAddonIds: string[];
+  complimentaryItems?: ComplimentaryItemConfig[];
   featured: boolean;
   createdAt?: string;
 }
@@ -45,6 +58,7 @@ export interface CartItem {
   variantSelections: Record<string, string>;
   qty: number;
   note: string;
+  complimentaryItems?: ComplimentaryCartItem[];
 }
 
 export interface OrderRecord {

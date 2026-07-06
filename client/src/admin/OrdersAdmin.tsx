@@ -7,6 +7,7 @@ import { DataTable } from './DataTable';
 import type { Column } from './DataTable';
 import { Modal, IconButton, SysLabel } from '../components/ui';
 import { useApp } from '../store/AppContext';
+import { complimentarySummary } from '../lib/complimentary';
 import { cx, formatDate } from '../lib/utils';
 
 const STATUS_STYLES: Record<OrderRecord['status'], string> = {
@@ -120,6 +121,11 @@ export function OrdersAdmin() {
                       <div className="text-xs font-semibold">{i.qty} × {i.name} {i.isAddon && <span className="text-[9px] uppercase text-muted">(add-on)</span>}</div>
                       {Object.entries(i.variantSelections).length > 0 && (
                         <div className="text-[10px] text-muted">{Object.entries(i.variantSelections).map(([k, v]) => `${k}: ${v}`).join(' · ')}</div>
+                      )}
+                      {complimentarySummary(i.complimentaryItems) && (
+                        <div className="text-[10px] font-semibold text-green">
+                          Complimentary: {complimentarySummary(i.complimentaryItems)}
+                        </div>
                       )}
                       {i.note && <div className="text-[10px] italic text-muted">“{i.note}”</div>}
                     </div>

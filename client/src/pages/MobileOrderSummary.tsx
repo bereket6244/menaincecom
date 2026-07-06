@@ -9,6 +9,7 @@ import { buildCartOrderMessage, smsOrderUrl, telegramOrderUrl, whatsappOrderUrl 
 import { EmptyState } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { mobileProductTint } from '../components/MobileProductCard';
+import { complimentaryForProduct, complimentarySummary } from '../lib/complimentary';
 import { formatPrice } from '../lib/utils';
 
 type Channel = 'whatsapp' | 'telegram' | 'sms';
@@ -72,6 +73,7 @@ export function MobileOrderSummary() {
   }, []);
 
   const selectedItems = useMemo(() => cart.filter((item) => selected.has(item.key)), [cart, selected]);
+  const productById = useMemo(() => new Map((products || []).map((product) => [product.id, product])), [products]);
   const allSelected = cart.length > 0 && selectedItems.length === cart.length;
   const selectedTotal = useMemo(() => {
     const priced = selectedItems.filter((item) => item.priceEach != null);
@@ -81,6 +83,16 @@ export function MobileOrderSummary() {
   const hasQuoteItems = selectedItems.some((item) => item.priceEach == null);
   const selectedQty = selectedItems.reduce((sum, item) => sum + item.qty, 0);
   const cartQty = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  const freebiesFor = (item: typeof cart[number]) => {
+    const product = productById.get(item.productId);
+    return product ? complimentaryForProduct(product, item.qty) : item.complimentaryItems || [];
+  };
+
+  const selectedItemsForMessage = selectedItems.map((item) => ({
+    ...item,
+    complimentaryItems: freebiesFor(item),
+  }));
 
   const suggestions = useMemo(() => {
     if (!products) return [];
@@ -123,7 +135,7 @@ export function MobileOrderSummary() {
     const chatTab = channel === 'sms' ? null : window.open('', '_blank');
     if (chatTab) chatTab.opener = null;
     try {
-      const message = buildCartOrderMessage(selectedItems, orderNote, window.location.origin);
+      const message = buildCartOrderMessage(selectedItemsForMessage, orderNote, window.location.origin);
       const chatUrl =
         channel === 'whatsapp' ? whatsappOrderUrl(business, message)
         : channel === 'telegram' ? telegramOrderUrl(business, message)
@@ -217,6 +229,11 @@ export function MobileOrderSummary() {
                     {Object.keys(item.variantSelections).length > 0 && (
                       <div className="mt-0.5 truncate text-[12px] text-muted">
                         {Object.entries(item.variantSelections).map(([key, value]) => `${key}: ${value}`).join(' · ')}
+                      </div>
+                    )}
+                    {complimentarySummary(freebiesFor(item)) && (
+                      <div className="mt-0.5 truncate text-[12px] font-semibold text-green">
+                        Complimentary: {complimentarySummary(freebiesFor(item))}
                       </div>
                     )}
                     <div className="mt-1 flex items-center justify-between gap-2">
@@ -322,13 +339,29 @@ export function MobileOrderSummary() {
                         {Object.entries(item.variantSelections).map(([key, value]) => `${key}: ${value}`).join(' · ')}
                       </div>
                     )}
+                    {complimentarySummary(freebiesFor(item)) && (
+                      <div className="mt-1 truncate text-[12px] font-semibold text-green">
+                        Complimentary: {complimentarySummary(freebiesFor(item))}
+                      </div>
+                    )}
                   </div>
                   <div className="shrink-0 text-right text-[15px] font-extrabold text-[#ee0a24]">
                     {item.priceEach != null ? `${(item.priceEach * item.qty).toLocaleString()} ETB` : 'Quote'}
                   </div>
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-3">
-                  <QuantityPicker size="sm" value={item.qty} onChange={(qty) => updateCartItem(item.key, { qty })} />
+                  <QuantityPicker
+                    size="sm"
+                    value={item.qty}
+                    onChange={(qty) =>
+                      updateCartItem(item.key, {
+                        qty,
+                        complimentaryItems: productById.get(item.productId)
+                          ? complimentaryForProduct(productById.get(item.productId)!, qty)
+                          : item.complimentaryItems,
+                      })
+                    }
+                  />
                   <button type="button" onClick={() => removeFromCart(item.key)} className="mena-press flex h-8 w-8 items-center justify-center rounded-full text-muted hover:bg-surface2 hover:text-pink" aria-label="Remove">
                     <Trash2 className="h-4 w-4" />
                   </button>

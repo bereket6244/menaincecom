@@ -153,7 +153,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           existing.note && item.note && existing.note !== item.note
             ? `${existing.note} | ${item.note}`
             : existing.note || item.note;
-        return c.map((x) => (x.key === key ? { ...x, qty, note } : x));
+        return c.map((x) => (x.key === key ? { ...x, qty, note, complimentaryItems: item.complimentaryItems } : x));
       }
       return [...c, { ...item, key }];
     });

@@ -6,6 +6,7 @@ import type { Product } from '../lib/types';
 import { useApp } from '../store/AppContext';
 import { Spinner, SysLabel, EmptyState } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
+import { complimentaryForProduct, complimentarySummary } from '../lib/complimentary';
 import { cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
 
@@ -59,6 +60,8 @@ export function DesktopProductDetail() {
 
   const missingVariant = product.variants.find((v) => !selections[v.name]);
   const isQuote = product.pricingMode === 'quote';
+  const complimentaryItems = complimentaryForProduct(product, qty);
+  const complimentaryText = complimentarySummary(complimentaryItems);
 
   const add = (p: Product, selectedVariants: Record<string, string>, quantity: number, mode: 'increment' | 'replace' = 'increment') => {
     return addToCart({
@@ -71,6 +74,7 @@ export function DesktopProductDetail() {
       variantSelections: selectedVariants,
       qty: quantity,
       note: '',
+      complimentaryItems: complimentaryForProduct(p, quantity),
     }, mode);
   };
 
@@ -206,6 +210,12 @@ export function DesktopProductDetail() {
             <QuantityPicker value={qty} onChange={setQty} presets={[100, 250, 500, 1000]} />
             <p className="mt-2 text-[12px] text-muted">Type the exact amount in the quantity box, tap a preset, or use - / +.</p>
           </div>
+
+          {complimentaryText && (
+            <div className="rounded-xl border border-green/30 bg-green/10 p-4 text-[13px] font-semibold text-green">
+              Complimentary: {complimentaryText}
+            </div>
+          )}
 
 
           <div className="flex flex-col gap-2.5 sm:flex-row">
