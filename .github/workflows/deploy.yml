@@ -112,20 +112,54 @@ jobs:
         env:
           CPANEL_TARGET_DIR: ${{ secrets.CPANEL_TARGET_DIR }}
           CPANEL_SERVER_DIR: ${{ secrets.CPANEL_SERVER_DIR }}
+          CPANEL_USER: ${{ secrets.CPANEL_USER }}
+          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
         run: |
           set -euo pipefail
 
           if [ -n "${CPANEL_SERVER_DIR:-}" ]; then
             server_dir="${CPANEL_SERVER_DIR%/}"
-          elif [[ "${CPANEL_TARGET_DIR}" == */public_html/* ]]; then
-            home_dir="${CPANEL_TARGET_DIR%%/public_html/*}"
-            server_dir="${home_dir}/mena-shop-app-v2/server"
+            app_path="${server_dir#/home/${CPANEL_USER}/}"
           else
-            echo "CPANEL_SERVER_DIR is required when CPANEL_TARGET_DIR is not under public_html." >&2
+            apps_json="$(curl --fail-with-body --show-error --silent \
+              --connect-timeout 20 \
+              --max-time 120 \
+              --retry 2 \
+              --retry-all-errors \
+              -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+              "${CPANEL_BASE_URL}/execute/PassengerApps/list_applications")"
+
+            app_path="$(printf '%s' "${apps_json}" | jq -r '
+              (.data // [])
+              | map(select(((.base_uri // .uri // .url // "") == "/shop") or ((.name // "") | test("shop"; "i"))))
+              | first
+              | (.path // .app_root // .app_path // empty)
+            ')"
+
+            if [ -n "${app_path}" ] && [[ "${app_path}" = /* ]]; then
+              server_dir="${app_path%/}"
+              app_path="${server_dir#/home/${CPANEL_USER}/}"
+            elif [ -n "${app_path}" ]; then
+              app_path="${app_path%/}"
+              server_dir="/home/${CPANEL_USER}/${app_path}"
+            elif [[ "${CPANEL_TARGET_DIR}" == */public_html/* ]]; then
+              home_dir="${CPANEL_TARGET_DIR%%/public_html/*}"
+              server_dir="${home_dir}/mena-shop-app-v2/server"
+              app_path="${server_dir#/home/${CPANEL_USER}/}"
+            else
+              echo "CPANEL_SERVER_DIR is required when the Passenger app cannot be discovered." >&2
+              exit 1
+            fi
+          fi
+
+          if [ -z "${server_dir:-}" ] || [ -z "${app_path:-}" ]; then
+            echo "Could not resolve the cPanel Passenger app directory." >&2
             exit 1
           fi
 
+          echo "Deploying server to ${server_dir}"
           echo "CPANEL_SERVER_DIR_RESOLVED=${server_dir}" >> "$GITHUB_ENV"
+          echo "CPANEL_APP_PATH_RESOLVED=${app_path}" >> "$GITHUB_ENV"
 
       - name: Upload server archive to cPanel
         env:
@@ -162,6 +196,24 @@ jobs:
             --data-urlencode "sourcefiles=${CPANEL_SERVER_DIR_RESOLVED}/server-deploy.zip" \
             --data-urlencode "destfiles=${CPANEL_SERVER_DIR_RESOLVED}" \
             "${CPANEL_BASE_URL}/json-api/cpanel"
+
+      - name: Install server dependencies on cPanel
+        env:
+          CPANEL_USER: ${{ secrets.CPANEL_USER }}
+          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
+        run: |
+          curl --fail-with-body --show-error --silent --get \
+            --connect-timeout 20 \
+            --max-time 180 \
+            --retry 2 \
+            --retry-all-errors \
+            -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+            --data-urlencode "type=npm" \
+            --data-urlencode "app_path=${CPANEL_APP_PATH_RESOLVED}" \
+            "${CPANEL_BASE_URL}/execute/PassengerApps/ensure_deps"
+
+      - name: Warm up Passenger app
+        run: sleep 20
 
       - name: Verify live shop
         run: |
