@@ -86,7 +86,7 @@ export function Shell({ children }: { children: ReactNode }) {
             </Link>
             <Link
               to={user ? '/account' : '/login'}
-              className="hidden rounded-full border-[1.5px] border-ink px-4 py-1.5 text-sm font-bold text-ink transition-colors hover:bg-ink hover:text-white sm:inline-flex"
+              className="hidden rounded-full bg-pink px-4 py-1.5 text-sm font-bold text-white transition-colors hover:bg-pink-dim sm:inline-flex"
             >
               {user ? user.name.split(' ')[0] : 'Log in'}
             </Link>

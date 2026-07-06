@@ -9,7 +9,7 @@ import { QuantityPicker } from '../components/QuantityPicker';
 import { cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
 
-const ADD_TO_CART_BUTTON = 'border-2 border-pink bg-white text-pink hover:bg-pink/5';
+const ADD_TO_CART_BUTTON = 'bg-pink text-white shadow-sm hover:bg-pink-dim';
 const BUY_NOW_BUTTON = 'bg-pink text-white shadow-sm hover:bg-pink-dim';
 
 export function ProductDetail() {
@@ -258,7 +258,7 @@ export function ProductDetail() {
                       const result = add(a, {}, 1);
                       notifyAdded(a.name, result);
                     }}
-                    className="mt-2.5 w-full rounded-lg bg-surface2 py-2 text-[13px] font-bold text-ink transition-colors hover:bg-edge"
+                    className="mt-2.5 w-full rounded-lg bg-pink py-2 text-[13px] font-bold text-white transition-colors hover:bg-pink-dim"
                   >
                     Add
                   </button>
@@ -299,11 +299,11 @@ export function ProductDetail() {
                 </span>
               )}
             </Link>
-            <div className="flex h-14 flex-1 overflow-hidden rounded-full border-2 border-pink bg-white shadow-sm">
+            <div className="flex h-14 flex-1 overflow-hidden rounded-full bg-pink shadow-sm">
               <button
                 type="button"
                 onClick={handleBarAdd}
-                className="flex-1 bg-white px-4 text-base font-extrabold text-pink transition-colors hover:bg-pink/5"
+                className="flex-1 bg-pink px-4 text-base font-extrabold text-white transition-colors hover:bg-pink-dim"
               >
                 Add to cart
               </button>

@@ -21,8 +21,7 @@ const CHANNELS: { id: Channel; label: string; desc: string; icon: typeof Send }[
   { id: 'sms', label: 'SMS', desc: 'Opens your messaging app — no internet needed', icon: MessageSquareText },
 ];
 
-/* AliExpress-style commerce accents. */
-const CTA = 'bg-[linear-gradient(90deg,#70c72b_0%,#c89b5d_48%,#ec2f7a_100%)] text-white';
+const CTA = 'bg-pink text-white hover:bg-pink-dim';
 const PRICE = 'text-[#ee0a24]';
 
 export function OrderSummary() {
