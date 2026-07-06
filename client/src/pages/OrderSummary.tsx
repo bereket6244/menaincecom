@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Trash2, Send, MessageCircle, MessageSquareText, CheckCircle2, PlusCircle, ChevronLeft, Check, ShieldCheck,
+  Trash2, Send, MessageCircle, MessageSquareText, CheckCircle2, PlusCircle, ChevronLeft, Check,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { useData } from '../lib/useData';
@@ -15,10 +15,10 @@ import { cx, formatPrice } from '../lib/utils';
 type Channel = 'whatsapp' | 'telegram' | 'sms';
 type Step = 'cart' | 'checkout';
 
-const CHANNELS: { id: Channel; label: string; desc: string; icon: typeof Send }[] = [
-  { id: 'whatsapp', label: 'WhatsApp', desc: 'Opens WhatsApp with your order ready to send', icon: MessageCircle },
-  { id: 'telegram', label: 'Telegram', desc: 'Opens Telegram with your order ready to send', icon: Send },
-  { id: 'sms', label: 'SMS', desc: 'Opens your messaging app — no internet needed', icon: MessageSquareText },
+const CHANNELS: { id: Channel; label: string; icon: typeof Send }[] = [
+  { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle },
+  { id: 'telegram', label: 'Telegram', icon: Send },
+  { id: 'sms', label: 'SMS', icon: MessageSquareText },
 ];
 
 const CTA = 'bg-pink text-white hover:bg-pink-dim';
@@ -199,10 +199,10 @@ export function OrderSummary() {
         </button>
         <h1 className="mt-2 font-serif text-3xl font-semibold">Checkout</h1>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
+        <div className="mt-6 w-full max-w-3xl space-y-6">
           <div className="space-y-6">
             {/* Items */}
-            <div className="rounded-2xl border border-edge bg-surface p-4">
+            <div className="w-full overflow-hidden rounded-2xl border border-edge bg-surface p-4">
               <h2 className="mb-3 text-sm font-bold uppercase tracking-[0.06em] text-muted">Your items ({selectedItems.length})</h2>
               <div className="divide-y divide-edge">
                 {selectedItems.map((item) => (
@@ -229,8 +229,36 @@ export function OrderSummary() {
               </div>
             </div>
 
+            {/* Send channel */}
+            <div className="w-full overflow-hidden rounded-2xl border border-edge bg-surface p-4">
+              <h2 className="mb-3 text-sm font-bold uppercase tracking-[0.06em] text-muted">Send order via</h2>
+              <div className="grid grid-cols-3 gap-2.5">
+                {CHANNELS.map(({ id, label, icon: Icon }) => {
+                  const active = channel === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setChannel(id)}
+                      className={cx(
+                        'flex min-w-0 flex-col items-center justify-center gap-2 rounded-2xl border p-3 text-center transition-colors',
+                        active ? 'border-green bg-green/10 shadow-sm' : 'border-edge bg-surface hover:border-green/50'
+                      )}
+                    >
+                      <span className={cx('flex h-10 w-10 shrink-0 items-center justify-center rounded-full', active ? 'bg-green text-white' : 'bg-surface2 text-muted')}>
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span className={cx('text-sm font-extrabold', active ? 'text-green' : 'text-ink')}>
+                        {label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Optional message to studio */}
-            <div className="rounded-2xl border border-edge bg-surface p-4">
+            <div className="w-full overflow-hidden rounded-2xl border border-edge bg-surface p-4">
               <h2 className="text-sm font-bold uppercase tracking-[0.06em] text-muted">Message to the studio (optional)</h2>
               <p className="mt-0.5 text-[12px] text-muted">You can leave this blank. Add wording, colors, deadlines, or special requests only if needed.</p>
               <textarea
@@ -241,89 +269,49 @@ export function OrderSummary() {
                 className="field mt-2 resize-y"
               />
             </div>
-
-            {/* Send channel */}
-            <div className="rounded-2xl border border-edge bg-surface p-4">
-              <h2 className="mb-3 text-sm font-bold uppercase tracking-[0.06em] text-muted">Send order via</h2>
-              <div className="space-y-2.5">
-                {CHANNELS.map(({ id, label, desc, icon: Icon }) => {
-                  const active = channel === id;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setChannel(id)}
-                      className={cx(
-                        'flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition-colors',
-                        active ? 'border-[#ee0a24] bg-[#ee0a24]/5 shadow-sm' : 'border-edge bg-surface hover:border-ink/30'
-                      )}
-                    >
-                      <span className={cx('flex h-10 w-10 shrink-0 items-center justify-center rounded-full', active ? 'bg-[#ee0a24] text-white' : 'bg-surface2 text-muted')}>
-                        <Icon className="h-5 w-5" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-extrabold text-ink">{label}</span>
-                        <span className="block truncate text-[12px] text-muted">{desc}</span>
-                      </span>
-                      <span className={cx('flex h-5 w-5 items-center justify-center rounded-full border-2', active ? 'border-[#ee0a24] bg-[#ee0a24]' : 'border-edge')}>
-                        {active && <Check className="h-3 w-3 text-white" />}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="mt-3 flex items-center gap-1.5 text-[11px] text-muted">
-                <ShieldCheck className="h-3.5 w-3.5 shrink-0" /> Your order opens pre-filled in the app you pick — just press send. No online payment.
-              </p>
-            </div>
           </div>
 
-          {/* Price detail */}
-          <div className="h-fit space-y-4 rounded-2xl border border-edge bg-surface p-6 lg:sticky lg:top-24">
-            <h2 className="text-lg font-bold">Order summary</h2>
-            <div className="space-y-2 border-b border-edge pb-4 text-sm">
-              <div className="flex justify-between text-muted">
-                <span>Items</span>
-                <span className="font-semibold text-ink">{selectedCount.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-muted">
-                <span>Subtotal</span>
-                <span className="font-semibold text-ink">{selectedTotal != null ? `${selectedTotal.toLocaleString()} ETB` : '—'}</span>
+          <div className="hidden w-full items-center justify-between gap-4 rounded-2xl border border-edge bg-surface p-4 lg:flex">
+            <div className="min-w-0">
+              <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted">Amount</div>
+              <div className="text-sm font-semibold text-ink">{selectedCount.toLocaleString()} item(s)</div>
+            </div>
+            <div className="min-w-0 text-right">
+              <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted">Total</div>
+              <div className={cx('text-xl font-extrabold', PRICE)}>
+                {selectedTotal != null ? `${selectedTotal.toLocaleString()} ETB` : 'Quote'}
               </div>
             </div>
-            <div className="flex items-end justify-between">
-              <span className="text-sm font-semibold">Total</span>
-              <span className={cx('text-2xl font-extrabold', PRICE)}>{selectedTotal != null ? `${selectedTotal.toLocaleString()} ETB` : '—'}</span>
-            </div>
-            {hasQuoteItems && <p className="text-[12px] text-muted">Some items are quoted on request — the studio confirms them with you.</p>}
             <button
               type="button"
               onClick={placeOrder}
               disabled={!online || sending !== null}
-              className={cx('hidden h-12 w-full items-center justify-center rounded-full text-sm font-extrabold disabled:opacity-50 lg:flex', CTA)}
+              className={cx('h-12 shrink-0 rounded-full px-6 text-sm font-extrabold disabled:opacity-50', CTA)}
             >
-              {sending ? 'Opening…' : `Place order via ${CHANNELS.find((c) => c.id === channel)?.label}`}
+              {sending ? 'Opening...' : `Place order via ${CHANNELS.find((c) => c.id === channel)?.label}`}
             </button>
-            <p className="hidden items-center justify-center gap-1.5 text-center text-[11px] text-muted lg:flex">
-              <ShieldCheck className="h-3.5 w-3.5" /> No online payment — the studio confirms every detail first.
-            </p>
           </div>
+          {hasQuoteItems && <p className="text-[12px] text-muted">Some items are quoted on request. The studio confirms them with you.</p>}
         </div>
 
         {/* Sticky place-order bar (mobile) */}
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-edge bg-surface/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur lg:hidden">
-          <div className="mx-auto flex max-w-6xl items-center gap-3">
+          <div className="mx-auto flex max-w-3xl items-center gap-3">
             <div className="min-w-0 flex-1">
+              <div className="text-[11px] text-muted">Amount</div>
+              <div className="truncate text-sm font-semibold text-ink">{selectedCount.toLocaleString()} item(s)</div>
+            </div>
+            <div className="min-w-0 flex-1 text-right">
               <div className="text-[11px] text-muted">Total</div>
-              <div className={cx('truncate text-lg font-extrabold', PRICE)}>{selectedTotal != null ? `${selectedTotal.toLocaleString()} ETB` : '—'}</div>
+              <div className={cx('truncate text-lg font-extrabold', PRICE)}>{selectedTotal != null ? `${selectedTotal.toLocaleString()} ETB` : 'Quote'}</div>
             </div>
             <button
               type="button"
               onClick={placeOrder}
               disabled={!online || sending !== null}
-              className={cx('h-12 rounded-full px-6 text-sm font-extrabold disabled:opacity-50', CTA)}
+              className={cx('h-12 shrink-0 rounded-full px-5 text-sm font-extrabold disabled:opacity-50', CTA)}
             >
-              {sending ? 'Opening…' : 'Place order'}
+              {sending ? 'Opening...' : 'Place order'}
             </button>
           </div>
         </div>
