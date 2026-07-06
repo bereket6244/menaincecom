@@ -180,7 +180,10 @@ export function OrderSummary() {
   if (cart.length === 0) {
     return (
       <div className="space-y-4">
-        <h1 className="font-serif text-4xl font-semibold">Your cart</h1>
+        <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
+          <ChevronLeft className="h-4 w-4" /> Back
+        </button>
+        <h1 className="mt-2 font-serif text-4xl font-semibold">Your cart</h1>
         <EmptyState>
           Your cart is empty.
           <Link to="/catalog" className="mt-1 font-semibold text-pink hover:underline">Browse the catalog</Link>
@@ -194,8 +197,8 @@ export function OrderSummary() {
   if (step === 'checkout') {
     return (
       <div className="pb-28">
-        <button onClick={() => { setStep('cart'); navigate('/order', { replace: true }); }} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
-          <ChevronLeft className="h-4 w-4" /> Back to cart
+        <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
+          <ChevronLeft className="h-4 w-4" /> Back
         </button>
         <h1 className="mt-2 font-serif text-3xl font-semibold">Checkout</h1>
 
@@ -324,7 +327,10 @@ export function OrderSummary() {
   return (
     <div className="space-y-6 pb-28">
       <div>
-        <h1 className="font-serif text-4xl font-semibold">Your cart</h1>
+        <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
+          <ChevronLeft className="h-4 w-4" /> Back
+        </button>
+        <h1 className="mt-2 font-serif text-4xl font-semibold">Your cart</h1>
         <p className="mt-1 text-sm text-muted">Pick the items to order, then check out — no signup, no online payment.</p>
       </div>
 
