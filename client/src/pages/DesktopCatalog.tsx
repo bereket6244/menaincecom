@@ -153,7 +153,7 @@ export function DesktopCatalog() {
         <div className="flex items-end gap-2">
           <button
             onClick={() => setMobileFilters((v) => !v)}
-            className="inline-flex items-center gap-2 rounded-lg border border-edge bg-surface px-4 py-2.5 text-sm font-semibold lg:hidden"
+            className="mena-press inline-flex items-center gap-2 rounded-lg border border-edge bg-surface px-4 py-2.5 text-sm font-semibold lg:hidden"
           >
             <SlidersHorizontal className="h-4 w-4" />
             {mobileFilters ? 'Hide filters' : 'Filters'}
@@ -181,7 +181,7 @@ export function DesktopCatalog() {
             <button
               key={c.id || 'all'}
               onClick={() => setCategory(c.id)}
-              className="flex w-[92px] shrink-0 flex-col items-center gap-2.5"
+              className="mena-press flex w-[92px] shrink-0 flex-col items-center gap-2.5"
             >
               <span
                 className={cx(
@@ -211,7 +211,7 @@ export function DesktopCatalog() {
             <div className="border-b border-edge pb-5">
               <button
                 onClick={() => setPriceOpen((v) => !v)}
-                className="mb-3 flex w-full items-center justify-between text-[15px] font-bold"
+                className="mena-press mb-3 flex w-full items-center justify-between text-[15px] font-bold"
               >
                 Price Range
                 <ChevronUp className={cx('h-4 w-4 text-muted transition-transform', !priceOpen && 'rotate-180')} />
@@ -221,7 +221,7 @@ export function DesktopCatalog() {
                   <div className="flex flex-col gap-3">
                     {priceBands.length > 0 ? (
                       priceBands.map((b) => (
-                        <label key={b.id} className="flex cursor-pointer items-center gap-2.5 text-sm text-ink/80">
+                        <label key={b.id} className="mena-press flex cursor-pointer items-center gap-2.5 text-sm text-ink/80">
                           <input
                             type="checkbox"
                             checked={bands.includes(b.id)}
@@ -255,7 +255,7 @@ export function DesktopCatalog() {
                 </>
               )}
             </div>
-            <button onClick={clearAll} className="mt-5 text-[13px] font-semibold text-pink hover:underline">
+            <button onClick={clearAll} className="mena-press mt-5 text-[13px] font-semibold text-pink hover:underline">
               Clear all filters
             </button>
           </div>

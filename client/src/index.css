@@ -107,7 +107,15 @@ input[type="number"]::-webkit-inner-spin-button { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   .modal-panel,
   .toast-enter,
-  .qty-pulse {
+  .qty-pulse,
+  .mena-fade-up,
+  .mena-pop,
+  .mena-check {
     animation: none;
+  }
+  .mena-press,
+  .mena-press:active {
+    transition: none;
+    transform: none;
   }
 }

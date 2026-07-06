@@ -117,13 +117,13 @@ export function DesktopProductDetail() {
 
   return (
     <div className="space-y-12 pb-44 md:pb-0">
-      <button onClick={goBack} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
+      <button onClick={goBack} className="mena-press inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
         <ChevronLeft className="h-4 w-4" /> Back to catalog
       </button>
 
       <div className="grid gap-10 md:grid-cols-2 lg:gap-14">
         {/* Photos */}
-        <div className="space-y-4">
+        <div className="mena-fade-up space-y-4">
           <div className="aspect-[5/7] max-w-md overflow-hidden rounded-lg border border-edge bg-surface2 shadow-md">
             {selectedPhoto ? (
               <img src={selectedPhoto} alt={product.name} loading="eager" decoding="async" className="h-full w-full object-cover" />
@@ -141,7 +141,7 @@ export function DesktopProductDetail() {
                   key={ph}
                   onClick={() => { setPhotoIdx(i); setPhotoPinned(true); }}
                   className={cx(
-                    'h-16 w-14 shrink-0 overflow-hidden rounded-md border-2',
+                    'mena-press h-16 w-14 shrink-0 overflow-hidden rounded-md border-2',
                     i === photoIdx ? 'border-pink' : 'border-edge opacity-70'
                   )}
                 >
@@ -154,12 +154,12 @@ export function DesktopProductDetail() {
         </div>
 
         {/* Details */}
-        <div className="space-y-6">
+        <div className="mena-fade-up space-y-6">
           <div>
             {product.isAddon ? (
               <SysLabel>Add-on item</SysLabel>
             ) : (
-              <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">Wedding Cards</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">Design</div>
             )}
             <h1 className="mt-1.5 font-serif text-4xl font-semibold leading-tight">{product.name}</h1>
             <div className="mt-2 text-3xl font-extrabold text-[#ee0a24]">
@@ -185,7 +185,7 @@ export function DesktopProductDetail() {
                         key={opt.label}
                         onClick={() => { setSelections((s) => ({ ...s, [group.name]: opt.label })); setPhotoPinned(false); }}
                         className={cx(
-                          'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors',
+                          'mena-press inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors',
                           selections[group.name] === opt.label
                             ? 'border-pink bg-pink/10 text-ink'
                             : 'border-edge bg-surface text-ink/70 hover:border-ink/40'
@@ -211,14 +211,14 @@ export function DesktopProductDetail() {
           <div className="flex flex-col gap-2.5 sm:flex-row">
             <button
               onClick={handleAdd}
-              className={cx('inline-flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-sm font-extrabold transition-colors active:scale-[0.98]', ADD_TO_CART_BUTTON)}
+              className={cx('mena-press inline-flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-sm font-extrabold transition-colors active:scale-[0.98]', ADD_TO_CART_BUTTON)}
             >
               <ShoppingBag className="h-4 w-4" />
               Add to cart
             </button>
             <button
               onClick={handleOrderNow}
-              className={cx('inline-flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-sm font-extrabold transition-colors active:scale-[0.98]', BUY_NOW_BUTTON)}
+              className={cx('mena-press inline-flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-sm font-extrabold transition-colors active:scale-[0.98]', BUY_NOW_BUTTON)}
             >
               Buy now
             </button>
@@ -241,8 +241,8 @@ export function DesktopProductDetail() {
           <p className="mb-4 text-sm text-muted">Matching extras that pair with this design.</p>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {addons.map((a) => (
-              <div key={a.id} className="overflow-hidden rounded-xl border border-edge bg-surface">
-                <Link to={`/product/${a.id}`} className="block aspect-square bg-surface2">
+              <div key={a.id} className="mena-fade-up overflow-hidden rounded-xl border border-edge bg-surface">
+                <Link to={`/product/${a.id}`} className="mena-press block aspect-square bg-surface2">
                   {a.photos[0] ? (
                     <img src={a.photos[0]} alt={a.name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                   ) : (
@@ -258,7 +258,7 @@ export function DesktopProductDetail() {
                       const result = add(a, {}, 1);
                       notifyAdded(a.name, result);
                     }}
-                    className="mt-2.5 w-full rounded-lg bg-pink py-2 text-[13px] font-bold text-white transition-colors hover:bg-pink-dim"
+                    className="mena-press mt-2.5 w-full rounded-lg bg-pink py-2 text-[13px] font-bold text-white transition-colors hover:bg-pink-dim"
                   >
                     Add
                   </button>

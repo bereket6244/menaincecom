@@ -56,7 +56,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
       {/* White brand header */}
       <header className="sticky top-0 z-30 border-b border-edge bg-surface/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4">
-          <Link to="/catalog" className="flex shrink-0 items-center">
+          <Link to="/catalog" className="mena-press flex shrink-0 items-center">
             <img
               src={menaIcon}
               alt="Mena Inc."
@@ -72,7 +72,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
                 end={end}
                 className={({ isActive }) =>
                   cx(
-                    'text-sm transition-colors',
+                    'mena-press text-sm transition-colors',
                     isActive
                       ? 'border-b-2 border-pink pb-[22px] font-semibold text-ink -mb-[26px]'
                       : 'font-medium text-ink/70 hover:text-ink'
@@ -85,24 +85,24 @@ export function DesktopShell({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="ml-auto flex items-center gap-2.5">
-            <Link to="/contact" className="hidden items-center gap-1.5 text-sm font-medium text-ink/70 hover:text-ink lg:flex">
+            <Link to="/contact" className="mena-press hidden items-center gap-1.5 text-sm font-medium text-ink/70 hover:text-ink lg:flex">
               <Phone className="h-4 w-4" /> Find our studio
             </Link>
             <Link
               to="/wishlist"
               aria-label={`Liked items, ${wishlistProductIds.length} saved`}
-              className="relative hidden h-9 w-9 items-center justify-center rounded-full text-ink/70 hover:bg-surface2 hover:text-ink md:flex"
+              className="mena-press relative hidden h-9 w-9 items-center justify-center rounded-full text-ink/70 hover:bg-surface2 hover:text-ink md:flex"
             >
               <Heart className="h-5 w-5" />
               {wishlistProductIds.length > 0 && (
-                <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[9px] font-bold text-white">
+                <span className="mena-pop absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[9px] font-bold text-white">
                   {wishlistProductIds.length > 99 ? '99+' : wishlistProductIds.length}
                 </span>
               )}
             </Link>
             <Link
               to={user ? '/account' : '/login'}
-              className="hidden rounded-full bg-pink px-4 py-1.5 text-sm font-bold text-white transition-colors hover:bg-pink-dim md:inline-flex"
+              className="mena-press hidden rounded-full bg-pink px-4 py-1.5 text-sm font-bold text-white transition-colors hover:bg-pink-dim md:inline-flex"
             >
               {user ? user.name.split(' ')[0] : 'Log in'}
             </Link>
@@ -110,11 +110,11 @@ export function DesktopShell({ children }: { children: ReactNode }) {
             <Link
               to="/order"
               aria-label={`Order cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
-              className="relative flex h-9 w-9 items-center justify-center rounded-full text-ink/70 hover:bg-surface2 hover:text-ink md:hidden"
+              className="mena-press relative flex h-9 w-9 items-center justify-center rounded-full text-ink/70 hover:bg-surface2 hover:text-ink md:hidden"
             >
               <ShoppingBag className="h-5 w-5" />
               {cartCount > 0 && (
-                <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[9px] font-bold text-white">
+                <span className="mena-pop absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[9px] font-bold text-white">
                   {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
@@ -124,7 +124,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
               onClick={() => setMenuOpen((v) => !v)}
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={menuOpen}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-ink/70 hover:bg-surface2 hover:text-ink md:hidden"
+              className="mena-press flex h-9 w-9 items-center justify-center rounded-full text-ink/70 hover:bg-surface2 hover:text-ink md:hidden"
             >
               {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -153,7 +153,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
                   onClick={() => setMenuOpen(false)}
                   className={({ isActive }) =>
                     cx(
-                      'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold transition-colors',
+                      'mena-press flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold transition-colors',
                       isActive ? 'bg-pink text-white' : 'text-ink hover:bg-surface2'
                     )
                   }
@@ -167,7 +167,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
                 onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
                   cx(
-                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold transition-colors',
+                    'mena-press flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold transition-colors',
                     isActive ? 'bg-pink text-white' : 'text-ink hover:bg-surface2'
                   )
                 }
@@ -184,16 +184,16 @@ export function DesktopShell({ children }: { children: ReactNode }) {
       <div className="hidden bg-ink text-white md:block">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
           <nav className="hidden items-center gap-5 lg:flex">
-            <Link to="/catalog" className="whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
+            <Link to="/catalog" className="mena-press whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
               All designs
             </Link>
-            <Link to="/gallery" className="whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
+            <Link to="/gallery" className="mena-press whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
               Portfolio
             </Link>
-            <Link to="/wishlist" className="whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
+            <Link to="/wishlist" className="mena-press whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
               Liked
             </Link>
-            <Link to="/contact" className="whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
+            <Link to="/contact" className="mena-press whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
               Studio
             </Link>
           </nav>
@@ -209,10 +209,10 @@ export function DesktopShell({ children }: { children: ReactNode }) {
               className="w-full rounded-full border-none bg-white py-2.5 pl-10 pr-4 text-sm text-ink outline-none placeholder:text-muted/70"
             />
           </form>
-          <Link to="/order" aria-label="Order" className="relative text-white hover:text-white/80">
+          <Link to="/order" aria-label="Order" className="mena-press relative text-white hover:text-white/80">
             <ShoppingBag className="h-5 w-5" />
             {cartCount > 0 && (
-              <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[10px] font-bold text-white">
+              <span className="mena-pop absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[10px] font-bold text-white">
                 {cartCount}
               </span>
             )}
@@ -225,7 +225,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
       <footer className="hidden border-t border-edge bg-surface py-6 md:block">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 text-[12px] text-muted">
           <span>© {new Date().getFullYear()} Mena INK Trading PLC — Addis Ababa, Ethiopia</span>
-          <span className="text-[11px] font-semibold uppercase tracking-[0.1em]">Wedding cards · Stationery · Print</span>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.1em]">Invitations · Stationery · Print</span>
         </div>
       </footer>
     </div>

@@ -145,8 +145,8 @@ export function DesktopOrderSummary() {
   if (sent) {
     const label = CHANNELS.find((c) => c.id === sent.channel)!.label;
     return (
-      <div className="mx-auto max-w-md py-16 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green">
+      <div className="mena-fade-up mx-auto max-w-md py-16 text-center">
+        <div className="mena-pop mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green">
           <CheckCircle2 className="h-8 w-8 text-white" />
         </div>
         <h1 className="mt-4 font-serif text-3xl font-semibold">Order ready</h1>
@@ -159,15 +159,15 @@ export function DesktopOrderSummary() {
             href={sent.chatUrl}
             target={sent.channel === 'sms' ? undefined : '_blank'}
             rel="noopener noreferrer"
-            className={cx('inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-bold', CTA)}
+            className={cx('mena-press inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-bold', CTA)}
           >
             {sent.channel === 'whatsapp' ? <MessageCircle className="h-4 w-4" /> : sent.channel === 'telegram' ? <Send className="h-4 w-4" /> : <MessageSquareText className="h-4 w-4" />}
             Open {label}
           </a>
-          <button onClick={finishOrder} className="text-sm font-semibold text-pink hover:underline">
+          <button onClick={finishOrder} className="mena-press text-sm font-semibold text-pink hover:underline">
             Done — continue browsing
           </button>
-          <button onClick={() => setSent(null)} className="text-[12px] font-medium text-muted hover:text-ink">
+          <button onClick={() => setSent(null)} className="mena-press text-[12px] font-medium text-muted hover:text-ink">
             Something went wrong? Your items are still in the cart — go back
           </button>
         </div>
@@ -180,7 +180,7 @@ export function DesktopOrderSummary() {
   if (cart.length === 0) {
     return (
       <div className="space-y-4">
-        <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
+        <button onClick={() => navigate(-1)} className="mena-press inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
           <ChevronLeft className="h-4 w-4" /> Back
         </button>
         <h1 className="mt-2 font-serif text-4xl font-semibold">Your cart</h1>
@@ -197,7 +197,7 @@ export function DesktopOrderSummary() {
   if (step === 'checkout') {
     return (
       <div className="pb-28">
-        <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
+        <button onClick={() => navigate(-1)} className="mena-press inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
           <ChevronLeft className="h-4 w-4" /> Back
         </button>
         <h1 className="mt-2 font-serif text-3xl font-semibold">Checkout</h1>
@@ -205,11 +205,11 @@ export function DesktopOrderSummary() {
         <div className="mt-6 w-full max-w-3xl space-y-6">
           <div className="space-y-6">
             {/* Items */}
-            <div className="w-full overflow-hidden rounded-2xl border border-edge bg-surface p-4">
+            <div className="mena-fade-up w-full overflow-hidden rounded-2xl border border-edge bg-surface p-4">
               <h2 className="mb-3 text-sm font-bold uppercase tracking-[0.06em] text-muted">Your items ({selectedItems.length})</h2>
               <div className="divide-y divide-edge">
                 {selectedItems.map((item) => (
-                  <div key={item.key} className="flex gap-3 py-3">
+                  <div key={item.key} className="mena-fade-up flex gap-3 py-3">
                     <div className="h-16 w-14 shrink-0 overflow-hidden rounded-md border border-edge bg-surface2">
                       {item.photo && <img src={item.photo} alt="" className="h-full w-full object-cover" />}
                     </div>
@@ -233,7 +233,7 @@ export function DesktopOrderSummary() {
             </div>
 
             {/* Send channel */}
-            <div className="w-full overflow-hidden rounded-2xl border border-edge bg-surface p-4">
+            <div className="mena-fade-up w-full overflow-hidden rounded-2xl border border-edge bg-surface p-4">
               <h2 className="mb-3 text-sm font-bold uppercase tracking-[0.06em] text-muted">Send order via</h2>
               <div className="grid grid-cols-3 gap-2.5">
                 {CHANNELS.map(({ id, label, icon: Icon }) => {
@@ -244,12 +244,12 @@ export function DesktopOrderSummary() {
                       type="button"
                       onClick={() => setChannel(id)}
                       className={cx(
-                        'flex min-w-0 flex-col items-center justify-center gap-2 rounded-2xl border p-3 text-center transition-colors',
+                        'mena-press flex min-w-0 flex-col items-center justify-center gap-2 rounded-2xl border p-3 text-center transition-colors',
                         active ? 'border-green bg-green/10 shadow-sm' : 'border-edge bg-surface hover:border-green/50'
                       )}
                     >
                       <span className={cx('flex h-10 w-10 shrink-0 items-center justify-center rounded-full', active ? 'bg-green text-white' : 'bg-surface2 text-muted')}>
-                        <Icon className="h-5 w-5" />
+                        <Icon className={cx('h-5 w-5', active && 'mena-pop')} />
                       </span>
                       <span className={cx('text-sm font-extrabold', active ? 'text-green' : 'text-ink')}>
                         {label}
@@ -261,7 +261,7 @@ export function DesktopOrderSummary() {
             </div>
 
             {/* Optional message to studio */}
-            <div className="w-full overflow-hidden rounded-2xl border border-edge bg-surface p-4">
+            <div className="mena-fade-up w-full overflow-hidden rounded-2xl border border-edge bg-surface p-4">
               <h2 className="text-sm font-bold uppercase tracking-[0.06em] text-muted">Message to the studio (optional)</h2>
               <p className="mt-0.5 text-[12px] text-muted">You can leave this blank. Add wording, colors, deadlines, or special requests only if needed.</p>
               <textarea
@@ -274,7 +274,7 @@ export function DesktopOrderSummary() {
             </div>
           </div>
 
-          <div className="hidden w-full items-center justify-between gap-4 rounded-2xl border border-edge bg-surface p-4 lg:flex">
+          <div className="mena-fade-up hidden w-full items-center justify-between gap-4 rounded-2xl border border-edge bg-surface p-4 lg:flex">
             <div className="min-w-0">
               <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted">Amount</div>
               <div className="text-sm font-semibold text-ink">{selectedCount.toLocaleString()} item(s)</div>
@@ -289,7 +289,7 @@ export function DesktopOrderSummary() {
               type="button"
               onClick={placeOrder}
               disabled={!online || sending !== null}
-              className={cx('h-12 shrink-0 rounded-full px-6 text-sm font-extrabold disabled:opacity-50', CTA)}
+              className={cx('mena-press h-12 shrink-0 rounded-full px-6 text-sm font-extrabold disabled:opacity-50', CTA)}
             >
               {sending ? 'Opening...' : `Place order via ${CHANNELS.find((c) => c.id === channel)?.label}`}
             </button>
@@ -327,7 +327,7 @@ export function DesktopOrderSummary() {
   return (
     <div className="space-y-6 pb-28">
       <div>
-        <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
+        <button onClick={() => navigate(-1)} className="mena-press inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
           <ChevronLeft className="h-4 w-4" /> Back
         </button>
         <h1 className="mt-2 font-serif text-4xl font-semibold">Your cart</h1>
@@ -340,19 +340,19 @@ export function DesktopOrderSummary() {
             {cart.map((item) => {
               const checked = selected.has(item.key);
               return (
-                <div key={item.key} className="flex gap-3 py-5">
+                <div key={item.key} className="mena-fade-up flex gap-3 py-5">
                   <button
                     type="button"
                     onClick={() => toggleOne(item.key)}
                     aria-label={checked ? 'Deselect item' : 'Select item'}
                     className={cx(
-                      'mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+                      'mena-press mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
                       checked ? 'border-[#ee0a24] bg-[#ee0a24]' : 'border-edge'
                     )}
                   >
                     {checked && <Check className="h-3 w-3 text-white" />}
                   </button>
-                  <Link to={`/product/${item.productId}`} className="h-24 w-[70px] shrink-0 overflow-hidden rounded-md border border-edge bg-surface2">
+                  <Link to={`/product/${item.productId}`} className="mena-press h-24 w-[70px] shrink-0 overflow-hidden rounded-md border border-edge bg-surface2">
                     {item.photo && <img src={item.photo} alt="" className="h-full w-full object-cover" />}
                   </Link>
                   <div className="min-w-0 flex-1">
@@ -387,7 +387,7 @@ export function DesktopOrderSummary() {
               <h2 className="mb-3 font-serif text-xl font-semibold">Complete the suite</h2>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {suggestions.map((a) => (
-                  <div key={a.id} className="rounded-xl border border-edge bg-surface p-3">
+                  <div key={a.id} className="mena-fade-up rounded-xl border border-edge bg-surface p-3">
                     <div className="truncate text-sm font-semibold">{a.name}</div>
                     <div className="text-[13px] text-muted">{formatPrice(a)}</div>
                     <button
@@ -409,7 +409,7 @@ export function DesktopOrderSummary() {
                         });
                         toast('success', `${a.name} added to your cart.`);
                       }}
-                      className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-pink hover:underline"
+                      className="mena-press mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-pink hover:underline"
                     >
                       <PlusCircle className="h-3.5 w-3.5" /> Add
                     </button>
@@ -421,7 +421,7 @@ export function DesktopOrderSummary() {
         </div>
 
         {/* Summary card (desktop) */}
-        <div className="hidden h-fit space-y-4 rounded-2xl border border-edge bg-surface p-6 lg:sticky lg:top-24 lg:block">
+        <div className="mena-fade-up hidden h-fit space-y-4 rounded-2xl border border-edge bg-surface p-6 lg:sticky lg:top-24 lg:block">
           <h2 className="text-lg font-bold">Summary</h2>
           <div className="space-y-2 border-b border-edge pb-4 text-sm">
             <div className="flex justify-between text-muted">
@@ -438,7 +438,7 @@ export function DesktopOrderSummary() {
             type="button"
             onClick={goCheckout}
             disabled={selectedItems.length === 0}
-            className={cx('flex h-12 w-full items-center justify-center rounded-full text-sm font-extrabold disabled:opacity-50', CTA)}
+            className={cx('mena-press flex h-12 w-full items-center justify-center rounded-full text-sm font-extrabold disabled:opacity-50', CTA)}
           >
             Checkout ({selectedItems.length})
           </button>

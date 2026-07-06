@@ -12,11 +12,11 @@ export function DesktopProductCard({ product, priority = false }: { product: Pro
   const open = () => navigate(`/product/${product.id}`);
 
   return (
-    <div className="group flex flex-col">
+    <div className="mena-fade-up group flex flex-col">
       <div className="relative">
         <button
           onClick={open}
-          className="block w-full overflow-hidden rounded-md bg-surface2 shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-md"
+          className="mena-press block w-full overflow-hidden rounded-md bg-surface2 shadow-sm ring-1 ring-black/5 transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-md"
         >
           <div className="aspect-[5/7] w-full overflow-hidden">
             {product.photos[0] ? (
@@ -37,7 +37,7 @@ export function DesktopProductCard({ product, priority = false }: { product: Pro
         </button>
 
         {product.featured && (
-          <span className="absolute left-2.5 top-2.5 rounded bg-ink px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+          <span className="mena-pop absolute left-2.5 top-2.5 rounded bg-ink px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
             Featured
           </span>
         )}
@@ -45,7 +45,7 @@ export function DesktopProductCard({ product, priority = false }: { product: Pro
         <button
           onClick={() => void toggleWishlist(product.id)}
           aria-label="Save to wishlist"
-          className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm transition-transform hover:scale-105"
+          className="mena-press absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm transition-transform hover:scale-105"
         >
           <Heart className={cx('h-4 w-4', wished ? 'fill-pink text-pink' : 'text-ink/40')} />
         </button>
@@ -106,8 +106,8 @@ export function DesktopProductCard({ product, priority = false }: { product: Pro
         );
       })()}
 
-      <div className="mt-2.5 text-[11px] uppercase tracking-[0.08em] text-muted">Wedding Cards</div>
-      <button onClick={open} className="mt-0.5 text-left text-base font-semibold text-ink transition-colors hover:text-pink">
+      <div className="mt-2.5 text-[11px] uppercase tracking-[0.08em] text-muted">Design</div>
+      <button onClick={open} className="mena-press mt-0.5 text-left text-base font-semibold text-ink transition-colors hover:text-pink">
         {product.name}
       </button>
       <div className="mt-2 text-[15px] font-bold text-[#ee0a24]">{formatPrice(product)}</div>
