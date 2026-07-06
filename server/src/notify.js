@@ -29,6 +29,11 @@ export function formatOrderMessage(order) {
       .map((freeItem) => `${Number(freeItem.qty).toLocaleString()} ${freeItem.name}`)
       .join(', ');
     if (freebies) lines.push(`  Complimentary: ${freebies}`);
+    for (const freeItem of item.complimentaryItems || []) {
+      if ((Number(freeItem.extraQty) || 0) > 0) {
+        lines.push(`  Extra ${freeItem.name}: ${Number(freeItem.extraQty).toLocaleString()} x ${Number(freeItem.extraPriceEach || 0).toLocaleString()} ETB = ${Number(freeItem.extraTotal || 0).toLocaleString()} ETB`);
+      }
+    }
     if (item.note) lines.push(`  Note: ${item.note}`);
   }
   if (order.note) lines.push('', `Order note: ${order.note}`);

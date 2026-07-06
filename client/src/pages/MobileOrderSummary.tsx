@@ -9,7 +9,7 @@ import { buildCartOrderMessage, smsOrderUrl, telegramOrderUrl, whatsappOrderUrl 
 import { EmptyState } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { mobileProductTint } from '../components/MobileProductCard';
-import { complimentaryForProduct, complimentarySummary } from '../lib/complimentary';
+import { complimentaryExtraTotal, complimentaryForProduct, complimentarySummary } from '../lib/complimentary';
 import { formatPrice } from '../lib/utils';
 
 type Channel = 'whatsapp' | 'telegram' | 'sms';
@@ -77,9 +77,15 @@ export function MobileOrderSummary() {
   const allSelected = cart.length > 0 && selectedItems.length === cart.length;
   const selectedTotal = useMemo(() => {
     const priced = selectedItems.filter((item) => item.priceEach != null);
-    if (!priced.length) return null;
-    return priced.reduce((sum, item) => sum + (item.priceEach || 0) * item.qty, 0);
-  }, [selectedItems]);
+    const productByIdForTotal = new Map((products || []).map((product) => [product.id, product]));
+    const extras = selectedItems.reduce((sum, item) => {
+      const product = productByIdForTotal.get(item.productId);
+      const selections = Object.fromEntries((item.complimentaryItems || []).map((freeItem) => [freeItem.name, freeItem.qty]));
+      return sum + complimentaryExtraTotal(product ? complimentaryForProduct(product, item.qty, selections) : item.complimentaryItems);
+    }, 0);
+    if (!priced.length && extras === 0) return null;
+    return priced.reduce((sum, item) => sum + (item.priceEach || 0) * item.qty, extras);
+  }, [products, selectedItems]);
   const hasQuoteItems = selectedItems.some((item) => item.priceEach == null);
   const selectedQty = selectedItems.reduce((sum, item) => sum + item.qty, 0);
   const cartQty = cart.reduce((sum, item) => sum + item.qty, 0);
@@ -264,7 +270,14 @@ export function MobileOrderSummary() {
                       <div className="truncate text-sm font-extrabold text-ink">{item.name}</div>
                       <div className="truncate text-[12px] text-muted">Included with {item.productName}</div>
                     </div>
-                    <div className="shrink-0 text-sm font-extrabold text-green">{item.qty.toLocaleString()}</div>
+                    <div className="shrink-0 text-right">
+                      <div className="text-sm font-extrabold text-green">{item.qty.toLocaleString()}</div>
+                      {(item.extraQty || 0) > 0 && (
+                        <div className="text-[11px] font-semibold text-[#ee0a24]">
+                          +{(item.extraTotal || 0).toLocaleString()} ETB extra
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

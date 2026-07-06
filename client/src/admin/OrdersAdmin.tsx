@@ -127,6 +127,11 @@ export function OrdersAdmin() {
                           Complimentary: {complimentarySummary(i.complimentaryItems)}
                         </div>
                       )}
+                      {(i.complimentaryItems || []).filter((freeItem) => (freeItem.extraQty || 0) > 0).map((freeItem) => (
+                        <div key={freeItem.name} className="text-[10px] font-semibold text-[#ee0a24]">
+                          Extra {freeItem.name}: {freeItem.extraQty?.toLocaleString()} x {(freeItem.extraPriceEach || 0).toLocaleString()} ETB = {(freeItem.extraTotal || 0).toLocaleString()} ETB
+                        </div>
+                      ))}
                       {i.note && <div className="text-[10px] italic text-muted">“{i.note}”</div>}
                     </div>
                     <div className="text-xs text-green">{i.priceEach != null ? `${(i.priceEach * i.qty).toLocaleString()} ETB` : 'Quote'}</div>

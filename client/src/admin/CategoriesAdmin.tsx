@@ -64,7 +64,7 @@ export function CategoriesAdmin() {
     {
       key: 'photo', label: '', width: '52px',
       render: (c) => (
-        <div className="h-8 w-10 overflow-hidden rounded border border-edge bg-surface2">
+        <div className="h-9 w-9 overflow-hidden rounded-full border border-edge bg-surface2">
           {c.photo && <img src={c.photo} alt="" className="h-full w-full object-cover" />}
         </div>
       ),
@@ -91,6 +91,7 @@ export function CategoriesAdmin() {
         columns={columns}
         loading={loading}
         searchText={(c) => c.name}
+        onRowClick={(c) => setEditing(c)}
         onBulkDelete={bulkDelete}
         toolbar={
           <Button onClick={() => setEditing({ ...EMPTY })} disabled={!online}>
@@ -118,8 +119,9 @@ export function CategoriesAdmin() {
               <input value={editing.name || ''} onChange={(e) => setEditing({ ...editing, name: e.target.value })} className="field mt-1" placeholder="e.g. Wedding Invitations" />
             </div>
             <div>
-              <SysLabel>Cover photo</SysLabel>
-              <div className="mt-1">
+              <SysLabel>Category profile picture</SysLabel>
+              <p className="mt-0.5 text-[11px] text-muted">Shown to customers as the circular category image in the storefront.</p>
+              <div className="mt-2">
                 <PhotoUpload single photos={editing.photo ? [editing.photo] : []} onChange={(p) => setEditing({ ...editing, photo: p[0] || '' })} />
               </div>
             </div>

@@ -11,12 +11,17 @@ export interface ComplimentaryItemConfig {
   name: string;
   type?: 'fixed' | 'multiplier';
   qty: number;
+  extraPriceEach?: number | null;
 }
 
 export interface ComplimentaryCartItem {
   name: string;
   qty: number;
   maxQty?: number;
+  freeQty?: number;
+  extraQty?: number;
+  extraPriceEach?: number | null;
+  extraTotal?: number;
 }
 
 export interface Product {

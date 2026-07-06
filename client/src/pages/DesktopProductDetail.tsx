@@ -6,7 +6,7 @@ import type { Product } from '../lib/types';
 import { useApp } from '../store/AppContext';
 import { Spinner, SysLabel, EmptyState } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
-import { complimentaryForProduct, complimentarySummary } from '../lib/complimentary';
+import { COMPLIMENTARY_EXTRA_MAX_QTY, complimentaryAllowanceText, complimentaryForProduct, complimentarySummary } from '../lib/complimentary';
 import { cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
 
@@ -221,24 +221,31 @@ export function DesktopProductDetail() {
               <div className="text-[12px] font-bold uppercase tracking-[0.08em] text-green">Complimentary items</div>
               <div className="mt-3 space-y-3">
                 {complimentaryOptions.map((item) => {
-                  const maxQty = item.maxQty || item.qty;
-                  const selectedQty = Math.min(maxQty, Math.max(0, complimentarySelections[item.name] ?? maxQty));
+                  const freeQty = item.freeQty ?? item.maxQty ?? item.qty;
+                  const selectedQty = Math.min(COMPLIMENTARY_EXTRA_MAX_QTY, Math.max(0, complimentarySelections[item.name] ?? freeQty));
+                  const extraQty = Math.max(0, selectedQty - freeQty);
+                  const extraTotal = extraQty * (item.extraPriceEach || 0);
                   return (
                     <div key={item.name} className="rounded-xl bg-white/75 p-3">
                       <div className="mb-2 flex items-start justify-between gap-3">
                         <div>
                           <div className="text-sm font-bold text-ink">{item.name}</div>
-                          <div className="text-[12px] text-muted">Choose 0 to {maxQty.toLocaleString()}</div>
+                          <div className="text-[12px] text-muted">{complimentaryAllowanceText(item)}</div>
                         </div>
                         <div className="text-sm font-extrabold text-green">{selectedQty.toLocaleString()}</div>
                       </div>
                       <QuantityPicker
                         size="sm"
                         min={0}
-                        max={maxQty}
+                        max={COMPLIMENTARY_EXTRA_MAX_QTY}
                         value={selectedQty}
                         onChange={(nextQty) => setComplimentarySelections((current) => ({ ...current, [item.name]: nextQty }))}
                       />
+                      {extraQty > 0 && (
+                        <div className="mt-2 text-[12px] font-semibold text-[#ee0a24]">
+                          Extra: {extraQty.toLocaleString()} x {(item.extraPriceEach || 0).toLocaleString()} ETB = {extraTotal.toLocaleString()} ETB
+                        </div>
+                      )}
                     </div>
                   );
                 })}

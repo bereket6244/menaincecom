@@ -248,6 +248,7 @@ api.get('/content/business', dbRoute(async (_req, res) => {
 /* ---------------------------------- orders --------------------------------- */
 
 const COMPLIMENTARY_MAX_MULTIPLIER = 2.5;
+const COMPLIMENTARY_EXTRA_MAX_QTY = 100000;
 
 function complimentaryForProduct(product, qty, selections = {}) {
   if (!product || product.isAddon) return [];
@@ -259,18 +260,25 @@ function complimentaryForProduct(product, qty, selections = {}) {
       const rawQty = item.type === 'multiplier'
         ? Math.floor((Number(qty) || 0) * Number(item.qty))
         : Math.floor(Number(item.qty) || 0);
-      const maxQty = Math.min(rawQty, limit);
+      const freeQty = Math.min(rawQty, limit);
       const name = String(item.name).trim().slice(0, 100);
       const hasSelection = Object.prototype.hasOwnProperty.call(selections, name);
+      const selectedQty = hasSelection
+        ? Math.min(COMPLIMENTARY_EXTRA_MAX_QTY, Math.max(0, Math.floor(Number(selections[name]) || 0)))
+        : freeQty;
+      const extraQty = Math.max(0, selectedQty - freeQty);
+      const extraPriceEach = item.extraPriceEach == null ? null : Math.max(0, Number(item.extraPriceEach) || 0);
       return {
         name,
-        qty: hasSelection
-          ? Math.min(maxQty, Math.max(0, Math.floor(Number(selections[name]) || 0)))
-          : maxQty,
-        maxQty,
+        qty: selectedQty,
+        maxQty: freeQty,
+        freeQty,
+        extraQty,
+        extraPriceEach,
+        extraTotal: extraPriceEach != null ? extraQty * extraPriceEach : 0,
       };
     })
-    .filter((item) => item.maxQty > 0);
+    .filter((item) => item.freeQty > 0 || item.qty > 0);
 }
 
 api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
@@ -326,8 +334,12 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
   }
 
   const priced = items.filter((i) => i.priceEach != null);
-  const estimatedTotal = priced.length
-    ? priced.reduce((sum, i) => sum + i.priceEach * i.qty, 0)
+  const extraTotal = items.reduce(
+    (sum, item) => sum + (item.complimentaryItems || []).reduce((sub, freeItem) => sub + (Number(freeItem.extraTotal) || 0), 0),
+    0
+  );
+  const estimatedTotal = priced.length || extraTotal > 0
+    ? priced.reduce((sum, i) => sum + i.priceEach * i.qty, extraTotal)
     : null;
 
   const order = await records.insert('orders', {

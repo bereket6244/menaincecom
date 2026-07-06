@@ -10,7 +10,7 @@ import type { BusinessSettings, Product } from '../lib/types';
 import { buildCartOrderMessage, smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
 import { EmptyState, IconButton } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
-import { complimentaryForProduct, complimentarySummary } from '../lib/complimentary';
+import { complimentaryExtraTotal, complimentaryForProduct, complimentarySummary } from '../lib/complimentary';
 import { cx, formatPrice } from '../lib/utils';
 
 type Channel = 'whatsapp' | 'telegram' | 'sms';
@@ -61,9 +61,15 @@ export function DesktopOrderSummary() {
 
   const selectedTotal = useMemo(() => {
     const priced = selectedItems.filter((i) => i.priceEach != null);
-    if (!priced.length) return null;
-    return priced.reduce((sum, i) => sum + (i.priceEach || 0) * i.qty, 0);
-  }, [selectedItems]);
+    const productByIdForTotal = new Map((products || []).map((product) => [product.id, product]));
+    const extras = selectedItems.reduce((sum, item) => {
+      const product = productByIdForTotal.get(item.productId);
+      const selections = Object.fromEntries((item.complimentaryItems || []).map((freeItem) => [freeItem.name, freeItem.qty]));
+      return sum + complimentaryExtraTotal(product ? complimentaryForProduct(product, item.qty, selections) : item.complimentaryItems);
+    }, 0);
+    if (!priced.length && extras === 0) return null;
+    return priced.reduce((sum, i) => sum + (i.priceEach || 0) * i.qty, extras);
+  }, [products, selectedItems]);
 
   const hasQuoteItems = selectedItems.some((i) => i.priceEach == null);
   const selectedCount = selectedItems.reduce((n, i) => n + i.qty, 0);
@@ -268,7 +274,14 @@ export function DesktopOrderSummary() {
                         <div className="truncate text-sm font-bold text-ink">{item.name}</div>
                         <div className="truncate text-[12px] text-muted">Included with {item.productName}</div>
                       </div>
-                      <div className="shrink-0 text-sm font-extrabold text-green">{item.qty.toLocaleString()}</div>
+                      <div className="shrink-0 text-right">
+                        <div className="text-sm font-extrabold text-green">{item.qty.toLocaleString()}</div>
+                        {(item.extraQty || 0) > 0 && (
+                          <div className="text-[11px] font-semibold text-[#ee0a24]">
+                            +{(item.extraTotal || 0).toLocaleString()} ETB extra
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

@@ -142,7 +142,7 @@ export function ProductsAdmin() {
       ...editing,
       complimentaryItems: [
         ...(editing.complimentaryItems || []),
-        { id: crypto.randomUUID?.() || String(Date.now()), enabled: true, name: '', type: 'fixed', qty: 2 },
+        { id: crypto.randomUUID?.() || String(Date.now()), enabled: true, name: '', type: 'fixed', qty: 2, extraPriceEach: 0 },
       ],
     });
   };
@@ -172,6 +172,7 @@ export function ProductsAdmin() {
                 qty: item.type === 'multiplier'
                   ? Math.min(COMPLIMENTARY_MAX_MULTIPLIER, Math.max(0.01, Number(item.qty) || 1))
                   : Math.max(1, Math.floor(Number(item.qty) || 1)),
+                extraPriceEach: Math.max(0, Number(item.extraPriceEach) || 0),
               }))
               .filter((item) => item.name),
       };
@@ -367,7 +368,7 @@ export function ProductsAdmin() {
                 ) : (
                   <div className="mt-3 space-y-2">
                     {(editing.complimentaryItems || []).map((item) => (
-                      <div key={item.id} className="grid gap-2 rounded border border-edge bg-surface p-2 sm:grid-cols-[auto_1fr_130px_120px_auto] sm:items-center">
+                      <div key={item.id} className="grid gap-2 rounded border border-edge bg-surface p-2 sm:grid-cols-[auto_1fr_130px_120px_140px_auto] sm:items-center">
                         <label className="flex items-center gap-2 text-xs font-semibold">
                           <input
                             type="checkbox"
@@ -402,6 +403,18 @@ export function ProductsAdmin() {
                           className="field py-1 text-[12px]"
                           aria-label={item.type === 'multiplier' ? 'Complimentary multiplier' : 'Complimentary quantity'}
                         />
+                        <label className="block">
+                          <span className="mb-1 block text-[9px] font-bold uppercase tracking-[0.08em] text-muted">Extra ETB each</span>
+                          <input
+                            type="number"
+                            min={0}
+                            step={1}
+                            value={item.extraPriceEach ?? 0}
+                            onChange={(e) => updateComplimentaryItem(item.id, { extraPriceEach: Number(e.target.value) })}
+                            className="field py-1 text-[12px]"
+                            aria-label="Extra price per complimentary item"
+                          />
+                        </label>
                         <IconButton
                           icon={<X className="h-3.5 w-3.5" />}
                           title="Remove complimentary item"

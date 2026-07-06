@@ -29,6 +29,11 @@ export function buildOrderMessage(order: OrderRecord, business: BusinessSettings
     lines.push(`• ${item.qty} × ${item.name}${variants ? ` (${variants})` : ''} — ${price}`);
     const freebies = complimentarySummary(item.complimentaryItems);
     if (freebies) lines.push(`  Complimentary: ${freebies}`);
+    for (const freeItem of item.complimentaryItems || []) {
+      if ((freeItem.extraQty || 0) > 0) {
+        lines.push(`  Extra ${freeItem.name}: ${freeItem.extraQty?.toLocaleString()} x ${(freeItem.extraPriceEach || 0).toLocaleString()} ETB = ${(freeItem.extraTotal || 0).toLocaleString()} ETB`);
+      }
+    }
     if (item.note) lines.push(`  Note: ${item.note}`);
   }
 
@@ -75,6 +80,11 @@ export function buildCartOrderMessage(items: CartItem[], note: string, origin: s
     lines.push(item.qty.toLocaleString() + ' pcs');
     const freebies = complimentarySummary(item.complimentaryItems);
     if (freebies) lines.push('complimentary: ' + freebies);
+    for (const freeItem of item.complimentaryItems || []) {
+      if ((freeItem.extraQty || 0) > 0) {
+        lines.push('extra ' + freeItem.name + ': ' + (freeItem.extraQty || 0).toLocaleString() + ' x ' + (freeItem.extraPriceEach || 0).toLocaleString() + ' ETB = ' + (freeItem.extraTotal || 0).toLocaleString() + ' ETB');
+      }
+    }
     lines.push('link: ' + productUrl(item.productId, origin));
     lines.push('');
   });
