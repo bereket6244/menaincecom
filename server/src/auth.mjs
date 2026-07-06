@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
-import { records } from './db.js';
+import { records } from './db.mjs';
 
 // Never fall back to a guessable secret: a known secret lets anyone forge an
 // admin token. With no configured secret we use a random per-boot one —

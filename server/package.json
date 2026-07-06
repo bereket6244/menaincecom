@@ -2,10 +2,9 @@
   "name": "mena-inc-server",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "node --watch src/index.js",
-    "start": "node src/index.js"
+    "dev": "node --watch src/index.mjs",
+    "start": "node src/index.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

@@ -3,12 +3,12 @@ import multer from 'multer';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { records, dbRoute, ensureWritablePersistence } from './db.js';
+import { records, dbRoute, ensureWritablePersistence } from './db.mjs';
 import {
   signToken, publicUser, hashPassword, verifyPassword,
   requireAuth, requireAdmin, optionalAuth,
-} from './auth.js';
-import { formatOrderMessage, sendTelegram, sendWhatsApp, pushToAdmins } from './notify.js';
+} from './auth.mjs';
+import { formatOrderMessage, sendTelegram, sendWhatsApp, pushToAdmins } from './notify.mjs';
 
 export const api = Router();
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');

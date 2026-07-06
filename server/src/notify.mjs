@@ -1,5 +1,5 @@
 import webpush from 'web-push';
-import { records } from './db.js';
+import { records } from './db.mjs';
 
 const vapidReady = Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);
 if (vapidReady) {

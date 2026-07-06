@@ -5,9 +5,9 @@ import compression from 'compression';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { ensureSchema, records } from './db.js';
-import { ensureAdminSeed } from './auth.js';
-import { api } from './routes.js';
+import { ensureSchema, records } from './db.mjs';
+import { ensureAdminSeed } from './auth.mjs';
+import { api } from './routes.mjs';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const app = express();
