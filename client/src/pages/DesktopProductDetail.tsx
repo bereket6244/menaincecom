@@ -79,7 +79,7 @@ export function DesktopProductDetail() {
       variantSelections: selectedVariants,
       qty: quantity,
       note: '',
-      complimentaryItems: complimentaryForProduct(p, quantity),
+      complimentaryItems: p.id === product.id ? complimentaryItems : complimentaryForProduct(p, quantity),
     }, mode);
   };
 

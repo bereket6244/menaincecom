@@ -120,18 +120,21 @@ export function MobileProductDetail() {
     );
   };
 
-  const add = (mode: 'increment' | 'replace' = 'increment') => addToCart({
-    productId: product.id,
-    name: product.name,
-    photo: product.photos[0] || '',
-    isAddon: product.isAddon,
-    pricingMode: product.pricingMode,
-    priceEach: product.pricingMode === 'exact' ? product.price : null,
-    variantSelections: selections,
-    qty,
-    note: '',
-    complimentaryItems,
-  }, mode);
+  const add = (mode: 'increment' | 'replace' = 'increment') => {
+    const selectedComplimentaryItems = complimentaryForProduct(product, qty, complimentarySelections);
+    return addToCart({
+      productId: product.id,
+      name: product.name,
+      photo: product.photos[0] || '',
+      isAddon: product.isAddon,
+      pricingMode: product.pricingMode,
+      priceEach: product.pricingMode === 'exact' ? product.price : null,
+      variantSelections: selections,
+      qty,
+      note: '',
+      complimentaryItems: selectedComplimentaryItems,
+    }, mode);
+  };
 
   const requireOptions = () => {
     if (!missingVariant) return false;
