@@ -29,21 +29,6 @@ export function MobileShell({ children }: { children: ReactNode }) {
     navigate(`/catalog${q ? `?q=${encodeURIComponent(q)}` : ''}`);
   };
 
-  const drawerSearch = (
-    <form
-      onSubmit={(e) => { e.preventDefault(); submitSearch(); }}
-      className="relative"
-    >
-      <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search designs, colors, prices..."
-        className="w-full rounded-full border border-edge bg-white py-3 pl-10 pr-4 text-sm text-ink outline-none placeholder:text-muted/70 focus:border-pink"
-      />
-    </form>
-  );
-
   return (
     <div className="mobile-boutique min-h-dvh bg-bg text-ink">
       <StatusBanners />
@@ -135,7 +120,6 @@ export function MobileShell({ children }: { children: ReactNode }) {
         </div>
 
         <div className="space-y-5 overflow-y-auto px-4 py-5">
-          {drawerSearch}
           <nav className="space-y-1">
             {NAV.map(({ to, label, icon: Icon }) => (
               <NavLink
