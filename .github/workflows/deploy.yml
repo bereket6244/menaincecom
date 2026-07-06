@@ -129,6 +129,20 @@ jobs:
               -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
               "${CPANEL_BASE_URL}/execute/PassengerApps/list_applications")"
 
+            printf '%s\n' "${apps_json}" | jq '
+              (.data // [])
+              | map(select(((.base_uri // .uri // .url // "") == "/shop") or ((.name // "") | test("shop"; "i"))))
+              | map({
+                  name,
+                  path: (.path // .app_root // .app_path // null),
+                  base_uri: (.base_uri // .uri // .url // null),
+                  startup_file: (.startup_file // .startupfile // .entry_point // .startup // null),
+                  app_type: (.app_type // .type // null),
+                  enabled,
+                  deployment_mode
+                })
+            '
+
             app_path="$(printf '%s' "${apps_json}" | jq -r '
               (.data // [])
               | map(select(((.base_uri // .uri // .url // "") == "/shop") or ((.name // "") | test("shop"; "i"))))
