@@ -1,9 +1,9 @@
 # MENA INC. - Wedding Cards & Stationery
 
 Lead-generation storefront and operations admin panel for **Mena INK Trading PLC** in Addis Ababa.
-Customers browse the catalog, build an order summary, and send it in one tap via **WhatsApp** or
-**Telegram**. There is no online payment. Every order is saved, delivered to the team on the chosen
-channel, and can trigger an admin push notification.
+Customers browse the catalog, build an order summary, and send it in one tap via **Telegram**,
+**WhatsApp**, or **SMS**. There is no online payment. Every order is saved, delivered to the team on
+the chosen channel, and can trigger an admin push notification.
 
 ## Stack
 
@@ -96,6 +96,16 @@ in the admin panel.
 - **Pricing modes**: products can have exact price, starting price, or quote-only pricing.
 - **Add-ons**: add-on products are hidden from the main catalog and surfaced as suggestions on product
   pages and the order summary.
+- **Complimentary items**: admins can attach free items to products directly, or create reusable
+  universal complimentary items and enable them per product. Free quantities can be fixed or a
+  multiplier of the main item quantity, capped at 2.5x. Customers start at `0`, choose how many free
+  items they want, and any quantity above the allowed free amount is priced with the admin-set extra
+  price.
+- **Product variants and photos**: products can have multiple photos and optional variant attributes
+  such as color or size. Variant values participate in catalog filtering and product detail
+  selections.
+- **Category photos**: admins can upload category profile photos, and customers see them in the
+  storefront category experience.
 - **Accounts**: customers can sign up with email or phone plus password. Guest checkout captures name,
   phone, and optional email.
 
@@ -117,7 +127,7 @@ CREATE TABLE app_records (
 Collections include:
 
 ```text
-products, categories, gallery, orders, leads, users, content, push_subscriptions
+products, categories, complimentary_items, gallery, orders, leads, users, content, push_subscriptions
 ```
 
 ## API Surface
@@ -129,6 +139,7 @@ Public:
 - `POST /api/auth/login`
 - `GET /api/auth/me`
 - `GET /api/categories`
+- `GET /api/complimentary-items`
 - `GET /api/products`
 - `GET /api/products/:id`
 - `GET /api/gallery`
@@ -138,7 +149,8 @@ Admin only:
 
 - `GET /api/admin/users/admins`
 - `POST /api/admin/users/admins`
-- CRUD on `/api/admin/products`, `/api/admin/categories`, `/api/admin/gallery`
+- CRUD on `/api/admin/products`, `/api/admin/categories`, `/api/admin/complimentary-items`,
+  `/api/admin/gallery`
 - `GET /api/admin/orders`
 - `PUT /api/admin/orders/:id`
 - `GET /api/admin/leads`
