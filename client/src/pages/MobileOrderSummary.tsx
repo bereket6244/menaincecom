@@ -16,8 +16,8 @@ type Channel = 'whatsapp' | 'telegram' | 'sms';
 type Step = 'cart' | 'checkout';
 
 const CHANNELS: { id: Channel; label: string; icon: typeof Send; accent: string; tint: string }[] = [
-  { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, accent: '#25a34f', tint: 'rgba(37,163,79,.08)' },
   { id: 'telegram', label: 'Telegram', icon: Send, accent: '#2b93d6', tint: 'rgba(43,147,214,.08)' },
+  { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, accent: '#25a34f', tint: 'rgba(37,163,79,.08)' },
   { id: 'sms', label: 'SMS', icon: MessageSquareText, accent: '#ee317b', tint: 'rgba(238,49,123,.08)' },
 ];
 
@@ -35,7 +35,7 @@ export function MobileOrderSummary() {
   const [step, setStep] = useState<Step>('cart');
   const [selected, setSelected] = useState<Set<string>>(() => new Set(cart.map((item) => item.key)));
   const [orderNote, setOrderNote] = useState('');
-  const [channel, setChannel] = useState<Channel>('whatsapp');
+  const [channel, setChannel] = useState<Channel>('telegram');
   const [sending, setSending] = useState<Channel | null>(null);
   const [sent, setSent] = useState<{ channel: Channel; chatUrl: string; keys: string[] } | null>(null);
   const prevKeys = useRef<Set<string>>(new Set());

@@ -70,27 +70,35 @@ function productUrl(productId: string, origin: string): string {
 }
 
 export function buildCartOrderMessage(items: CartItem[], note: string, origin: string): string {
-  const lines = ['hello there, i would like to order these', ''];
+  const itemWord = items.length === 1 ? 'this item' : 'these items';
+  const lines = [`Hello, I'd like to order ${itemWord}.`, ''];
 
   items.forEach((item, idx) => {
-    const variants = Object.entries(item.variantSelections || {})
-      .map(([k, v]) => k + ': ' + v)
-      .join(', ');
-    lines.push((idx + 1) + ') ' + item.name + (variants ? ' - ' + variants : ''));
-    lines.push(item.qty.toLocaleString() + ' pcs');
-    const freebies = complimentarySummary(item.complimentaryItems);
-    if (freebies) lines.push('complimentary: ' + freebies);
-    for (const freeItem of item.complimentaryItems || []) {
-      if ((freeItem.extraQty || 0) > 0) {
-        lines.push('extra ' + freeItem.name + ': ' + (freeItem.extraQty || 0).toLocaleString() + ' x ' + (freeItem.extraPriceEach || 0).toLocaleString() + ' ETB = ' + (freeItem.extraTotal || 0).toLocaleString() + ' ETB');
+    const prefix = items.length === 1 ? '' : `${idx + 1}) `;
+    lines.push(`${prefix}Item: ${item.name}`);
+    lines.push(`Quantity: ${item.qty.toLocaleString()} pcs`);
+
+    const complimentary = (item.complimentaryItems || []).filter((freeItem) => freeItem.qty > 0);
+    if (complimentary.length) {
+      lines.push('Extras:');
+      for (const freeItem of complimentary) {
+        const freeQty = Math.min(freeItem.qty, freeItem.freeQty ?? freeItem.maxQty ?? freeItem.qty);
+        const extraQty = freeItem.extraQty || 0;
+        if (extraQty > 0) {
+          lines.push(`- ${freeItem.name}: ${freeQty.toLocaleString()} free + ${extraQty.toLocaleString()} paid x ${(freeItem.extraPriceEach || 0).toLocaleString()} ETB = ${(freeItem.extraTotal || 0).toLocaleString()} ETB`);
+        } else {
+          lines.push(`- ${freeItem.name}: ${freeQty.toLocaleString()} free`);
+        }
       }
     }
-    lines.push('link: ' + productUrl(item.productId, origin));
+
+    lines.push('Reference image:');
+    lines.push(item.photo || productUrl(item.productId, origin));
     lines.push('');
   });
 
   if (note.trim()) lines.push('order note: ' + note.trim(), '');
-  lines.push('please contact me');
+  lines.push('Please contact me.');
   return lines.join('\n');
 }
 

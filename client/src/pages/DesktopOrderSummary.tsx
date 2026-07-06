@@ -17,8 +17,8 @@ type Channel = 'whatsapp' | 'telegram' | 'sms';
 type Step = 'cart' | 'checkout';
 
 const CHANNELS: { id: Channel; label: string; icon: typeof Send }[] = [
-  { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle },
   { id: 'telegram', label: 'Telegram', icon: Send },
+  { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle },
   { id: 'sms', label: 'SMS', icon: MessageSquareText },
 ];
 
@@ -35,7 +35,7 @@ export function DesktopOrderSummary() {
   const [step, setStep] = useState<Step>('cart');
   const [selected, setSelected] = useState<Set<string>>(() => new Set(cart.map((i) => i.key)));
   const [orderNote, setOrderNote] = useState('');
-  const [channel, setChannel] = useState<Channel>('whatsapp');
+  const [channel, setChannel] = useState<Channel>('telegram');
   const [sending, setSending] = useState<Channel | null>(null);
   // keys: the cart lines this order covers — kept in the cart until the
   // customer confirms they're done, so a failed send never loses the order.
