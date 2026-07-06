@@ -30,7 +30,7 @@ export function complimentaryForProduct(
         ? Math.floor((Number(mainQty) || 0) * Number(item.qty))
         : Math.floor(Number(item.qty) || 0);
       const freeQty = Math.min(rawQty, limit);
-      const selectedQty = selections ? clampSelected(selections[item.name.trim()], COMPLIMENTARY_EXTRA_MAX_QTY) : freeQty;
+      const selectedQty = selections ? clampSelected(selections[item.name.trim()], COMPLIMENTARY_EXTRA_MAX_QTY) : 0;
       const extraQty = Math.max(0, selectedQty - freeQty);
       const extraPriceEach = item.extraPriceEach == null ? null : Math.max(0, Number(item.extraPriceEach) || 0);
       return {

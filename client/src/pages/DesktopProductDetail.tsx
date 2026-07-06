@@ -222,7 +222,7 @@ export function DesktopProductDetail() {
               <div className="mt-3 space-y-3">
                 {complimentaryOptions.map((item) => {
                   const freeQty = item.freeQty ?? item.maxQty ?? item.qty;
-                  const selectedQty = Math.min(COMPLIMENTARY_EXTRA_MAX_QTY, Math.max(0, complimentarySelections[item.name] ?? freeQty));
+                  const selectedQty = Math.min(COMPLIMENTARY_EXTRA_MAX_QTY, Math.max(0, complimentarySelections[item.name] ?? 0));
                   const extraQty = Math.max(0, selectedQty - freeQty);
                   const extraTotal = extraQty * (item.extraPriceEach || 0);
                   return (

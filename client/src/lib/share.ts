@@ -92,8 +92,8 @@ export function buildCartOrderMessage(items: CartItem[], note: string, origin: s
       }
     }
 
-    lines.push('Reference image:');
-    lines.push(item.photo || productUrl(item.productId, origin));
+    lines.push('Item link:');
+    lines.push(productUrl(item.productId, origin));
     lines.push('');
   });
 

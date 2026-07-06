@@ -265,7 +265,7 @@ function complimentaryForProduct(product, qty, selections = {}) {
       const hasSelection = Object.prototype.hasOwnProperty.call(selections, name);
       const selectedQty = hasSelection
         ? Math.min(COMPLIMENTARY_EXTRA_MAX_QTY, Math.max(0, Math.floor(Number(selections[name]) || 0)))
-        : freeQty;
+        : 0;
       const extraQty = Math.max(0, selectedQty - freeQty);
       const extraPriceEach = item.extraPriceEach == null ? null : Math.max(0, Number(item.extraPriceEach) || 0);
       return {

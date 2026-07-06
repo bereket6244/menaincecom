@@ -81,9 +81,8 @@ export function MobileProductDetail() {
       const next: Record<string, number> = {};
       for (const item of complimentaryOptions) {
         const maxQty = COMPLIMENTARY_EXTRA_MAX_QTY;
-        const freeQty = item.freeQty ?? item.maxQty ?? item.qty;
         const existing = current[item.name];
-        next[item.name] = existing == null ? freeQty : Math.min(maxQty, Math.max(0, existing));
+        next[item.name] = existing == null ? 0 : Math.min(maxQty, Math.max(0, existing));
       }
       return next;
     });
@@ -254,7 +253,7 @@ export function MobileProductDetail() {
               <div className="mt-3 space-y-3">
                 {complimentaryOptions.map((item) => {
                   const freeQty = item.freeQty ?? item.maxQty ?? item.qty;
-                  const selectedQty = complimentarySelections[item.name] ?? freeQty;
+                  const selectedQty = complimentarySelections[item.name] ?? 0;
                   const extraQty = Math.max(0, selectedQty - freeQty);
                   const extraTotal = extraQty * (item.extraPriceEach || 0);
                   return (
