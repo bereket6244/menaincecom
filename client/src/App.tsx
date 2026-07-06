@@ -6,6 +6,7 @@ const Catalog = lazy(() => import('./pages/Catalog').then((m) => ({ default: m.C
 const ProductDetail = lazy(() => import('./pages/ProductDetail').then((m) => ({ default: m.ProductDetail })));
 const Gallery = lazy(() => import('./pages/Gallery').then((m) => ({ default: m.Gallery })));
 const OrderSummary = lazy(() => import('./pages/OrderSummary').then((m) => ({ default: m.OrderSummary })));
+const Wishlist = lazy(() => import('./pages/Wishlist').then((m) => ({ default: m.Wishlist })));
 const Login = lazy(() => import('./pages/Login').then((m) => ({ default: m.Login })));
 const Account = lazy(() => import('./pages/Login').then((m) => ({ default: m.Account })));
 const Contact = lazy(() => import('./pages/Contact').then((m) => ({ default: m.Contact })));
@@ -48,6 +49,7 @@ export default function App() {
                 <Route path="/catalog" element={<Catalog />} />
                 <Route path="/product/:id" element={<ProductDetail />} />
                 <Route path="/gallery" element={<Gallery />} />
+                <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/order" element={<OrderSummary />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/account" element={<Account />} />

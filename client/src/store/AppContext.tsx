@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { ReactNode } from 'react';
 import type { CartItem, User } from '../lib/types';
 import { apiGet, apiSend, checkApiHealth, onDbStatus, setToken } from '../lib/api';
+import { readLocalWishlist, writeLocalWishlist } from '../lib/wishlist';
 
 export interface Toast {
   id: number;
@@ -19,6 +20,9 @@ interface AppState {
   signup: (name: string, identifier: string, password: string) => Promise<void>;
   logout: () => void;
   cart: CartItem[];
+  wishlistProductIds: string[];
+  toggleWishlist: (productId: string) => Promise<boolean>;
+  removeFromWishlist: (productId: string) => Promise<void>;
   /** 'increment' stacks qty onto an existing identical line; 'replace' sets it (used by Buy now so double-taps never double the order). */
   addToCart: (item: Omit<CartItem, 'key'>, mode?: 'increment' | 'replace') => AddToCartResult;
   updateCartItem: (key: string, patch: Partial<CartItem>) => void;
@@ -44,6 +48,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [dbDown, setDbDown] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [cart, setCart] = useState<CartItem[]>(loadCart);
+  const [wishlistProductIds, setWishlistProductIds] = useState<string[]>(readLocalWishlist);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastId = useRef(0);
 
@@ -82,6 +87,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem('mena_cart', JSON.stringify(cart));
   }, [cart]);
+
+  useEffect(() => {
+    writeLocalWishlist(wishlistProductIds);
+  }, [wishlistProductIds]);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    const syncWishlist = async () => {
+      try {
+        const localIds = readLocalWishlist();
+        const remote = await apiGet<{ productIds: string[] }>('/wishlist');
+        const merged = [...new Set([...remote.productIds, ...localIds])];
+        if (localIds.length) {
+          await Promise.all(localIds.map((productId) => apiSend('PUT', `/wishlist/${productId}`)));
+        }
+        if (!cancelled) setWishlistProductIds(merged);
+      } catch {
+        // Keep the local wishlist usable if the API is temporarily unavailable.
+      }
+    };
+    void syncWishlist();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const toast = useCallback((kind: Toast['kind'], message: string) => {
     const id = ++toastId.current;
@@ -139,13 +170,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const clearCart = useCallback(() => setCart([]), []);
 
+  const toggleWishlist = useCallback(async (productId: string) => {
+    const shouldSave = !wishlistProductIds.includes(productId);
+    setWishlistProductIds((ids) => {
+      return shouldSave ? [...ids, productId] : ids.filter((id) => id !== productId);
+    });
+    if (user) {
+      try {
+        if (shouldSave) await apiSend('PUT', `/wishlist/${productId}`);
+        else await apiSend('DELETE', `/wishlist/${productId}`);
+      } catch {
+        toast('error', 'Could not sync liked item. It is saved on this device for now.');
+      }
+    }
+    return shouldSave;
+  }, [toast, user, wishlistProductIds]);
+
+  const removeFromWishlist = useCallback(async (productId: string) => {
+    setWishlistProductIds((ids) => ids.filter((id) => id !== productId));
+    if (user) {
+      try {
+        await apiSend('DELETE', `/wishlist/${productId}`);
+      } catch {
+        toast('error', 'Could not sync liked item removal.');
+      }
+    }
+  }, [toast, user]);
+
   const value = useMemo<AppState>(
     () => ({
       online, dbDown, user, login, signup, logout,
-      cart, addToCart, updateCartItem, removeFromCart, clearCart,
+      cart, wishlistProductIds, toggleWishlist, removeFromWishlist,
+      addToCart, updateCartItem, removeFromCart, clearCart,
       toasts, toast, dismissToast,
     }),
-    [online, dbDown, user, login, signup, logout, cart, addToCart, updateCartItem, removeFromCart, clearCart, toasts, toast, dismissToast]
+    [
+      online, dbDown, user, login, signup, logout, cart, wishlistProductIds,
+      toggleWishlist, removeFromWishlist, addToCart, updateCartItem, removeFromCart,
+      clearCart, toasts, toast, dismissToast,
+    ]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

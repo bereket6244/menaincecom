@@ -1,31 +1,13 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
 import { Heart } from 'lucide-react';
 import type { Product } from '../lib/types';
 import { cx, cssColor, findVariantGroup, formatPrice } from '../lib/utils';
-
-/* Lightweight, self-contained wishlist persisted in localStorage. */
-const WKEY = 'mena_wishlist';
-function readWish(): string[] {
-  try {
-    return JSON.parse(localStorage.getItem(WKEY) || '[]');
-  } catch {
-    return [];
-  }
-}
-function toggleWish(id: string): boolean {
-  const w = readWish();
-  const next = w.includes(id) ? w.filter((x) => x !== id) : [...w, id];
-  localStorage.setItem(WKEY, JSON.stringify(next));
-  return next.includes(id);
-}
+import { useApp } from '../store/AppContext';
 
 export function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
   const navigate = useNavigate();
-  const [wished, setWished] = useState(false);
-  useEffect(() => {
-    setWished(readWish().includes(product.id));
-  }, [product.id]);
+  const { wishlistProductIds, toggleWishlist } = useApp();
+  const wished = wishlistProductIds.includes(product.id);
 
   const open = () => navigate(`/product/${product.id}`);
 
@@ -61,7 +43,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
         )}
 
         <button
-          onClick={() => setWished(toggleWish(product.id))}
+          onClick={() => void toggleWishlist(product.id)}
           aria-label="Save to wishlist"
           className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm transition-transform hover:scale-105"
         >

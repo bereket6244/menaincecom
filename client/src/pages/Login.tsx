@@ -91,6 +91,9 @@ export function Account() {
             Open admin panel
           </Button>
         )}
+        <Button variant="outline" className="mt-4 w-full" onClick={() => navigate('/wishlist')}>
+          View liked items
+        </Button>
         <Button
           variant="danger"
           className="mt-2 w-full"

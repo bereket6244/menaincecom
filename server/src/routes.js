@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { records, dbRoute, ensureWritablePersistence } from './db.js';
 import {
   signToken, publicUser, hashPassword, verifyPassword,
-  requireAdmin, optionalAuth,
+  requireAuth, requireAdmin, optionalAuth,
 } from './auth.js';
 import { formatOrderMessage, sendTelegram, sendWhatsApp, pushToAdmins } from './notify.js';
 
@@ -136,6 +136,37 @@ api.get('/auth/me', optionalAuth, dbRoute(async (req, res) => {
   const user = await records.get('users', req.auth.id);
   if (!user) return res.status(401).json({ error: 'unauthorized' });
   res.json({ user: publicUser(user) });
+}));
+
+/* -------------------------------- wishlist -------------------------------- */
+
+api.get('/wishlist', requireAuth, dbRoute(async (req, res) => {
+  const items = await records.list('wishlist_items');
+  const productIds = items
+    .filter((item) => item.userId === req.auth.id)
+    .map((item) => item.productId);
+  res.json({ productIds: [...new Set(productIds)] });
+}));
+
+api.put('/wishlist/:productId', requireAuth, dbRoute(async (req, res) => {
+  const product = await records.get('products', req.params.productId);
+  if (!product) return res.status(404).json({ error: 'not_found', message: 'Product not found.' });
+  const existing = await records.find(
+    'wishlist_items',
+    (item) => item.userId === req.auth.id && item.productId === product.id
+  );
+  if (existing) return res.json({ ok: true });
+  await records.insert('wishlist_items', { userId: req.auth.id, productId: product.id });
+  res.json({ ok: true });
+}));
+
+api.delete('/wishlist/:productId', requireAuth, dbRoute(async (req, res) => {
+  const existing = await records.find(
+    'wishlist_items',
+    (item) => item.userId === req.auth.id && item.productId === req.params.productId
+  );
+  if (existing) await records.remove('wishlist_items', existing.id);
+  res.json({ ok: true });
 }));
 
 /* ------------------------------- admin users ------------------------------- */

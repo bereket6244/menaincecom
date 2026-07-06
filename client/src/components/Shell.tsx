@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutGrid, Images, ShoppingBag, User, Phone, Search, Menu, X } from 'lucide-react';
+import { LayoutGrid, Images, ShoppingBag, User, Phone, Search, Menu, X, Heart } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useApp } from '../store/AppContext';
 import { cx } from '../lib/utils';
@@ -16,12 +16,13 @@ type NavItem = {
 
 const NAV: NavItem[] = [
   { to: '/catalog', label: 'Wedding Cards', icon: LayoutGrid },
+  { to: '/wishlist', label: 'Liked', icon: Heart },
   { to: '/gallery', label: 'Gallery', icon: Images },
   { to: '/contact', label: 'Contact', icon: Phone },
 ];
 
 export function Shell({ children }: { children: ReactNode }) {
-  const { cart, user } = useApp();
+  const { cart, user, wishlistProductIds } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const [q, setQ] = useState('');
@@ -86,6 +87,18 @@ export function Shell({ children }: { children: ReactNode }) {
           <div className="ml-auto flex items-center gap-2.5">
             <Link to="/contact" className="hidden items-center gap-1.5 text-sm font-medium text-ink/70 hover:text-ink lg:flex">
               <Phone className="h-4 w-4" /> Find our studio
+            </Link>
+            <Link
+              to="/wishlist"
+              aria-label={`Liked items, ${wishlistProductIds.length} saved`}
+              className="relative hidden h-9 w-9 items-center justify-center rounded-full text-ink/70 hover:bg-surface2 hover:text-ink md:flex"
+            >
+              <Heart className="h-5 w-5" />
+              {wishlistProductIds.length > 0 && (
+                <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[9px] font-bold text-white">
+                  {wishlistProductIds.length > 99 ? '99+' : wishlistProductIds.length}
+                </span>
+              )}
             </Link>
             <Link
               to={user ? '/account' : '/login'}
@@ -176,6 +189,9 @@ export function Shell({ children }: { children: ReactNode }) {
             </Link>
             <Link to="/gallery" className="whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
               Portfolio
+            </Link>
+            <Link to="/wishlist" className="whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
+              Liked
             </Link>
             <Link to="/contact" className="whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
               Studio
