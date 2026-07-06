@@ -13,6 +13,7 @@ const Contact = lazy(() => import('./pages/Contact').then((m) => ({ default: m.C
 const AdminShell = lazy(() => import('./admin/AdminShell').then((m) => ({ default: m.AdminShell })));
 const OrdersAdmin = lazy(() => import('./admin/OrdersAdmin').then((m) => ({ default: m.OrdersAdmin })));
 const ProductsAdmin = lazy(() => import('./admin/ProductsAdmin').then((m) => ({ default: m.ProductsAdmin })));
+const ComplimentaryItemsAdmin = lazy(() => import('./admin/ComplimentaryItemsAdmin').then((m) => ({ default: m.ComplimentaryItemsAdmin })));
 const CategoriesAdmin = lazy(() => import('./admin/CategoriesAdmin').then((m) => ({ default: m.CategoriesAdmin })));
 const GalleryAdmin = lazy(() => import('./admin/GalleryAdmin').then((m) => ({ default: m.GalleryAdmin })));
 const BusinessAdmin = lazy(() => import('./admin/BusinessAdmin').then((m) => ({ default: m.BusinessAdmin })));
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="/admin" element={<AdminShell />}>
           <Route index element={<OrdersAdmin />} />
           <Route path="products" element={<ProductsAdmin />} />
+          <Route path="complimentary-items" element={<ComplimentaryItemsAdmin />} />
           <Route path="categories" element={<CategoriesAdmin />} />
           <Route path="gallery" element={<GalleryAdmin />} />
           <Route path="business" element={<BusinessAdmin />} />

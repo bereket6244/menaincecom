@@ -1,4 +1,4 @@
-import type { ComplimentaryCartItem, Product } from './types';
+import type { ComplimentaryCartItem, ComplimentaryItemConfig, Product, UniversalComplimentaryItem } from './types';
 
 export const COMPLIMENTARY_MAX_MULTIPLIER = 2.5;
 export const COMPLIMENTARY_EXTRA_MAX_QTY = 100000;
@@ -44,6 +44,35 @@ export function complimentaryForProduct(
       };
     })
     .filter((item) => (item.freeQty || 0) > 0 || item.qty > 0);
+}
+
+export function resolveComplimentaryItems(
+  product: Product,
+  universalItems: UniversalComplimentaryItem[] | undefined
+): ComplimentaryItemConfig[] {
+  const selectedUniversalIds = new Set(product.universalComplimentaryItemIds || []);
+  const universal = (universalItems || [])
+    .filter((item) => item.enabled && selectedUniversalIds.has(item.id))
+    .map((item) => ({
+      id: `universal:${item.id}`,
+      enabled: item.enabled,
+      name: item.name,
+      type: item.type,
+      qty: item.qty,
+      extraPriceEach: item.extraPriceEach,
+    }));
+
+  return [...universal, ...(product.complimentaryItems || [])];
+}
+
+export function productWithResolvedComplimentary(
+  product: Product,
+  universalItems: UniversalComplimentaryItem[] | undefined
+): Product {
+  return {
+    ...product,
+    complimentaryItems: resolveComplimentaryItems(product, universalItems),
+  };
 }
 
 export function complimentarySummary(items: ComplimentaryCartItem[] | undefined): string {

@@ -2,11 +2,11 @@
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, Clock, LayoutGrid, ShoppingBag, X } from 'lucide-react';
 import { useData } from '../lib/useData';
-import type { Product } from '../lib/types';
+import type { Product, UniversalComplimentaryItem } from '../lib/types';
 import { useApp } from '../store/AppContext';
 import { Spinner, SysLabel, EmptyState } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
-import { COMPLIMENTARY_EXTRA_MAX_QTY, complimentaryAllowanceText, complimentaryForProduct, complimentarySummary } from '../lib/complimentary';
+import { COMPLIMENTARY_EXTRA_MAX_QTY, complimentaryAllowanceText, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
 import { cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
 
@@ -19,8 +19,12 @@ export function DesktopProductDetail() {
   const location = useLocation();
   const { addToCart, cart, toast, online } = useApp();
   const { data: products, loading } = useData<Product[]>('/products');
+  const { data: universalComplimentaryItems } = useData<UniversalComplimentaryItem[]>('/complimentary-items');
 
-  const product = useMemo(() => (products || []).find((p) => p.id === id) || null, [products, id]);
+  const product = useMemo(() => {
+    const found = (products || []).find((p) => p.id === id) || null;
+    return found ? productWithResolvedComplimentary(found, universalComplimentaryItems) : null;
+  }, [products, id, universalComplimentaryItems]);
   const [photoIdx, setPhotoIdx] = useState(0);
   // A clicked thumbnail pins the main photo; picking a variant unpins it so
   // the variant's own photo can take over.

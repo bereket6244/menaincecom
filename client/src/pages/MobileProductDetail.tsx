@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, ShoppingBag, X } from 'lucide-react';
 import { useData } from '../lib/useData';
-import type { Category, Product } from '../lib/types';
+import type { Category, Product, UniversalComplimentaryItem } from '../lib/types';
 import { useApp } from '../store/AppContext';
 import { EmptyState, Spinner } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { mobileProductTint } from '../components/MobileProductCard';
-import { COMPLIMENTARY_EXTRA_MAX_QTY, complimentaryAllowanceText, complimentaryForProduct, complimentarySummary } from '../lib/complimentary';
+import { COMPLIMENTARY_EXTRA_MAX_QTY, complimentaryAllowanceText, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
 import { cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
 
@@ -63,7 +63,11 @@ export function MobileProductDetail() {
   const { addToCart, cart, toast } = useApp();
   const { data: products, loading } = useData<Product[]>('/products');
   const { data: categories } = useData<Category[]>('/categories');
-  const product = useMemo(() => (products || []).find((p) => p.id === id) || null, [products, id]);
+  const { data: universalComplimentaryItems } = useData<UniversalComplimentaryItem[]>('/complimentary-items');
+  const product = useMemo(() => {
+    const found = (products || []).find((p) => p.id === id) || null;
+    return found ? productWithResolvedComplimentary(found, universalComplimentaryItems) : null;
+  }, [products, id, universalComplimentaryItems]);
   const categoryName = categories?.find((category) => category.id === product?.categoryId)?.name || 'Wedding Cards';
   const [selections, setSelections] = useState<Record<string, string>>({});
   const [complimentarySelections, setComplimentarySelections] = useState<Record<string, number>>({});

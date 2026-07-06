@@ -14,6 +14,12 @@ export interface ComplimentaryItemConfig {
   extraPriceEach?: number | null;
 }
 
+export interface UniversalComplimentaryItem extends ComplimentaryItemConfig {
+  description?: string;
+  photo?: string;
+  sortOrder?: number;
+}
+
 export interface ComplimentaryCartItem {
   name: string;
   qty: number;
@@ -36,6 +42,7 @@ export interface Product {
   isAddon: boolean; // complimentary/add-on item (entrance cards, schedule cards…)
   suggestedAddonIds: string[];
   complimentaryItems?: ComplimentaryItemConfig[];
+  universalComplimentaryItemIds?: string[];
   featured: boolean;
   createdAt?: string;
 }

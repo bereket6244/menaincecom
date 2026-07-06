@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Plus, Pencil, Star, X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import { apiSend } from '../lib/api';
-import type { Category, PricingMode, Product, VariantGroup } from '../lib/types';
+import type { Category, PricingMode, Product, UniversalComplimentaryItem, VariantGroup } from '../lib/types';
 import { DataTable } from './DataTable';
 import type { Column } from './DataTable';
 import { Button, IconButton, Modal, SysLabel } from '../components/ui';
@@ -16,7 +16,7 @@ type Draft = Omit<Product, 'id' | 'createdAt'> & { id?: string };
 const EMPTY: Draft = {
   name: '', categoryId: '', description: '', photos: [],
   pricingMode: 'exact', price: null, variants: [],
-  isAddon: false, suggestedAddonIds: [], complimentaryItems: [], featured: false,
+  isAddon: false, suggestedAddonIds: [], complimentaryItems: [], universalComplimentaryItemIds: [], featured: false,
 };
 
 function VariantsEditor({ variants, onChange }: { variants: VariantGroup[]; onChange: (v: VariantGroup[]) => void }) {
@@ -116,6 +116,7 @@ function VariantsEditor({ variants, onChange }: { variants: VariantGroup[]; onCh
 export function ProductsAdmin() {
   const { data: products, loading, reload } = useData<Product[]>('/admin/products');
   const { data: categories } = useData<Category[]>('/categories');
+  const { data: universalComplimentaryItems } = useData<UniversalComplimentaryItem[]>('/admin/complimentary-items');
   const { toast, online } = useApp();
   const [editing, setEditing] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
@@ -175,6 +176,7 @@ export function ProductsAdmin() {
                 extraPriceEach: Math.max(0, Number(item.extraPriceEach) || 0),
               }))
               .filter((item) => item.name),
+        universalComplimentaryItemIds: editing.isAddon ? [] : editing.universalComplimentaryItemIds || [],
       };
       if (editing.id) await apiSend('PUT', `/admin/products/${editing.id}`, payload);
       else await apiSend('POST', '/admin/products', payload);
@@ -430,6 +432,40 @@ export function ProductsAdmin() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {!editing.isAddon && (universalComplimentaryItems || []).length > 0 && (
+              <div className="rounded border border-edge bg-surface2 p-3">
+                <SysLabel>Universal complimentary items for this product</SysLabel>
+                <p className="mt-0.5 text-[10px] text-muted">
+                  Select reusable free/extra items that should appear on this product page.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(universalComplimentaryItems || []).map((item) => {
+                    const active = (editing.universalComplimentaryItemIds || []).includes(item.id);
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() =>
+                          setEditing({
+                            ...editing,
+                            universalComplimentaryItemIds: active
+                              ? (editing.universalComplimentaryItemIds || []).filter((id) => id !== item.id)
+                              : [...(editing.universalComplimentaryItemIds || []), item.id],
+                          })
+                        }
+                        className={cx(
+                          'rounded border px-2.5 py-1.5 text-[11px] font-semibold',
+                          active ? 'border-green bg-green/15 text-green' : 'border-edge bg-surface text-muted hover:text-ink'
+                        )}
+                      >
+                        {item.name}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 

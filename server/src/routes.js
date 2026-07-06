@@ -245,6 +245,12 @@ api.get('/content/business', dbRoute(async (_req, res) => {
   res.json(doc || { key: 'business' });
 }));
 
+api.get('/complimentary-items', dbRoute(async (_req, res) => {
+  publicCache(res);
+  const items = await records.list('complimentary_items');
+  res.json(items.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)));
+}));
+
 /* ---------------------------------- orders --------------------------------- */
 
 const COMPLIMENTARY_MAX_MULTIPLIER = 2.5;
@@ -390,6 +396,7 @@ function crud(collection) {
 }
 
 api.use('/admin/products', crud('products'));
+api.use('/admin/complimentary-items', crud('complimentary_items'));
 api.use('/admin/categories', crud('categories'));
 api.use('/admin/gallery', crud('gallery'));
 

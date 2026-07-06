@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet, Link } from 'react-router-dom';
 import {
-  Inbox, Package, FolderTree, Images, Users, ShieldCheck, Bell, ExternalLink, LogOut, Building2,
+  Inbox, Package, FolderTree, Images, Users, ShieldCheck, Bell, ExternalLink, LogOut, Building2, Gift,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { apiGet, apiSend } from '../lib/api';
@@ -11,6 +11,7 @@ import { cx } from '../lib/utils';
 const TABS = [
   { to: '/admin', label: 'Orders', icon: Inbox, end: true },
   { to: '/admin/products', label: 'Products', icon: Package },
+  { to: '/admin/complimentary-items', label: 'Free Items', icon: Gift },
   { to: '/admin/categories', label: 'Categories', icon: FolderTree },
   { to: '/admin/gallery', label: 'Gallery', icon: Images },
   { to: '/admin/business', label: 'Business', icon: Building2 },
@@ -152,7 +153,7 @@ export function AdminShell() {
       </main>
 
       {/* Mobile bottom navigation */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-7 border-t border-edge bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-8 border-t border-edge bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
         {TABS.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
