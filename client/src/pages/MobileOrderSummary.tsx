@@ -387,6 +387,10 @@ export function MobileOrderSummary() {
             </span>
             All
           </button>
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] text-muted">Amount</div>
+            <div className="truncate text-sm font-semibold text-ink">{selectedQty.toLocaleString()} item(s)</div>
+          </div>
           <div className="min-w-0 flex-1 text-right">
             <div className="text-[11px] text-muted">Total</div>
             <div className="truncate text-lg font-extrabold text-[#ee0a24]">{totalLabel(selectedTotal, hasQuoteItems)}</div>

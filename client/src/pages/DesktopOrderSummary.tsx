@@ -425,7 +425,7 @@ export function DesktopOrderSummary() {
           <h2 className="text-lg font-bold">Summary</h2>
           <div className="space-y-2 border-b border-edge pb-4 text-sm">
             <div className="flex justify-between text-muted">
-              <span>Items selected</span>
+              <span>Amount</span>
               <span className="font-semibold text-ink">{selectedCount.toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-muted">
@@ -454,6 +454,10 @@ export function DesktopOrderSummary() {
             </span>
             All
           </button>
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] text-muted">Amount</div>
+            <div className="truncate text-sm font-semibold text-ink">{selectedCount.toLocaleString()} item(s)</div>
+          </div>
           <div className="min-w-0 flex-1 text-right">
             <div className="text-[11px] text-muted">Total</div>
             <div className={cx('truncate text-lg font-extrabold', PRICE)}>{selectedTotal != null ? `${selectedTotal.toLocaleString()} ETB` : '—'}</div>
