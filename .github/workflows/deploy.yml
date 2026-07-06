@@ -202,7 +202,7 @@ jobs:
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
         run: |
-          curl --fail-with-body --show-error --silent --get \
+          deps_json="$(curl --fail-with-body --show-error --silent --get \
             --connect-timeout 20 \
             --max-time 180 \
             --retry 2 \
@@ -210,10 +210,23 @@ jobs:
             -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
             --data-urlencode "type=npm" \
             --data-urlencode "app_path=${CPANEL_APP_PATH_RESOLVED}" \
-            "${CPANEL_BASE_URL}/execute/PassengerApps/ensure_deps"
+            "${CPANEL_BASE_URL}/execute/PassengerApps/ensure_deps")"
+
+          echo "${deps_json}"
+          sse_url="$(printf '%s' "${deps_json}" | jq -r '.data.sse_url // empty')"
+          if [ -n "${sse_url}" ]; then
+            echo "Waiting for cPanel npm dependency task..."
+            timeout 240 curl --show-error --silent --no-buffer \
+              -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+              "${CPANEL_BASE_URL}${sse_url}" | tee ensure-deps.log || true
+            if grep -Eiq 'npm ERR!|error:|failed|traceback|exception' ensure-deps.log; then
+              echo "cPanel dependency installation reported an error." >&2
+              exit 1
+            fi
+          fi
 
       - name: Warm up Passenger app
-        run: sleep 20
+        run: sleep 60
 
       - name: Verify live shop
         run: |
