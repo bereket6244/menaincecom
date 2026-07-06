@@ -146,7 +146,7 @@ export function MobileProductDetail() {
   };
 
   return (
-    <div className="min-h-dvh bg-bg pb-28">
+    <div className="min-h-dvh bg-bg pb-44">
       <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-edge bg-surface px-3">
         <button type="button" onClick={goBack} aria-label="Back" className="mena-press flex h-10 w-10 items-center justify-center rounded-xl text-ink hover:bg-surface2">
           <ChevronLeft className="h-5.5 w-5.5" />
@@ -219,34 +219,48 @@ export function MobileProductDetail() {
             );
           })}
         </section>
+
+        <section className="px-[18px] pt-5">
+          <div className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">Amount</div>
+          <QuantityPicker value={qty} onChange={setQty} presets={[100, 250, 500, 1000]} />
+        </section>
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[430px] border-t border-edge bg-white/95 px-3.5 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-8px_24px_rgba(28,26,25,0.07)] backdrop-blur">
-        <div className="flex items-center gap-2.5">
-          <div className="min-w-0 shrink">
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-[11px] text-muted">Amount</div>
+              <div className="text-sm font-semibold text-ink">{qty.toLocaleString()} item(s)</div>
+            </div>
+            <QuantityPicker size="sm" value={qty} onChange={setQty} />
+          </div>
+          <div className="flex items-center gap-2.5">
+            <div className="min-w-0 shrink">
             <div className="text-[11px] text-muted">Total each</div>
             <div className="truncate text-[19px] font-extrabold text-[#ee0a24]">{formatPrice(product)}</div>
+            </div>
+            <button
+              type="button"
+              onClick={(event) => {
+                if (product.variants.length && missingVariant) openSheet('add');
+                else addFrom(event.currentTarget);
+              }}
+              className="btn-outline h-[50px] min-w-0 flex-1 px-3 text-sm"
+            >
+              Add to cart
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (product.variants.length && missingVariant) openSheet('buy');
+                else buyNow();
+              }}
+              className="btn-primary h-[50px] min-w-0 flex-1 px-3 text-sm"
+            >
+              Buy now
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={(event) => {
-              if (product.variants.length && missingVariant) openSheet('add');
-              else addFrom(event.currentTarget);
-            }}
-            className="btn-outline h-[50px] min-w-0 flex-1 px-3 text-sm"
-          >
-            Add to cart
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (product.variants.length && missingVariant) openSheet('buy');
-              else buyNow();
-            }}
-            className="btn-primary h-[50px] min-w-0 flex-1 px-3 text-sm"
-          >
-            Buy now
-          </button>
         </div>
       </div>
 
