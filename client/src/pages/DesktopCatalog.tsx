@@ -147,7 +147,7 @@ export function DesktopCatalog() {
       {/* Title + sort */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex items-baseline gap-3">
-          <h1 className="font-serif text-4xl font-semibold tracking-tight sm:text-5xl">Wedding Cards</h1>
+          <h1 className="font-serif text-4xl font-semibold tracking-tight sm:text-5xl">All designs</h1>
           <span className="text-sm text-muted">{visible.length} designs</span>
         </div>
         <div className="flex items-end gap-2">

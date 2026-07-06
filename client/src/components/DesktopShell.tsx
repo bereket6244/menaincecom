@@ -15,7 +15,7 @@ type NavItem = {
 };
 
 const NAV: NavItem[] = [
-  { to: '/catalog', label: 'Wedding Cards', icon: LayoutGrid },
+  { to: '/catalog', label: 'All designs', icon: LayoutGrid },
   { to: '/wishlist', label: 'Liked', icon: Heart },
   { to: '/gallery', label: 'Gallery', icon: Images },
   { to: '/contact', label: 'Contact', icon: Phone },
