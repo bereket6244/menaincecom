@@ -4,6 +4,7 @@ let loadError = null;
 const appReady = import('./src/index.mjs')
   .then((mod) => {
     app = mod.default || mod.app;
+    if (mod.start) return mod.start().then(() => mod);
     return mod;
   })
   .catch((err) => {
@@ -29,9 +30,7 @@ function passengerApp(req, res) {
 module.exports = passengerApp;
 
 if (require.main === module) {
-  appReady
-    .then((mod) => mod.start())
-    .catch(() => {
-      process.exitCode = 1;
-    });
+  appReady.catch(() => {
+    process.exitCode = 1;
+  });
 }
