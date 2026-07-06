@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Clock3, ShoppingBag, X } from 'lucide-react';
+import { ChevronLeft, ShoppingBag, X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { Category, Product } from '../lib/types';
 import { useApp } from '../store/AppContext';
@@ -219,11 +219,6 @@ export function MobileProductDetail() {
             );
           })}
         </section>
-
-        <div className="mx-[18px] mt-5 flex items-start gap-2.5 rounded-[14px] bg-surface2 p-3.5 text-[13px] leading-normal text-ink/70">
-          <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-pink" />
-          Send your order on WhatsApp, Telegram or SMS. No signup, no online payment. Our studio confirms every detail with you first.
-        </div>
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[430px] border-t border-edge bg-white/95 px-3.5 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-8px_24px_rgba(28,26,25,0.07)] backdrop-blur">

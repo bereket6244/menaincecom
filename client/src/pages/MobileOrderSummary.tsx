@@ -266,16 +266,18 @@ export function MobileOrderSummary() {
         </div>
 
         <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[430px] border-t border-edge bg-white/95 px-3.5 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-8px_24px_rgba(28,26,25,0.07)] backdrop-blur">
-          <div className="flex items-center gap-3">
-            <div className="min-w-0 flex-1">
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="min-w-0">
               <div className="text-[11px] text-muted">Amount</div>
               <div className="truncate text-sm font-semibold text-ink">{selectedQty.toLocaleString()} item(s)</div>
-            </div>
-            <div className="min-w-0 flex-1 text-right">
+              </div>
+              <div className="min-w-0 text-right">
               <div className="text-[11px] text-muted">Total</div>
               <div className="truncate text-lg font-extrabold text-[#ee0a24]">{totalLabel(selectedTotal, hasQuoteItems)}</div>
+              </div>
             </div>
-            <button type="button" onClick={placeOrder} disabled={!online || sending !== null} className="btn-primary h-12 shrink-0 px-5">
+            <button type="button" onClick={placeOrder} disabled={!online || sending !== null} className="btn-primary h-12 w-full px-5">
               {sending ? 'Opening...' : 'Place order'}
             </button>
           </div>
@@ -380,22 +382,24 @@ export function MobileOrderSummary() {
       )}
 
       <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[430px] border-t border-edge bg-white/95 px-3.5 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-8px_24px_rgba(28,26,25,0.07)] backdrop-blur">
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={toggleAll} className="mena-press flex shrink-0 items-center gap-2 text-sm font-extrabold text-ink">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full border-2" style={{ borderColor: allSelected ? '#ee0a24' : '#d8cfc8', background: allSelected ? '#ee0a24' : '#fff' }}>
-              {allSelected && <Check className="h-3 w-3 text-white" />}
-            </span>
-            All
-          </button>
-          <div className="min-w-0 flex-1">
-            <div className="text-[11px] text-muted">Amount</div>
-            <div className="truncate text-sm font-semibold text-ink">{selectedQty.toLocaleString()} item(s)</div>
+        <div className="space-y-2">
+          <div className="grid grid-cols-[auto_1fr_1fr] items-center gap-3">
+            <button type="button" onClick={toggleAll} className="mena-press flex shrink-0 items-center gap-2 text-sm font-extrabold text-ink">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full border-2" style={{ borderColor: allSelected ? '#ee0a24' : '#d8cfc8', background: allSelected ? '#ee0a24' : '#fff' }}>
+                {allSelected && <Check className="h-3 w-3 text-white" />}
+              </span>
+              All
+            </button>
+            <div className="min-w-0">
+              <div className="text-[11px] text-muted">Amount</div>
+              <div className="truncate text-sm font-semibold text-ink">{selectedQty.toLocaleString()} item(s)</div>
+            </div>
+            <div className="min-w-0 text-right">
+              <div className="text-[11px] text-muted">Total</div>
+              <div className="truncate text-lg font-extrabold text-[#ee0a24]">{totalLabel(selectedTotal, hasQuoteItems)}</div>
+            </div>
           </div>
-          <div className="min-w-0 flex-1 text-right">
-            <div className="text-[11px] text-muted">Total</div>
-            <div className="truncate text-lg font-extrabold text-[#ee0a24]">{totalLabel(selectedTotal, hasQuoteItems)}</div>
-          </div>
-          <button type="button" onClick={goCheckout} disabled={!selectedItems.length} className="btn-primary h-12 shrink-0 px-5">
+          <button type="button" onClick={goCheckout} disabled={!selectedItems.length} className="btn-primary h-12 w-full px-5">
             Checkout ({selectedItems.length})
           </button>
         </div>
