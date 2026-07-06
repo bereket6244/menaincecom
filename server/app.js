@@ -1,21 +1,22 @@
 import fs from 'node:fs';
-import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+let app;
+
 try {
-  await import('./src/index.js');
+  const mod = await import('./src/index.js');
+  app = mod.default || mod.app;
 } catch (err) {
-  console.error('[startup] full app failed, serving static fallback:', err?.stack || err?.message || err);
-  startStaticFallback();
+  console.error('[startup] full app failed, exporting static fallback:', err?.stack || err?.message || err);
+  app = createStaticFallbackHandler();
 }
 
-function startStaticFallback() {
+function createStaticFallbackHandler() {
   const serverRoot = path.dirname(fileURLToPath(import.meta.url));
   const clientDist = process.env.CLIENT_DIST_DIR || path.resolve(serverRoot, '../client/dist');
   const basePath = `/${(process.env.APP_BASE_PATH || '').replace(/^\/+|\/+$/g, '')}`.replace(/\/$/, '');
   const mountPath = basePath === '' ? '/' : basePath;
-  const port = Number(process.env.PORT || 4000);
 
   const send = (res, status, body, type = 'text/plain; charset=utf-8') => {
     res.writeHead(status, {
@@ -26,7 +27,7 @@ function startStaticFallback() {
     res.end(body);
   };
 
-  const server = http.createServer((req, res) => {
+  return (req, res) => {
     const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
     const pathname = decodeURIComponent(url.pathname);
     const relative = mountPath !== '/' && pathname.startsWith(`${mountPath}/`)
@@ -76,12 +77,8 @@ function startStaticFallback() {
     }
 
     send(res, 503, 'Storefront fallback is running, but client files are missing.');
-  });
-
-  server.on('error', (listenErr) => {
-    console.error('[startup] fallback listen error:', listenErr?.stack || listenErr?.message || listenErr);
-    process.exitCode = 1;
-  });
-
-  server.listen(port, () => console.log(`[startup] static fallback listening on ${port}`));
+  };
 }
+
+export { app };
+export default app;

@@ -110,18 +110,32 @@ app.use((err, _req, res, _next) => {
 });
 
 const port = Number(process.env.PORT || 4000);
+let initialized = false;
+let initializing = null;
+
+async function initialize() {
+  if (initialized) return;
+  if (initializing) return initializing;
+  initializing = (async () => {
+    try {
+      await ensureSchema();
+      await ensureAdminSeed();
+      await seed();
+      console.log('[db] schema ready');
+    } catch (err) {
+      // Boot anyway: /api/health reports whether writes are available instead
+      // of taking the whole storefront down.
+      console.error('[db] not reachable at boot:', err.code || err.message);
+    } finally {
+      initialized = true;
+      initializing = null;
+    }
+  })();
+  return initializing;
+}
 
 async function start() {
-  try {
-    await ensureSchema();
-    await ensureAdminSeed();
-    await seed();
-    console.log('[db] schema ready');
-  } catch (err) {
-    // Boot anyway: /api/health reports whether writes are available instead
-    // of taking the whole storefront down.
-    console.error('[db] not reachable at boot:', err.code || err.message);
-  }
+  await initialize();
   const server = app.listen(port, () => console.log(`MENA INC. API listening on http://localhost:${port}`));
   server.on('error', (listenErr) => {
     console.error('[server] listen error:', listenErr.code || listenErr.message);
@@ -129,6 +143,11 @@ async function start() {
   });
 }
 
-start();
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  start();
+} else {
+  initialize();
+}
 
-export { app };
+export { app, initialize, start };
+export default app;
