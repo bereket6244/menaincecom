@@ -127,7 +127,7 @@ export function Shell({ children }: { children: ReactNode }) {
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search rustic, modern, floral..."
+                placeholder="Search designs, categories, colors, prices..."
                 className="w-full rounded-full border border-edge bg-white py-2.5 pl-10 pr-4 text-sm text-ink outline-none placeholder:text-muted/70 focus:border-pink"
               />
             </form>
@@ -189,7 +189,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <input
               value={q}
               onChange={(e) => applySearch(e.target.value, true)}
-              placeholder="Search rustic, modern, floral…"
+              placeholder="Search designs, categories, colors, prices..."
               className="w-full rounded-full border-none bg-white py-2.5 pl-10 pr-4 text-sm text-ink outline-none placeholder:text-muted/70"
             />
           </form>

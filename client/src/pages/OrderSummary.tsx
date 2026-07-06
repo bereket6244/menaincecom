@@ -229,15 +229,15 @@ export function OrderSummary() {
               </div>
             </div>
 
-            {/* Message to studio */}
+            {/* Optional message to studio */}
             <div className="rounded-2xl border border-edge bg-surface p-4">
-              <h2 className="text-sm font-bold uppercase tracking-[0.06em] text-muted">Message to the studio</h2>
-              <p className="mt-0.5 text-[12px] text-muted">Wording, colours, deadlines — added to your order message.</p>
+              <h2 className="text-sm font-bold uppercase tracking-[0.06em] text-muted">Message to the studio (optional)</h2>
+              <p className="mt-0.5 text-[12px] text-muted">You can leave this blank. Add wording, colors, deadlines, or special requests only if needed.</p>
               <textarea
                 value={orderNote}
                 onChange={(e) => setOrderNote(e.target.value)}
                 rows={3}
-                placeholder="Anything else we should know?"
+                placeholder="Optional: anything else we should know?"
                 className="field mt-2 resize-y"
               />
             </div>

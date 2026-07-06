@@ -9,13 +9,6 @@ import { cx } from '../lib/utils';
 
 type Band = { id: string; label: string; test: (v: number) => boolean };
 
-const PRICE_BANDS: Band[] = [
-  { id: 'b1', label: 'Under 1,000 ETB', test: (v) => v < 1000 },
-  { id: 'b2', label: '1,000 – 2,000 ETB', test: (v) => v >= 1000 && v < 2000 },
-  { id: 'b3', label: '2,000 – 3,500 ETB', test: (v) => v >= 2000 && v < 3500 },
-  { id: 'b4', label: '3,500 ETB & up', test: (v) => v >= 3500 },
-];
-
 const CIRCLE_TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#eeeeec', '#f6efdd', '#e9f0ec', '#e9e6ef'];
 
 const SORTS: { id: string; label: string }[] = [
@@ -24,6 +17,60 @@ const SORTS: { id: string; label: string }[] = [
   { id: 'low', label: 'Price: Low to High' },
   { id: 'high', label: 'Price: High to Low' },
 ];
+
+function formatEtb(value: number): string {
+  return `${Math.round(value).toLocaleString()} ETB`;
+}
+
+function productSearchText(product: Product, categories: Category[]): string {
+  const category = categories.find((c) => c.id === product.categoryId)?.name || '';
+  const variants = (product.variants || [])
+    .flatMap((group) => [group.name, ...group.options.map((option) => option.label)])
+    .join(' ');
+  const pricing =
+    product.price == null
+      ? 'quote request quote quoted price'
+      : `${product.price} ${formatEtb(product.price)} birr etb`;
+  return [
+    product.name,
+    product.description,
+    category,
+    variants,
+    product.pricingMode,
+    product.isAddon ? 'add-on addon extra' : 'wedding card invitation stationery',
+    product.featured ? 'featured' : '',
+    pricing,
+  ].join(' ').toLowerCase();
+}
+
+function buildPriceBands(products: Product[]): Band[] {
+  const prices = products
+    .filter((p) => !p.isAddon && p.price != null)
+    .map((p) => p.price as number)
+    .filter((price) => Number.isFinite(price) && price > 0)
+    .sort((a, b) => a - b);
+
+  if (prices.length === 0) return [];
+
+  const min = prices[0];
+  const max = prices[prices.length - 1];
+  if (min === max) {
+    return [{ id: 'actual-0', label: formatEtb(min), test: (v) => v === min }];
+  }
+
+  const bandCount = Math.min(4, Math.max(2, prices.length));
+  const step = (max - min) / bandCount;
+
+  return Array.from({ length: bandCount }, (_, i) => {
+    const lower = Math.floor(i === 0 ? min : min + step * i);
+    const upper = Math.ceil(i === bandCount - 1 ? max : min + step * (i + 1));
+    return {
+      id: `actual-${i}`,
+      label: `${formatEtb(lower)} - ${formatEtb(upper)}`,
+      test: (v: number) => (i === bandCount - 1 ? v >= lower && v <= max : v >= lower && v < upper),
+    };
+  });
+}
 
 export function Catalog() {
   const { data: categories } = useData<Category[]>('/categories');
@@ -39,6 +86,7 @@ export function Catalog() {
   const [max, setMax] = useState('');
   const [priceOpen, setPriceOpen] = useState(true);
   const [mobileFilters, setMobileFilters] = useState(false);
+  const priceBands = useMemo(() => buildPriceBands(products || []), [products]);
 
   const setCategory = (id: string) => {
     const next = new URLSearchParams(params);
@@ -62,12 +110,12 @@ export function Catalog() {
     if (activeCategory) list = list.filter((p) => p.categoryId === activeCategory);
     if (query.trim()) {
       const s = query.trim().toLowerCase();
-      list = list.filter((p) => p.name.toLowerCase().includes(s) || p.description.toLowerCase().includes(s));
+      list = list.filter((p) => productSearchText(p, categories || []).includes(s));
     }
     // Quote-priced designs have no listed price, so price filters keep them
     // visible instead of silently hiding them.
     if (bands.length) {
-      const active = PRICE_BANDS.filter((b) => bands.includes(b.id));
+      const active = priceBands.filter((b) => bands.includes(b.id));
       list = list.filter((p) => p.price == null || active.some((b) => b.test(p.price as number)));
     }
     const mn = parseFloat(min);
@@ -87,7 +135,7 @@ export function Catalog() {
         (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
       );
     return list;
-  }, [products, activeCategory, query, bands, min, max, sort]);
+  }, [products, activeCategory, query, bands, min, max, sort, categories, priceBands]);
 
   const chips: { id: string; name: string; photo?: string }[] = [
     { id: '', name: 'All' },
@@ -171,24 +219,28 @@ export function Catalog() {
               {priceOpen && (
                 <>
                   <div className="flex flex-col gap-3">
-                    {PRICE_BANDS.map((b) => (
-                      <label key={b.id} className="flex cursor-pointer items-center gap-2.5 text-sm text-ink/80">
-                        <input
-                          type="checkbox"
-                          checked={bands.includes(b.id)}
-                          onChange={() => toggleBand(b.id)}
-                          className="h-4 w-4 accent-pink"
-                        />
-                        {b.label}
-                      </label>
-                    ))}
+                    {priceBands.length > 0 ? (
+                      priceBands.map((b) => (
+                        <label key={b.id} className="flex cursor-pointer items-center gap-2.5 text-sm text-ink/80">
+                          <input
+                            type="checkbox"
+                            checked={bands.includes(b.id)}
+                            onChange={() => toggleBand(b.id)}
+                            className="h-4 w-4 accent-pink"
+                          />
+                          {b.label}
+                        </label>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted">No exact prices yet.</p>
+                    )}
                   </div>
                   <div className="mt-4 flex items-center gap-2">
                     <input
                       value={min}
                       onChange={(e) => setMin(e.target.value)}
                       inputMode="numeric"
-                      placeholder="Min"
+                      placeholder={priceBands[0]?.label.split(' - ')[0] || 'Min'}
                       className="w-full rounded-lg border border-edge bg-white px-2.5 py-2 text-[13px] outline-none focus:border-pink"
                     />
                     <span className="text-muted">–</span>
@@ -196,7 +248,7 @@ export function Catalog() {
                       value={max}
                       onChange={(e) => setMax(e.target.value)}
                       inputMode="numeric"
-                      placeholder="Max"
+                      placeholder={priceBands[priceBands.length - 1]?.label.split(' - ')[1] || 'Max'}
                       className="w-full rounded-lg border border-edge bg-white px-2.5 py-2 text-[13px] outline-none focus:border-pink"
                     />
                   </div>
