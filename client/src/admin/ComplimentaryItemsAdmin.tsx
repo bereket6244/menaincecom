@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Gift, Pencil, Plus } from 'lucide-react';
 import { useData } from '../lib/useData';
-import { apiSend } from '../lib/api';
+import { ApiError, apiSend } from '../lib/api';
 import type { UniversalComplimentaryItem } from '../lib/types';
 import { DataTable } from './DataTable';
 import type { Column } from './DataTable';
@@ -53,6 +53,10 @@ export function ComplimentaryItemsAdmin() {
       setEditing(null);
       reload();
     } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        toast('error', 'The complimentary items API is not deployed yet. Push the latest server and try again.');
+        return;
+      }
       toast('error', (err as Error).message);
     } finally {
       setBusy(false);
@@ -65,6 +69,10 @@ export function ComplimentaryItemsAdmin() {
       toast('success', `${ids.length} item(s) deleted.`);
       reload();
     } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        toast('error', 'The complimentary items API is not deployed yet. Push the latest server and try again.');
+        return;
+      }
       toast('error', (err as Error).message);
     }
   };

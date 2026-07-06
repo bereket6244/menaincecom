@@ -198,5 +198,14 @@ CPANEL_TOKEN
 CPANEL_TARGET_DIR
 ```
 
+Optional:
+
+```text
+CPANEL_SERVER_DIR
+```
+
+If `CPANEL_SERVER_DIR` is not set, the deploy workflow derives it from `CPANEL_TARGET_DIR` by using
+`/home/<cpanel-user>/mena-shop-app-v2/server` when the target directory is under `public_html`.
+
 Do not commit cPanel tokens, GitHub tokens, SSH private keys, seed passwords, or production `.env`
 files.

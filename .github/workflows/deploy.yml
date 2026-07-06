@@ -28,6 +28,17 @@ jobs:
           cd client/dist
           zip -r ../../shop-deploy.zip .
 
+      - name: Package server files
+        run: |
+          rm -rf server-deploy
+          mkdir -p server-deploy/tmp server-deploy/uploads
+          cp server/app.js server/package.json server/package-lock.json server-deploy/
+          cp -R server/src server-deploy/
+          touch server-deploy/uploads/.gitkeep
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > server-deploy/tmp/restart.txt
+          cd server-deploy
+          zip -r ../server-deploy.zip .
+
       - name: Resolve cPanel endpoint
         env:
           CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
@@ -97,7 +108,63 @@ jobs:
             --data-urlencode "destfiles=${CPANEL_TARGET_DIR}" \
             "${CPANEL_BASE_URL}/json-api/cpanel"
 
+      - name: Resolve cPanel server directory
+        env:
+          CPANEL_TARGET_DIR: ${{ secrets.CPANEL_TARGET_DIR }}
+          CPANEL_SERVER_DIR: ${{ secrets.CPANEL_SERVER_DIR }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "${CPANEL_SERVER_DIR:-}" ]; then
+            server_dir="${CPANEL_SERVER_DIR%/}"
+          elif [[ "${CPANEL_TARGET_DIR}" == */public_html/* ]]; then
+            home_dir="${CPANEL_TARGET_DIR%%/public_html/*}"
+            server_dir="${home_dir}/mena-shop-app-v2/server"
+          else
+            echo "CPANEL_SERVER_DIR is required when CPANEL_TARGET_DIR is not under public_html." >&2
+            exit 1
+          fi
+
+          echo "CPANEL_SERVER_DIR_RESOLVED=${server_dir}" >> "$GITHUB_ENV"
+
+      - name: Upload server archive to cPanel
+        env:
+          CPANEL_USER: ${{ secrets.CPANEL_USER }}
+          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
+        run: |
+          curl --fail-with-body --show-error --silent \
+            --connect-timeout 20 \
+            --max-time 120 \
+            --retry 2 \
+            --retry-all-errors \
+            -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+            -F "dir=${CPANEL_SERVER_DIR_RESOLVED}" \
+            -F "overwrite=1" \
+            -F "file=@server-deploy.zip;filename=server-deploy.zip" \
+            "${CPANEL_BASE_URL}/execute/Fileman/upload_files"
+
+      - name: Extract server archive on cPanel
+        env:
+          CPANEL_USER: ${{ secrets.CPANEL_USER }}
+          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
+        run: |
+          curl --fail-with-body --show-error --silent --get \
+            --connect-timeout 20 \
+            --max-time 120 \
+            --retry 2 \
+            --retry-all-errors \
+            -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+            --data-urlencode "cpanel_jsonapi_user=${CPANEL_USER}" \
+            --data-urlencode "cpanel_jsonapi_apiversion=2" \
+            --data-urlencode "cpanel_jsonapi_module=Fileman" \
+            --data-urlencode "cpanel_jsonapi_func=fileop" \
+            --data-urlencode "op=extract" \
+            --data-urlencode "sourcefiles=${CPANEL_SERVER_DIR_RESOLVED}/server-deploy.zip" \
+            --data-urlencode "destfiles=${CPANEL_SERVER_DIR_RESOLVED}" \
+            "${CPANEL_BASE_URL}/json-api/cpanel"
+
       - name: Verify live shop
         run: |
           curl --fail --show-error --silent --head https://menaincet.com/shop/
           curl --fail --show-error --silent --head https://menaincet.com/shop/catalog
+          curl --fail --show-error --silent https://menaincet.com/shop/api/complimentary-items >/dev/null
