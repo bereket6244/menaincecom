@@ -42,18 +42,41 @@ function VariantsEditor({ variants, onChange }: { variants: VariantGroup[]; onCh
               {group.options.map((opt, oi) => {
                 const swatch = isColor ? cssColor(opt.label) : null;
                 return (
-                  <span key={oi} className="inline-flex items-center gap-1 rounded border border-edge bg-surface px-2 py-0.5 text-[11px]">
-                    {swatch && <span className="h-3 w-3 shrink-0 rounded-full ring-1 ring-black/15" style={{ background: swatch }} />}
-                    {opt.label}
-                    <button
-                      type="button"
-                      onClick={() => onChange(variants.map((g, i) => (i === gi ? { ...g, options: g.options.filter((_, j) => j !== oi) } : g)))}
-                      className="text-muted hover:text-rose-400"
-                      aria-label={`Remove ${opt.label}`}
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </span>
+                  <div key={oi} className="rounded border border-edge bg-surface p-2">
+                    <div className="mb-1.5 flex items-center gap-1 text-[11px]">
+                      {opt.photo ? (
+                        <img src={opt.photo} alt="" className="h-5 w-5 shrink-0 rounded object-cover" />
+                      ) : swatch ? (
+                        <span className="h-3 w-3 shrink-0 rounded-full ring-1 ring-black/15" style={{ background: swatch }} />
+                      ) : null}
+                      <span className="font-semibold">{opt.label}</span>
+                      <button
+                        type="button"
+                        onClick={() => onChange(variants.map((g, i) => (i === gi ? { ...g, options: g.options.filter((_, j) => j !== oi) } : g)))}
+                        className="ml-auto text-muted hover:text-rose-400"
+                        aria-label={`Remove ${opt.label}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                    <PhotoUpload
+                      single
+                      max={1}
+                      photos={opt.photo ? [opt.photo] : []}
+                      onChange={(photos) =>
+                        onChange(variants.map((g, i) => (
+                          i === gi
+                            ? {
+                                ...g,
+                                options: g.options.map((option, j) => (
+                                  j === oi ? { ...option, photo: photos[0] } : option
+                                )),
+                              }
+                            : g
+                        )))
+                      }
+                    />
+                  </div>
                 );
               })}
               <input
@@ -119,7 +142,7 @@ export function ProductsAdmin() {
       ...editing,
       complimentaryItems: [
         ...(editing.complimentaryItems || []),
-        { id: crypto.randomUUID?.() || String(Date.now()), enabled: true, name: '', qty: 2 },
+        { id: crypto.randomUUID?.() || String(Date.now()), enabled: true, name: '', type: 'fixed', qty: 2 },
       ],
     });
   };
@@ -145,7 +168,10 @@ export function ProductsAdmin() {
                 id: item.id,
                 enabled: !!item.enabled,
                 name: item.name.trim(),
-                qty: Math.max(1, Math.floor(Number(item.qty) || 1)),
+                type: item.type === 'multiplier' ? 'multiplier' : 'fixed',
+                qty: item.type === 'multiplier'
+                  ? Math.min(COMPLIMENTARY_MAX_MULTIPLIER, Math.max(0.01, Number(item.qty) || 1))
+                  : Math.max(1, Math.floor(Number(item.qty) || 1)),
               }))
               .filter((item) => item.name),
       };
@@ -328,7 +354,7 @@ export function ProductsAdmin() {
                   <div>
                     <SysLabel>Complimentary items</SysLabel>
                     <p className="mt-0.5 text-[10px] text-muted">
-                      Free extras included with this product. At checkout each free item is capped at {COMPLIMENTARY_MAX_MULTIPLIER}x the selected main-card amount.
+                      Use Fixed qty for a set amount like 50 schedule cards, or Multiplier for amounts like 1x the main card quantity. Every item is capped at {COMPLIMENTARY_MAX_MULTIPLIER}x the selected main-card amount.
                     </p>
                   </div>
                   <Button variant="outline" onClick={addComplimentaryItem}>
@@ -341,7 +367,7 @@ export function ProductsAdmin() {
                 ) : (
                   <div className="mt-3 space-y-2">
                     {(editing.complimentaryItems || []).map((item) => (
-                      <div key={item.id} className="grid gap-2 rounded border border-edge bg-surface p-2 sm:grid-cols-[auto_1fr_120px_auto] sm:items-center">
+                      <div key={item.id} className="grid gap-2 rounded border border-edge bg-surface p-2 sm:grid-cols-[auto_1fr_130px_120px_auto] sm:items-center">
                         <label className="flex items-center gap-2 text-xs font-semibold">
                           <input
                             type="checkbox"
@@ -357,14 +383,24 @@ export function ProductsAdmin() {
                           placeholder="Entrance cards, schedule cards..."
                           className="field py-1 text-[12px]"
                         />
+                        <select
+                          value={item.type || 'fixed'}
+                          onChange={(e) => updateComplimentaryItem(item.id, { type: e.target.value as 'fixed' | 'multiplier' })}
+                          className="field py-1 text-[12px]"
+                          aria-label="Complimentary quantity type"
+                        >
+                          <option value="fixed">Fixed qty</option>
+                          <option value="multiplier">Multiplier</option>
+                        </select>
                         <input
                           type="number"
-                          min={1}
-                          step={1}
+                          min={item.type === 'multiplier' ? 0.01 : 1}
+                          max={item.type === 'multiplier' ? COMPLIMENTARY_MAX_MULTIPLIER : undefined}
+                          step={item.type === 'multiplier' ? 0.25 : 1}
                           value={item.qty}
                           onChange={(e) => updateComplimentaryItem(item.id, { qty: Number(e.target.value) })}
                           className="field py-1 text-[12px]"
-                          aria-label="Complimentary quantity"
+                          aria-label={item.type === 'multiplier' ? 'Complimentary multiplier' : 'Complimentary quantity'}
                         />
                         <IconButton
                           icon={<X className="h-3.5 w-3.5" />}

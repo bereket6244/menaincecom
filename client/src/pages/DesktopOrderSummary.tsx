@@ -70,7 +70,8 @@ export function DesktopOrderSummary() {
 
   const freebiesFor = (item: typeof cart[number]) => {
     const product = productById.get(item.productId);
-    return product ? complimentaryForProduct(product, item.qty) : item.complimentaryItems || [];
+    const selections = Object.fromEntries((item.complimentaryItems || []).map((freeItem) => [freeItem.name, freeItem.qty]));
+    return product ? complimentaryForProduct(product, item.qty, selections) : item.complimentaryItems || [];
   };
 
   const selectedItemsForMessage = selectedItems.map((item) => ({
@@ -78,7 +79,7 @@ export function DesktopOrderSummary() {
     complimentaryItems: freebiesFor(item),
   }));
   const complimentaryRows = selectedItems.flatMap((item) =>
-    freebiesFor(item).map((freeItem) => ({
+    freebiesFor(item).filter((freeItem) => freeItem.qty > 0).map((freeItem) => ({
       key: `${item.key}:${freeItem.name}`,
       productName: item.name,
       ...freeItem,
@@ -257,9 +258,9 @@ export function DesktopOrderSummary() {
             </div>
 
             {/* Complimentary items */}
-            <div className="mena-fade-up w-full overflow-hidden rounded-2xl border border-green/30 bg-green/10 p-4">
-              <h2 className="mb-3 text-sm font-bold uppercase tracking-[0.06em] text-green">Complimentary items</h2>
-              {complimentaryRows.length > 0 ? (
+            {complimentaryRows.length > 0 && (
+              <div className="mena-fade-up w-full overflow-hidden rounded-2xl border border-green/30 bg-green/10 p-4">
+                <h2 className="mb-3 text-sm font-bold uppercase tracking-[0.06em] text-green">Complimentary items</h2>
                 <div className="space-y-2">
                   {complimentaryRows.map((item) => (
                     <div key={item.key} className="flex items-start justify-between gap-4 rounded-xl bg-white/70 px-3 py-2">
@@ -271,12 +272,8 @@ export function DesktopOrderSummary() {
                     </div>
                   ))}
                 </div>
-              ) : (
-                <p className="text-[12px] font-semibold text-green">
-                  No complimentary items are configured for the selected item(s).
-                </p>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Send channel */}
             <div className="mena-fade-up w-full overflow-hidden rounded-2xl border border-edge bg-surface p-4">
@@ -431,7 +428,11 @@ export function DesktopOrderSummary() {
                           updateCartItem(item.key, {
                             qty,
                             complimentaryItems: productById.get(item.productId)
-                              ? complimentaryForProduct(productById.get(item.productId)!, qty)
+                              ? complimentaryForProduct(
+                                  productById.get(item.productId)!,
+                                  qty,
+                                  Object.fromEntries((item.complimentaryItems || []).map((freeItem) => [freeItem.name, freeItem.qty]))
+                                )
                               : item.complimentaryItems,
                           })
                         }

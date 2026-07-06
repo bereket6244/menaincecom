@@ -8,6 +8,7 @@ import { EmptyState, Spinner } from '../components/ui';
 import { cx } from '../lib/utils';
 
 type Band = { id: string; label: string; test: (v: number) => boolean };
+type AttributeFilter = { id: string; group: string; label: string; count: number };
 
 const CIRCLE_TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#eeeeec', '#f6efdd', '#e9f0ec', '#e9e6ef'];
 
@@ -72,6 +73,25 @@ function buildPriceBands(products: Product[]): Band[] {
   });
 }
 
+function buildAttributeFilters(products: Product[]): AttributeFilter[] {
+  const counts = new Map<string, AttributeFilter>();
+  for (const product of products.filter((p) => !p.isAddon)) {
+    for (const group of product.variants || []) {
+      for (const option of group.options || []) {
+        const id = `${group.name}::${option.label}`;
+        const existing = counts.get(id);
+        counts.set(id, {
+          id,
+          group: group.name,
+          label: option.label,
+          count: (existing?.count || 0) + 1,
+        });
+      }
+    }
+  }
+  return [...counts.values()].sort((a, b) => a.group.localeCompare(b.group) || a.label.localeCompare(b.label));
+}
+
 export function DesktopCatalog() {
   const { data: categories } = useData<Category[]>('/categories');
   const { data: products, loading } = useData<Product[]>('/products');
@@ -84,9 +104,18 @@ export function DesktopCatalog() {
   const [bands, setBands] = useState<string[]>([]);
   const [min, setMin] = useState('');
   const [max, setMax] = useState('');
+  const [attributes, setAttributes] = useState<string[]>([]);
   const [priceOpen, setPriceOpen] = useState(true);
+  const [attributeOpen, setAttributeOpen] = useState(true);
   const [mobileFilters, setMobileFilters] = useState(false);
   const priceBands = useMemo(() => buildPriceBands(products || []), [products]);
+  const attributeFilters = useMemo(() => buildAttributeFilters(products || []), [products]);
+  const groupedAttributeFilters = useMemo(() => {
+    return attributeFilters.reduce<Record<string, AttributeFilter[]>>((groups, item) => {
+      groups[item.group] = [...(groups[item.group] || []), item];
+      return groups;
+    }, {});
+  }, [attributeFilters]);
 
   const setCategory = (id: string) => {
     const next = new URLSearchParams(params);
@@ -97,9 +126,12 @@ export function DesktopCatalog() {
 
   const toggleBand = (id: string) =>
     setBands((b) => (b.includes(id) ? b.filter((x) => x !== id) : [...b, id]));
+  const toggleAttribute = (id: string) =>
+    setAttributes((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
 
   const clearAll = () => {
     setBands([]);
+    setAttributes([]);
     setMin('');
     setMax('');
     setCategory('');
@@ -118,6 +150,14 @@ export function DesktopCatalog() {
       const active = priceBands.filter((b) => bands.includes(b.id));
       list = list.filter((p) => p.price == null || active.some((b) => b.test(p.price as number)));
     }
+    if (attributes.length) {
+      list = list.filter((p) => {
+        const productAttributes = new Set(
+          (p.variants || []).flatMap((group) => (group.options || []).map((option) => `${group.name}::${option.label}`))
+        );
+        return attributes.every((id) => productAttributes.has(id));
+      });
+    }
     const mn = parseFloat(min);
     const mx = parseFloat(max);
     if (!isNaN(mn)) list = list.filter((p) => p.price == null || (p.price as number) >= mn);
@@ -135,7 +175,7 @@ export function DesktopCatalog() {
         (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
       );
     return list;
-  }, [products, activeCategory, query, bands, min, max, sort, categories, priceBands]);
+  }, [products, activeCategory, query, bands, attributes, min, max, sort, categories, priceBands]);
 
   const chips: { id: string; name: string; photo?: string }[] = [
     { id: '', name: 'All' },
@@ -255,6 +295,40 @@ export function DesktopCatalog() {
                 </>
               )}
             </div>
+            {attributeFilters.length > 0 && (
+              <div className="border-b border-edge py-5">
+                <button
+                  onClick={() => setAttributeOpen((v) => !v)}
+                  className="mena-press mb-3 flex w-full items-center justify-between text-[15px] font-bold"
+                >
+                  Attributes
+                  <ChevronUp className={cx('h-4 w-4 text-muted transition-transform', !attributeOpen && 'rotate-180')} />
+                </button>
+                {attributeOpen && (
+                  <div className="space-y-4">
+                    {Object.entries(groupedAttributeFilters).map(([group, items]) => (
+                      <div key={group}>
+                        <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-muted">{group}</div>
+                        <div className="flex flex-col gap-2">
+                          {(items || []).map((item) => (
+                            <label key={item.id} className="mena-press flex cursor-pointer items-center gap-2.5 text-sm text-ink/80">
+                              <input
+                                type="checkbox"
+                                checked={attributes.includes(item.id)}
+                                onChange={() => toggleAttribute(item.id)}
+                                className="h-4 w-4 accent-pink"
+                              />
+                              <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                              <span className="text-[11px] text-muted">{item.count}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <button onClick={clearAll} className="mena-press mt-5 text-[13px] font-semibold text-pink hover:underline">
               Clear all filters
             </button>

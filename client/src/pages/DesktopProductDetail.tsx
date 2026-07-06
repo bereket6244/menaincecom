@@ -26,9 +26,14 @@ export function DesktopProductDetail() {
   // the variant's own photo can take over.
   const [photoPinned, setPhotoPinned] = useState(false);
   const [selections, setSelections] = useState<Record<string, string>>({});
+  const [complimentarySelections, setComplimentarySelections] = useState<Record<string, number>>({});
   const [qty, setQty] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
+  const complimentaryOptions = useMemo(
+    () => (product ? complimentaryForProduct(product, qty) : []),
+    [product, qty]
+  );
 
   const notifyAdded = (name: string, result: AddToCartResult) => {
     toast(
@@ -60,7 +65,7 @@ export function DesktopProductDetail() {
 
   const missingVariant = product.variants.find((v) => !selections[v.name]);
   const isQuote = product.pricingMode === 'quote';
-  const complimentaryItems = complimentaryForProduct(product, qty);
+  const complimentaryItems = complimentaryForProduct(product, qty, complimentarySelections);
   const complimentaryText = complimentarySummary(complimentaryItems);
 
   const add = (p: Product, selectedVariants: Record<string, string>, quantity: number, mode: 'increment' | 'replace' = 'increment') => {
@@ -211,9 +216,34 @@ export function DesktopProductDetail() {
             <p className="mt-2 text-[12px] text-muted">Type the exact amount in the quantity box, tap a preset, or use - / +.</p>
           </div>
 
-          {complimentaryText && (
-            <div className="rounded-xl border border-green/30 bg-green/10 p-4 text-[13px] font-semibold text-green">
-              Complimentary: {complimentaryText}
+          {complimentaryOptions.length > 0 && (
+            <div className="rounded-xl border border-green/30 bg-green/10 p-4">
+              <div className="text-[12px] font-bold uppercase tracking-[0.08em] text-green">Complimentary items</div>
+              <div className="mt-3 space-y-3">
+                {complimentaryOptions.map((item) => {
+                  const maxQty = item.maxQty || item.qty;
+                  const selectedQty = Math.min(maxQty, Math.max(0, complimentarySelections[item.name] ?? maxQty));
+                  return (
+                    <div key={item.name} className="rounded-xl bg-white/75 p-3">
+                      <div className="mb-2 flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-sm font-bold text-ink">{item.name}</div>
+                          <div className="text-[12px] text-muted">Choose 0 to {maxQty.toLocaleString()}</div>
+                        </div>
+                        <div className="text-sm font-extrabold text-green">{selectedQty.toLocaleString()}</div>
+                      </div>
+                      <QuantityPicker
+                        size="sm"
+                        min={0}
+                        max={maxQty}
+                        value={selectedQty}
+                        onChange={(nextQty) => setComplimentarySelections((current) => ({ ...current, [item.name]: nextQty }))}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              {complimentaryText && <div className="mt-3 text-[12px] font-semibold text-green">Selected: {complimentaryText}</div>}
             </div>
           )}
 

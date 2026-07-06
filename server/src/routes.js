@@ -249,17 +249,28 @@ api.get('/content/business', dbRoute(async (_req, res) => {
 
 const COMPLIMENTARY_MAX_MULTIPLIER = 2.5;
 
-function complimentaryForProduct(product, qty) {
+function complimentaryForProduct(product, qty, selections = {}) {
   if (!product || product.isAddon) return [];
   const limit = Math.max(0, Math.floor((Number(qty) || 0) * COMPLIMENTARY_MAX_MULTIPLIER));
   if (limit <= 0) return [];
   return (product.complimentaryItems || [])
     .filter((item) => item?.enabled && String(item.name || '').trim() && Number(item.qty) > 0)
-    .map((item) => ({
-      name: String(item.name).trim().slice(0, 100),
-      qty: Math.min(Math.floor(Number(item.qty) || 0), limit),
-    }))
-    .filter((item) => item.qty > 0);
+    .map((item) => {
+      const rawQty = item.type === 'multiplier'
+        ? Math.floor((Number(qty) || 0) * Number(item.qty))
+        : Math.floor(Number(item.qty) || 0);
+      const maxQty = Math.min(rawQty, limit);
+      const name = String(item.name).trim().slice(0, 100);
+      const hasSelection = Object.prototype.hasOwnProperty.call(selections, name);
+      return {
+        name,
+        qty: hasSelection
+          ? Math.min(maxQty, Math.max(0, Math.floor(Number(selections[name]) || 0)))
+          : maxQty,
+        maxQty,
+      };
+    })
+    .filter((item) => item.maxQty > 0);
 }
 
 api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
@@ -292,6 +303,11 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
       );
       const base = { qty, note: raw?.note ? String(raw.note).slice(0, 500) : '', variantSelections };
       if (!product) return null;
+      const complimentarySelections = Object.fromEntries(
+        (Array.isArray(raw?.complimentaryItems) ? raw.complimentaryItems : [])
+          .filter((item) => item && typeof item.name === 'string')
+          .map((item) => [String(item.name).trim().slice(0, 100), Number(item.qty)])
+      );
       return {
         ...base,
         productId: product.id,
@@ -300,7 +316,7 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
         isAddon: !!product.isAddon,
         pricingMode: product.pricingMode,
         priceEach: product.pricingMode === 'exact' && product.price != null ? product.price : null,
-        complimentaryItems: complimentaryForProduct(product, qty),
+        complimentaryItems: complimentaryForProduct(product, qty, complimentarySelections),
       };
     })
     .filter(Boolean);

@@ -9,12 +9,14 @@ export interface ComplimentaryItemConfig {
   id: string;
   enabled: boolean;
   name: string;
+  type?: 'fixed' | 'multiplier';
   qty: number;
 }
 
 export interface ComplimentaryCartItem {
   name: string;
   qty: number;
+  maxQty?: number;
 }
 
 export interface Product {

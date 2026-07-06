@@ -4,20 +4,22 @@ import { Minus, Plus } from 'lucide-react';
 import { cx } from '../lib/utils';
 
 const MAX_QTY = 100000;
-const clamp = (n: number) => Math.min(MAX_QTY, Math.max(1, Math.floor(n) || 1));
+const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, Math.floor(n) || min));
 
 /**
  * Animated quantity picker: − / + steppers, a directly editable number field
  * (type 1000 instead of clicking 1000 times), and optional one-tap presets.
  */
 export function QuantityPicker({
-  value, onChange, presets, size = 'md', className = '',
+  value, onChange, presets, size = 'md', className = '', min = 1, max = MAX_QTY,
 }: {
   value: number;
   onChange: (qty: number) => void;
   presets?: number[];
   size?: 'sm' | 'md';
   className?: string;
+  min?: number;
+  max?: number;
 }) {
   const [text, setText] = useState(String(value));
   const [pulse, setPulse] = useState(0);
@@ -33,7 +35,7 @@ export function QuantityPicker({
   useEffect(() => () => stopHold(), []);
 
   const set = (n: number) => {
-    onChange(clamp(n));
+    onChange(clamp(n, min, max));
     setPulse((p) => p + 1);
   };
 
@@ -57,7 +59,7 @@ export function QuantityPicker({
   };
 
   const commit = () => {
-    const n = clamp(parseInt(text, 10));
+    const n = clamp(parseInt(text, 10), min, max);
     onChange(n);
     setText(String(n));
   };
@@ -119,11 +121,13 @@ export function QuantityPicker({
               key={p}
               type="button"
               onClick={() => set(p)}
+              disabled={p < min || p > max}
               className={cx(
                 'rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition-colors',
                 value === p
                   ? 'border-pink bg-pink/10 text-ink'
-                  : 'border-edge bg-surface text-muted hover:border-ink/40 hover:text-ink'
+                  : 'border-edge bg-surface text-muted hover:border-ink/40 hover:text-ink',
+                (p < min || p > max) && 'cursor-not-allowed opacity-40'
               )}
             >
               {p.toLocaleString()}

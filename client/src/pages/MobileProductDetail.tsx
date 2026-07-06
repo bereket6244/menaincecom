@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, ShoppingBag, X } from 'lucide-react';
 import { useData } from '../lib/useData';
@@ -66,10 +66,27 @@ export function MobileProductDetail() {
   const product = useMemo(() => (products || []).find((p) => p.id === id) || null, [products, id]);
   const categoryName = categories?.find((category) => category.id === product?.categoryId)?.name || 'Wedding Cards';
   const [selections, setSelections] = useState<Record<string, string>>({});
+  const [complimentarySelections, setComplimentarySelections] = useState<Record<string, number>>({});
   const [qty, setQty] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetMode, setSheetMode] = useState<SheetMode>('add');
   const cartCount = cart.reduce((n, item) => n + item.qty, 0);
+  const complimentaryOptions = useMemo(
+    () => (product ? complimentaryForProduct(product, qty) : []),
+    [product, qty]
+  );
+
+  useEffect(() => {
+    setComplimentarySelections((current) => {
+      const next: Record<string, number> = {};
+      for (const item of complimentaryOptions) {
+        const maxQty = item.maxQty || item.qty;
+        const existing = current[item.name];
+        next[item.name] = existing == null ? maxQty : Math.min(maxQty, Math.max(0, existing));
+      }
+      return next;
+    });
+  }, [complimentaryOptions]);
 
   const goBack = () => {
     if (location.key === 'default') navigate('/catalog');
@@ -93,7 +110,7 @@ export function MobileProductDetail() {
   const missingVariant = product.variants.find((variant) => !selections[variant.name]);
   const tint = mobileProductTint(product);
   const isQuote = product.pricingMode === 'quote';
-  const complimentaryItems = complimentaryForProduct(product, qty);
+  const complimentaryItems = complimentaryForProduct(product, qty, complimentarySelections);
   const complimentaryText = complimentarySummary(complimentaryItems);
 
   const notifyAdded = (result: AddToCartResult) => {
@@ -229,10 +246,33 @@ export function MobileProductDetail() {
           <QuantityPicker value={qty} onChange={setQty} presets={[100, 250, 500, 1000]} />
         </section>
 
-        {complimentaryText && (
+        {complimentaryOptions.length > 0 && (
           <section className="px-[18px] pt-4">
-            <div className="rounded-2xl border border-green/30 bg-green/10 p-4 text-[13px] font-extrabold text-green">
-              Complimentary: {complimentaryText}
+            <div className="rounded-2xl border border-green/30 bg-green/10 p-4">
+              <div className="text-[12px] font-extrabold uppercase tracking-[0.06em] text-green">Complimentary items</div>
+              <div className="mt-3 space-y-3">
+                {complimentaryOptions.map((item) => (
+                  <div key={item.name} className="rounded-xl bg-white/75 p-3">
+                    <div className="mb-2 flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-extrabold text-ink">{item.name}</div>
+                        <div className="text-[12px] text-muted">Choose 0 to {(item.maxQty || item.qty).toLocaleString()}</div>
+                      </div>
+                      <div className="shrink-0 text-sm font-extrabold text-green">
+                        {(complimentarySelections[item.name] ?? item.maxQty ?? item.qty).toLocaleString()}
+                      </div>
+                    </div>
+                    <QuantityPicker
+                      size="sm"
+                      min={0}
+                      max={item.maxQty || item.qty}
+                      value={complimentarySelections[item.name] ?? item.maxQty ?? item.qty}
+                      onChange={(nextQty) => setComplimentarySelections((current) => ({ ...current, [item.name]: nextQty }))}
+                    />
+                  </div>
+                ))}
+              </div>
+              {complimentaryText && <div className="mt-3 text-[12px] font-semibold text-green">Selected: {complimentaryText}</div>}
             </div>
           </section>
         )}
