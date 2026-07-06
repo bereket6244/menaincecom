@@ -6,11 +6,11 @@ import {
 import { useApp } from '../store/AppContext';
 import { useData } from '../lib/useData';
 import { OFFLINE_MESSAGE } from '../lib/api';
-import type { BusinessSettings, Product } from '../lib/types';
+import type { BusinessSettings, Product, UniversalComplimentaryItem } from '../lib/types';
 import { buildCartOrderMessage, smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
 import { EmptyState, IconButton } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
-import { complimentaryExtraTotal, complimentaryForProduct, complimentarySummary } from '../lib/complimentary';
+import { complimentaryExtraTotal, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
 import { cx, formatPrice } from '../lib/utils';
 
 type Channel = 'whatsapp' | 'telegram' | 'sms';
@@ -30,6 +30,7 @@ export function DesktopOrderSummary() {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: products } = useData<Product[]>('/products');
+  const { data: universalComplimentaryItems } = useData<UniversalComplimentaryItem[]>('/complimentary-items');
   const { data: business } = useData<BusinessSettings>('/content/business');
 
   const [step, setStep] = useState<Step>('cart');
@@ -56,12 +57,15 @@ export function DesktopOrderSummary() {
   }, [cart]);
 
   const selectedItems = useMemo(() => cart.filter((i) => selected.has(i.key)), [cart, selected]);
-  const productById = useMemo(() => new Map((products || []).map((product) => [product.id, product])), [products]);
+  const productById = useMemo(
+    () => new Map((products || []).map((product) => [product.id, productWithResolvedComplimentary(product, universalComplimentaryItems || undefined)])),
+    [products, universalComplimentaryItems]
+  );
   const allSelected = cart.length > 0 && selectedItems.length === cart.length;
 
   const selectedTotal = useMemo(() => {
     const priced = selectedItems.filter((i) => i.priceEach != null);
-    const productByIdForTotal = new Map((products || []).map((product) => [product.id, product]));
+    const productByIdForTotal = new Map((products || []).map((product) => [product.id, productWithResolvedComplimentary(product, universalComplimentaryItems || undefined)]));
     const extras = selectedItems.reduce((sum, item) => {
       const product = productByIdForTotal.get(item.productId);
       const selections = Object.fromEntries((item.complimentaryItems || []).map((freeItem) => [freeItem.name, freeItem.qty]));
@@ -69,7 +73,7 @@ export function DesktopOrderSummary() {
     }, 0);
     if (!priced.length && extras === 0) return null;
     return priced.reduce((sum, i) => sum + (i.priceEach || 0) * i.qty, extras);
-  }, [products, selectedItems]);
+  }, [products, selectedItems, universalComplimentaryItems]);
 
   const hasQuoteItems = selectedItems.some((i) => i.priceEach == null);
   const selectedCount = selectedItems.reduce((n, i) => n + i.qty, 0);

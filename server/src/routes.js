@@ -287,6 +287,26 @@ function complimentaryForProduct(product, qty, selections = {}) {
     .filter((item) => item.freeQty > 0 || item.qty > 0);
 }
 
+function resolveComplimentaryProduct(product, universalItems) {
+  if (!product) return product;
+  const selectedUniversalIds = new Set(product.universalComplimentaryItemIds || []);
+  const universal = (universalItems || [])
+    .filter((item) => item?.enabled && selectedUniversalIds.has(item.id))
+    .map((item) => ({
+      id: `universal:${item.id}`,
+      enabled: item.enabled,
+      name: item.name,
+      type: item.type,
+      qty: item.qty,
+      extraPriceEach: item.extraPriceEach,
+    }));
+
+  return {
+    ...product,
+    complimentaryItems: [...universal, ...(product.complimentaryItems || [])],
+  };
+}
+
 api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
   const { items: rawItems, customer, channel, note } = req.body || {};
   if (!Array.isArray(rawItems) || rawItems.length === 0 || rawItems.length > 60) {
@@ -302,8 +322,11 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
     return res.status(400).json({ error: 'bad_request', message: 'Invalid channel.' });
   }
 
-  const products = await records.list('products');
-  const productById = new Map(products.map((p) => [p.id, p]));
+  const [products, universalComplimentaryItems] = await Promise.all([
+    records.list('products'),
+    records.list('complimentary_items'),
+  ]);
+  const productById = new Map(products.map((p) => [p.id, resolveComplimentaryProduct(p, universalComplimentaryItems)]));
 
   // Prices always come from the catalog — never trust amounts sent by the browser.
   const items = rawItems

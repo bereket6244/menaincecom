@@ -66,7 +66,7 @@ export function MobileProductDetail() {
   const { data: universalComplimentaryItems } = useData<UniversalComplimentaryItem[]>('/complimentary-items');
   const product = useMemo(() => {
     const found = (products || []).find((p) => p.id === id) || null;
-    return found ? productWithResolvedComplimentary(found, universalComplimentaryItems) : null;
+    return found ? productWithResolvedComplimentary(found, universalComplimentaryItems || undefined) : null;
   }, [products, id, universalComplimentaryItems]);
   const categoryName = categories?.find((category) => category.id === product?.categoryId)?.name || 'Wedding Cards';
   const [selections, setSelections] = useState<Record<string, string>>({});

@@ -10,7 +10,7 @@ export function complimentaryLimit(mainQty: number): number {
 export type ComplimentarySelections = Record<string, number>;
 
 function clampSelected(value: number | undefined, maxQty: number): number {
-  if (value == null) return maxQty;
+  if (value == null) return 0;
   return Math.min(maxQty, Math.max(0, Math.floor(Number(value) || 0)));
 }
 

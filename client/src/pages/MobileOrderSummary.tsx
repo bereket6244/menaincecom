@@ -4,12 +4,12 @@ import { Check, CheckCircle2, ChevronLeft, MessageCircle, MessageSquareText, Plu
 import { useApp } from '../store/AppContext';
 import { useData } from '../lib/useData';
 import { OFFLINE_MESSAGE } from '../lib/api';
-import type { BusinessSettings, Product } from '../lib/types';
+import type { BusinessSettings, Product, UniversalComplimentaryItem } from '../lib/types';
 import { buildCartOrderMessage, smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
 import { EmptyState } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { mobileProductTint } from '../components/MobileProductCard';
-import { complimentaryExtraTotal, complimentaryForProduct, complimentarySummary } from '../lib/complimentary';
+import { complimentaryExtraTotal, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
 import { formatPrice } from '../lib/utils';
 
 type Channel = 'whatsapp' | 'telegram' | 'sms';
@@ -31,6 +31,7 @@ export function MobileOrderSummary() {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: products } = useData<Product[]>('/products');
+  const { data: universalComplimentaryItems } = useData<UniversalComplimentaryItem[]>('/complimentary-items');
   const { data: business } = useData<BusinessSettings>('/content/business');
   const [step, setStep] = useState<Step>('cart');
   const [selected, setSelected] = useState<Set<string>>(() => new Set(cart.map((item) => item.key)));
@@ -73,11 +74,14 @@ export function MobileOrderSummary() {
   }, []);
 
   const selectedItems = useMemo(() => cart.filter((item) => selected.has(item.key)), [cart, selected]);
-  const productById = useMemo(() => new Map((products || []).map((product) => [product.id, product])), [products]);
+  const productById = useMemo(
+    () => new Map((products || []).map((product) => [product.id, productWithResolvedComplimentary(product, universalComplimentaryItems || undefined)])),
+    [products, universalComplimentaryItems]
+  );
   const allSelected = cart.length > 0 && selectedItems.length === cart.length;
   const selectedTotal = useMemo(() => {
     const priced = selectedItems.filter((item) => item.priceEach != null);
-    const productByIdForTotal = new Map((products || []).map((product) => [product.id, product]));
+    const productByIdForTotal = new Map((products || []).map((product) => [product.id, productWithResolvedComplimentary(product, universalComplimentaryItems || undefined)]));
     const extras = selectedItems.reduce((sum, item) => {
       const product = productByIdForTotal.get(item.productId);
       const selections = Object.fromEntries((item.complimentaryItems || []).map((freeItem) => [freeItem.name, freeItem.qty]));
@@ -85,7 +89,7 @@ export function MobileOrderSummary() {
     }, 0);
     if (!priced.length && extras === 0) return null;
     return priced.reduce((sum, item) => sum + (item.priceEach || 0) * item.qty, extras);
-  }, [products, selectedItems]);
+  }, [products, selectedItems, universalComplimentaryItems]);
   const hasQuoteItems = selectedItems.some((item) => item.priceEach == null);
   const selectedQty = selectedItems.reduce((sum, item) => sum + item.qty, 0);
   const cartQty = cart.reduce((sum, item) => sum + item.qty, 0);

@@ -23,7 +23,7 @@ export function DesktopProductDetail() {
 
   const product = useMemo(() => {
     const found = (products || []).find((p) => p.id === id) || null;
-    return found ? productWithResolvedComplimentary(found, universalComplimentaryItems) : null;
+    return found ? productWithResolvedComplimentary(found, universalComplimentaryItems || undefined) : null;
   }, [products, id, universalComplimentaryItems]);
   const [photoIdx, setPhotoIdx] = useState(0);
   // A clicked thumbnail pins the main photo; picking a variant unpins it so
