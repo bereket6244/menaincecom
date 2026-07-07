@@ -47,18 +47,50 @@ jobs:
         run: |
           set -euo pipefail
 
+          trim() {
+            local value="$1"
+            value="${value#"${value%%[![:space:]]*}"}"
+            value="${value%"${value##*[![:space:]]}"}"
+            printf '%s' "${value}"
+          }
+
           if [ -n "${CPANEL_URL}" ]; then
-            base_url="${CPANEL_URL%/}"
+            base_url="$(trim "${CPANEL_URL}")"
+            base_url="${base_url%/}"
+            host_port="${base_url#https://}"
+            host_port="${host_port#http://}"
+            host_port="${host_port%%/*}"
           else
-            host="${CPANEL_HOST#https://}"
+            if [ -z "${CPANEL_HOST}" ]; then
+              echo "CPANEL_HOST is empty. Set CPANEL_HOST to your cPanel server hostname, or set CPANEL_URL to the full cPanel base URL." >&2
+              exit 1
+            fi
+            host="$(trim "${CPANEL_HOST}")"
+            host="${host#https://}"
             host="${host#http://}"
             host="${host%/}"
+            host="${host%%/*}"
             port="${CPANEL_PORT:-2083}"
             if [[ "${host}" == *:* ]]; then
               base_url="https://${host}"
+              host_port="${host}"
             else
               base_url="https://${host}:${port}"
+              host_port="${host}:${port}"
             fi
+          fi
+
+          host="${host_port%%:*}"
+          if [ -z "${host}" ] || [[ "${host}" == *"*"* ]] || [[ "${host}" == *" "* ]]; then
+            echo "Invalid cPanel hostname. CPANEL_HOST should look like 'server.example.com' or CPANEL_URL should look like 'https://server.example.com:2083'." >&2
+            exit 1
+          fi
+
+          echo "Resolved cPanel endpoint on port ${host_port##*:}."
+          if ! getent hosts "${host}" >/dev/null 2>&1; then
+            echo "Could not resolve the cPanel host from DNS. Check the CPANEL_HOST/CPANEL_URL GitHub secret value." >&2
+            echo "Use the hostname shown in your hosting account's cPanel login URL, for example 'server123.hostingcompany.com', or set CPANEL_URL to the full login URL base." >&2
+            exit 1
           fi
 
           echo "CPANEL_BASE_URL=${base_url}" >> "$GITHUB_ENV"
