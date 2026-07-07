@@ -83,6 +83,15 @@ in the admin panel.
 
 ## Behavior Notes
 
+- **Desktop storefront**: the desktop catalog, product detail, cart, checkout, and order-ready screens
+  use the Boutique desktop redesign from `design_handoff_mena_mobile_storefront desktop`. Desktop has
+  a white header, blush search band, circular category rail, sticky filter sidebar, independent product
+  grid scrolling, Telegram-first checkout channel selection, and the fixed Amount/Total/Place order
+  bar.
+- **Mobile storefront**: mobile keeps the mobile Boutique flow with hamburger navigation, sheets,
+  sticky purchase bars, and mobile cart/checkout behavior.
+- **Buttons**: customer-facing primary actions use filled pink buttons with white text; secondary
+  actions use pink outlines with pink text.
 - **Offline viewing**: GET responses are cached in `localStorage`; cached data renders immediately and
   refreshes in the background.
 - **Database outage**: database failures return clear `503` responses that the frontend can show as a
@@ -187,12 +196,12 @@ from the Node app upload directory.
 ## GitHub Actions Deploy
 
 `.github/workflows/deploy.yml` builds the Vite frontend for `/shop`, packages `client/dist`, uploads it
-to cPanel using Fileman, extracts it into the target directory, and verifies the live `/shop` URLs.
+to cPanel using Fileman, deploys the Passenger server bundle, installs server dependencies, warms the
+app, and verifies the live `/shop` URLs.
 
 Required repository secrets:
 
 ```text
-CPANEL_HOST
 CPANEL_USER
 CPANEL_TOKEN
 CPANEL_TARGET_DIR
@@ -201,8 +210,18 @@ CPANEL_TARGET_DIR
 Optional:
 
 ```text
+CPANEL_URL
+CPANEL_HOST
+CPANEL_PORT
 CPANEL_SERVER_DIR
 ```
+
+Endpoint rules:
+
+- Prefer `CPANEL_URL=https://cpanel.menaincet.com:2083`.
+- If `CPANEL_URL` is empty, set `CPANEL_HOST=cpanel.menaincet.com` and `CPANEL_PORT=2083`.
+- The workflow trims accidental protocols/paths from `CPANEL_HOST`, validates DNS before upload, and
+  falls back to `https://cpanel.menaincet.com:2083` if an older bad host secret is still present.
 
 If `CPANEL_SERVER_DIR` is not set, the deploy workflow derives it from `CPANEL_TARGET_DIR` by using
 `/home/<cpanel-user>/mena-shop-app-v2/server` when the target directory is under `public_html`.
