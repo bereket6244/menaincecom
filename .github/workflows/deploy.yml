@@ -88,9 +88,16 @@ jobs:
 
           echo "Resolved cPanel endpoint on port ${host_port##*:}."
           if ! getent hosts "${host}" >/dev/null 2>&1; then
-            echo "Could not resolve the cPanel host from DNS. Check the CPANEL_HOST/CPANEL_URL GitHub secret value." >&2
-            echo "Use the hostname shown in your hosting account's cPanel login URL, for example 'server123.hostingcompany.com', or set CPANEL_URL to the full login URL base." >&2
-            exit 1
+            fallback_host="cpanel.menaincet.com"
+            fallback_url="https://${fallback_host}:2083"
+            echo "Could not resolve the cPanel host from DNS. Falling back to ${fallback_url}."
+            if ! getent hosts "${fallback_host}" >/dev/null 2>&1; then
+              echo "Could not resolve the configured cPanel host or the fallback host." >&2
+              echo "Set CPANEL_URL to the full cPanel base URL, for example 'https://cpanel.menaincet.com:2083'." >&2
+              exit 1
+            fi
+            base_url="${fallback_url}"
+            host_port="${fallback_host}:2083"
           fi
 
           echo "CPANEL_BASE_URL=${base_url}" >> "$GITHUB_ENV"
