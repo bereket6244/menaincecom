@@ -1,24 +1,18 @@
-﻿import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutGrid, Images, ShoppingBag, User, Phone, Search, Menu, X, Heart } from 'lucide-react';
+import { ChevronDown, Heart, Search, ShoppingBag, User } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useApp } from '../store/AppContext';
-import { cx } from '../lib/utils';
 import { StatusBanners, Toasts } from './ui';
+import { cx } from '../lib/utils';
 import menaIcon from '../assets/menainc-icon.png';
 
-type NavItem = {
-  to: string;
-  label: string;
-  icon: typeof LayoutGrid;
-  end?: boolean;
-};
-
-const NAV: NavItem[] = [
-  { to: '/catalog', label: 'All designs', icon: LayoutGrid },
-  { to: '/wishlist', label: 'Liked', icon: Heart },
-  { to: '/gallery', label: 'Gallery', icon: Images },
-  { to: '/contact', label: 'Contact', icon: Phone },
+const NAV = [
+  { to: '/catalog', label: 'All Designs' },
+  { to: '/gallery', label: 'Portfolio' },
+  { to: '/contact', label: 'Studio' },
+  { to: '/contact', label: 'About' },
+  { to: '/contact', label: 'Contact' },
 ];
 
 export function DesktopShell({ children }: { children: ReactNode }) {
@@ -26,11 +20,13 @@ export function DesktopShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [q, setQ] = useState('');
-  const [menuOpen, setMenuOpen] = useState(false);
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
 
-  // Live-filter only while already on the catalog (keeping the category param);
-  // from any other page, search navigates only on submit.
+  useEffect(() => {
+    if (location.pathname !== '/catalog') return;
+    setQ(new URLSearchParams(location.search).get('q') || '');
+  }, [location.pathname, location.search]);
+
   const applySearch = (value: string, live = false) => {
     setQ(value);
     const onCatalog = location.pathname === '/catalog';
@@ -41,41 +37,27 @@ export function DesktopShell({ children }: { children: ReactNode }) {
     navigate(`/catalog${next.toString() ? `?${next.toString()}` : ''}`, { replace: live });
   };
 
-  const submitSearch = () => {
-    const next = new URLSearchParams();
-    if (q.trim()) next.set('q', q.trim());
-    setMenuOpen(false);
-    navigate(`/catalog${next.toString() ? `?${next.toString()}` : ''}`);
-  };
-
   return (
-    <div className="flex min-h-dvh flex-col bg-bg">
+    <div className="flex min-h-dvh flex-col bg-bg text-ink desktop-boutique">
       <StatusBanners />
       <Toasts />
 
-      {/* White brand header */}
-      <header className="sticky top-0 z-30 border-b border-edge bg-surface/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4">
-          <Link to="/catalog" className="mena-press flex shrink-0 items-center">
-            <img
-              src={menaIcon}
-              alt="Mena Inc."
-              className="h-8 w-auto object-contain sm:h-9"
-            />
+      <header className="sticky top-0 z-50 border-b border-edge bg-white">
+        <div className="mx-auto flex h-[74px] max-w-[1240px] items-center justify-between px-10">
+          <Link to="/catalog" className="mena-press flex shrink-0 items-center gap-3">
+            <img src={menaIcon} alt="Mena Inc." className="h-9 w-9 object-contain" />
+            <span className="font-serif text-[27px] font-semibold tracking-[0.01em]">Mena Inc.</span>
           </Link>
 
-          <nav className="hidden items-center gap-6 md:flex">
-            {NAV.map(({ to, label, end }) => (
+          <nav className="ml-14 flex flex-1 items-center gap-8">
+            {NAV.map(({ to, label }) => (
               <NavLink
-                key={to}
+                key={label}
                 to={to}
-                end={end}
                 className={({ isActive }) =>
                   cx(
-                    'mena-press text-sm transition-colors',
-                    isActive
-                      ? 'border-b-2 border-pink pb-[22px] font-semibold text-ink -mb-[26px]'
-                      : 'font-medium text-ink/70 hover:text-ink'
+                    'mena-press text-[13.5px] font-bold transition-colors hover:text-pink',
+                    isActive || (label === 'All Designs' && location.pathname === '/catalog') ? 'text-pink' : 'text-ink'
                   )
                 }
               >
@@ -84,148 +66,66 @@ export function DesktopShell({ children }: { children: ReactNode }) {
             ))}
           </nav>
 
-          <div className="ml-auto flex items-center gap-2.5">
-            <Link to="/contact" className="mena-press hidden items-center gap-1.5 text-sm font-medium text-ink/70 hover:text-ink lg:flex">
-              <Phone className="h-4 w-4" /> Find our studio
+          <div className="flex shrink-0 items-center gap-5">
+            <Link to="/wishlist" className="mena-press flex items-center gap-2 text-[13px] font-bold text-ink hover:text-pink">
+              <Heart className={cx('h-[18px] w-[18px]', wishlistProductIds.length > 0 && 'fill-pink text-pink')} />
+              Wishlist
+              {wishlistProductIds.length > 0 && (
+                <span className="mena-pop rounded-full bg-pink px-1.5 py-0.5 text-[10px] font-extrabold text-white">
+                  {wishlistProductIds.length}
+                </span>
+              )}
             </Link>
             <Link
-              to="/wishlist"
-              aria-label={`Liked items, ${wishlistProductIds.length} saved`}
-              className="mena-press relative hidden h-9 w-9 items-center justify-center rounded-full text-ink/70 hover:bg-surface2 hover:text-ink md:flex"
+              id="desktop-cart-target"
+              to="/order"
+              aria-label={`Cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
+              className="mena-press relative flex h-10 w-10 items-center justify-center text-ink hover:text-pink"
             >
-              <Heart className="h-5 w-5" />
-              {wishlistProductIds.length > 0 && (
-                <span className="mena-pop absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[9px] font-bold text-white">
-                  {wishlistProductIds.length > 99 ? '99+' : wishlistProductIds.length}
+              <ShoppingBag className="h-[22px] w-[22px]" />
+              {cartCount > 0 && (
+                <span className="mena-pop absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-pink px-1 text-[10px] font-extrabold text-white">
+                  {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
             </Link>
             <Link
               to={user ? '/account' : '/login'}
-              className="mena-press hidden rounded-full bg-pink px-4 py-1.5 text-sm font-bold text-white transition-colors hover:bg-pink-dim md:inline-flex"
+              className="mena-press inline-flex items-center gap-2 rounded-full bg-pink px-5 py-2.5 text-[13px] font-extrabold text-white hover:bg-pink-dim"
             >
-              {user ? user.name.split(' ')[0] : 'Log in'}
+              <User className="h-4 w-4" />
+              {user ? user.name.split(' ')[0] : 'Mena'}
+              <ChevronDown className="h-3.5 w-3.5" />
             </Link>
-            {/* Ordering needs no account — keep the entry point quiet. */}
-            <Link
-              to="/order"
-              aria-label={`Order cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
-              className="mena-press relative flex h-9 w-9 items-center justify-center rounded-full text-ink/70 hover:bg-surface2 hover:text-ink md:hidden"
-            >
-              <ShoppingBag className="h-5 w-5" />
-              {cartCount > 0 && (
-                <span className="mena-pop absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[9px] font-bold text-white">
-                  {cartCount > 99 ? '99+' : cartCount}
-                </span>
-              )}
-            </Link>
-            <button
-              type="button"
-              onClick={() => setMenuOpen((v) => !v)}
-              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={menuOpen}
-              className="mena-press flex h-9 w-9 items-center justify-center rounded-full text-ink/70 hover:bg-surface2 hover:text-ink md:hidden"
-            >
-              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
           </div>
         </div>
-        {menuOpen && (
-          <div className="border-t border-edge bg-surface px-4 py-4 md:hidden">
-            <form
-              onSubmit={(e) => { e.preventDefault(); submitSearch(); }}
-              className="relative mb-4"
-            >
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Search designs, categories, colors, prices..."
-                className="w-full rounded-full border border-edge bg-white py-2.5 pl-10 pr-4 text-sm text-ink outline-none placeholder:text-muted/70 focus:border-pink"
-              />
-            </form>
-            <nav className="space-y-1">
-              {NAV.map(({ to, label, icon: Icon, end }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={end}
-                  onClick={() => setMenuOpen(false)}
-                  className={({ isActive }) =>
-                    cx(
-                      'mena-press flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold transition-colors',
-                      isActive ? 'bg-pink text-white' : 'text-ink hover:bg-surface2'
-                    )
-                  }
-                >
-                  <Icon className="h-5 w-5" />
-                  {label}
-                </NavLink>
-              ))}
-              <NavLink
-                to={user ? '/account' : '/login'}
-                onClick={() => setMenuOpen(false)}
-                className={({ isActive }) =>
-                  cx(
-                    'mena-press flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold transition-colors',
-                    isActive ? 'bg-pink text-white' : 'text-ink hover:bg-surface2'
-                  )
-                }
-              >
-                <User className="h-5 w-5" />
-                {user ? 'Account' : 'Log in'}
-              </NavLink>
-            </nav>
-          </div>
-        )}
-      </header>
 
-      {/* Black sub-nav with search */}
-      <div className="hidden bg-ink text-white md:block">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
-          <nav className="hidden items-center gap-5 lg:flex">
-            <Link to="/catalog" className="mena-press whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
-              All designs
-            </Link>
-            <Link to="/gallery" className="mena-press whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
-              Portfolio
-            </Link>
-            <Link to="/wishlist" className="mena-press whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
-              Liked
-            </Link>
-            <Link to="/contact" className="mena-press whitespace-nowrap text-[13px] font-medium text-white/80 hover:text-white">
-              Studio
-            </Link>
-          </nav>
+        <div className="relative bg-[#fdeef5] px-10 py-[18px]">
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-56 opacity-40" />
           <form
-            onSubmit={(e) => { e.preventDefault(); applySearch(q); }}
-            className="relative min-w-0 flex-1 lg:max-w-md"
+            onSubmit={(e) => {
+              e.preventDefault();
+              applySearch(q);
+            }}
+            className="relative mx-auto max-w-[1240px]"
           >
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+            <Search className="pointer-events-none absolute left-5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted/80" />
             <input
               value={q}
               onChange={(e) => applySearch(e.target.value, true)}
-              placeholder="Search designs, categories, colors, prices..."
-              className="w-full rounded-full border-none bg-white py-2.5 pl-10 pr-4 text-sm text-ink outline-none placeholder:text-muted/70"
+              placeholder="Search wedding cards, save-the-dates, menus..."
+              className="h-12 w-full rounded-full border-0 bg-white pl-14 pr-6 text-[15px] text-ink shadow-[0_1px_4px_rgba(28,26,25,0.06)] outline-none placeholder:text-muted/70 focus:shadow-[0_2px_12px_rgba(28,26,25,0.12)]"
             />
           </form>
-          <Link to="/order" aria-label="Order" className="mena-press relative text-white hover:text-white/80">
-            <ShoppingBag className="h-5 w-5" />
-            {cartCount > 0 && (
-              <span className="mena-pop absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[10px] font-bold text-white">
-                {cartCount}
-              </span>
-            )}
-          </Link>
         </div>
-      </div>
+      </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-8 pt-8 md:pb-12">{children}</main>
+      <main className="w-full flex-1">{children}</main>
 
-      <footer className="hidden border-t border-edge bg-surface py-6 md:block">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 text-[12px] text-muted">
-          <span>© {new Date().getFullYear()} Mena INK Trading PLC — Addis Ababa, Ethiopia</span>
-          <span className="text-[11px] font-semibold uppercase tracking-[0.1em]">Invitations · Stationery · Print</span>
+      <footer className="border-t border-edge bg-white py-6">
+        <div className="mx-auto flex max-w-[1240px] items-center justify-between px-10 text-[12px] text-muted">
+          <span>© {new Date().getFullYear()} Mena INK Trading PLC · Addis Ababa, Ethiopia</span>
+          <span className="font-bold uppercase tracking-[0.12em]">Invitations · Stationery · Print</span>
         </div>
       </footer>
     </div>

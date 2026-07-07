@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#e9e4df; }
+  .mena-vp > * { height:100% !important; display:block !important; }
+</style>
+</helmet>
+
+<section id="turn1" style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;padding:64px 72px;font-family:'Segoe UI',system-ui,sans-serif;">
+
+  <div id="1a" style="display:flex;flex-direction:column;align-items:center;gap:20px;">
+    <div style="text-align:center;">
+      <div style="display:inline-flex;align-items:center;gap:8px;">
+        <span style="background:#1c1a19;color:#fff;font-size:13px;font-weight:800;padding:4px 11px;border-radius:8px;letter-spacing:.04em;">1a</span>
+        <h2 style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:30px;font-weight:600;color:#1c1a19;">Boutique</h2>
+      </div>
+      <p style="margin:8px 0 0;font-size:13.5px;color:#6b6560;max-width:340px;line-height:1.5;">Elegant editorial storefront — category circles, serif headings, soft motion. Cart via the header bag. Left drawer, unified pink / outline buttons.</p>
+    </div>
+<div style="width:414px;height:868px;border-radius:52px;background:#1c1a19;padding:12px;box-shadow:0 40px 90px rgba(28,26,25,.32);">
+      <div style="position:relative;width:390px;height:844px;border-radius:40px;overflow:hidden;background:#000;display:flex;flex-direction:column;">
+        <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:150px;height:30px;background:#1c1a19;border-radius:0 0 18px 18px;z-index:200;"></div>
+        <!-- status bar -->
+        <div style="flex-shrink:0;height:44px;background:#f6f6f8;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 6px;font-size:13px;font-weight:700;color:#1c1a19;font-family:system-ui;">
+          <span>9:41</span>
+          <span style="display:flex;align-items:center;gap:5px;"><svg width="17" height="11" viewBox="0 0 17 11" fill="#1c1a19"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg><svg width="22" height="11" viewBox="0 0 24 12" fill="none"><rect x="1" y="1" width="20" height="10" rx="3" stroke="#1c1a19" stroke-width="1"/><rect x="2.5" y="2.5" width="15" height="7" rx="1.5" fill="#1c1a19"/><rect x="22" y="4" width="1.5" height="4" rx=".75" fill="#1c1a19"/></svg></span>
+        </div>
+        <!-- browser URL bar -->
+        <div style="flex-shrink:0;background:#f6f6f8;padding:2px 12px 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #dfdcd9;">
+          <div style="flex:1;display:flex;align-items:center;gap:7px;height:38px;background:#e4e2e5;border-radius:11px;padding:0 12px;font-size:14px;color:#1c1a19;font-family:system-ui;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5c5c5e" stroke-width="2.2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+            <span style="color:#5c5c5e;">menainc.com</span>
+            <span style="flex:1;"></span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5c5c5e" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          </div>
+        </div>
+        <!-- app viewport -->
+        <div class="mena-vp" style="flex:1;position:relative;overflow:hidden;background:#faf8f6;">
+          <dc-import name="MenaApp" variant="a" style="position:absolute;inset:0;" hint-size="100%,100%"></dc-import>
+        </div>
+        <!-- browser toolbar -->
+        <div style="flex-shrink:0;height:52px;background:#f6f6f8;border-top:1px solid #dfdcd9;display:flex;align-items:center;justify-content:space-between;padding:0 24px 4px;color:#1273ff;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#b7b7b9" stroke-width="2.2" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="1b" style="display:flex;flex-direction:column;align-items:center;gap:20px;">
+    <div style="text-align:center;">
+      <div style="display:inline-flex;align-items:center;gap:8px;">
+        <span style="background:#ee0a24;color:#fff;font-size:13px;font-weight:800;padding:4px 11px;border-radius:8px;letter-spacing:.04em;">1b</span>
+        <h2 style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:30px;font-weight:600;color:#1c1a19;">Bazaar</h2>
+      </div>
+      <p style="margin:8px 0 0;font-size:13.5px;color:#6b6560;max-width:340px;line-height:1.5;">AliExpress-style commerce — pill categories, quick-add + fly-to-cart on the grid, a persistent bottom tab bar with a live cart badge. Same flow, denser and faster.</p>
+    </div>
+<div style="width:414px;height:868px;border-radius:52px;background:#1c1a19;padding:12px;box-shadow:0 40px 90px rgba(28,26,25,.32);">
+      <div style="position:relative;width:390px;height:844px;border-radius:40px;overflow:hidden;background:#000;display:flex;flex-direction:column;">
+        <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:150px;height:30px;background:#1c1a19;border-radius:0 0 18px 18px;z-index:200;"></div>
+        <div style="flex-shrink:0;height:44px;background:#f6f6f8;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 6px;font-size:13px;font-weight:700;color:#1c1a19;font-family:system-ui;">
+          <span>9:41</span>
+          <span style="display:flex;align-items:center;gap:5px;"><svg width="17" height="11" viewBox="0 0 17 11" fill="#1c1a19"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg><svg width="22" height="11" viewBox="0 0 24 12" fill="none"><rect x="1" y="1" width="20" height="10" rx="3" stroke="#1c1a19" stroke-width="1"/><rect x="2.5" y="2.5" width="15" height="7" rx="1.5" fill="#1c1a19"/><rect x="22" y="4" width="1.5" height="4" rx=".75" fill="#1c1a19"/></svg></span>
+        </div>
+        <div style="flex-shrink:0;background:#f6f6f8;padding:2px 12px 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #dfdcd9;">
+          <div style="flex:1;display:flex;align-items:center;gap:7px;height:38px;background:#e4e2e5;border-radius:11px;padding:0 12px;font-size:14px;color:#1c1a19;font-family:system-ui;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5c5c5e" stroke-width="2.2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+            <span style="color:#5c5c5e;">menainc.com</span>
+            <span style="flex:1;"></span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5c5c5e" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          </div>
+        </div>
+        <div class="mena-vp" style="flex:1;position:relative;overflow:hidden;background:#faf8f6;">
+          <dc-import name="MenaApp" variant="b" style="position:absolute;inset:0;" hint-size="100%,100%"></dc-import>
+        </div>
+        <div style="flex-shrink:0;height:52px;background:#f6f6f8;border-top:1px solid #dfdcd9;display:flex;align-items:center;justify-content:space-between;padding:0 24px 4px;color:#1273ff;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#b7b7b9" stroke-width="2.2" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+</x-dc>
+</body>
+</html>

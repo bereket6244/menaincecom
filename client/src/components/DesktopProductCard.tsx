@@ -1,116 +1,94 @@
-﻿import { useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
-import type { Product } from '../lib/types';
-import { cx, cssColor, findVariantGroup, formatPrice } from '../lib/utils';
+import type { Product, Category } from '../lib/types';
 import { useApp } from '../store/AppContext';
+import { cx, formatPrice } from '../lib/utils';
 
-export function DesktopProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
-  const navigate = useNavigate();
+const TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#e9f0ec', '#f6efdd'];
+
+export function DesktopProductCard({
+  product,
+  category,
+  priority = false,
+  index = 0,
+  onOpen,
+  onQuickAdd,
+}: {
+  product: Product;
+  category?: Category;
+  priority?: boolean;
+  index?: number;
+  onOpen: (product: Product) => void;
+  onQuickAdd: (product: Product) => void;
+}) {
   const { wishlistProductIds, toggleWishlist } = useApp();
   const wished = wishlistProductIds.includes(product.id);
-
-  const open = () => navigate(`/product/${product.id}`);
+  const tint = TINTS[index % TINTS.length];
+  const isQuote = product.pricingMode === 'quote' || product.price == null;
 
   return (
-    <div className="mena-fade-up group flex flex-col">
-      <div className="relative">
-        <button
-          onClick={open}
-          className="mena-press block w-full overflow-hidden rounded-md bg-surface2 shadow-sm ring-1 ring-black/5 transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-md"
-        >
-          <div className="aspect-[5/7] w-full overflow-hidden">
-            {product.photos[0] ? (
-              <img
-                src={product.photos[0]}
-                alt={product.name}
-                loading={priority ? 'eager' : 'lazy'}
-                decoding="async"
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-              />
-            ) : (
-              <div className="flex h-full flex-col items-center justify-center bg-[#f4f0ec] p-4 text-center">
-                <span className="font-script text-3xl leading-none text-pink">{product.name}</span>
-                <span className="mt-3 text-[9px] uppercase tracking-[0.24em] text-ink/50">Mena Inc.</span>
-              </div>
-            )}
-          </div>
+    <article
+      className="mena-fade-up group overflow-hidden rounded-[14px] border border-edge bg-white shadow-[0_1px_3px_rgba(28,26,25,0.05)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(28,26,25,0.12)]"
+      style={{ animationDelay: `${Math.min(index, 8) * 28}ms` }}
+    >
+      <div className="relative aspect-square overflow-hidden" style={{ background: tint }}>
+        <button type="button" onClick={() => onOpen(product)} className="block h-full w-full cursor-pointer">
+          {product.photos[0] ? (
+            <img
+              src={product.photos[0]}
+              alt={product.name}
+              loading={priority ? 'eager' : 'lazy'}
+              decoding="async"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.035]"
+            />
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center p-5 text-center">
+              <span className="font-script text-[34px] leading-none text-pink">{product.name}</span>
+              <span className="mt-3 text-[9px] uppercase tracking-[0.24em] text-ink/40">Mena Inc.</span>
+            </div>
+          )}
         </button>
 
         {product.featured && (
-          <span className="mena-pop absolute left-2.5 top-2.5 rounded bg-ink px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+          <span className="absolute left-3 top-3 rounded-md bg-pink px-2.5 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-white">
             Featured
           </span>
         )}
 
         <button
-          onClick={() => void toggleWishlist(product.id)}
-          aria-label="Save to wishlist"
-          className="mena-press absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm transition-transform hover:scale-105"
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            void toggleWishlist(product.id);
+          }}
+          aria-label={wished ? 'Remove from wishlist' : 'Save to wishlist'}
+          className="mena-press absolute right-3 top-3 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-white/95 shadow-[0_1px_4px_rgba(28,26,25,0.14)]"
         >
-          <Heart className={cx('h-4 w-4', wished ? 'fill-pink text-pink' : 'text-ink/40')} />
+          <Heart className={cx('h-4 w-4', wished ? 'fill-pink text-pink' : 'text-ink/45')} />
         </button>
       </div>
 
-      {(() => {
-        // Real Size/Color variants from the admin panel, shown on the card.
-        const colorGroup = findVariantGroup(product, 'color');
-        const sizeGroup = findVariantGroup(product, 'size');
-        if (!colorGroup?.options.length && !sizeGroup?.options.length) return null;
-        return (
-          <div className="mt-3 space-y-1.5">
-            {colorGroup && colorGroup.options.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5">
-                {colorGroup.options.slice(0, 5).map((opt) => {
-                  const swatch = cssColor(opt.label);
-                  return opt.photo ? (
-                    <img
-                      key={opt.label}
-                      src={opt.photo}
-                      alt={opt.label}
-                      title={opt.label}
-                      loading="lazy"
-                      decoding="async"
-                      className="h-3.5 w-3.5 rounded-full object-cover ring-1 ring-black/10"
-                    />
-                  ) : swatch ? (
-                    <span
-                      key={opt.label}
-                      title={opt.label}
-                      className="h-3.5 w-3.5 rounded-full ring-1 ring-black/10"
-                      style={{ background: swatch }}
-                    />
-                  ) : (
-                    <span key={opt.label} className="rounded-full border border-edge bg-surface px-1.5 py-0.5 text-[9px] font-medium text-muted">
-                      {opt.label}
-                    </span>
-                  );
-                })}
-                {colorGroup.options.length > 5 && (
-                  <span className="text-[10px] font-medium text-muted">+{colorGroup.options.length - 5}</span>
-                )}
-              </div>
-            )}
-            {sizeGroup && sizeGroup.options.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1">
-                {sizeGroup.options.slice(0, 4).map((opt) => (
-                  <span key={opt.label} className="rounded border border-edge bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-ink/70">
-                    {opt.label}
-                  </span>
-                ))}
-                {sizeGroup.options.length > 4 && (
-                  <span className="text-[10px] font-medium text-muted">+{sizeGroup.options.length - 4}</span>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      })()}
-
-      <div className="mt-2.5 text-[11px] uppercase tracking-[0.08em] text-muted">Design</div>
-      <button onClick={open} className="mena-press mt-0.5 text-left text-base font-semibold text-ink transition-colors hover:text-pink">
-        {product.name}
-      </button>
-      <div className="mt-2 text-[15px] font-bold text-[#ee0a24]">{formatPrice(product)}</div>
-    </div>
+      <div className="p-4 pb-[18px]">
+        <div className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-muted/80">
+          {category?.name || (product.isAddon ? 'Add-on' : 'Design')}
+        </div>
+        <button
+          type="button"
+          onClick={() => onOpen(product)}
+          className="mena-press mt-1 block text-left text-base font-extrabold leading-tight text-ink hover:text-pink"
+        >
+          {product.name}
+        </button>
+        <div className="mt-3.5 flex items-center justify-between gap-3">
+          <span className="text-[15px] font-extrabold text-pink">{formatPrice(product)}</span>
+          <button
+            type="button"
+            onClick={() => onQuickAdd(product)}
+            className="btn-outline h-[36px] min-w-[120px] whitespace-nowrap px-5 py-0 text-[12.5px]"
+          >
+            {isQuote ? 'Request Quote' : 'Add to Order'}
+          </button>
+        </div>
+      </div>
+    </article>
   );
 }

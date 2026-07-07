@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  @keyframes menaFadeUp { from { opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
+  @keyframes menaPop { 0%{transform:scale(1);} 40%{transform:scale(1.35);} 100%{transform:scale(1);} }
+  @keyframes menaSpin { to { transform:rotate(360deg);} }
+  @keyframes menaCheck { from { transform:scale(0);} to {transform:scale(1);} }
+  .mena-scroll::-webkit-scrollbar { width:0; height:0; }
+</style>
+</helmet>
+<div id="{{ rootId }}" style="position:relative;width:100%;height:100%;overflow:hidden;background:#faf8f6;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#1c1a19;-webkit-font-smoothing:antialiased;">
+
+  <!-- ============ CATALOG ============ -->
+  <sc-if value="{{ isCatalog }}" hint-placeholder-val="{{ true }}">
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;">
+    <header style="flex-shrink:0;display:flex;align-items:center;gap:10px;padding:14px 16px 10px;background:#ffffff;border-bottom:1px solid #ece7e2;">
+      <button onClick="{{ openDrawer }}" aria-label="Menu" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:12px;cursor:pointer;color:#1c1a19;" style-active="background:#f4f0ec">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div style="flex:1;text-align:center;font-family:'Cormorant Garamond',Georgia,serif;font-size:24px;font-weight:600;letter-spacing:.5px;">Mena Inc.</div>
+      <button id="{{ cartIconId }}" onClick="{{ goCart }}" aria-label="Cart" style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:12px;cursor:pointer;color:#1c1a19;" style-active="background:#f4f0ec">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <sc-if value="{{ hasCart }}" hint-placeholder-val="{{ false }}">
+          <span key="{{ bounce }}" style="position:absolute;top:2px;right:2px;min-width:18px;height:18px;padding:0 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;background:#ee0a24;color:#fff;font-size:10px;font-weight:800;animation:menaPop .4s ease;">{{ cartCount }}</span>
+        </sc-if>
+      </button>
+    </header>
+
+    <div class="mena-scroll" style="flex:1;overflow-y:auto;padding-bottom:{{ catalogPadBottom }};">
+      <div style="padding:14px 16px 4px;">
+        <div style="position:relative;">
+          <svg style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#8a8580;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input value="{{ search }}" onInput="{{ onSearch }}" placeholder="Search designs, colors, prices…" style="width:100%;box-sizing:border-box;border:1px solid #ece7e2;background:#fff;border-radius:9999px;padding:11px 16px 11px 40px;font-size:14px;outline:none;color:#1c1a19;" style-focus="border-color:#ee317b" />
+        </div>
+      </div>
+
+      <!-- Variation-B promo ribbon -->
+      <sc-if value="{{ isB }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:6px 16px 2px;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:14px;background:linear-gradient(90deg,#fff1f5,#fdeef0);border:1px solid #f6d9e3;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366"><path d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.3A10 10 0 1 0 12 2Z"/></svg>
+          <span style="font-size:12.5px;font-weight:700;color:#c2185b;">Order in one tap — WhatsApp, Telegram or SMS. No online payment.</span>
+        </div>
+      </sc-if>
+
+      <!-- Categories -->
+      <sc-if value="{{ isA }}" hint-placeholder-val="{{ true }}">
+        <div class="mena-scroll" style="display:flex;gap:18px;overflow-x:auto;padding:16px 16px 8px;">
+          <sc-for list="{{ cats }}" as="c" hint-placeholder-count="5">
+            <button data-id="{{ c.id }}" onClick="{{ selectCat }}" style="display:flex;flex-direction:column;align-items:center;gap:8px;border:none;background:transparent;cursor:pointer;flex-shrink:0;width:66px;">
+              <span style="{{ c.circleStyle }}">{{ c.initial }}</span>
+              <span style="{{ c.labelStyle }}">{{ c.name }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ isB }}" hint-placeholder-val="{{ false }}">
+        <div class="mena-scroll" style="display:flex;gap:8px;overflow-x:auto;padding:14px 16px 6px;">
+          <sc-for list="{{ cats }}" as="c" hint-placeholder-count="5">
+            <button data-id="{{ c.id }}" onClick="{{ selectCat }}" style="{{ c.pillStyle }}">{{ c.name }}</button>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <div style="display:flex;align-items:baseline;justify-content:space-between;padding:8px 16px 2px;">
+        <h1 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:30px;font-weight:600;margin:0;letter-spacing:.3px;">{{ catalogTitle }}</h1>
+        <span style="font-size:12.5px;color:#8a8580;">{{ resultCount }} designs</span>
+      </div>
+
+      <!-- Product grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:12px 16px 4px;">
+        <sc-for list="{{ products }}" as="p" hint-placeholder-count="6">
+          <div style="display:flex;flex-direction:column;animation:menaFadeUp .3s ease both;">
+            <button data-id="{{ p.id }}" onClick="{{ openProduct }}" style="position:relative;border:none;padding:0;cursor:pointer;border-radius:12px;overflow:hidden;background:{{ p.tint }};box-shadow:0 1px 3px rgba(28,26,25,.08);aspect-ratio:5/7;" style-active="transform:scale(.98)">
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;text-align:center;">
+                <span style="font-family:'Dancing Script',cursive;font-size:28px;line-height:1;color:#ee317b;">{{ p.name }}</span>
+                <span style="margin-top:10px;font-size:8px;letter-spacing:.24em;text-transform:uppercase;color:rgba(28,26,25,.5);">Mena Inc.</span>
+              </div>
+              <sc-if value="{{ p.featured }}" hint-placeholder-val="{{ false }}">
+                <span style="position:absolute;left:8px;top:8px;background:#1c1a19;color:#fff;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:5px;">Featured</span>
+              </sc-if>
+              <span data-id="{{ p.id }}" onClick="{{ toggleWish }}" role="button" aria-label="Save" style="position:absolute;right:8px;top:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:0 1px 3px rgba(0,0,0,.12);">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="{{ p.wishFill }}" stroke="{{ p.wishStroke }}" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 1 0-7.8 7.8l1.1 1L12 21.2l7.7-7.7 1.1-1a5.5 5.5 0 0 0 0-7.9Z"/></svg>
+              </span>
+            </button>
+            <div style="margin-top:8px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#8a8580;">{{ p.category }}</div>
+            <button data-id="{{ p.id }}" onClick="{{ openProduct }}" style="text-align:left;border:none;background:transparent;padding:2px 0 0;cursor:pointer;font-size:15px;font-weight:600;color:#1c1a19;">{{ p.name }}</button>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+              <span style="font-size:15px;font-weight:800;color:#ee0a24;">{{ p.priceLabel }}</span>
+              <sc-if value="{{ p.showQuickAdd }}" hint-placeholder-val="{{ false }}">
+                <button data-id="{{ p.id }}" onClick="{{ quickAdd }}" aria-label="Add" style="width:32px;height:32px;border-radius:50%;border:none;background:#ee317b;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(238,49,123,.4);" style-active="transform:scale(.9)">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                </button>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+        <div style="text-align:center;color:#8a8580;font-size:13px;padding:30px 16px;">No designs found.</div>
+      </sc-if>
+    </div>
+
+    <!-- Variation-B bottom tab bar -->
+    <sc-if value="{{ isB }}" hint-placeholder-val="{{ false }}">
+      <nav style="flex-shrink:0;display:flex;background:#fff;border-top:1px solid #ece7e2;padding:8px 0 calc(8px + env(safe-area-inset-bottom));">
+        <button onClick="{{ goCatalog }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;cursor:pointer;color:#ee317b;font-size:10px;font-weight:700;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          Shop
+        </button>
+        <button onClick="{{ goCart }}" style="flex:1;position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;cursor:pointer;color:#8a8580;font-size:10px;font-weight:700;">
+          <span style="position:relative;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <sc-if value="{{ hasCart }}" hint-placeholder-val="{{ false }}">
+              <span style="position:absolute;top:-5px;right:-8px;min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#ee0a24;color:#fff;font-size:9px;font-weight:800;">{{ cartCount }}</span>
+            </sc-if>
+          </span>
+          Cart
+        </button>
+        <button onClick="{{ openDrawer }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;cursor:pointer;color:#8a8580;font-size:10px;font-weight:700;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          Account
+        </button>
+      </nav>
+    </sc-if>
+  </div>
+  </sc-if>
+
+  <!-- ============ PRODUCT ============ -->
+  <sc-if value="{{ isProduct }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:#faf8f6;">
+    <header style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:12px 12px 10px;background:#fff;border-bottom:1px solid #ece7e2;">
+      <button onClick="{{ goCatalog }}" aria-label="Back" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:12px;cursor:pointer;color:#1c1a19;" style-active="background:#f4f0ec">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div style="flex:1;font-size:14px;font-weight:600;color:#8a8580;">Wedding Cards</div>
+      <button id="{{ cartIconId }}" onClick="{{ goCart }}" aria-label="Cart" style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:12px;cursor:pointer;color:#1c1a19;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <sc-if value="{{ hasCart }}" hint-placeholder-val="{{ false }}">
+          <span key="{{ bounce }}" style="position:absolute;top:2px;right:2px;min-width:18px;height:18px;padding:0 4px;display:flex;align-items:center;justify-content:center;border-radius:9px;background:#ee0a24;color:#fff;font-size:10px;font-weight:800;animation:menaPop .4s ease;">{{ cartCount }}</span>
+        </sc-if>
+      </button>
+    </header>
+
+    <div class="mena-scroll" style="flex:1;overflow-y:auto;padding-bottom:120px;">
+      <div style="margin:0 auto;width:100%;aspect-ratio:5/7;max-height:420px;background:{{ current.tint }};display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <span style="font-family:'Dancing Script',cursive;font-size:52px;line-height:1;color:#ee317b;">{{ current.name }}</span>
+        <span style="margin-top:16px;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:rgba(28,26,25,.5);">Mena Inc. · Addis Ababa</span>
+      </div>
+
+      <div style="padding:18px 18px 8px;">
+        <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8a8580;font-weight:600;">{{ current.category }}</div>
+        <h1 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:30px;font-weight:600;margin:4px 0 0;line-height:1.15;">{{ current.name }}</h1>
+        <div style="margin-top:8px;font-size:26px;font-weight:800;color:#ee0a24;">{{ current.priceLabel }}<span style="font-size:13px;font-weight:500;color:#8a8580;margin-left:4px;">{{ current.perEach }}</span></div>
+        <p style="margin:12px 0 0;font-size:14.5px;line-height:1.55;color:rgba(28,26,25,.72);">{{ current.description }}</p>
+      </div>
+
+      <!-- Variant groups inline preview -->
+      <div style="padding:8px 18px 0;">
+        <sc-for list="{{ currentVariants }}" as="g" hint-placeholder-count="2">
+          <div style="margin-bottom:16px;">
+            <div style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8a8580;margin-bottom:10px;">{{ g.name }}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;">
+              <sc-for list="{{ g.options }}" as="o" hint-placeholder-count="3">
+                <button data-group="{{ g.name }}" data-label="{{ o.label }}" onClick="{{ selectVariant }}" style="{{ o.chipStyle }}">
+                  <sc-if value="{{ o.hasSwatch }}" hint-placeholder-val="{{ false }}"><span style="{{ o.swatchStyle }}"></span></sc-if>
+                  {{ o.label }}
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;align-items:flex-start;gap:10px;margin:8px 18px 0;padding:14px;border-radius:14px;background:#f4f0ec;font-size:13px;line-height:1.5;color:rgba(28,26,25,.72);">
+        <svg style="flex-shrink:0;margin-top:1px;color:#ee317b;" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        Send your order on WhatsApp, Telegram or SMS — no signup, no online payment. Our studio confirms every detail with you first.
+      </div>
+    </div>
+
+    <!-- sticky split bar -->
+    <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid #ece7e2;box-shadow:0 -8px 24px rgba(28,26,25,.07);padding:12px 14px calc(12px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:10px;">
+      <div style="min-width:0;flex-shrink:1;">
+        <div style="font-size:11px;color:#8a8580;">Total each</div>
+        <div style="font-size:19px;font-weight:800;color:#ee0a24;">{{ current.priceLabel }}</div>
+      </div>
+      <button onClick="{{ openSheetAdd }}" style="flex:1;min-width:0;height:50px;border-radius:9999px;background:#fff;color:#ee317b;border:2px solid #ee317b;font-weight:800;font-size:14px;cursor:pointer;" style-active="transform:scale(.97)">Add to cart</button>
+      <button onClick="{{ openSheetBuy }}" style="flex:1;min-width:0;height:50px;border-radius:9999px;background:#ee317b;color:#fff;border:none;font-weight:800;font-size:14px;cursor:pointer;" style-active="transform:scale(.97)">Buy now</button>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ============ CART ============ -->
+  <sc-if value="{{ isCart }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:#faf8f6;">
+    <header style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:12px 12px 10px;background:#fff;border-bottom:1px solid #ece7e2;">
+      <button onClick="{{ goCatalog }}" aria-label="Back" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:12px;cursor:pointer;color:#1c1a19;" style-active="background:#f4f0ec">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div style="flex:1;font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:600;">Your cart</div>
+      <span style="font-size:12.5px;color:#8a8580;padding-right:6px;">{{ cartCount }} items</span>
+    </header>
+
+    <div class="mena-scroll" style="flex:1;overflow-y:auto;padding-bottom:96px;">
+      <sc-if value="{{ cartEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:60px 24px;text-align:center;">
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#d8cfc8" stroke-width="1.6"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          <div style="font-size:14px;color:#8a8580;">Your cart is empty.</div>
+          <button onClick="{{ goCatalog }}" style="height:46px;padding:0 26px;border-radius:9999px;background:#ee317b;color:#fff;border:none;font-weight:800;font-size:14px;cursor:pointer;">Browse the catalog</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ hasCart }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:4px 16px 0;">
+          <sc-for list="{{ cartItems }}" as="it" hint-placeholder-count="2">
+            <div style="display:flex;gap:12px;padding:16px 0;border-bottom:1px solid #ece7e2;animation:menaFadeUp .25s ease both;">
+              <button data-key="{{ it.key }}" onClick="{{ toggleOne }}" aria-label="Select" style="margin-top:2px;flex-shrink:0;width:22px;height:22px;border-radius:50%;border:2px solid {{ it.checkBorder }};background:{{ it.checkBg }};display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                <sc-if value="{{ it.selected }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></sc-if>
+              </button>
+              <div style="width:66px;height:88px;flex-shrink:0;border-radius:10px;overflow:hidden;background:{{ it.tint }};display:flex;align-items:center;justify-content:center;">
+                <span style="font-family:'Dancing Script',cursive;font-size:22px;color:#ee317b;">{{ it.name }}</span>
+              </div>
+              <div style="min-width:0;flex:1;">
+                <div style="display:flex;justify-content:space-between;gap:8px;">
+                  <div style="font-size:15px;font-weight:600;">{{ it.name }}</div>
+                  <div style="font-size:15px;font-weight:800;color:#ee0a24;white-space:nowrap;">{{ it.lineLabel }}</div>
+                </div>
+                <sc-if value="{{ it.hasSel }}" hint-placeholder-val="{{ false }}"><div style="margin-top:3px;font-size:12.5px;color:#8a8580;">{{ it.selLabel }}</div></sc-if>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;">
+                  <div style="display:flex;align-items:center;border:1px solid #ece7e2;border-radius:9999px;overflow:hidden;background:#fff;">
+                    <button data-key="{{ it.key }}" onClick="{{ decItem }}" aria-label="Decrease" style="width:34px;height:34px;border:none;background:transparent;cursor:pointer;color:#1c1a19;display:flex;align-items:center;justify-content:center;" style-active="background:#f4f0ec"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
+                    <span style="min-width:36px;text-align:center;font-size:14px;font-weight:700;">{{ it.qty }}</span>
+                    <button data-key="{{ it.key }}" onClick="{{ incItem }}" aria-label="Increase" style="width:34px;height:34px;border:none;background:transparent;cursor:pointer;color:#1c1a19;display:flex;align-items:center;justify-content:center;" style-active="background:#f4f0ec"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+                  </div>
+                  <button data-key="{{ it.key }}" onClick="{{ removeItem }}" aria-label="Remove" style="width:34px;height:34px;border:none;background:transparent;cursor:pointer;color:#8a8580;border-radius:10px;display:flex;align-items:center;justify-content:center;" style-active="background:#f4f0ec">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="padding:18px 16px 0;">
+          <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:600;margin:0 0 10px;">Complete the suite</h2>
+          <div style="display:flex;gap:10px;overflow-x:auto;" class="mena-scroll">
+            <sc-for list="{{ suggestions }}" as="s" hint-placeholder-count="3">
+              <div style="flex-shrink:0;width:130px;border:1px solid #ece7e2;border-radius:14px;overflow:hidden;background:#fff;">
+                <div style="height:90px;background:{{ s.tint }};display:flex;align-items:center;justify-content:center;"><span style="font-family:'Dancing Script',cursive;font-size:20px;color:#ee317b;">{{ s.name }}</span></div>
+                <div style="padding:10px;">
+                  <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ s.name }}</div>
+                  <div style="font-size:12.5px;color:#8a8580;margin-top:1px;">{{ s.priceLabel }}</div>
+                  <button data-id="{{ s.id }}" onClick="{{ addSuggestion }}" style="margin-top:8px;width:100%;height:34px;border-radius:9999px;background:#fff;color:#ee317b;border:2px solid #ee317b;font-weight:800;font-size:12.5px;cursor:pointer;" style-active="transform:scale(.96)">Add</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+
+    <sc-if value="{{ hasCart }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid #ece7e2;padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:12px;">
+        <button onClick="{{ toggleAll }}" style="display:flex;align-items:center;gap:8px;border:none;background:transparent;cursor:pointer;font-size:13px;font-weight:700;color:#1c1a19;flex-shrink:0;">
+          <span style="width:22px;height:22px;border-radius:50%;border:2px solid {{ allBorder }};background:{{ allBg }};display:flex;align-items:center;justify-content:center;">
+            <sc-if value="{{ allSelected }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg></sc-if>
+          </span>All
+        </button>
+        <div style="flex:1;text-align:right;min-width:0;">
+          <div style="font-size:11px;color:#8a8580;">Total</div>
+          <div style="font-size:18px;font-weight:800;color:#ee0a24;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ totalLabel }}</div>
+        </div>
+        <button onClick="{{ goCheckout }}" style="height:48px;padding:0 22px;border-radius:9999px;background:#ee317b;color:#fff;border:none;font-weight:800;font-size:14px;cursor:pointer;flex-shrink:0;opacity:{{ checkoutOpacity }};" style-active="transform:scale(.97)">Checkout ({{ selectedCount }})</button>
+      </div>
+    </sc-if>
+  </div>
+  </sc-if>
+
+  <!-- ============ CHECKOUT ============ -->
+  <sc-if value="{{ isCheckout }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:#faf8f6;">
+    <header style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:12px 12px 10px;background:#fff;border-bottom:1px solid #ece7e2;">
+      <button onClick="{{ goCart }}" aria-label="Back" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:12px;cursor:pointer;color:#1c1a19;" style-active="background:#f4f0ec">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div style="flex:1;font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:600;">Checkout</div>
+    </header>
+
+    <div class="mena-scroll" style="flex:1;overflow-y:auto;padding:16px 16px 110px;">
+      <div style="background:#fff;border:1px solid #ece7e2;border-radius:16px;padding:14px;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8a8580;margin-bottom:8px;">Your items ({{ selectedCount }})</div>
+        <sc-for list="{{ checkoutItems }}" as="it" hint-placeholder-count="2">
+          <div style="display:flex;gap:12px;padding:10px 0;border-top:1px solid #f4f0ec;">
+            <div style="width:52px;height:66px;flex-shrink:0;border-radius:8px;overflow:hidden;background:{{ it.tint }};display:flex;align-items:center;justify-content:center;"><span style="font-family:'Dancing Script',cursive;font-size:16px;color:#ee317b;">{{ it.name }}</span></div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:14px;font-weight:600;">{{ it.name }}</div>
+              <sc-if value="{{ it.hasSel }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#8a8580;margin-top:2px;">{{ it.selLabel }}</div></sc-if>
+              <div style="display:flex;justify-content:space-between;margin-top:6px;"><span style="font-size:14px;font-weight:800;color:#ee0a24;">{{ it.lineLabel }}</span><span style="font-size:12px;color:#8a8580;">×{{ it.qty }}</span></div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="background:#fff;border:1px solid #ece7e2;border-radius:16px;padding:14px;margin-top:14px;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8a8580;margin-bottom:12px;">Send order via</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+          <sc-for list="{{ channels }}" as="ch" hint-placeholder-count="3">
+            <button data-id="{{ ch.id }}" onClick="{{ setChannel }}" style="{{ ch.cardStyle }}">
+              <span style="{{ ch.iconWrap }}"><span innerHTML="{{ ch.icon }}"></span></span>
+              <span style="{{ ch.labelStyle }}">{{ ch.label }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid #ece7e2;border-radius:16px;padding:14px;margin-top:14px;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8a8580;">Message to the studio (optional)</div>
+        <div style="font-size:12.5px;color:#8a8580;line-height:1.5;margin-top:6px;">You can leave this blank. Add wording, colors, deadlines, or special requests only if needed.</div>
+        <textarea value="{{ note }}" onInput="{{ onNote }}" rows="3" placeholder="Optional: anything else we should know?" style="width:100%;box-sizing:border-box;margin-top:10px;border:1px solid #ece7e2;border-radius:12px;padding:10px 12px;font-size:14px;font-family:inherit;resize:none;outline:none;color:#1c1a19;" style-focus="border-color:#ee317b"></textarea>
+      </div>
+    </div>
+
+    <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid #ece7e2;padding:14px 16px calc(14px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;">
+      <div style="min-width:0;"><div style="font-size:11.5px;color:#8a8580;">Amount</div><div style="font-size:15px;font-weight:700;color:#1c1a19;white-space:nowrap;">{{ selectedCount }} item(s)</div></div>
+      <div style="flex:1;text-align:right;min-width:0;"><div style="font-size:11.5px;color:#8a8580;">Total</div><div style="font-size:20px;font-weight:800;color:#ee0a24;white-space:nowrap;">{{ totalLabel }}</div></div>
+      <button onClick="{{ placeOrder }}" style="height:52px;padding:0 26px;border-radius:9999px;background:#ee317b;color:#fff;border:none;font-weight:800;font-size:15px;cursor:pointer;flex-shrink:0;" style-active="transform:scale(.98)">Place order</button>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ============ SUCCESS ============ -->
+  <sc-if value="{{ isSuccess }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;background:#faf8f6;">
+    <div style="width:72px;height:72px;border-radius:50%;background:#5a9e2e;display:flex;align-items:center;justify-content:center;animation:menaCheck .35s cubic-bezier(.2,1.4,.5,1) both;">
+      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+    </div>
+    <h1 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:30px;font-weight:600;margin:18px 0 0;">Order ready</h1>
+    <p style="font-size:14px;color:#8a8580;line-height:1.55;margin:10px 0 0;max-width:280px;">{{ channelLabel }} should have opened with your order summary — press send there to forward it to our studio.</p>
+    <a href="{{ sentUrl }}" target="_blank" rel="noopener noreferrer" style="margin-top:24px;height:50px;padding:0 30px;border-radius:9999px;background:#ee317b;color:#fff;text-decoration:none;font-weight:800;font-size:15px;display:inline-flex;align-items:center;gap:8px;">Open {{ channelLabel }}</a>
+    <button onClick="{{ finishOrder }}" style="margin-top:16px;border:none;background:transparent;color:#ee317b;font-weight:700;font-size:14px;cursor:pointer;">Done — continue browsing</button>
+  </div>
+  </sc-if>
+
+  <!-- ============ DRAWER (left) ============ -->
+  <div onClick="{{ closeDrawer }}" style="{{ drawerOverlayStyle }}"></div>
+  <aside style="{{ drawerStyle }}">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 20px 14px;border-bottom:1px solid #ece7e2;">
+      <span style="font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;font-weight:600;">Mena Inc.</span>
+      <button onClick="{{ closeDrawer }}" aria-label="Close" style="width:36px;height:36px;border:none;background:transparent;border-radius:10px;cursor:pointer;color:#1c1a19;display:flex;align-items:center;justify-content:center;" style-active="background:#f4f0ec">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div style="padding:20px;">
+      <div style="position:relative;margin-bottom:18px;">
+        <svg style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#8a8580;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input value="{{ search }}" onInput="{{ onSearch }}" placeholder="Search designs…" style="width:100%;box-sizing:border-box;border:1px solid #ece7e2;background:#fff;border-radius:9999px;padding:11px 16px 11px 40px;font-size:14px;outline:none;" style-focus="border-color:#ee317b" />
+      </div>
+      <sc-for list="{{ drawerNav }}" as="n" hint-placeholder-count="4">
+        <button data-key="{{ n.key }}" onClick="{{ drawerGo }}" style="{{ n.style }}">
+          <span innerHTML="{{ n.icon }}"></span>{{ n.label }}
+        </button>
+      </sc-for>
+      <div style="margin-top:22px;padding-top:18px;border-top:1px solid #ece7e2;font-size:12.5px;line-height:1.7;color:#8a8580;">
+        <div style="font-weight:700;color:#1c1a19;margin-bottom:4px;">Mena INK Trading PLC</div>
+        Reality Plaza, 1st Floor, Office 104<br/>Bole, Addis Ababa<br/>+251 92 963 9939
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ OPTIONS SHEET ============ -->
+  <div onClick="{{ closeSheet }}" style="{{ sheetOverlayStyle }}"></div>
+  <div style="{{ sheetStyle }}">
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:16px 16px 14px;border-bottom:1px solid #ece7e2;">
+      <div style="width:60px;height:78px;flex-shrink:0;border-radius:10px;overflow:hidden;background:{{ current.tint }};display:flex;align-items:center;justify-content:center;"><span style="font-family:'Dancing Script',cursive;font-size:20px;color:#ee317b;">{{ current.name }}</span></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:16px;font-weight:800;">{{ current.name }}</div>
+        <div style="font-size:22px;font-weight:800;color:#ee0a24;margin-top:2px;">{{ current.priceLabel }}</div>
+        <div style="font-size:12.5px;color:#8a8580;margin-top:2px;">{{ sheetSelLabel }}</div>
+      </div>
+      <button onClick="{{ closeSheet }}" aria-label="Close" style="width:34px;height:34px;border:none;background:transparent;border-radius:10px;cursor:pointer;color:#1c1a19;display:flex;align-items:center;justify-content:center;" style-active="background:#f4f0ec">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="mena-scroll" style="max-height:340px;overflow-y:auto;padding:16px;">
+      <sc-for list="{{ currentVariants }}" as="g" hint-placeholder-count="2">
+        <div style="margin-bottom:18px;">
+          <div style="font-size:15px;font-weight:800;margin-bottom:10px;">{{ g.name }}: {{ g.selectedLabel }}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;">
+            <sc-for list="{{ g.options }}" as="o" hint-placeholder-count="3">
+              <button data-group="{{ g.name }}" data-label="{{ o.label }}" onClick="{{ selectVariant }}" style="{{ o.sheetChipStyle }}">
+                <sc-if value="{{ o.hasSwatch }}" hint-placeholder-val="{{ false }}"><span style="{{ o.swatchStyle }}"></span></sc-if>
+                {{ o.label }}
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+      <div>
+        <div style="font-size:15px;font-weight:800;margin-bottom:10px;">Quantity</div>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="display:flex;align-items:center;border:1px solid #ece7e2;border-radius:9999px;overflow:hidden;background:#fff;">
+            <button onClick="{{ sheetDec }}" aria-label="Decrease" style="width:44px;height:44px;border:none;background:transparent;cursor:pointer;color:#1c1a19;display:flex;align-items:center;justify-content:center;" style-active="background:#f4f0ec"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
+            <span key="{{ qty }}" style="min-width:56px;text-align:center;font-size:17px;font-weight:800;animation:menaPop .3s ease;">{{ qty }}</span>
+            <button onClick="{{ sheetInc }}" aria-label="Increase" style="width:44px;height:44px;border:none;background:transparent;cursor:pointer;color:#1c1a19;display:flex;align-items:center;justify-content:center;" style-active="background:#f4f0ec"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <sc-for list="{{ presets }}" as="pr" hint-placeholder-count="4">
+              <button data-val="{{ pr.val }}" onClick="{{ setPreset }}" style="{{ pr.style }}">{{ pr.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;padding:14px 16px calc(14px + env(safe-area-inset-bottom));border-top:1px solid #ece7e2;">
+      <button id="{{ sheetAddBtnId }}" onClick="{{ confirmAdd }}" style="flex:1;height:52px;border-radius:9999px;background:#fff;color:#ee317b;border:2px solid #ee317b;font-weight:800;font-size:15px;cursor:pointer;" style-active="transform:scale(.97)">Add to cart</button>
+      <button onClick="{{ confirmBuy }}" style="flex:1;height:52px;border-radius:9999px;background:#ee317b;color:#fff;border:none;font-weight:800;font-size:15px;cursor:pointer;" style-active="transform:scale(.97)">Buy now</button>
+    </div>
+  </div>
+
+  <!-- ============ TOAST ============ -->
+  <div style="{{ toastStyle }}">
+    <span innerHTML="{{ toastIcon }}"></span>{{ toastMsg }}
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;a&quot;,&quot;b&quot;],&quot;default&quot;:&quot;a&quot;,&quot;tsType&quot;:&quot;'a' | 'b'&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.rootId = 'mena-' + Math.random().toString(36).slice(2, 8);
+    this.cartIconId = this.rootId + '-cart';
+    this.sheetAddBtnId = this.rootId + '-addbtn';
+
+    const CATS = [
+      { id: '', name: 'All' },
+      { id: 'inv', name: 'Wedding Invitations' },
+      { id: 'std', name: 'Save-the-Dates' },
+      { id: 'ty', name: 'Thank-You Cards' },
+      { id: 'suite', name: 'Full Suites' },
+    ];
+    const color = (label, swatch) => ({ label, swatch });
+    const COLORV = { name: 'Color', options: [color('Ivory', '#f5efe2'), color('Blush', '#f4c2ce'), color('Sage', '#b8c6a8'), color('Gold', '#c9a24b'), color('Navy', '#26324f')] };
+    const SIZEV = { name: 'Size', options: [color('A6'), color('A5'), color('Square')] };
+    this.PRODUCTS = [
+      { id: 'aster', name: 'Aster', cat: 'inv', category: 'Wedding Invitations', tint: '#f3e7ea', mode: 'exact', price: 85, featured: true, description: 'Delicate botanical linework framing your names, letterpressed on soft cotton stock.', variants: [COLORV, SIZEV] },
+      { id: 'lumiere', name: 'Lumière', cat: 'suite', category: 'Full Suites', tint: '#efe9df', mode: 'starting', price: 240, featured: false, description: 'A complete gold-foil suite: invitation, RSVP, details card and belly band.', variants: [COLORV] },
+      { id: 'selam', name: 'Selam', cat: 'std', category: 'Save-the-Dates', tint: '#e7ecef', mode: 'exact', price: 60, featured: false, description: 'Clean modern save-the-date with a photo window and elegant serif date.', variants: [SIZEV] },
+      { id: 'habesha', name: 'Habesha Gold', cat: 'inv', category: 'Wedding Invitations', tint: '#efe3d6', mode: 'quote', price: null, featured: true, description: 'Traditional Ethiopian motifs in hand-applied gold, quoted per finish and quantity.', variants: [COLORV] },
+      { id: 'meskel', name: 'Meskel', cat: 'ty', category: 'Thank-You Cards', tint: '#e9f0ec', mode: 'exact', price: 45, featured: false, description: 'Folded thank-you card with a Meskel-daisy crest and blank interior.', variants: [] },
+      { id: 'adey', name: 'Adey', cat: 'inv', category: 'Wedding Invitations', tint: '#f6efdd', mode: 'exact', price: 95, featured: true, description: 'Golden Adey Abeba blooms on warm cream — a bright, celebratory invitation.', variants: [COLORV, SIZEV] },
+      { id: 'enku', name: 'Enkutatash', cat: 'std', category: 'Save-the-Dates', tint: '#eeeeec', mode: 'exact', price: 70, featured: false, description: 'Fresh, minimal save-the-date inspired by new-year renewal.', variants: [SIZEV] },
+      { id: 'tsehay', name: 'Tsehay', cat: 'suite', category: 'Full Suites', tint: '#e9e6ef', mode: 'starting', price: 300, featured: false, description: 'Sunlit full suite with vellum overlay, wax seal and custom monogram.', variants: [COLORV] },
+    ];
+    this.ADDONS = [
+      { id: 'wax', name: 'Wax Seal', tint: '#f1e2e6', mode: 'exact', price: 30 },
+      { id: 'liner', name: 'Envelope Liner', tint: '#e6ece9', mode: 'exact', price: 25 },
+      { id: 'band', name: 'Belly Band', tint: '#efe8dd', mode: 'exact', price: 20 },
+    ];
+    this.CATS = CATS;
+
+    this.state = {
+      screen: 'catalog', drawerOpen: false, sheetOpen: false, sheetMode: 'add',
+      productId: null, qty: 1, selections: {}, cart: [], selectedKeys: [],
+      category: '', search: '', channel: 'whatsapp', note: '', bounce: 0,
+      sentUrl: '', wish: [], toast: null, _toastKey: 0,
+    };
+  }
+
+  // ---------- helpers ----------
+  fmt(mode, price) {
+    if (mode === 'quote' || price == null) return 'Request a quote';
+    const a = price.toLocaleString() + ' ETB';
+    return mode === 'starting' ? 'From ' + a : a;
+  }
+  productById(id) { return this.PRODUCTS.find(p => p.id === id) || this.ADDONS.find(a => a.id === id); }
+  keyFor(p, sel) { return p.id + '|' + JSON.stringify(sel || {}); }
+
+  toast(kind, msg) {
+    const k = this.state._toastKey + 1;
+    this.setState({ toast: { kind, msg }, _toastKey: k });
+    clearTimeout(this._tt);
+    this._tt = setTimeout(() => { if (this.state._toastKey === k) this.setState({ toast: null }); }, 2200);
+  }
+
+  flyToCart(fromEl, tint, label) {
+    const root = document.getElementById(this.rootId);
+    const target = document.getElementById(this.cartIconId);
+    if (!root || !fromEl || !target) return;
+    const r = root.getBoundingClientRect();
+    const a = fromEl.getBoundingClientRect();
+    const b = target.getBoundingClientRect();
+    const g = document.createElement('div');
+    g.textContent = (label || 'M')[0];
+    Object.assign(g.style, {
+      position: 'absolute', left: (a.left - r.left + a.width / 2 - 20) + 'px', top: (a.top - r.top + a.height / 2 - 20) + 'px',
+      width: '40px', height: '40px', borderRadius: '50%', background: tint || '#f3e7ea',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Dancing Script',cursive",
+      color: '#ee317b', fontSize: '20px', fontWeight: '700', zIndex: '9999', boxShadow: '0 8px 22px rgba(0,0,0,.22)',
+      transition: 'transform .65s cubic-bezier(.55,-0.25,.3,1), opacity .65s ease', pointerEvents: 'none',
+    });
+    root.appendChild(g);
+    const dx = (b.left - r.left + b.width / 2) - (a.left - r.left + a.width / 2);
+    const dy = (b.top - r.top + b.height / 2) - (a.top - r.top + a.height / 2);
+    requestAnimationFrame(() => { g.style.transform = `translate(${dx}px,${dy}px) scale(.25)`; g.style.opacity = '0.3'; });
+    setTimeout(() => g.remove(), 680);
+  }
+
+  add(p, sel, qty, replace) {
+    const key = this.keyFor(p, sel);
+    const cart = this.state.cart.slice();
+    const idx = cart.findIndex(x => x.key === key);
+    if (idx >= 0) cart[idx] = { ...cart[idx], qty: replace ? qty : cart[idx].qty + qty };
+    else cart.push({ key, productId: p.id, name: p.name, tint: p.tint, mode: p.mode, priceEach: p.mode === 'exact' ? p.price : null, selections: sel || {}, qty });
+    const selectedKeys = this.state.selectedKeys.includes(key) ? this.state.selectedKeys : [...this.state.selectedKeys, key];
+    this.setState({ cart, selectedKeys, bounce: this.state.bounce + 1 });
+    return key;
+  }
+
+  // ---------- navigation ----------
+  go(screen) { this.setState({ screen, drawerOpen: false, sheetOpen: false }); const r = document.getElementById(this.rootId); }
+  openDrawer = () => this.setState({ drawerOpen: true });
+  closeDrawer = () => this.setState({ drawerOpen: false });
+  goCatalog = () => this.go('catalog');
+  goCart = () => this.go('cart');
+  goCheckout = () => {
+    if (this.selectedItems().length === 0) { this.toast('error', 'Select at least one item.'); return; }
+    this.go('checkout');
+  };
+
+  openProduct = (e) => {
+    const id = e.currentTarget.dataset.id;
+    this.setState({ productId: id, screen: 'product', selections: {}, qty: 1, drawerOpen: false });
+    const r = document.getElementById(this.rootId); if (r) { const s = r.querySelector('.mena-scroll'); }
+  };
+  selectCat = (e) => this.setState({ category: e.currentTarget.dataset.id });
+  onSearch = (e) => this.setState({ search: e.target.value });
+  onNote = (e) => this.setState({ note: e.target.value });
+
+  toggleWish = (e) => {
+    e.stopPropagation();
+    const id = e.currentTarget.dataset.id;
+    const wish = this.state.wish.includes(id) ? this.state.wish.filter(x => x !== id) : [...this.state.wish, id];
+    this.setState({ wish });
+  };
+
+  // ---------- variants / sheet ----------
+  selectVariant = (e) => {
+    const { group, label } = e.currentTarget.dataset;
+    this.setState({ selections: { ...this.state.selections, [group]: label } });
+  };
+  missingVariant() {
+    const p = this.productById(this.state.productId);
+    if (!p || !p.variants) return null;
+    return p.variants.find(g => !this.state.selections[g.name]) || null;
+  }
+  openSheetAdd = () => { const p = this.productById(this.state.productId); if (!p.variants || p.variants.length === 0) { this.doAdd(false); return; } this.setState({ sheetOpen: true, sheetMode: 'add' }); };
+  openSheetBuy = () => { const p = this.productById(this.state.productId); if (!p.variants || p.variants.length === 0) { this.doAdd(true); return; } this.setState({ sheetOpen: true, sheetMode: 'buy' }); };
+  closeSheet = () => this.setState({ sheetOpen: false });
+  sheetInc = () => this.setState({ qty: this.state.qty + 1 });
+  sheetDec = () => this.setState({ qty: Math.max(1, this.state.qty - 1) });
+  setPreset = (e) => this.setState({ qty: parseInt(e.currentTarget.dataset.val, 10) });
+
+  doAdd(buy) {
+    const p = this.productById(this.state.productId);
+    const miss = this.missingVariant();
+    if (miss) { this.toast('error', 'Please choose a ' + miss.name.toLowerCase() + '.'); return; }
+    const btn = document.getElementById(this.sheetAddBtnId) || document.getElementById(this.cartIconId);
+    if (!buy) this.flyToCart(btn, p.tint, p.name);
+    const key = this.add(p, this.state.selections, this.state.qty, buy);
+    if (buy) { this.setState({ sheetOpen: false, selectedKeys: [key], screen: 'checkout' }); }
+    else { this.setState({ sheetOpen: false }); this.toast('success', p.name + ' added to cart.'); }
+  }
+  confirmAdd = () => this.doAdd(false);
+  confirmBuy = () => this.doAdd(true);
+
+  quickAdd = (e) => {
+    e.stopPropagation();
+    const p = this.productById(e.currentTarget.dataset.id);
+    if (p.variants && p.variants.length > 0) { this.openProduct(e); return; }
+    this.flyToCart(e.currentTarget, p.tint, p.name);
+    this.add(p, {}, 1, false);
+    this.toast('success', p.name + ' added to cart.');
+  };
+  addSuggestion = (e) => {
+    const p = this.productById(e.currentTarget.dataset.id);
+    this.flyToCart(e.currentTarget, p.tint, p.name);
+    this.add(p, {}, 1, false);
+    this.toast('success', p.name + ' added to cart.');
+  };
+
+  // ---------- cart ----------
+  incItem = (e) => { const k = e.currentTarget.dataset.key; this.setState({ cart: this.state.cart.map(i => i.key === k ? { ...i, qty: i.qty + 1 } : i) }); };
+  decItem = (e) => { const k = e.currentTarget.dataset.key; this.setState({ cart: this.state.cart.map(i => i.key === k ? { ...i, qty: Math.max(1, i.qty - 1) } : i) }); };
+  removeItem = (e) => { const k = e.currentTarget.dataset.key; this.setState({ cart: this.state.cart.filter(i => i.key !== k), selectedKeys: this.state.selectedKeys.filter(x => x !== k) }); };
+  toggleOne = (e) => { const k = e.currentTarget.dataset.key; const s = this.state.selectedKeys; this.setState({ selectedKeys: s.includes(k) ? s.filter(x => x !== k) : [...s, k] }); };
+  toggleAll = () => { const all = this.state.cart.length > 0 && this.state.selectedKeys.length === this.state.cart.length; this.setState({ selectedKeys: all ? [] : this.state.cart.map(i => i.key) }); };
+
+  selectedItems() { return this.state.cart.filter(i => this.state.selectedKeys.includes(i.key)); }
+
+  // ---------- checkout ----------
+  setChannel = (e) => this.setState({ channel: e.currentTarget.dataset.id });
+  placeOrder = () => {
+    const items = this.selectedItems();
+    if (items.length === 0) return;
+    const lines = items.map(i => `• ${i.name}${Object.keys(i.selections).length ? ' (' + Object.entries(i.selections).map(([k, v]) => k + ': ' + v).join(', ') + ')' : ''} ×${i.qty}${i.priceEach != null ? ' — ' + (i.priceEach * i.qty).toLocaleString() + ' ETB' : ' — Quote'}`).join('\n');
+    const total = items.filter(i => i.priceEach != null).reduce((s, i) => s + i.priceEach * i.qty, 0);
+    let msg = 'Hello Mena Inc.! I would like to order:\n\n' + lines;
+    if (total > 0) msg += '\n\nEstimated total: ' + total.toLocaleString() + ' ETB';
+    if (this.state.note.trim()) msg += '\n\nNote: ' + this.state.note.trim();
+    const enc = encodeURIComponent(msg);
+    const ch = this.state.channel;
+    const url = ch === 'whatsapp' ? 'https://wa.me/251929639939?text=' + enc
+      : ch === 'telegram' ? 'https://t.me/+251929639939?text=' + enc
+      : 'sms:+251929639939?body=' + enc;
+    this.setState({ sentUrl: url, screen: 'success' });
+  };
+  finishOrder = () => {
+    const keys = this.selectedItems().map(i => i.key);
+    this.setState({ cart: this.state.cart.filter(i => !keys.includes(i.key)), selectedKeys: [], screen: 'catalog', note: '' });
+  };
+
+  drawerGo = (e) => {
+    const k = e.currentTarget.dataset.key;
+    if (k === 'catalog') { this.setState({ screen: 'catalog', category: '', drawerOpen: false }); }
+    else if (k === 'cart') { this.go('cart'); }
+    else { this.toast('info', 'Coming soon in the full app.'); this.setState({ drawerOpen: false }); }
+  };
+
+  // ---------- render ----------
+  renderVals() {
+    const s = this.state;
+    const isB = this.props.variant === 'b';
+    const p = this.productById(s.productId);
+    const cartCount = s.cart.reduce((n, i) => n + i.qty, 0);
+    const selItems = this.selectedItems();
+    const selectedCount = selItems.reduce((n, i) => n + i.qty, 0);
+    const priced = selItems.filter(i => i.priceEach != null);
+    const total = priced.length ? priced.reduce((sum, i) => sum + i.priceEach * i.qty, 0) : null;
+    const hasQuote = selItems.some(i => i.priceEach == null);
+    const totalLabel = total != null ? (total.toLocaleString() + ' ETB' + (hasQuote ? ' +' : '')) : (hasQuote ? 'Quote' : '—');
+
+    // categories
+    const cats = this.CATS.map((c, i) => {
+      const active = s.category === c.id;
+      const tints = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#e9f0ec'];
+      return {
+        id: c.id, name: c.name, initial: c.name === 'All' ? '✦' : c.name[0],
+        circleStyle: `display:flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;background:${tints[i % tints.length]};font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:26px;color:rgba(28,26,25,.5);${active ? 'box-shadow:0 0 0 2px #ee317b, 0 0 0 5px #faf8f6;' : ''}`,
+        labelStyle: `font-size:11.5px;text-align:center;line-height:1.15;${active ? 'font-weight:800;color:#1c1a19;' : 'font-weight:500;color:#8a8580;'}`,
+        pillStyle: `flex-shrink:0;padding:9px 16px;border-radius:9999px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid ${active ? '#ee317b' : '#ece7e2'};background:${active ? '#ee317b' : '#fff'};color:${active ? '#fff' : '#1c1a19'};white-space:nowrap;`,
+      };
+    });
+
+    // product filtering
+    const q = s.search.trim().toLowerCase();
+    let list = this.PRODUCTS.slice();
+    if (s.category) list = list.filter(x => x.cat === s.category);
+    if (q) list = list.filter(x => (x.name + ' ' + x.category + ' ' + x.description).toLowerCase().includes(q));
+    list = list.sort((a, b) => Number(b.featured) - Number(a.featured));
+    const products = list.map(x => ({
+      id: x.id, name: x.name, tint: x.tint, category: x.category, featured: x.featured,
+      priceLabel: this.fmt(x.mode, x.price), showQuickAdd: isB,
+      wishFill: s.wish.includes(x.id) ? '#ee317b' : 'none', wishStroke: s.wish.includes(x.id) ? '#ee317b' : 'rgba(28,26,25,.4)',
+    }));
+
+    // current product variants
+    const chipBase = 'display:inline-flex;align-items:center;gap:8px;border-radius:9999px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid ';
+    const buildVariants = (forSheet) => (p && p.variants ? p.variants : []).map(g => {
+      const sel = s.selections[g.name];
+      return {
+        name: g.name, selectedLabel: sel || 'Select',
+        options: g.options.map(o => {
+          const active = sel === o.label;
+          const swatch = o.swatch || null;
+          return {
+            label: o.label, hasSwatch: !!swatch,
+            swatchStyle: `width:14px;height:14px;border-radius:50%;background:${swatch || 'transparent'};box-shadow:0 0 0 1px rgba(0,0,0,.15);`,
+            chipStyle: chipBase + (active ? '#ee317b;background:rgba(238,49,123,.08);color:#1c1a19;' : '#ece7e2;background:#fff;color:rgba(28,26,25,.7);'),
+            sheetChipStyle: chipBase + (active ? '#1c1a19;background:#fff;color:#1c1a19;' : '#ece7e2;background:#fff;color:rgba(28,26,25,.75);'),
+          };
+        }),
+      };
+    });
+
+    // cart items
+    const cartItems = s.cart.map(i => {
+      const selected = s.selectedKeys.includes(i.key);
+      const selLabel = Object.entries(i.selections).map(([k, v]) => k + ': ' + v).join(' · ');
+      return {
+        key: i.key, name: i.name, tint: i.tint, qty: i.qty, selected,
+        hasSel: !!selLabel, selLabel,
+        lineLabel: i.priceEach != null ? (i.priceEach * i.qty).toLocaleString() + ' ETB' : 'Quote',
+        checkBorder: selected ? '#ee0a24' : '#d8cfc8', checkBg: selected ? '#ee0a24' : '#fff',
+      };
+    });
+    const suggestions = this.ADDONS.filter(a => !s.cart.some(i => i.productId === a.id)).map(a => ({ id: a.id, name: a.name, tint: a.tint, priceLabel: this.fmt(a.mode, a.price) }));
+
+    const checkoutItems = selItems.map(i => ({
+      name: i.name, tint: i.tint, qty: i.qty,
+      hasSel: Object.keys(i.selections).length > 0, selLabel: Object.entries(i.selections).map(([k, v]) => k + ': ' + v).join(' · '),
+      lineLabel: i.priceEach != null ? (i.priceEach * i.qty).toLocaleString() + ' ETB' : 'Quote',
+    }));
+
+    // channels
+    const chDefs = [
+      { id: 'whatsapp', label: 'WhatsApp', accent: '#25a34f', tint: 'rgba(37,163,79,.08)', icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.3A10 10 0 1 0 12 2Z"/></svg>' },
+      { id: 'telegram', label: 'Telegram', accent: '#2b93d6', tint: 'rgba(43,147,214,.08)', icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M22 3 2 11l6 2 2 6 3-4 5 4Z"/></svg>' },
+      { id: 'sms', label: 'SMS', accent: '#ee317b', tint: 'rgba(238,49,123,.08)', icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>' },
+    ];
+    const channels = chDefs.map(c => {
+      const active = s.channel === c.id;
+      return {
+        id: c.id, label: c.label, active, icon: c.icon,
+        cardStyle: `display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px 8px;border-radius:16px;cursor:pointer;transition:border-color .2s,background .2s;border:1.5px solid ${active ? c.accent : '#ece7e2'};background:${active ? c.tint : '#fff'};`,
+        iconWrap: `flex-shrink:0;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .2s;color:${active ? '#fff' : '#a8a29d'};background:${active ? c.accent : '#f4f0ec'};`,
+        labelStyle: `font-size:14px;font-weight:800;color:${active ? c.accent : '#1c1a19'};`,
+      };
+    });
+    const channelLabel = chDefs.find(c => c.id === s.channel).label;
+
+    // drawer nav
+    const navDefs = [
+      { key: 'catalog', label: 'Wedding Cards', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>' },
+      { key: 'gallery', label: 'Gallery', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>' },
+      { key: 'contact', label: 'Contact', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></svg>' },
+      { key: 'login', label: 'Log in', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>' },
+    ];
+    const drawerNav = navDefs.map(n => {
+      const active = (n.key === 'catalog' && s.screen === 'catalog') || (n.key === 'cart' && s.screen === 'cart');
+      return { key: n.key, label: n.label, icon: n.icon,
+        style: `display:flex;align-items:center;gap:14px;width:100%;padding:14px 12px;border:none;border-radius:12px;cursor:pointer;font-size:15px;font-weight:700;text-align:left;margin-bottom:2px;background:${active ? '#ee317b' : 'transparent'};color:${active ? '#fff' : '#1c1a19'};` };
+    });
+
+    // presets
+    const presets = [100, 250, 500, 1000].map(v => ({ val: v, label: v.toLocaleString(),
+      style: `padding:8px 14px;border-radius:9999px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid ${s.qty === v ? '#ee317b' : '#ece7e2'};background:${s.qty === v ? 'rgba(238,49,123,.08)' : '#fff'};color:${s.qty === v ? '#1c1a19' : '#8a8580'};` }));
+
+    // drawer / sheet animation styles
+    const drawerOverlayStyle = `position:absolute;inset:0;background:rgba(28,26,25,.45);z-index:60;transition:opacity .3s ease;opacity:${s.drawerOpen ? '1' : '0'};visibility:${s.drawerOpen ? 'visible' : 'hidden'};`;
+    const drawerStyle = `position:absolute;top:0;bottom:0;left:0;width:300px;background:#fff;z-index:61;box-shadow:8px 0 30px rgba(0,0,0,.18);transition:transform .32s cubic-bezier(.4,0,.2,1);transform:translateX(${s.drawerOpen ? '0' : '-100%'});overflow-y:auto;`;
+    const sheetOverlayStyle = `position:absolute;inset:0;background:rgba(28,26,25,.5);z-index:70;transition:opacity .3s ease;opacity:${s.sheetOpen ? '1' : '0'};visibility:${s.sheetOpen ? 'visible' : 'hidden'};`;
+    const sheetStyle = `position:absolute;left:0;right:0;bottom:0;background:#fff;z-index:71;border-radius:24px 24px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.2);transition:transform .34s cubic-bezier(.3,1,.4,1);transform:translateY(${s.sheetOpen ? '0' : '110%'});`;
+
+    // toast
+    const tIcons = {
+      success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5a9e2e" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>',
+      error: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ee0a24" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></svg>',
+      info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a8580" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><path d="M12 11v5M12 8h.01"/></svg>',
+    };
+    const toastStyle = `position:absolute;top:14px;left:50%;transform:translateX(-50%) translateY(${s.toast ? '0' : '-16px'});z-index:90;display:flex;align-items:center;gap:8px;max-width:320px;padding:10px 14px;border-radius:12px;background:#fff;border:1px solid #ece7e2;box-shadow:0 8px 24px rgba(0,0,0,.14);font-size:13px;font-weight:600;color:#1c1a19;transition:opacity .2s ease, transform .2s ease;opacity:${s.toast ? '1' : '0'};pointer-events:none;`;
+
+    return {
+      rootId: this.rootId, cartIconId: this.cartIconId, sheetAddBtnId: this.sheetAddBtnId,
+      isA: !isB, isB,
+      isCatalog: s.screen === 'catalog', isProduct: s.screen === 'product', isCart: s.screen === 'cart',
+      isCheckout: s.screen === 'checkout', isSuccess: s.screen === 'success',
+      cartCount, hasCart: s.cart.length > 0, cartEmpty: s.cart.length === 0, bounce: s.bounce,
+      catalogPadBottom: isB ? '8px' : '24px',
+      cats, catalogTitle: s.category ? (this.CATS.find(c => c.id === s.category) || {}).name : 'Wedding Cards',
+      resultCount: products.length, products, noResults: products.length === 0,
+      current: p ? { name: p.name, tint: p.tint, category: p.category, priceLabel: this.fmt(p.mode, p.price), perEach: (p.mode === 'quote') ? '' : 'each', description: p.description } : { name: '', tint: '#f3e7ea', category: '', priceLabel: '', perEach: '', description: '' },
+      currentVariants: buildVariants(false),
+      cartItems, suggestions, checkoutItems, channels, channelLabel,
+      selectedCount, totalLabel,
+      allSelected: s.cart.length > 0 && s.selectedKeys.length === s.cart.length,
+      allBorder: (s.cart.length > 0 && s.selectedKeys.length === s.cart.length) ? '#ee0a24' : '#d8cfc8',
+      allBg: (s.cart.length > 0 && s.selectedKeys.length === s.cart.length) ? '#ee0a24' : '#fff',
+      checkoutOpacity: selItems.length === 0 ? '.5' : '1',
+      qty: s.qty, presets, note: s.note, search: s.search,
+      sheetSelLabel: Object.keys(s.selections).length ? Object.entries(s.selections).map(([k, v]) => k + ': ' + v).join(', ') : 'Choose your options',
+      drawerNav, drawerOverlayStyle, drawerStyle, sheetOverlayStyle, sheetStyle,
+      sentUrl: s.sentUrl,
+      toastStyle, toastMsg: s.toast ? s.toast.msg : '', toastIcon: s.toast ? tIcons[s.toast.kind] : '',
+      // handlers
+      openDrawer: this.openDrawer, closeDrawer: this.closeDrawer, goCatalog: this.goCatalog, goCart: this.goCart,
+      goCheckout: this.goCheckout, openProduct: this.openProduct, selectCat: this.selectCat, onSearch: this.onSearch,
+      onNote: this.onNote, toggleWish: this.toggleWish, selectVariant: this.selectVariant,
+      openSheetAdd: this.openSheetAdd, openSheetBuy: this.openSheetBuy, closeSheet: this.closeSheet,
+      sheetInc: this.sheetInc, sheetDec: this.sheetDec, setPreset: this.setPreset, confirmAdd: this.confirmAdd, confirmBuy: this.confirmBuy,
+      quickAdd: this.quickAdd, addSuggestion: this.addSuggestion, incItem: this.incItem, decItem: this.decItem,
+      removeItem: this.removeItem, toggleOne: this.toggleOne, toggleAll: this.toggleAll,
+      setChannel: this.setChannel, placeOrder: this.placeOrder, finishOrder: this.finishOrder, drawerGo: this.drawerGo,
+    };
+  }
+}
+</script>
+</body>
+</html>
