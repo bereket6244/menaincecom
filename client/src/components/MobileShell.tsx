@@ -5,7 +5,7 @@ import { Grid2X2, Heart, Image, Menu, Phone, Search, ShoppingBag, User, X } from
 import { useApp } from '../store/AppContext';
 import { cx } from '../lib/utils';
 import { StatusBanners, Toasts } from './ui';
-import menaIcon from '../assets/menainc-icon.png';
+import { BrandLogo } from './BrandLogo';
 
 const NAV = [
   { to: '/catalog', label: 'Wedding Cards', icon: Grid2X2 },
@@ -46,8 +46,8 @@ export function MobileShell({ children }: { children: ReactNode }) {
               >
                 <Menu className="h-5.5 w-5.5" />
               </button>
-              <Link to="/catalog" className="min-w-0 flex-1 text-center font-serif text-2xl font-semibold tracking-[0.02em]">
-                Mena Inc.
+              <Link to="/catalog" className="mena-press min-w-0 flex-1 text-center">
+                <BrandLogo showIcon={false} size="sm" centered />
               </Link>
               <Link
                 id="mena-cart-icon"
@@ -104,9 +104,8 @@ export function MobileShell({ children }: { children: ReactNode }) {
         )}
       >
         <div className="flex items-center gap-3 border-b border-edge px-4 py-4">
-          <img src={menaIcon} alt="Mena Inc." className="h-10 w-auto" />
           <div className="min-w-0">
-            <div className="font-serif text-2xl font-semibold leading-none">Mena Inc.</div>
+            <BrandLogo size="lg" />
             <div className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-muted">Wedding stationery</div>
           </div>
           <button

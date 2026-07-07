@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { useApp } from '../store/AppContext';
 import { StatusBanners, Toasts } from './ui';
 import { cx } from '../lib/utils';
-import menaIcon from '../assets/menainc-icon.png';
+import { BrandLogo } from './BrandLogo';
 
 const NAV = [
   { to: '/catalog', label: 'All Designs' },
@@ -45,8 +45,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-50 border-b border-edge bg-white">
         <div className="mx-auto flex h-[74px] max-w-[1240px] items-center justify-between px-10">
           <Link to="/catalog" className="mena-press flex shrink-0 items-center gap-3">
-            <img src={menaIcon} alt="Mena Inc." className="h-9 w-9 object-contain" />
-            <span className="font-serif text-[27px] font-semibold tracking-[0.01em]">Mena Inc.</span>
+            <BrandLogo size="md" />
           </Link>
 
           <nav className="ml-14 flex flex-1 items-center gap-8">
