@@ -53,11 +53,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const toastId = useRef(0);
 
   useEffect(() => {
+    const refreshReachability = async () => {
+      const health = await checkApiHealth();
+      setOnline(health.error !== 'server_unreachable');
+    };
     const up = () => {
       setOnline(true);
-      void checkApiHealth();
+      void refreshReachability();
     };
-    const down = () => setOnline(false);
+    const down = () => {
+      setOnline(false);
+      setDbDown(false);
+    };
     window.addEventListener('online', up);
     window.addEventListener('offline', down);
     onDbStatus(setDbDown);
@@ -68,10 +75,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const refreshHealth = () => {
-      if (navigator.onLine) void checkApiHealth();
+    const refreshHealth = async () => {
+      if (!navigator.onLine) {
+        setOnline(false);
+        setDbDown(false);
+        return;
+      }
+      const health = await checkApiHealth();
+      setOnline(health.error !== 'server_unreachable');
     };
-    refreshHealth();
+    void refreshHealth();
     const id = window.setInterval(refreshHealth, 30_000);
     return () => window.clearInterval(id);
   }, []);

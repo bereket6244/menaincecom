@@ -1,7 +1,6 @@
 import { X, Loader2, WifiOff, DatabaseZap, CheckCircle2, AlertCircle, Info } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useApp } from '../store/AppContext';
-import { OFFLINE_MESSAGE } from '../lib/api';
 import { cx } from '../lib/utils';
 
 /* ------------------------------- primitives -------------------------------- */
@@ -147,7 +146,7 @@ export function StatusBanners() {
       {!online && (
         <div className="flex items-center gap-2 border-b border-amber-300 bg-amber-50 px-3 py-1.5 text-xs text-amber-800">
           <WifiOff className="h-3.5 w-3.5 shrink-0" />
-          {OFFLINE_MESSAGE}
+          You appear to be offline. Saved data is still visible, and sending or saving will work again when the connection returns.
         </div>
       )}
       {online && dbDown && (
