@@ -86,7 +86,12 @@ jobs:
             exit 1
           fi
 
-          echo "Resolved cPanel endpoint on port ${host_port##*:}."
+          port="${host_port##*:}"
+          if [ "${port}" = "${host_port}" ]; then
+            port="443"
+          fi
+
+          echo "Resolved cPanel endpoint on port ${port}."
           if ! getent hosts "${host}" >/dev/null 2>&1; then
             fallback_host="cpanel.menaincet.com"
             fallback_url="https://${fallback_host}:2083"
@@ -98,11 +103,28 @@ jobs:
             fi
             base_url="${fallback_url}"
             host_port="${fallback_host}:2083"
+            host="${fallback_host}"
+            port="2083"
           fi
 
           echo "CPANEL_BASE_URL=${base_url}" >> "$GITHUB_ENV"
+          resolved_ip="$(getent ahostsv4 "${host}" 2>/dev/null | awk 'NR == 1 { print $1 }' || true)"
+          if [ -z "${resolved_ip}" ]; then
+            resolved_ip="$(getent hosts "${host}" 2>/dev/null | awk 'NR == 1 { print $1 }' || true)"
+          fi
+          if [ -n "${resolved_ip}" ]; then
+            echo "Pinning ${host}:${port} to resolved IP ${resolved_ip} for curl."
+            echo "CPANEL_CURL_RESOLVE=${host}:${port}:${resolved_ip}" >> "$GITHUB_ENV"
+          else
+            echo "Could not capture a cPanel IP address for curl pinning." >&2
+          fi
 
+          curl_resolve_args=()
+          if [ -n "${resolved_ip}" ]; then
+            curl_resolve_args=(--resolve "${host}:${port}:${resolved_ip}")
+          fi
           curl --show-error --silent --head \
+            "${curl_resolve_args[@]}" \
             --connect-timeout 15 \
             --max-time 30 \
             --retry 2 \
@@ -115,7 +137,12 @@ jobs:
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
           CPANEL_TARGET_DIR: ${{ secrets.CPANEL_TARGET_DIR }}
         run: |
+          curl_resolve_args=()
+          if [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then
+            curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")
+          fi
           curl --fail-with-body --show-error --silent \
+            "${curl_resolve_args[@]}" \
             --connect-timeout 20 \
             --max-time 120 \
             --retry 2 \
@@ -132,7 +159,12 @@ jobs:
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
           CPANEL_TARGET_DIR: ${{ secrets.CPANEL_TARGET_DIR }}
         run: |
+          curl_resolve_args=()
+          if [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then
+            curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")
+          fi
           curl --fail-with-body --show-error --silent --get \
+            "${curl_resolve_args[@]}" \
             --connect-timeout 20 \
             --max-time 120 \
             --retry 2 \
@@ -154,9 +186,14 @@ jobs:
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
         run: |
+          curl_resolve_args=()
+          if [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then
+            curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")
+          fi
           set -euo pipefail
 
           apps_json="$(curl --fail-with-body --show-error --silent \
+            "${curl_resolve_args[@]}" \
             --connect-timeout 20 \
             --max-time 120 \
             --retry 2 \
@@ -218,7 +255,12 @@ jobs:
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
         run: |
+          curl_resolve_args=()
+          if [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then
+            curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")
+          fi
           curl --fail-with-body --show-error --silent \
+            "${curl_resolve_args[@]}" \
             --connect-timeout 20 \
             --max-time 120 \
             --retry 2 \
@@ -234,7 +276,12 @@ jobs:
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
         run: |
+          curl_resolve_args=()
+          if [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then
+            curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")
+          fi
           curl --fail-with-body --show-error --silent --get \
+            "${curl_resolve_args[@]}" \
             --connect-timeout 20 \
             --max-time 120 \
             --retry 2 \
@@ -254,7 +301,12 @@ jobs:
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
         run: |
+          curl_resolve_args=()
+          if [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then
+            curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")
+          fi
           deps_json="$(curl --fail-with-body --show-error --silent --get \
+            "${curl_resolve_args[@]}" \
             --connect-timeout 20 \
             --max-time 180 \
             --retry 2 \
@@ -269,6 +321,7 @@ jobs:
           if [ -n "${sse_url}" ]; then
             echo "Waiting for cPanel npm dependency task..."
             timeout 240 curl --show-error --silent --no-buffer \
+              "${curl_resolve_args[@]}" \
               -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
               "${CPANEL_BASE_URL}${sse_url}" | tee ensure-deps.log || true
             if grep -Eiq 'npm ERR!|error:|failed|traceback|exception' ensure-deps.log; then
