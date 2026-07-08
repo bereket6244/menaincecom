@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { ImagePlus, Loader2, X } from 'lucide-react';
-import watermarkImage from '../assets/mena-watermark.png';
+import watermarkImage from '../assets/mena-watermark-tile.png';
 import { apiUpload } from '../lib/api';
 import { compressImage } from '../lib/utils';
 import { useApp } from '../store/AppContext';

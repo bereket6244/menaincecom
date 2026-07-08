@@ -48,9 +48,6 @@ export function assetUrl(src: string | undefined): string {
   return src;
 }
 
-const MAX_DIMENSION = 2400;
-const QUALITY = 0.98;
-
 type CompressImageOptions = {
   watermarkSrc?: string;
 };
@@ -80,45 +77,28 @@ async function drawWatermark(ctx: CanvasRenderingContext2D, width: number, heigh
 }
 
 /**
- * Client-side photo handling: preserve original uploads when possible, resize
- * only very large images, and re-encode when baking a watermark into the file.
+ * Client-side photo handling: preserve original uploads unless a watermark is
+ * requested. Watermarked uploads are baked into a PNG to avoid lossy re-encoding.
  */
 export async function compressImage(file: File, options: CompressImageOptions = {}): Promise<File> {
   if (!/^image\//.test(file.type)) return file;
+  if (!options.watermarkSrc) return file;
+
   const bitmap = await createImageBitmap(file).catch(() => null);
-  if (!bitmap) return file;
-
-  const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
-  const width = Math.round(bitmap.width * scale);
-  const height = Math.round(bitmap.height * scale);
-
-  if (!options.watermarkSrc && scale === 1) {
-    bitmap.close();
-    return file;
-  }
+  if (!bitmap) throw new Error('Could not read the selected image for watermarking.');
 
   const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
   const ctx = canvas.getContext('2d');
-  if (!ctx) return file;
-  ctx.drawImage(bitmap, 0, 0, width, height);
+  if (!ctx) throw new Error('Could not prepare the image for watermarking.');
+  ctx.drawImage(bitmap, 0, 0);
   bitmap.close();
-  if (options.watermarkSrc) await drawWatermark(ctx, width, height, options.watermarkSrc);
+  await drawWatermark(ctx, canvas.width, canvas.height, options.watermarkSrc);
 
-  const tryEncode = (type: string) =>
-    new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, QUALITY));
-
-  let blob = await tryEncode('image/webp');
-  let ext = '.webp';
-  if (!blob || blob.type !== 'image/webp') {
-    blob = await tryEncode('image/jpeg');
-    ext = '.jpg';
-  }
-  if (!blob) return file;
-  // Keep the original if compression didn't actually help (tiny files).
-  if (!options.watermarkSrc && blob.size >= file.size && scale === 1) return file;
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+  if (!blob) throw new Error('Could not save the watermarked image.');
 
   const base = file.name.replace(/\.[^.]+$/, '');
-  return new File([blob], `${base}${ext}`, { type: blob.type });
+  return new File([blob], `${base}-watermarked.png`, { type: blob.type });
 }

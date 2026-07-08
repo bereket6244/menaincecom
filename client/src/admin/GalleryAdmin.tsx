@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus, Trash2, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
-import watermarkImage from '../assets/mena-watermark.png';
+import watermarkImage from '../assets/mena-watermark-tile.png';
 import { useData } from '../lib/useData';
 import { apiSend, apiUpload } from '../lib/api';
 import type { GalleryItem } from '../lib/types';
@@ -79,7 +79,7 @@ export function GalleryAdmin() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-sm font-bold">Gallery / Portfolio</h1>
-          <p className="text-[11px] text-muted">Photos are optimized in high quality before upload.</p>
+          <p className="text-[11px] text-muted">Photos upload unchanged unless watermarking is selected.</p>
         </div>
         <div className="flex items-center gap-3">
           <label className="inline-flex items-center gap-2 text-[11px] font-semibold text-muted">
