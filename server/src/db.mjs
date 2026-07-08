@@ -6,7 +6,8 @@ import { fileURLToPath } from 'node:url';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const localStorePath = path.join(serverRoot, 'dev-data.json');
-let useLocalStore = process.env.USE_LOCAL_STORE === 'true';
+const requireMysql = process.env.DB_REQUIRE_MYSQL === 'true';
+let useLocalStore = !requireMysql && process.env.USE_LOCAL_STORE === 'true';
 let localStoreCache;
 
 export function isUsingLocalStore() {
@@ -18,6 +19,7 @@ export function persistenceStatus() {
     primary: useLocalStore ? 'local' : 'mysql',
     writable: true,
     localStore: useLocalStore,
+    requireMysql,
   };
 }
 
@@ -98,6 +100,10 @@ function isDbUnavailable(err) {
 }
 
 async function switchToLocalStore(err) {
+  if (requireMysql) {
+    console.error(`[db] MySQL required but unavailable (${err.code || err.message})`);
+    throw err;
+  }
   useLocalStore = true;
   await readLocalStore();
   console.warn(`[db] MySQL unavailable (${err.code || err.message}); using local dev-data.json store`);

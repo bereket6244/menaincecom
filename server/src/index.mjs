@@ -126,6 +126,7 @@ async function initialize() {
       // Boot anyway: /api/health reports whether writes are available instead
       // of taking the whole storefront down.
       console.error('[db] not reachable at boot:', err.code || err.message);
+      if (process.env.DB_REQUIRE_MYSQL === 'true') throw err;
     } finally {
       initialized = true;
       initializing = null;
