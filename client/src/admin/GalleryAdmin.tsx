@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Plus, Trash2, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
+import watermarkImage from '../assets/mena-watermark.png';
 import { useData } from '../lib/useData';
 import { apiSend, apiUpload } from '../lib/api';
 import type { GalleryItem } from '../lib/types';
@@ -11,6 +12,7 @@ export function GalleryAdmin() {
   const { data: items, loading, reload } = useData<GalleryItem[]>('/admin/gallery');
   const { toast, online } = useApp();
   const [uploading, setUploading] = useState(false);
+  const [addWatermark, setAddWatermark] = useState(false);
 
   const sorted = [...(items || [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
@@ -18,7 +20,9 @@ export function GalleryAdmin() {
     if (!files?.length) return;
     setUploading(true);
     try {
-      const compressed = await Promise.all([...files].map(compressImage));
+      const compressed = await Promise.all(
+        [...files].map((file) => compressImage(file, { watermarkSrc: addWatermark ? watermarkImage : undefined }))
+      );
       const urls = await apiUpload(compressed);
       await Promise.all(
         urls.map((photo, i) =>
@@ -77,13 +81,24 @@ export function GalleryAdmin() {
           <h1 className="text-sm font-bold">Gallery / Portfolio</h1>
           <p className="text-[11px] text-muted">Photos are compressed in the browser before upload.</p>
         </div>
-        <label className={online ? 'cursor-pointer' : 'pointer-events-none opacity-40'}>
-          <span className="inline-flex items-center gap-1.5 rounded bg-pink px-3 py-1.5 text-xs font-semibold text-white hover:bg-pink-dim">
-            {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-            Upload photos
-          </span>
-          <input type="file" accept="image/*" multiple hidden disabled={uploading} onChange={(e) => upload(e.target.files)} />
-        </label>
+        <div className="flex items-center gap-3">
+          <label className="inline-flex items-center gap-2 text-[11px] font-semibold text-muted">
+            <input
+              type="checkbox"
+              checked={addWatermark}
+              onChange={(event) => setAddWatermark(event.target.checked)}
+              className="accent-pink"
+            />
+            Add watermark
+          </label>
+          <label className={online ? 'cursor-pointer' : 'pointer-events-none opacity-40'}>
+            <span className="inline-flex items-center gap-1.5 rounded bg-pink px-3 py-1.5 text-xs font-semibold text-white hover:bg-pink-dim">
+              {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+              Upload photos
+            </span>
+            <input type="file" accept="image/*" multiple hidden disabled={uploading} onChange={(e) => upload(e.target.files)} />
+          </label>
+        </div>
       </div>
 
       {loading && !items ? (
