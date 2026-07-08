@@ -49,8 +49,7 @@ export function assetUrl(src: string | undefined): string {
 }
 
 const MAX_DIMENSION = 2400;
-const QUALITY = 0.92;
-const WATERMARK_OPACITY = 0.82;
+const QUALITY = 0.98;
 
 type CompressImageOptions = {
   watermarkSrc?: string;
@@ -68,17 +67,21 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 
 async function drawWatermark(ctx: CanvasRenderingContext2D, width: number, height: number, src: string) {
   const watermark = await loadImage(src);
+  const pattern = ctx.createPattern(watermark, 'repeat');
+  if (!pattern) {
+    ctx.drawImage(watermark, 0, 0);
+    return;
+  }
 
   ctx.save();
-  ctx.globalAlpha = WATERMARK_OPACITY;
-  ctx.drawImage(watermark, 0, 0, width, height);
+  ctx.fillStyle = pattern;
+  ctx.fillRect(0, 0, width, height);
   ctx.restore();
 }
 
 /**
- * Client-side photo compression: downscales to a web-friendly size and
- * re-encodes (WebP when supported, JPEG otherwise) before upload, so large
- * camera photos never hit the server or slow the storefront down.
+ * Client-side photo handling: preserve original uploads when possible, resize
+ * only very large images, and re-encode when baking a watermark into the file.
  */
 export async function compressImage(file: File, options: CompressImageOptions = {}): Promise<File> {
   if (!/^image\//.test(file.type)) return file;
