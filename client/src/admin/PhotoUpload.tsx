@@ -6,8 +6,8 @@ import { compressImage } from '../lib/utils';
 import { useApp } from '../store/AppContext';
 
 /**
- * Photo picker: compresses images in the browser (resize + WebP/JPEG
- * re-encode) before uploading, so the storefront only ever serves small files.
+ * Photo picker: preserves normal uploads when possible, and only re-encodes
+ * when resizing or applying a watermark is needed.
  */
 export function PhotoUpload({
   photos, onChange, max = 8, single,

@@ -48,9 +48,9 @@ export function assetUrl(src: string | undefined): string {
   return src;
 }
 
-const MAX_DIMENSION = 1200;
-const QUALITY = 0.74;
-const WATERMARK_OPACITY = 0.48;
+const MAX_DIMENSION = 2400;
+const QUALITY = 0.92;
+const WATERMARK_OPACITY = 0.82;
 
 type CompressImageOptions = {
   watermarkSrc?: string;
@@ -68,16 +68,10 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 
 async function drawWatermark(ctx: CanvasRenderingContext2D, width: number, height: number, src: string) {
   const watermark = await loadImage(src);
-  const scale = Math.max(width / watermark.naturalWidth, height / watermark.naturalHeight);
-  const drawWidth = watermark.naturalWidth * scale;
-  const drawHeight = watermark.naturalHeight * scale;
-  const x = (width - drawWidth) / 2;
-  const y = (height - drawHeight) / 2;
 
   ctx.save();
   ctx.globalAlpha = WATERMARK_OPACITY;
-  ctx.globalCompositeOperation = 'multiply';
-  ctx.drawImage(watermark, x, y, drawWidth, drawHeight);
+  ctx.drawImage(watermark, 0, 0, width, height);
   ctx.restore();
 }
 
@@ -94,6 +88,11 @@ export async function compressImage(file: File, options: CompressImageOptions = 
   const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
   const width = Math.round(bitmap.width * scale);
   const height = Math.round(bitmap.height * scale);
+
+  if (!options.watermarkSrc && scale === 1) {
+    bitmap.close();
+    return file;
+  }
 
   const canvas = document.createElement('canvas');
   canvas.width = width;

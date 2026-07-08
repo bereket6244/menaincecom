@@ -79,7 +79,7 @@ export function GalleryAdmin() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-sm font-bold">Gallery / Portfolio</h1>
-          <p className="text-[11px] text-muted">Photos are compressed in the browser before upload.</p>
+          <p className="text-[11px] text-muted">Photos are optimized in high quality before upload.</p>
         </div>
         <div className="flex items-center gap-3">
           <label className="inline-flex items-center gap-2 text-[11px] font-semibold text-muted">
