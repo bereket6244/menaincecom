@@ -13,7 +13,7 @@ const digitsOnly = (value: string) => (value || '').replace(/\D/g, '');
  */
 export function buildOrderMessage(order: OrderRecord, business: BusinessSettings | null): string {
   const lines: string[] = [
-    'Selam! I would like to place this order with Mena Inc.',
+    'Selam! I would like to place this order with mena Inc.',
     `Order ref: ${order.id.slice(0, 8).toUpperCase()}`,
     '',
   ];

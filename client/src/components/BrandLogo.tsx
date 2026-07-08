@@ -20,10 +20,10 @@ export function BrandLogo({
   return (
     <span className={cx('inline-flex min-w-0 items-center gap-2.5', centered && 'justify-center')}>
       {showIcon && <img src={menaIcon} alt="" aria-hidden="true" className={cx('shrink-0 object-contain', iconSize)} />}
-      <span className="sr-only">Mena Inc.</span>
+      <span className="sr-only">mena Inc.</span>
       <span aria-hidden="true" className="inline-flex items-baseline whitespace-nowrap leading-none">
         <span className={cx('tracking-[-0.02em] text-green', menaSize)} style={{ fontFamily: MENA_FONT, fontWeight: 700 }}>
-          Mena
+          mena
         </span>
         <span className={cx('ml-1 text-pink', incSize)} style={{ fontFamily: INC_FONT, fontWeight: 700 }}>
           Inc.

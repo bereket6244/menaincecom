@@ -202,7 +202,7 @@ export function MobileProductDetail() {
           ) : (
             <div className="flex h-full flex-col items-center justify-center p-8 text-center">
               <span className="font-script text-[52px] leading-none text-pink">{product.name}</span>
-              <span className="mt-4 text-[10px] uppercase tracking-[0.24em] text-ink/50">Mena Inc. · Addis Ababa</span>
+              <span className="mt-4 text-[10px] uppercase tracking-[0.24em] text-ink/50">mena Inc. · Addis Ababa</span>
             </div>
           )}
         </div>
