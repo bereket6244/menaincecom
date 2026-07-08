@@ -2,7 +2,7 @@
 /* URLs resolve against the registration scope so the app also works when
    deployed under a base path. */
 self.addEventListener('push', (event) => {
-  let data = { title: 'mena Inc.', body: 'New activity', url: 'admin' };
+  let data = { title: 'mena inc', body: 'New activity', url: 'admin' };
   try { data = { ...data, ...event.data.json() }; } catch { /* keep defaults */ }
   const icon = new URL('menainc-icon.png', self.registration.scope).href;
   event.waitUntil(

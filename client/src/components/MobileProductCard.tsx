@@ -46,7 +46,7 @@ export function MobileProductCard({
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center">
               <span className="font-script text-[28px] leading-none text-pink">{product.name}</span>
-              <span className="mt-2.5 text-[8px] uppercase tracking-[0.24em] text-ink/50">mena Inc.</span>
+              <span className="mt-2.5 text-[8px] tracking-[0.24em] text-ink/50">mena inc</span>
             </div>
           )}
 

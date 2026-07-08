@@ -43,7 +43,7 @@ export function DesktopProductCard({
           ) : (
             <div className="flex h-full flex-col items-center justify-center p-5 text-center">
               <span className="font-script text-[34px] leading-none text-pink">{product.name}</span>
-              <span className="mt-3 text-[9px] uppercase tracking-[0.24em] text-ink/40">mena Inc.</span>
+              <span className="mt-3 text-[9px] tracking-[0.24em] text-ink/40">mena inc</span>
             </div>
           )}
         </button>

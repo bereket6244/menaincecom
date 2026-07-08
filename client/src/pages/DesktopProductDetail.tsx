@@ -159,7 +159,7 @@ export function DesktopProductDetail() {
             ) : (
               <div className="flex h-full flex-col items-center justify-center bg-[#f3e7ea] p-8 text-center">
                 <span className="font-script text-[68px] leading-none text-pink">{product.name}</span>
-                <span className="mt-5 text-[11px] uppercase tracking-[0.24em] text-ink/50">mena Inc. · Addis Ababa</span>
+                <span className="mt-5 text-[11px] tracking-[0.24em] text-ink/50">mena inc · Addis Ababa</span>
               </div>
             )}
           </div>

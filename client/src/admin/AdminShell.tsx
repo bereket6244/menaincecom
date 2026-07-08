@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { apiGet, apiSend } from '../lib/api';
+import { BrandLogo } from '../components/BrandLogo';
 import { StatusBanners, Toasts, Button, SysLabel } from '../components/ui';
 import { cx } from '../lib/utils';
 
@@ -48,8 +49,7 @@ function AdminLogin() {
       <Toasts />
       <form onSubmit={submit} className="w-full max-w-xs space-y-3 rounded-lg border border-edge bg-surface p-5">
         <div className="flex items-baseline gap-1.5">
-          <span className="text-sm font-black">mena</span>
-          <span className="text-sm font-black text-pink">Inc.</span>
+          <BrandLogo size="sm" />
           <span className="syslabel ml-1">Admin</span>
         </div>
         <div>
@@ -110,8 +110,7 @@ export function AdminShell() {
       <header className="border-b border-edge bg-surface">
         <div className="flex h-11 items-center gap-3 px-3">
           <Link to="/admin" className="flex items-baseline gap-1.5">
-            <span className="text-sm font-black">mena</span>
-            <span className="text-sm font-black text-pink">Inc.</span>
+            <BrandLogo showIcon={false} size="sm" />
           </Link>
           <SysLabel>Operations Console</SysLabel>
           <div className="ml-auto flex items-center gap-1">
