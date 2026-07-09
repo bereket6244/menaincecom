@@ -189,6 +189,11 @@ export async function apiUpload(files: File[]): Promise<string[]> {
     headers: headers(false),
     body: form,
   });
+  // 406/413 come from the hosting layer's body-size limit, not our API — the
+  // response is an HTML error page with no usable message.
+  if (res.status === 406 || res.status === 413) {
+    throw new ApiError('http', 'Upload rejected: the image is too large for the server. Try a smaller photo.', res.status);
+  }
   if (!res.ok) throw await parseError(res);
   const data = (await res.json()) as { urls: string[] };
   return data.urls.map(mediaUrl);

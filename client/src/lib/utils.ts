@@ -78,7 +78,10 @@ async function drawWatermark(ctx: CanvasRenderingContext2D, width: number, heigh
 
 /**
  * Client-side photo handling: preserve original uploads unless a watermark is
- * requested. Watermarked uploads are baked into a PNG to avoid lossy re-encoding.
+ * requested. Watermarked photos are re-encoded as high-quality JPEG — a
+ * full-resolution PNG re-encode of a phone photo is 15-40MB, which the
+ * hosting layer rejects before the request ever reaches the API. PNG sources
+ * stay PNG so transparency survives.
  */
 export async function compressImage(file: File, options: CompressImageOptions = {}): Promise<File> {
   if (!/^image\//.test(file.type)) return file;
@@ -87,18 +90,28 @@ export async function compressImage(file: File, options: CompressImageOptions = 
   const bitmap = await createImageBitmap(file).catch(() => null);
   if (!bitmap) throw new Error('Could not read the selected image for watermarking.');
 
+  const keepPng = file.type === 'image/png';
   const canvas = document.createElement('canvas');
   canvas.width = bitmap.width;
   canvas.height = bitmap.height;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Could not prepare the image for watermarking.');
+  if (!keepPng) {
+    // JPEG has no alpha channel; without this, transparent regions turn black.
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
   ctx.drawImage(bitmap, 0, 0);
   bitmap.close();
   await drawWatermark(ctx, canvas.width, canvas.height, options.watermarkSrc);
 
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+  const type = keepPng ? 'image/png' : 'image/jpeg';
+  let blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, 0.92));
+  if (blob && blob.size > 8 * 1024 * 1024 && !keepPng) {
+    blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, 0.8));
+  }
   if (!blob) throw new Error('Could not save the watermarked image.');
 
   const base = file.name.replace(/\.[^.]+$/, '');
-  return new File([blob], `${base}-watermarked.png`, { type: blob.type });
+  return new File([blob], `${base}-watermarked.${keepPng ? 'png' : 'jpg'}`, { type: blob.type });
 }
