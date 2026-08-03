@@ -81,11 +81,7 @@ jobs:
             host_port="${host_port#http://}"
             host_port="${host_port%%/*}"
           else
-            if [ -z "${CPANEL_HOST}" ]; then
-              echo "CPANEL_HOST is empty. Set CPANEL_HOST to your cPanel server hostname, or set CPANEL_URL to the full cPanel base URL." >&2
-              exit 1
-            fi
-            host="$(trim "${CPANEL_HOST}")"
+            host="$(trim "${CPANEL_HOST:-cpanel.menaincet.com}")"
             host="${host#https://}"
             host="${host#http://}"
             host="${host%/}"
@@ -151,6 +147,29 @@ jobs:
             --retry-all-errors \
             "${base_url}/" >/dev/null
 
+      - name: Validate cPanel auth and target
+        env:
+          CPANEL_USER: ${{ secrets.CPANEL_USER }}
+          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
+          CPANEL_TARGET_DIR: ${{ secrets.CPANEL_TARGET_DIR }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [ -n "${CPANEL_USER:-}" ] || missing+=("CPANEL_USER")
+          [ -n "${CPANEL_TOKEN:-}" ] || missing+=("CPANEL_TOKEN")
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            printf 'Missing required cPanel secret(s): %s\n' "${missing[*]}" >&2
+            exit 1
+          fi
+
+          if [ -z "${CPANEL_TARGET_DIR:-}" ]; then
+            CPANEL_TARGET_DIR="/home/${CPANEL_USER}/public_html/shop"
+          fi
+
+          echo "Deploying frontend to ${CPANEL_TARGET_DIR}"
+          echo "CPANEL_TARGET_DIR=${CPANEL_TARGET_DIR}" >> "$GITHUB_ENV"
+
       - name: Upload archive to cPanel
         env:
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
@@ -166,7 +185,6 @@ jobs:
             --connect-timeout 20 \
             --max-time 120 \
             --retry 2 \
-            --retry-all-errors \
             -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
             -F "dir=${CPANEL_TARGET_DIR}" \
             -F "overwrite=1" \
@@ -188,7 +206,6 @@ jobs:
             --connect-timeout 20 \
             --max-time 120 \
             --retry 2 \
-            --retry-all-errors \
             -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
             --data-urlencode "cpanel_jsonapi_user=${CPANEL_USER}" \
             --data-urlencode "cpanel_jsonapi_apiversion=2" \
@@ -218,7 +235,6 @@ jobs:
             --connect-timeout 20 \
             --max-time 120 \
             --retry 2 \
-            --retry-all-errors \
             -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
             "${CPANEL_BASE_URL}/execute/PassengerApps/list_applications")"
 
@@ -286,7 +302,6 @@ jobs:
             --connect-timeout 20 \
             --max-time 120 \
             --retry 2 \
-            --retry-all-errors \
             -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
             -F "dir=${CPANEL_SERVER_DIR_RESOLVED}" \
             -F "overwrite=1" \
@@ -308,7 +323,6 @@ jobs:
             --connect-timeout 20 \
             --max-time 120 \
             --retry 2 \
-            --retry-all-errors \
             -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
             --data-urlencode "cpanel_jsonapi_user=${CPANEL_USER}" \
             --data-urlencode "cpanel_jsonapi_apiversion=2" \
@@ -334,7 +348,6 @@ jobs:
             --connect-timeout 20 \
             --max-time 180 \
             --retry 2 \
-            --retry-all-errors \
             -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
             --data-urlencode "type=npm" \
             --data-urlencode "app_path=${CPANEL_APP_PATH_RESOLVED}" \
