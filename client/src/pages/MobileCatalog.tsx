@@ -1,12 +1,20 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { ArrowUpDown, Check, SlidersHorizontal } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { Category, Product } from '../lib/types';
 import { MobileProductCard } from '../components/MobileProductCard';
-import { EmptyState, Spinner } from '../components/ui';
+import { EmptyState, Modal, Spinner } from '../components/ui';
 import { cx } from '../lib/utils';
 
 const CIRCLE_TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#e9f0ec'];
+const SORTS = [
+  { id: 'featured', label: 'Featured' },
+  { id: 'newest', label: 'Newest' },
+  { id: 'low', label: 'Price: low to high' },
+  { id: 'high', label: 'Price: high to low' },
+  { id: 'name', label: 'Name A-Z' },
+];
 type AttributeFilter = { id: string; group: string; label: string; count: number };
 
 function formatEtb(value: number): string {
@@ -58,6 +66,9 @@ export function MobileCatalog() {
   const { data: products, loading } = useData<Product[]>('/products');
   const [params, setParams] = useSearchParams();
   const [attributes, setAttributes] = useState<string[]>([]);
+  const [sort, setSort] = useState('featured');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
   const query = params.get('q') || '';
   const activeCategory = params.get('category') || '';
 
@@ -91,17 +102,22 @@ export function MobileCatalog() {
         return attributes.every((id) => productAttributes.has(id));
       });
     }
+    if (sort === 'low') return [...list].sort((a, b) => (a.price ?? 1e9) - (b.price ?? 1e9));
+    if (sort === 'high') return [...list].sort((a, b) => (b.price ?? -1) - (a.price ?? -1));
+    if (sort === 'name') return [...list].sort((a, b) => a.name.localeCompare(b.name));
+    if (sort === 'newest') return [...list].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
     return [...list].sort(
       (a, b) =>
         Number(b.featured) - Number(a.featured)
         || new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
     );
-  }, [activeCategory, attributes, categories, products, query]);
+  }, [activeCategory, attributes, categories, products, query, sort]);
 
   const chips: { id: string; name: string; photo?: string }[] = [
     { id: '', name: 'All' },
     ...(categories || []).map((category) => ({ id: category.id, name: category.name, photo: category.photo })),
   ];
+  const sortLabel = SORTS.find((item) => item.id === sort)?.label || 'Featured';
 
   return (
     <div className="pb-8">
@@ -143,35 +159,27 @@ export function MobileCatalog() {
         <span className="text-[12.5px] text-muted">{visible.length} designs</span>
       </div>
 
-      {attributeFilters.length > 0 && (
-        <div className="mena-scroll flex gap-2 overflow-x-auto px-4 pb-2 pt-1">
-          {attributeFilters.map((item) => {
-            const active = attributes.includes(item.id);
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => toggleAttribute(item.id)}
-                className={cx(
-                  'mena-press shrink-0 rounded-full border px-3 py-1.5 text-[12px] font-extrabold',
-                  active ? 'border-pink bg-pink text-white' : 'border-edge bg-white text-ink/70'
-                )}
-              >
-                {item.group}: {item.label}
-              </button>
-            );
-          })}
-          {attributes.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setAttributes([])}
-              className="mena-press shrink-0 rounded-full border border-edge bg-surface px-3 py-1.5 text-[12px] font-extrabold text-pink"
-            >
-              Clear
-            </button>
+      <div className="grid grid-cols-2 gap-2 px-4 pb-2 pt-1">
+        <button
+          type="button"
+          onClick={() => setFilterOpen(true)}
+          className={cx(
+            'mena-press flex h-11 items-center justify-center gap-2 rounded-full border text-[13px] font-extrabold',
+            attributes.length ? 'border-pink bg-pink text-white' : 'border-edge bg-white text-ink'
           )}
-        </div>
-      )}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Filter{attributes.length ? ` (${attributes.length})` : ''}
+        </button>
+        <button
+          type="button"
+          onClick={() => setSortOpen(true)}
+          className="mena-press flex h-11 items-center justify-center gap-2 rounded-full border border-edge bg-white px-3 text-[13px] font-extrabold text-ink"
+        >
+          <ArrowUpDown className="h-4 w-4" />
+          <span className="min-w-0 truncate">{sortLabel}</span>
+        </button>
+      </div>
 
       {loading && !products ? (
         <div className="flex justify-center py-16"><Spinner /></div>
@@ -191,6 +199,65 @@ export function MobileCatalog() {
           ))}
         </div>
       )}
+
+      <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filter designs">
+        {attributeFilters.length > 0 ? (
+          <div className="space-y-2.5">
+            {attributeFilters.map((item) => {
+              const active = attributes.includes(item.id);
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => toggleAttribute(item.id)}
+                  className={cx(
+                    'mena-press flex w-full items-center justify-between rounded-2xl border px-3.5 py-3 text-left text-sm font-extrabold',
+                    active ? 'border-pink bg-pink/5 text-pink' : 'border-edge bg-white text-ink'
+                  )}
+                >
+                  <span>{item.group}: {item.label}</span>
+                  {active && <Check className="h-4 w-4" />}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-muted">No filters available yet.</p>
+        )}
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <button type="button" onClick={() => setAttributes([])} className="btn-outline h-12 px-3">
+            Clear
+          </button>
+          <button type="button" onClick={() => setFilterOpen(false)} className="btn-primary h-12 px-3">
+            Apply
+          </button>
+        </div>
+      </Modal>
+
+      <Modal open={sortOpen} onClose={() => setSortOpen(false)} title="Sort designs">
+        <div className="space-y-2.5">
+          {SORTS.map((item) => {
+            const active = sort === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  setSort(item.id);
+                  setSortOpen(false);
+                }}
+                className={cx(
+                  'mena-press flex w-full items-center justify-between rounded-2xl border px-3.5 py-3 text-left text-sm font-extrabold',
+                  active ? 'border-pink bg-pink/5 text-pink' : 'border-edge bg-white text-ink'
+                )}
+              >
+                {item.label}
+                {active && <Check className="h-4 w-4" />}
+              </button>
+            );
+          })}
+        </div>
+      </Modal>
     </div>
   );
 }
