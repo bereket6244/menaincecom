@@ -9,6 +9,12 @@ import {
   requireAuth, requireAdmin, optionalAuth,
 } from './auth.mjs';
 import { formatOrderMessage, sendTelegram, sendWhatsApp, pushToAdmins } from './notify.mjs';
+import {
+  isPublicProduct,
+  normalizeProductStatus,
+  publicProduct,
+  telegramProductIdentity,
+} from './product-model.mjs';
 
 export const api = Router();
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -224,13 +230,16 @@ api.get('/categories', dbRoute(async (_req, res) => {
 
 api.get('/products', dbRoute(async (_req, res) => {
   publicCache(res, 30);
-  res.json(await records.list('products'));
+  const products = await records.list('products');
+  res.json(products.filter(isPublicProduct).map(publicProduct));
 }));
 
-api.get('/products/:id', dbRoute(async (req, res) => {
+api.get('/products/:id', optionalAuth, dbRoute(async (req, res) => {
   const product = await records.get('products', req.params.id);
-  if (!product) return res.status(404).json({ error: 'not_found' });
-  res.json(product);
+  if (!product || (!isPublicProduct(product) && req.auth?.role !== 'admin')) {
+    return res.status(404).json({ error: 'not_found' });
+  }
+  res.json(req.auth?.role === 'admin' ? product : publicProduct(product));
 }));
 
 api.get('/gallery', dbRoute(async (_req, res) => {
@@ -322,10 +331,11 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
     return res.status(400).json({ error: 'bad_request', message: 'Invalid channel.' });
   }
 
-  const [products, universalComplimentaryItems] = await Promise.all([
+  const [allProducts, universalComplimentaryItems] = await Promise.all([
     records.list('products'),
     records.list('complimentary_items'),
   ]);
+  const products = allProducts.filter(isPublicProduct);
   const productById = new Map(products.map((p) => [p.id, resolveComplimentaryProduct(p, universalComplimentaryItems)]));
 
   // Prices always come from the catalog — never trust amounts sent by the browser.
@@ -418,7 +428,56 @@ function crud(collection) {
   return r;
 }
 
-api.use('/admin/products', crud('products'));
+api.get('/admin/products', requireAdmin, dbRoute(async (_req, res) => {
+  res.json(await records.list('products'));
+}));
+
+api.post('/admin/products', requireAdmin, dbRoute(async (req, res) => {
+  const input = { ...req.body, status: normalizeProductStatus(req.body?.status) };
+  const identity = telegramProductIdentity(input);
+  if (identity) {
+    const existing = await records.find('products', (product) => telegramProductIdentity(product) === identity);
+    if (existing) return res.json({ ...existing, importAction: 'skipped_existing' });
+  }
+  const product = await records.insert('products', {
+    ...input,
+    contentVersion: Math.max(1, Number(input.contentVersion) || 1),
+  });
+  res.status(201).json(product);
+}));
+
+api.put('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
+  const existing = await records.get('products', req.params.id);
+  if (!existing) return res.status(404).json({ error: 'not_found' });
+  const doc = await records.update('products', req.params.id, {
+    ...req.body,
+    status: normalizeProductStatus(req.body?.status ?? existing.status),
+    contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,
+  });
+  res.json(doc);
+}));
+
+api.delete('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
+  const existing = await records.get('products', req.params.id);
+  if (!existing) return res.status(404).json({ error: 'not_found' });
+  const doc = await records.update('products', req.params.id, {
+    status: 'archived',
+    deletedAt: new Date().toISOString(),
+    contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,
+  });
+  res.json({ ok: true, product: doc });
+}));
+
+api.post('/admin/products/:id/restore', requireAdmin, dbRoute(async (req, res) => {
+  const existing = await records.get('products', req.params.id);
+  if (!existing) return res.status(404).json({ error: 'not_found' });
+  const doc = await records.update('products', req.params.id, {
+    status: normalizeProductStatus(req.body?.status || 'draft'),
+    deletedAt: null,
+    contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,
+  });
+  res.json(doc);
+}));
 api.use('/admin/complimentary-items', crud('complimentary_items'));
 api.use('/admin/categories', crud('categories'));
 api.use('/admin/gallery', crud('gallery'));

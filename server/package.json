@@ -4,10 +4,15 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "node --watch src/index.mjs",
-    "start": "node src/index.mjs"
+    "start": "node src/index.mjs",
+    "test": "node --test",
+    "telegram-import": "node src/telegram-import/cli.mjs",
+    "telegram-control-test": "node src/telegram-import/legacy-post-check.mjs",
+    "telegram-production-import": "node src/telegram-import/production-import.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
+    "cheerio": "^1.0.0",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",

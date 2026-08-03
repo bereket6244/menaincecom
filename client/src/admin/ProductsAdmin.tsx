@@ -17,6 +17,7 @@ const EMPTY: Draft = {
   name: '', categoryId: '', description: '', photos: [],
   pricingMode: 'exact', price: null, variants: [],
   isAddon: false, suggestedAddonIds: [], complimentaryItems: [], universalComplimentaryItemIds: [], featured: false,
+  status: 'published',
 };
 
 function VariantsEditor({ variants, onChange }: { variants: VariantGroup[]; onChange: (v: VariantGroup[]) => void }) {
@@ -222,6 +223,11 @@ export function ProductsAdmin() {
     },
     { key: 'category', label: 'Category', render: (p) => (p.isAddon ? '—' : catName(p.categoryId)), sortValue: (p) => catName(p.categoryId) },
     {
+      key: 'status', label: 'Status',
+      render: (p) => <span className="text-[11px] capitalize">{p.status || 'published'}</span>,
+      sortValue: (p) => p.status || 'published',
+    },
+    {
       key: 'pricing', label: 'Pricing',
       render: (p) => (
         <span className={cx('text-[11px]', p.pricingMode === 'quote' ? 'text-muted' : 'text-green')}>{formatPrice(p)}</span>
@@ -286,6 +292,19 @@ export function ProductsAdmin() {
                   {(categories || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
+            </div>
+
+            <div>
+              <SysLabel>Publication status</SysLabel>
+              <select
+                value={editing.status || 'published'}
+                onChange={(e) => setEditing({ ...editing, status: e.target.value as Product['status'] })}
+                className="field mt-1"
+              >
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="archived">Archived</option>
+              </select>
             </div>
 
             <div>

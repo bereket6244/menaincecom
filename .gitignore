@@ -6,3 +6,6 @@ server/uploads/*
 !server/uploads/.gitkeep
 *.log
 .DS_Store
+ChatExport_*/
+server/reports/
+server/backups/

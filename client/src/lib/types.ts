@@ -32,6 +32,7 @@ export interface ComplimentaryCartItem {
 
 export interface Product {
   id: string;
+  status?: 'draft' | 'published' | 'archived';
   name: string;
   categoryId: string;
   description: string;
@@ -44,6 +45,8 @@ export interface Product {
   complimentaryItems?: ComplimentaryItemConfig[];
   universalComplimentaryItemIds?: string[];
   featured: boolean;
+  needsReview?: boolean;
+  telegramPostUrl?: string;
   createdAt?: string;
 }
 
