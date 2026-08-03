@@ -13,8 +13,6 @@ import { telegramContactUrl } from '../lib/share';
 const NAV = [
   { to: '/catalog', label: 'All Designs' },
   { to: '/gallery', label: 'Portfolio' },
-  { to: '/contact', label: 'Studio' },
-  { to: '/contact', label: 'About' },
   { to: '/contact', label: 'Contact' },
 ];
 
