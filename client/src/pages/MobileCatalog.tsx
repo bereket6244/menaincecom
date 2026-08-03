@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ArrowUpDown, Check, SlidersHorizontal } from 'lucide-react';
+import { ArrowUpDown, Check, ChevronDown, RotateCcw, SlidersHorizontal } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { Category, Product } from '../lib/types';
 import { MobileProductCard } from '../components/MobileProductCard';
@@ -15,10 +15,33 @@ const SORTS = [
   { id: 'high', label: 'Price: high to low' },
   { id: 'name', label: 'Name A-Z' },
 ];
-type AttributeFilter = { id: string; group: string; label: string; count: number };
+type Band = { id: string; label: string; test: (value: number) => boolean };
 
 function formatEtb(value: number): string {
   return `${Math.round(value).toLocaleString()} ETB`;
+}
+
+function buildPriceBands(products: Product[]): Band[] {
+  const prices = products
+    .filter((product) => !product.isAddon && product.price != null)
+    .map((product) => product.price as number)
+    .filter((price) => Number.isFinite(price) && price > 0)
+    .sort((a, b) => a - b);
+  if (prices.length === 0) return [];
+  const min = prices[0];
+  const max = prices[prices.length - 1];
+  if (min === max) return [{ id: 'actual-0', label: formatEtb(min), test: (value) => value === min }];
+  const bandCount = Math.min(4, Math.max(2, prices.length));
+  const step = (max - min) / bandCount;
+  return Array.from({ length: bandCount }, (_, index) => {
+    const lower = Math.floor(index === 0 ? min : min + step * index);
+    const upper = Math.ceil(index === bandCount - 1 ? max : min + step * (index + 1));
+    return {
+      id: `actual-${index}`,
+      label: `${formatEtb(lower)} - ${formatEtb(upper)}`,
+      test: (value: number) => (index === bandCount - 1 ? value >= lower && value <= max : value >= lower && value < upper),
+    };
+  });
 }
 
 function productSearchText(product: Product, categories: Category[]): string {
@@ -42,30 +65,16 @@ function productSearchText(product: Product, categories: Category[]): string {
   ].join(' ').toLowerCase();
 }
 
-function buildAttributeFilters(products: Product[]): AttributeFilter[] {
-  const counts = new Map<string, AttributeFilter>();
-  for (const product of products.filter((item) => !item.isAddon)) {
-    for (const group of product.variants || []) {
-      for (const option of group.options || []) {
-        const id = `${group.name}::${option.label}`;
-        const existing = counts.get(id);
-        counts.set(id, {
-          id,
-          group: group.name,
-          label: option.label,
-          count: (existing?.count || 0) + 1,
-        });
-      }
-    }
-  }
-  return [...counts.values()].sort((a, b) => a.group.localeCompare(b.group) || a.label.localeCompare(b.label));
-}
-
 export function MobileCatalog() {
   const { data: categories } = useData<Category[]>('/categories');
   const { data: products, loading } = useData<Product[]>('/products');
   const [params, setParams] = useSearchParams();
-  const [attributes, setAttributes] = useState<string[]>([]);
+  const [bands, setBands] = useState<string[]>([]);
+  const [min, setMin] = useState('');
+  const [max, setMax] = useState('');
+  const [pendingCategoryFilters, setPendingCategoryFilters] = useState<string[]>([]);
+  const [appliedCategoryFilters, setAppliedCategoryFilters] = useState<string[]>([]);
+  const [showMoreCats, setShowMoreCats] = useState(false);
   const [sort, setSort] = useState('featured');
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
@@ -83,25 +92,37 @@ export function MobileCatalog() {
     () => new Map((categories || []).map((category) => [category.id, category.name])),
     [categories]
   );
-  const attributeFilters = useMemo(() => buildAttributeFilters(products || []), [products]);
-  const toggleAttribute = (id: string) =>
-    setAttributes((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+  const priceBands = useMemo(() => buildPriceBands(products || []), [products]);
+  const minPrice = priceBands[0]?.label.split(' - ')[0] || 'Min';
+  const maxPrice = priceBands[priceBands.length - 1]?.label.split(' - ').pop() || 'Max';
+  const sidebarCategories = showMoreCats ? (categories || []) : (categories || []).slice(0, 5);
+  const activeFilterCount = bands.length + appliedCategoryFilters.length + (min ? 1 : 0) + (max ? 1 : 0);
+
+  const clearAll = () => {
+    setBands([]);
+    setMin('');
+    setMax('');
+    setPendingCategoryFilters([]);
+    setAppliedCategoryFilters([]);
+    setCategory('');
+  };
 
   const visible = useMemo(() => {
     let list = (products || []).filter((product) => !product.isAddon);
     if (activeCategory) list = list.filter((product) => product.categoryId === activeCategory);
+    if (appliedCategoryFilters.length) list = list.filter((product) => appliedCategoryFilters.includes(product.categoryId));
     if (query.trim()) {
       const needle = query.trim().toLowerCase();
       list = list.filter((product) => productSearchText(product, categories || []).includes(needle));
     }
-    if (attributes.length) {
-      list = list.filter((product) => {
-        const productAttributes = new Set(
-          (product.variants || []).flatMap((group) => (group.options || []).map((option) => `${group.name}::${option.label}`))
-        );
-        return attributes.every((id) => productAttributes.has(id));
-      });
+    if (bands.length) {
+      const active = priceBands.filter((band) => bands.includes(band.id));
+      list = list.filter((product) => product.price == null || active.some((band) => band.test(product.price as number)));
     }
+    const mn = parseFloat(min);
+    const mx = parseFloat(max);
+    if (!Number.isNaN(mn)) list = list.filter((product) => product.price == null || (product.price as number) >= mn);
+    if (!Number.isNaN(mx)) list = list.filter((product) => product.price == null || (product.price as number) <= mx);
     if (sort === 'low') return [...list].sort((a, b) => (a.price ?? 1e9) - (b.price ?? 1e9));
     if (sort === 'high') return [...list].sort((a, b) => (b.price ?? -1) - (a.price ?? -1));
     if (sort === 'name') return [...list].sort((a, b) => a.name.localeCompare(b.name));
@@ -111,7 +132,7 @@ export function MobileCatalog() {
         Number(b.featured) - Number(a.featured)
         || new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
     );
-  }, [activeCategory, attributes, categories, products, query, sort]);
+  }, [activeCategory, appliedCategoryFilters, bands, categories, max, min, priceBands, products, query, sort]);
 
   const chips: { id: string; name: string; photo?: string }[] = [
     { id: '', name: 'All' },
@@ -165,11 +186,11 @@ export function MobileCatalog() {
           onClick={() => setFilterOpen(true)}
           className={cx(
             'mena-press flex h-11 items-center justify-center gap-2 rounded-full border text-[13px] font-extrabold',
-            attributes.length ? 'border-pink bg-pink text-white' : 'border-edge bg-white text-ink'
+            activeFilterCount ? 'border-pink bg-pink text-white' : 'border-edge bg-white text-ink'
           )}
         >
           <SlidersHorizontal className="h-4 w-4" />
-          Filter{attributes.length ? ` (${attributes.length})` : ''}
+          Filter{activeFilterCount ? ` (${activeFilterCount})` : ''}
         </button>
         <button
           type="button"
@@ -201,34 +222,77 @@ export function MobileCatalog() {
       )}
 
       <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filter designs">
-        {attributeFilters.length > 0 ? (
-          <div className="space-y-2.5">
-            {attributeFilters.map((item) => {
-              const active = attributes.includes(item.id);
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => toggleAttribute(item.id)}
-                  className={cx(
-                    'mena-press flex w-full items-center justify-between rounded-2xl border px-3.5 py-3 text-left text-sm font-extrabold',
-                    active ? 'border-pink bg-pink/5 text-pink' : 'border-edge bg-white text-ink'
-                  )}
-                >
-                  <span>{item.group}: {item.label}</span>
-                  {active && <Check className="h-4 w-4" />}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-muted">No filters available yet.</p>
-        )}
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <button type="button" onClick={() => setAttributes([])} className="btn-outline h-12 px-3">
-            Clear
+        <div className="space-y-5">
+          <section className="border-b border-edge pb-5">
+            <h2 className="mb-3 text-sm font-extrabold">Price Range</h2>
+            {priceBands.length ? (
+              <div className="space-y-2.5">
+                {priceBands.map((band) => {
+                  const checked = bands.includes(band.id);
+                  return (
+                    <label key={band.id} className="mena-press flex cursor-pointer items-center gap-2.5 text-[13.5px] text-ink/80">
+                      <input type="checkbox" checked={checked} onChange={() => setBands((current) => checked ? current.filter((id) => id !== band.id) : [...current, band.id])} className="sr-only" />
+                      <span className={cx('flex h-5 w-5 items-center justify-center rounded-[5px] border', checked ? 'border-pink bg-pink' : 'border-[#d8cfc8] bg-white')}>
+                        {checked && <Check className="h-3 w-3 text-white" />}
+                      </span>
+                      {band.label}
+                    </label>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-muted">No exact prices yet.</p>
+            )}
+            <div className="mt-4 flex items-center gap-2">
+              <input value={min} onChange={(e) => setMin(e.target.value)} inputMode="numeric" placeholder={minPrice} className="min-w-0 flex-1 rounded-lg border border-edge bg-white px-2.5 py-2 text-[13px] outline-none focus:border-pink" />
+              <span className="font-bold text-muted">-</span>
+              <input value={max} onChange={(e) => setMax(e.target.value)} inputMode="numeric" placeholder={maxPrice} className="min-w-0 flex-1 rounded-lg border border-edge bg-white px-2.5 py-2 text-[13px] outline-none focus:border-pink" />
+            </div>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-sm font-extrabold">Category</h2>
+            <div className="space-y-2.5">
+              {sidebarCategories.map((category) => {
+                const checked = pendingCategoryFilters.includes(category.id);
+                return (
+                  <label key={category.id} className="mena-press flex cursor-pointer items-center gap-2.5 text-[13.5px] text-ink/80">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => setPendingCategoryFilters((current) => checked ? current.filter((id) => id !== category.id) : [...current, category.id])}
+                      className="sr-only"
+                    />
+                    <span className={cx('flex h-5 w-5 items-center justify-center rounded-[5px] border', checked ? 'border-pink bg-pink' : 'border-[#d8cfc8] bg-white')}>
+                      {checked && <Check className="h-3 w-3 text-white" />}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">{category.name}</span>
+                  </label>
+                );
+              })}
+            </div>
+            {(categories || []).length > 5 && (
+              <button type="button" onClick={() => setShowMoreCats((value) => !value)} className="mena-press mt-3 flex items-center gap-1 text-[13px] font-bold text-pink">
+                {showMoreCats ? 'Show less' : 'Show more'}
+                <ChevronDown className={cx('h-4 w-4 transition-transform', showMoreCats && 'rotate-180')} />
+              </button>
+            )}
+          </section>
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-2">
+          <button type="button" onClick={clearAll} className="btn-outline h-12 px-3">
+            <RotateCcw className="h-4 w-4" />
+            Reset
           </button>
-          <button type="button" onClick={() => setFilterOpen(false)} className="btn-primary h-12 px-3">
+          <button
+            type="button"
+            onClick={() => {
+              setAppliedCategoryFilters(pendingCategoryFilters);
+              setFilterOpen(false);
+            }}
+            className="btn-primary h-12 px-3"
+          >
             Apply
           </button>
         </div>

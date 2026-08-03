@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowUpDown, Check, ChevronDown, RotateCcw, ShieldCheck, SlidersHorizontal, Sparkles, Truck, Wand2 } from 'lucide-react';
+import { ArrowUpDown, Check, ChevronDown, RotateCcw, ShieldCheck, Sparkles, Truck, Wand2 } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { Category, Product, UniversalComplimentaryItem } from '../lib/types';
 import { DesktopProductCard } from '../components/DesktopProductCard';
@@ -74,7 +74,6 @@ export function DesktopCatalog() {
   const [pendingCategoryFilters, setPendingCategoryFilters] = useState<string[]>([]);
   const [appliedCategoryFilters, setAppliedCategoryFilters] = useState<string[]>([]);
   const [showMoreCats, setShowMoreCats] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(true);
   const [sortOpen, setSortOpen] = useState(false);
 
   const priceBands = useMemo(() => buildPriceBands(products || []), [products]);
@@ -123,7 +122,6 @@ export function DesktopCatalog() {
   const chips: Pick<Category, 'id' | 'name' | 'photo'>[] = [{ id: '', name: 'All' }, ...(categories || [])];
   const pageTitle = activeCategory ? catById.get(activeCategory)?.name || 'Designs' : 'All';
   const sidebarCategories = showMoreCats ? (categories || []) : (categories || []).slice(0, 5);
-  const activeFilterCount = bands.length + appliedCategoryFilters.length + (min ? 1 : 0) + (max ? 1 : 0);
   const sortLabel = SORTS.find((item) => item.id === sort)?.label || 'Featured';
 
   const quickAdd = (product: Product) => {
@@ -190,17 +188,6 @@ export function DesktopCatalog() {
           <p className="mt-2 text-sm text-muted">{visible.length} designs available</p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setFiltersOpen((value) => !value)}
-            className={cx(
-              'mena-press flex h-11 items-center gap-2 rounded-full border px-5 text-[13.5px] font-extrabold',
-              filtersOpen || activeFilterCount ? 'border-pink bg-pink text-white' : 'border-edge bg-white text-ink'
-            )}
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            Filter{activeFilterCount ? ` (${activeFilterCount})` : ''}
-          </button>
           <div className="relative">
             <button
               type="button"
@@ -239,8 +226,7 @@ export function DesktopCatalog() {
         </div>
       </div>
 
-      <div className={cx('grid h-[calc(100vh-272px)] min-h-[560px] gap-9', filtersOpen ? 'grid-cols-[240px_minmax(0,1fr)]' : 'grid-cols-1')}>
-        {filtersOpen && (
+      <div className="grid h-[calc(100vh-272px)] min-h-[560px] grid-cols-[240px_minmax(0,1fr)] gap-9">
         <aside className="mena-d-scroll overflow-y-auto rounded-2xl border border-edge bg-white p-[22px] shadow-[0_1px_3px_rgba(28,26,25,0.05)]">
           <div className="mb-5 flex items-center justify-between border-b border-edge pb-4">
             <span className="text-[17px] font-extrabold">Filters</span>
@@ -311,7 +297,6 @@ export function DesktopCatalog() {
             </button>
           </div>
         </aside>
-        )}
 
         <div className="mena-d-scroll overflow-y-auto pr-3">
           {loading && !products ? (
