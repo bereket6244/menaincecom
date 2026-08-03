@@ -111,6 +111,16 @@ export function telegramOrderUrl(_business: BusinessSettings | null, text: strin
   return `${TELEGRAM_ORDER_URL}?text=${encodeURIComponent(text)}`;
 }
 
+export function telegramContactUrl(business: BusinessSettings | null): string {
+  const handle = (business?.telegramHandle || '').trim();
+  if (!handle) return TELEGRAM_ORDER_URL;
+  if (/^https?:\/\//i.test(handle)) return handle;
+  if (handle.startsWith('@')) return `https://t.me/${handle.slice(1)}`;
+  const phone = digitsOnly(handle);
+  if (phone) return `https://t.me/+${phone}`;
+  return `https://t.me/${handle.replace(/^\/+/, '')}`;
+}
+
 export function smsOrderUrl(business: BusinessSettings | null, text: string): string {
   const number = digitsOnly(business?.phone || '') || FALLBACK_WHATSAPP;
   return `sms:+${number}?body=${encodeURIComponent(text)}`;

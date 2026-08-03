@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDown, Heart, Search, ShoppingBag, User } from 'lucide-react';
+import { ChevronDown, Heart, Send, Search, ShoppingBag, User } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useApp } from '../store/AppContext';
 import { StatusBanners, Toasts } from './ui';
 import { cx } from '../lib/utils';
 import { BrandLogo } from './BrandLogo';
+import { useData } from '../lib/useData';
+import type { BusinessSettings } from '../lib/types';
+import { telegramContactUrl } from '../lib/share';
 
 const NAV = [
   { to: '/catalog', label: 'All Designs' },
@@ -17,10 +20,12 @@ const NAV = [
 
 export function DesktopShell({ children }: { children: ReactNode }) {
   const { cart, user, wishlistProductIds } = useApp();
+  const { data: business } = useData<BusinessSettings>('/content/business');
   const navigate = useNavigate();
   const location = useLocation();
   const [q, setQ] = useState('');
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
+  const telegramUrl = telegramContactUrl(business);
 
   useEffect(() => {
     if (location.pathname !== '/catalog') return;
@@ -66,6 +71,16 @@ export function DesktopShell({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="flex shrink-0 items-center gap-5">
+            <a
+              href={telegramUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mena-press flex items-center gap-2 text-[13px] font-bold text-ink hover:text-pink"
+              aria-label="Message Mena on Telegram"
+            >
+              <Send className="h-[18px] w-[18px]" />
+              Message
+            </a>
             <Link to="/wishlist" className="mena-press flex items-center gap-2 text-[13px] font-bold text-ink hover:text-pink">
               <Heart className={cx('h-[18px] w-[18px]', wishlistProductIds.length > 0 && 'fill-pink text-pink')} />
               Wishlist
