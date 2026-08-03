@@ -15,6 +15,7 @@ import {
   publicProduct,
   telegramProductIdentity,
 } from './product-model.mjs';
+import { createTelegramProductPost, shouldCreateTelegramPost } from './product-telegram.mjs';
 
 export const api = Router();
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -439,21 +440,68 @@ api.post('/admin/products', requireAdmin, dbRoute(async (req, res) => {
     const existing = await records.find('products', (product) => telegramProductIdentity(product) === identity);
     if (existing) return res.json({ ...existing, importAction: 'skipped_existing' });
   }
-  const product = await records.insert('products', {
+  const shouldPost = shouldCreateTelegramPost(null, input);
+  let product = await records.insert('products', {
     ...input,
+    ...(shouldPost ? { status: 'draft', telegramSyncStatus: 'pending' } : {}),
     contentVersion: Math.max(1, Number(input.contentVersion) || 1),
   });
+  if (shouldPost) {
+    try {
+      const telegram = await createTelegramProductPost({ ...product, status: 'published' });
+      product = await records.update('products', product.id, { ...telegram, status: 'published' });
+      return res.status(201).json({ ...product, telegramPublishAction: 'created' });
+    } catch (error) {
+      product = await records.update('products', product.id, {
+        status: 'draft',
+        telegramSyncStatus: 'failed',
+        telegramSyncError: error.telegram || { message: 'Telegram publication failed.' },
+      });
+      return res.status(502).json({
+        error: 'telegram_publish_failed',
+        message: 'Product was saved as a draft because Telegram publication failed.',
+        product,
+      });
+    }
+  }
   res.status(201).json(product);
 }));
 
 api.put('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
   const existing = await records.get('products', req.params.id);
   if (!existing) return res.status(404).json({ error: 'not_found' });
-  const doc = await records.update('products', req.params.id, {
+  const nextVersion = Math.max(1, Number(existing.contentVersion) || 1) + 1;
+  const input = {
+    ...existing,
     ...req.body,
     status: normalizeProductStatus(req.body?.status ?? existing.status),
-    contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,
+    contentVersion: nextVersion,
+  };
+  const shouldPost = shouldCreateTelegramPost(existing, input);
+  let doc = await records.update('products', req.params.id, {
+    ...req.body,
+    status: shouldPost ? 'draft' : input.status,
+    ...(shouldPost ? { telegramSyncStatus: 'pending' } : {}),
+    contentVersion: nextVersion,
   });
+  if (shouldPost) {
+    try {
+      const telegram = await createTelegramProductPost({ ...doc, status: 'published' });
+      doc = await records.update('products', req.params.id, { ...telegram, status: 'published' });
+      return res.json({ ...doc, telegramPublishAction: 'created' });
+    } catch (error) {
+      doc = await records.update('products', req.params.id, {
+        status: 'draft',
+        telegramSyncStatus: 'failed',
+        telegramSyncError: error.telegram || { message: 'Telegram publication failed.' },
+      });
+      return res.status(502).json({
+        error: 'telegram_publish_failed',
+        message: 'Product was saved as a draft because Telegram publication failed.',
+        product: doc,
+      });
+    }
+  }
   res.json(doc);
 }));
 
