@@ -10,6 +10,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect server changes
+        id: changes
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "server_changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          changed_files="$(git diff --name-only HEAD^ HEAD)"
+          printf '%s\n' "${changed_files}"
+          if printf '%s\n' "${changed_files}" | grep -Eq '^server/'; then
+            echo "server_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "server_changed=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: actions/setup-node@v4
         with:
@@ -29,6 +48,7 @@ jobs:
           zip -r ../../shop-deploy.zip .
 
       - name: Package server files
+        if: steps.changes.outputs.server_changed == 'true'
         run: |
           rm -rf server-deploy
           mkdir -p server-deploy/tmp server-deploy/uploads
@@ -180,6 +200,7 @@ jobs:
             "${CPANEL_BASE_URL}/json-api/cpanel"
 
       - name: Resolve cPanel server directory
+        if: steps.changes.outputs.server_changed == 'true'
         env:
           CPANEL_TARGET_DIR: ${{ secrets.CPANEL_TARGET_DIR }}
           CPANEL_SERVER_DIR: ${{ secrets.CPANEL_SERVER_DIR }}
@@ -251,6 +272,7 @@ jobs:
           echo "CPANEL_APP_PATH_RESOLVED=${app_path}" >> "$GITHUB_ENV"
 
       - name: Upload server archive to cPanel
+        if: steps.changes.outputs.server_changed == 'true'
         env:
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
@@ -272,6 +294,7 @@ jobs:
             "${CPANEL_BASE_URL}/execute/Fileman/upload_files"
 
       - name: Extract server archive on cPanel
+        if: steps.changes.outputs.server_changed == 'true'
         env:
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
@@ -297,6 +320,7 @@ jobs:
             "${CPANEL_BASE_URL}/json-api/cpanel"
 
       - name: Install server dependencies on cPanel
+        if: steps.changes.outputs.server_changed == 'true'
         env:
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
