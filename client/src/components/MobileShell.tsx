@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Grid2X2, Heart, Menu, Search, Send, ShoppingCart, User, X } from 'lucide-react';
+import { Grid2X2, Heart, Menu, MessageCircle, MessageSquareText, Search, Send, ShoppingCart, User, X } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { cx } from '../lib/utils';
 import { useData } from '../lib/useData';
@@ -22,10 +22,24 @@ export function MobileShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [fabOpen, setFabOpen] = useState(false);
+  const fabRef = useRef<HTMLDivElement>(null);
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
   const likedCount = wishlistProductIds.length;
   const telegramUrl = telegramContactUrl(business);
   const showCatalogHeader = ['/catalog', '/', '/wishlist', '/gallery', '/contact'].includes(location.pathname);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (fabRef.current && !fabRef.current.contains(event.target as Node)) {
+        setFabOpen(false);
+      }
+    };
+    if (fabOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [fabOpen]);
 
   const submitSearch = (value = search) => {
     const q = value.trim();
@@ -51,15 +65,6 @@ export function MobileShell({ children }: { children: ReactNode }) {
                 <Menu className="h-5.5 w-5.5" />
               </button>
               <div className="flex-1" />
-              <a
-                href={telegramUrl}
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Message Mena on Telegram"
-                className="mena-press flex h-10 w-10 items-center justify-center rounded-xl text-ink hover:bg-surface2"
-              >
-                <Send className="h-5.5 w-5.5" />
-              </a>
               <Link
                 id="mena-liked-icon"
                 to="/wishlist"
@@ -198,6 +203,49 @@ export function MobileShell({ children }: { children: ReactNode }) {
           <div>Bole, Addis Ababa</div>
         </div>
       </aside>
+
+      <div ref={fabRef} className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+        {fabOpen && (
+          <>
+            <a
+              href={telegramUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mena-press animate-in fade-in zoom-in-95 flex h-12 w-12 items-center justify-center rounded-full bg-[#2b93d6] text-white shadow-lg hover:bg-[#2380c0] duration-200"
+              aria-label="Contact on Telegram"
+            >
+              <Send className="h-5 w-5" />
+            </a>
+            <a
+              href={`https://wa.me/${business?.whatsappNumber || ''}`}
+              target="_blank"
+              rel="noreferrer"
+              className="mena-press animate-in fade-in zoom-in-95 flex h-12 w-12 items-center justify-center rounded-full bg-[#25a34f] text-white shadow-lg hover:bg-[#1e8a3d] duration-200"
+              aria-label="Contact on WhatsApp"
+            >
+              <MessageCircle className="h-5 w-5" />
+            </a>
+            <a
+              href={`sms:${business?.phone || ''}`}
+              className="mena-press animate-in fade-in zoom-in-95 flex h-12 w-12 items-center justify-center rounded-full bg-[#ee317b] text-white shadow-lg hover:bg-[#d41f66] duration-200"
+              aria-label="Contact via SMS"
+            >
+              <MessageSquareText className="h-5 w-5" />
+            </a>
+          </>
+        )}
+        <button
+          type="button"
+          onClick={() => setFabOpen(!fabOpen)}
+          className={cx(
+            'mena-press flex h-14 w-14 items-center justify-center rounded-full bg-pink text-white shadow-lg hover:bg-pink-dim transition-transform duration-300',
+            fabOpen && 'rotate-45'
+          )}
+          aria-label="Contact options"
+        >
+          <Send className="h-6 w-6" />
+        </button>
+      </div>
     </div>
   );
 }
