@@ -317,7 +317,7 @@ export function MobileProductDetail() {
                 if (product.variants.length && missingVariant) openSheet('add');
                 else addFrom(event.currentTarget);
               }}
-              className="btn-outline h-[50px] min-w-0 flex-1 px-3 text-sm"
+              className="btn-outline h-10 min-w-0 flex-1 px-2 text-xs"
             >
               Add to cart
             </button>
@@ -327,7 +327,7 @@ export function MobileProductDetail() {
                 if (product.variants.length && missingVariant) openSheet('buy');
                 else buyNow();
               }}
-              className="btn-primary h-[50px] min-w-0 flex-1 px-3 text-sm"
+              className="btn-primary h-10 min-w-0 flex-1 px-2 text-xs"
             >
               Buy now
             </button>
@@ -410,10 +410,10 @@ export function MobileProductDetail() {
         </div>
 
         <div className="sticky bottom-0 flex gap-3 border-t border-edge bg-surface px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
-          <button type="button" onClick={(event) => runAction('add', event.currentTarget)} className="btn-outline h-14 flex-1">
+          <button type="button" onClick={(event) => runAction('add', event.currentTarget)} className="btn-outline h-11 flex-1 text-sm">
             Add to cart
           </button>
-          <button type="button" onClick={() => runAction(sheetMode === 'buy' ? 'buy' : 'buy', null)} className="btn-primary h-14 flex-1">
+          <button type="button" onClick={() => runAction(sheetMode === 'buy' ? 'buy' : 'buy', null)} className="btn-primary h-11 flex-1 text-sm">
             Buy now
           </button>
         </div>

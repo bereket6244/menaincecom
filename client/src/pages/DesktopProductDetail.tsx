@@ -286,8 +286,8 @@ export function DesktopProductDetail() {
               </div>
             </div>
             <div className="sticky bottom-0 flex gap-3 border-t border-edge bg-white p-4">
-              <button type="button" onClick={handleAdd} className="btn-outline h-14 flex-1">Add to cart</button>
-              <button type="button" onClick={handleBuy} className="btn-primary h-14 flex-1">Buy now</button>
+              <button type="button" onClick={handleAdd} className="btn-outline h-11 flex-1 text-sm">Add to cart</button>
+              <button type="button" onClick={handleBuy} className="btn-primary h-11 flex-1 text-sm">Buy now</button>
             </div>
           </div>
         </div>
