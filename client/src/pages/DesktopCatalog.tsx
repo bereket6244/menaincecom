@@ -170,7 +170,7 @@ export function DesktopCatalog() {
               <ChevronDown className={cx('h-4 w-4 transition-transform', sortOpen && 'rotate-180')} />
             </button>
             {sortOpen && (
-              <div className="absolute right-0 top-[calc(100%+10px)] z-20 w-56 rounded-2xl border border-edge bg-white p-2 shadow-[0_14px_36px_rgba(28,26,25,0.14)]">
+              <div className="absolute right-0 top-[calc(100%+10px)] z-20 w-48 rounded-2xl border border-edge bg-white p-1.5 shadow-[0_14px_36px_rgba(28,26,25,0.14)]">
                 {SORTS.map((item) => {
                   const active = sort === item.id;
                   return (
@@ -182,7 +182,7 @@ export function DesktopCatalog() {
                         setSortOpen(false);
                       }}
                       className={cx(
-                        'mena-press flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-[13.5px] font-bold',
+                        'mena-press flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[13px] font-bold',
                         active ? 'bg-pink/10 text-pink' : 'text-ink hover:bg-surface2'
                       )}
                     >
@@ -239,7 +239,10 @@ export function DesktopCatalog() {
                     <input
                       type="checkbox"
                       checked={checked}
-                      onChange={() => setCategoryFilters((current) => checked ? current.filter((id) => id !== category.id) : [...current, category.id])}
+                      onChange={() => {
+                        setCategory('');
+                        setCategoryFilters((current) => checked ? current.filter((id) => id !== category.id) : [...current, category.id]);
+                      }}
                       className="sr-only"
                     />
                     <span className={cx('flex h-5 w-5 items-center justify-center rounded-[5px] border', checked ? 'border-pink bg-pink' : 'border-[#d8cfc8] bg-white')}>

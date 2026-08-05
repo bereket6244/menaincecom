@@ -186,9 +186,9 @@ export function MobileCatalog() {
         )}
 
         {filterOpen && (
-          <div className="absolute inset-x-4 top-[calc(100%+8px)] z-10 max-h-[70vh] overflow-y-auto rounded-2xl border border-edge bg-white p-4 shadow-[0_16px_40px_rgba(28,26,25,0.16)]">
-            <div className="space-y-5">
-              <section className="border-b border-edge pb-5">
+          <div className="absolute left-4 top-[calc(100%+8px)] z-10 w-[min(19rem,calc(100%-2rem))] max-h-[58vh] overflow-y-auto rounded-2xl border border-edge bg-white p-3.5 shadow-[0_16px_40px_rgba(28,26,25,0.16)]">
+            <div className="space-y-4">
+              <section className="border-b border-edge pb-4">
                 <h2 className="mb-3 text-sm font-extrabold">Price Range</h2>
                 {priceBands.length ? (
                   <div className="space-y-2.5">
@@ -225,7 +225,10 @@ export function MobileCatalog() {
                         <input
                           type="checkbox"
                           checked={checked}
-                          onChange={() => setCategoryFilters((current) => checked ? current.filter((id) => id !== category.id) : [...current, category.id])}
+                          onChange={() => {
+                            setCategory('');
+                            setCategoryFilters((current) => checked ? current.filter((id) => id !== category.id) : [...current, category.id]);
+                          }}
                           className="sr-only"
                         />
                         <span className={cx('flex h-5 w-5 items-center justify-center rounded-[5px] border', checked ? 'border-pink bg-pink' : 'border-[#d8cfc8] bg-white')}>
@@ -245,15 +248,15 @@ export function MobileCatalog() {
               </section>
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-2">
-              <button type="button" onClick={clearAll} className="btn-outline h-12 px-3">
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button type="button" onClick={clearAll} className="btn-outline h-10 px-3">
                 <RotateCcw className="h-4 w-4" />
                 Reset
               </button>
               <button
                 type="button"
                 onClick={() => setFilterOpen(false)}
-                className="btn-primary h-12 px-3"
+                className="btn-primary h-10 px-3"
               >
                 Done
               </button>
@@ -262,7 +265,7 @@ export function MobileCatalog() {
         )}
 
         {sortOpen && (
-          <div className="absolute right-4 top-[calc(100%+8px)] z-10 w-[min(20rem,calc(100%-2rem))] rounded-2xl border border-edge bg-white p-2 shadow-[0_16px_40px_rgba(28,26,25,0.16)]">
+          <div className="absolute right-4 top-[calc(100%+8px)] z-10 w-[min(14rem,calc(100%-2rem))] rounded-2xl border border-edge bg-white p-1.5 shadow-[0_16px_40px_rgba(28,26,25,0.16)]">
             {SORTS.map((item) => {
               const active = sort === item.id;
               return (
@@ -274,7 +277,7 @@ export function MobileCatalog() {
                     setSortOpen(false);
                   }}
                   className={cx(
-                    'mena-press flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left text-[13.5px] font-bold',
+                    'mena-press flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[13px] font-bold',
                     active ? 'bg-pink/10 text-pink' : 'text-ink hover:bg-surface2'
                   )}
                 >
