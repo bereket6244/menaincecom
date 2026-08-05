@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import type { Product } from '../lib/types';
 import { cx, formatPrice } from '../lib/utils';
+import { flyToLiked } from '../lib/fly';
 import { useApp } from '../store/AppContext';
 
 const TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#eeeeec', '#f6efdd', '#e9f0ec', '#e9e6ef'];
@@ -58,7 +59,10 @@ export function MobileProductCard({
         </button>
         <button
           type="button"
-          onClick={() => void toggleWishlist(product.id)}
+          onClick={(e) => {
+            if (!wished) flyToLiked(e.currentTarget);
+            void toggleWishlist(product.id);
+          }}
           aria-label={wished ? 'Remove from liked items' : 'Save to liked items'}
           className="mena-press absolute right-2 top-2 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-white/95 shadow-sm"
         >

@@ -1,26 +1,30 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Grid2X2, Heart, Image, Menu, Phone, Search, ShoppingBag, User, X } from 'lucide-react';
+import { Grid2X2, Heart, Menu, Search, Send, ShoppingCart, User, X } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { cx } from '../lib/utils';
+import { useData } from '../lib/useData';
+import type { BusinessSettings } from '../lib/types';
+import { telegramContactUrl } from '../lib/share';
 import { StatusBanners, Toasts } from './ui';
 import { BrandLogo } from './BrandLogo';
 
 const NAV = [
   { to: '/catalog', label: 'Wedding Cards', icon: Grid2X2 },
   { to: '/wishlist', label: 'Liked items', icon: Heart },
-  { to: '/gallery', label: 'Gallery', icon: Image },
-  { to: '/contact', label: 'Contact', icon: Phone },
 ];
 
 export function MobileShell({ children }: { children: ReactNode }) {
   const { cart, user, wishlistProductIds } = useApp();
+  const { data: business } = useData<BusinessSettings>('/content/business');
   const navigate = useNavigate();
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [search, setSearch] = useState('');
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
+  const likedCount = wishlistProductIds.length;
+  const telegramUrl = telegramContactUrl(business);
   const showCatalogHeader = ['/catalog', '/', '/wishlist', '/gallery', '/contact'].includes(location.pathname);
 
   const submitSearch = (value = search) => {
@@ -34,10 +38,10 @@ export function MobileShell({ children }: { children: ReactNode }) {
       <StatusBanners />
       <Toasts />
 
-      <div className="mx-auto min-h-dvh w-full max-w-[430px] overflow-x-hidden bg-bg shadow-none sm:shadow-[0_0_0_1px_rgba(28,26,25,0.06)]">
+      <div className="mx-auto min-h-dvh w-full max-w-[430px] overflow-x-clip bg-bg shadow-none sm:shadow-[0_0_0_1px_rgba(28,26,25,0.06)]">
         {showCatalogHeader && (
           <header className="sticky top-0 z-30 border-b border-edge bg-surface">
-            <div className="flex h-16 items-center gap-2 px-4">
+            <div className="flex h-16 items-center gap-0.5 px-3">
               <button
                 type="button"
                 onClick={() => setDrawerOpen(true)}
@@ -46,8 +50,28 @@ export function MobileShell({ children }: { children: ReactNode }) {
               >
                 <Menu className="h-5.5 w-5.5" />
               </button>
-              <Link to="/catalog" className="mena-press min-w-0 flex-1 text-center">
-                <BrandLogo showIcon={false} size="sm" centered />
+              <div className="flex-1" />
+              <a
+                href={telegramUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Message Mena on Telegram"
+                className="mena-press flex h-10 w-10 items-center justify-center rounded-xl text-ink hover:bg-surface2"
+              >
+                <Send className="h-5.5 w-5.5" />
+              </a>
+              <Link
+                id="mena-liked-icon"
+                to="/wishlist"
+                aria-label={`Liked items, ${likedCount} saved`}
+                className="mena-press relative flex h-10 w-10 items-center justify-center rounded-xl text-ink hover:bg-surface2"
+              >
+                <Heart className={cx('h-5.5 w-5.5', likedCount > 0 && 'fill-pink text-pink')} />
+                {likedCount > 0 && (
+                  <span className="mena-pop absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-pink px-1 text-[10px] font-extrabold text-white">
+                    {likedCount > 99 ? '99+' : likedCount}
+                  </span>
+                )}
               </Link>
               <Link
                 id="mena-cart-icon"
@@ -55,7 +79,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
                 aria-label={`Cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
                 className="mena-press relative flex h-10 w-10 items-center justify-center rounded-xl text-ink hover:bg-surface2"
               >
-                <ShoppingBag className="h-5.5 w-5.5" />
+                <ShoppingCart className="h-5.5 w-5.5" />
                 {cartCount > 0 && (
                   <span className="mena-pop absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#ee0a24] px-1 text-[10px] font-extrabold text-white">
                     {cartCount > 99 ? '99+' : cartCount}
@@ -79,8 +103,21 @@ export function MobileShell({ children }: { children: ReactNode }) {
                       navigate(`/catalog${q ? `?q=${encodeURIComponent(q)}` : ''}`, { replace: true });
                     }}
                     placeholder="Search designs, colors, prices..."
-                    className="w-full rounded-full border border-edge bg-white py-3 pl-10 pr-4 text-sm text-ink outline-none placeholder:text-muted/70 focus:border-pink"
+                    className="w-full rounded-full border border-edge bg-white py-3 pl-10 pr-11 text-sm text-ink outline-none placeholder:text-muted/70 focus:border-pink"
                   />
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearch('');
+                        navigate('/catalog', { replace: true });
+                      }}
+                      aria-label="Clear search"
+                      className="mena-press absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-muted hover:bg-surface2 hover:text-ink"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
                 </form>
               </div>
             )}

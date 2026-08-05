@@ -2,6 +2,7 @@ import { Heart } from 'lucide-react';
 import type { Product, Category } from '../lib/types';
 import { useApp } from '../store/AppContext';
 import { cx, formatPrice } from '../lib/utils';
+import { flyToLiked } from '../lib/fly';
 
 const TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#e9f0ec', '#f6efdd'];
 
@@ -58,6 +59,7 @@ export function DesktopProductCard({
           type="button"
           onClick={(e) => {
             e.stopPropagation();
+            if (!wished) flyToLiked(e.currentTarget);
             void toggleWishlist(product.id);
           }}
           aria-label={wished ? 'Remove from wishlist' : 'Save to wishlist'}

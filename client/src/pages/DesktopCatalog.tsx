@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowUpDown, Check, ChevronDown, RotateCcw, ShieldCheck, Sparkles, Truck, Wand2 } from 'lucide-react';
+import { ArrowUpDown, Check, ChevronDown, RotateCcw } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { Category, Product, UniversalComplimentaryItem } from '../lib/types';
 import { DesktopProductCard } from '../components/DesktopProductCard';
@@ -8,8 +8,7 @@ import { EmptyState, Spinner } from '../components/ui';
 import { cx } from '../lib/utils';
 import { useApp } from '../store/AppContext';
 import { complimentaryForProduct, productWithResolvedComplimentary } from '../lib/complimentary';
-
-type Band = { id: string; label: string; test: (v: number) => boolean };
+import { buildPriceBands, formatEtb, priceBounds } from '../lib/priceBands';
 
 const CIRCLE_TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#eeeeec', '#f6efdd', '#e9f0ec', '#e9e6ef'];
 const SORTS = [
@@ -18,33 +17,6 @@ const SORTS = [
   { id: 'high', label: 'Price: high to low' },
   { id: 'name', label: 'Name A-Z' },
 ];
-
-function formatEtb(value: number): string {
-  return `${Math.round(value).toLocaleString()} ETB`;
-}
-
-function buildPriceBands(products: Product[]): Band[] {
-  const prices = products
-    .filter((p) => !p.isAddon && p.price != null)
-    .map((p) => p.price as number)
-    .filter((price) => Number.isFinite(price) && price > 0)
-    .sort((a, b) => a - b);
-  if (prices.length === 0) return [];
-  const min = prices[0];
-  const max = prices[prices.length - 1];
-  if (min === max) return [{ id: 'actual-0', label: formatEtb(min), test: (v) => v === min }];
-  const bandCount = Math.min(4, Math.max(2, prices.length));
-  const step = (max - min) / bandCount;
-  return Array.from({ length: bandCount }, (_, i) => {
-    const lower = Math.floor(i === 0 ? min : min + step * i);
-    const upper = Math.ceil(i === bandCount - 1 ? max : min + step * (i + 1));
-    return {
-      id: `actual-${i}`,
-      label: `${formatEtb(lower)} - ${formatEtb(upper)}`,
-      test: (v: number) => (i === bandCount - 1 ? v >= lower && v <= max : v >= lower && v < upper),
-    };
-  });
-}
 
 function productSearchText(product: Product, categories: Category[]): string {
   const category = categories.find((c) => c.id === product.categoryId)?.name || '';
@@ -71,15 +43,15 @@ export function DesktopCatalog() {
   const [bands, setBands] = useState<string[]>([]);
   const [min, setMin] = useState('');
   const [max, setMax] = useState('');
-  const [pendingCategoryFilters, setPendingCategoryFilters] = useState<string[]>([]);
-  const [appliedCategoryFilters, setAppliedCategoryFilters] = useState<string[]>([]);
+  const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
   const [showMoreCats, setShowMoreCats] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
 
   const priceBands = useMemo(() => buildPriceBands(products || []), [products]);
+  const bounds = useMemo(() => priceBounds(products || []), [products]);
   const catById = useMemo(() => new Map((categories || []).map((cat) => [cat.id, cat])), [categories]);
-  const minPrice = priceBands[0]?.label.split(' - ')[0] || 'Min';
-  const maxPrice = priceBands[priceBands.length - 1]?.label.split(' - ').pop() || 'Max';
+  const minPrice = bounds.min != null ? formatEtb(bounds.min) : 'Min';
+  const maxPrice = bounds.max != null ? formatEtb(bounds.max) : 'Max';
 
   const setCategory = (id: string) => {
     const next = new URLSearchParams(params);
@@ -92,15 +64,14 @@ export function DesktopCatalog() {
     setBands([]);
     setMin('');
     setMax('');
-    setPendingCategoryFilters([]);
-    setAppliedCategoryFilters([]);
+    setCategoryFilters([]);
     setCategory('');
   };
 
   const visible = useMemo(() => {
     let list = (products || []).filter((p) => !p.isAddon);
     if (activeCategory) list = list.filter((p) => p.categoryId === activeCategory);
-    if (appliedCategoryFilters.length) list = list.filter((p) => appliedCategoryFilters.includes(p.categoryId));
+    if (categoryFilters.length) list = list.filter((p) => categoryFilters.includes(p.categoryId));
     if (query.trim()) {
       const search = query.trim().toLowerCase();
       list = list.filter((p) => productSearchText(p, categories || []).includes(search));
@@ -117,7 +88,7 @@ export function DesktopCatalog() {
     if (sort === 'low') return [...list].sort((a, b) => (a.price ?? 1e9) - (b.price ?? 1e9));
     if (sort === 'high') return [...list].sort((a, b) => (b.price ?? -1) - (a.price ?? -1));
     return [...list].sort((a, b) => a.name.localeCompare(b.name));
-  }, [products, activeCategory, appliedCategoryFilters, query, bands, min, max, sort, categories, priceBands]);
+  }, [products, activeCategory, categoryFilters, query, bands, min, max, sort, categories, priceBands]);
 
   const chips: Pick<Category, 'id' | 'name' | 'photo'>[] = [{ id: '', name: 'All' }, ...(categories || [])];
   const pageTitle = activeCategory ? catById.get(activeCategory)?.name || 'Designs' : 'All';
@@ -262,13 +233,13 @@ export function DesktopCatalog() {
             <h2 className="mb-3 text-sm font-extrabold">Category</h2>
             <div className="space-y-2.5">
               {sidebarCategories.map((category) => {
-                const checked = pendingCategoryFilters.includes(category.id);
+                const checked = categoryFilters.includes(category.id);
                 return (
                   <label key={category.id} className="mena-press flex cursor-pointer items-center gap-2.5 text-[13.5px] text-ink/80">
                     <input
                       type="checkbox"
                       checked={checked}
-                      onChange={() => setPendingCategoryFilters((current) => checked ? current.filter((id) => id !== category.id) : [...current, category.id])}
+                      onChange={() => setCategoryFilters((current) => checked ? current.filter((id) => id !== category.id) : [...current, category.id])}
                       className="sr-only"
                     />
                     <span className={cx('flex h-5 w-5 items-center justify-center rounded-[5px] border', checked ? 'border-pink bg-pink' : 'border-[#d8cfc8] bg-white')}>
@@ -287,10 +258,7 @@ export function DesktopCatalog() {
             )}
           </section>
 
-          <div className="space-y-3 pt-5">
-            <button type="button" onClick={() => setAppliedCategoryFilters(pendingCategoryFilters)} className="btn-primary w-full py-3">
-              Apply Filters
-            </button>
+          <div className="pt-5">
             <button type="button" onClick={clearAll} className="btn-outline w-full py-3">
               <RotateCcw className="h-4 w-4" />
               Reset
@@ -318,25 +286,6 @@ export function DesktopCatalog() {
               ))}
             </div>
           )}
-
-          <div className="mt-12 grid grid-cols-4 gap-6 border-t border-edge pt-9">
-            {[
-              { title: 'Quality Materials', desc: 'Premium papers & finishes', icon: ShieldCheck },
-              { title: 'Custom Design', desc: 'Tailored to your vision', icon: Wand2 },
-              { title: 'Fast & Reliable', desc: '7-10 days delivery', icon: Truck },
-              { title: 'Secure Ordering', desc: 'Confirm safely by chat', icon: Sparkles },
-            ].map(({ title, desc, icon: Icon }) => (
-              <div key={title} className="flex items-center gap-3.5">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-pink/10 text-pink">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <span>
-                  <span className="block text-sm font-extrabold">{title}</span>
-                  <span className="mt-0.5 block text-[12.5px] text-muted">{desc}</span>
-                </span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDown, Heart, Send, Search, ShoppingBag, User } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ChevronDown, Heart, Send, Search, ShoppingCart, User, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useApp } from '../store/AppContext';
 import { StatusBanners, Toasts } from './ui';
@@ -9,12 +9,6 @@ import { BrandLogo } from './BrandLogo';
 import { useData } from '../lib/useData';
 import type { BusinessSettings } from '../lib/types';
 import { telegramContactUrl } from '../lib/share';
-
-const NAV = [
-  { to: '/catalog', label: 'All Designs' },
-  { to: '/gallery', label: 'Portfolio' },
-  { to: '/contact', label: 'Contact' },
-];
 
 export function DesktopShell({ children }: { children: ReactNode }) {
   const { cart, user, wishlistProductIds } = useApp();
@@ -51,40 +45,28 @@ export function DesktopShell({ children }: { children: ReactNode }) {
             <BrandLogo size="md" />
           </Link>
 
-          <nav className="ml-14 flex flex-1 items-center gap-8">
-            {NAV.map(({ to, label }) => (
-              <NavLink
-                key={label}
-                to={to}
-                className={({ isActive }) =>
-                  cx(
-                    'mena-press text-[13.5px] font-bold transition-colors hover:text-pink',
-                    isActive || (label === 'All Designs' && location.pathname === '/catalog') ? 'text-pink' : 'text-ink'
-                  )
-                }
-              >
-                {label}
-              </NavLink>
-            ))}
-          </nav>
+          <div className="flex-1" />
 
-          <div className="flex shrink-0 items-center gap-5">
+          <div className="flex shrink-0 items-center gap-2">
             <a
               href={telegramUrl}
               target="_blank"
               rel="noreferrer"
-              className="mena-press flex items-center gap-2 text-[13px] font-bold text-ink hover:text-pink"
+              className="mena-press flex h-10 w-10 items-center justify-center text-ink hover:text-pink"
               aria-label="Message Mena on Telegram"
             >
-              <Send className="h-[18px] w-[18px]" />
-              Message
+              <Send className="h-[22px] w-[22px]" />
             </a>
-            <Link to="/wishlist" className="mena-press flex items-center gap-2 text-[13px] font-bold text-ink hover:text-pink">
-              <Heart className={cx('h-[18px] w-[18px]', wishlistProductIds.length > 0 && 'fill-pink text-pink')} />
-              Wishlist
+            <Link
+              id="desktop-liked-target"
+              to="/wishlist"
+              aria-label={`Liked items, ${wishlistProductIds.length} saved`}
+              className="mena-press relative flex h-10 w-10 items-center justify-center text-ink hover:text-pink"
+            >
+              <Heart className={cx('h-[22px] w-[22px]', wishlistProductIds.length > 0 && 'fill-pink text-pink')} />
               {wishlistProductIds.length > 0 && (
-                <span className="mena-pop rounded-full bg-pink px-1.5 py-0.5 text-[10px] font-extrabold text-white">
-                  {wishlistProductIds.length}
+                <span className="mena-pop absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-pink px-1 text-[10px] font-extrabold text-white">
+                  {wishlistProductIds.length > 99 ? '99+' : wishlistProductIds.length}
                 </span>
               )}
             </Link>
@@ -94,7 +76,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
               aria-label={`Cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
               className="mena-press relative flex h-10 w-10 items-center justify-center text-ink hover:text-pink"
             >
-              <ShoppingBag className="h-[22px] w-[22px]" />
+              <ShoppingCart className="h-[22px] w-[22px]" />
               {cartCount > 0 && (
                 <span className="mena-pop absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-pink px-1 text-[10px] font-extrabold text-white">
                   {cartCount > 99 ? '99+' : cartCount}
@@ -126,8 +108,18 @@ export function DesktopShell({ children }: { children: ReactNode }) {
               value={q}
               onChange={(e) => applySearch(e.target.value, true)}
               placeholder="Search wedding cards, save-the-dates, menus..."
-              className="h-12 w-full rounded-full border-0 bg-white pl-14 pr-6 text-[15px] text-ink shadow-[0_1px_4px_rgba(28,26,25,0.06)] outline-none placeholder:text-muted/70 focus:shadow-[0_2px_12px_rgba(28,26,25,0.12)]"
+              className="h-12 w-full rounded-full border-0 bg-white pl-14 pr-14 text-[15px] text-ink shadow-[0_1px_4px_rgba(28,26,25,0.06)] outline-none placeholder:text-muted/70 focus:shadow-[0_2px_12px_rgba(28,26,25,0.12)]"
             />
+            {q && (
+              <button
+                type="button"
+                onClick={() => applySearch('', true)}
+                aria-label="Clear search"
+                className="mena-press absolute right-4 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-muted hover:bg-surface2 hover:text-ink"
+              >
+                <X className="h-[18px] w-[18px]" />
+              </button>
+            )}
           </form>
         </div>
       </header>

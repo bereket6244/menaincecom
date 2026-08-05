@@ -4,8 +4,9 @@ import { ArrowUpDown, Check, ChevronDown, RotateCcw, SlidersHorizontal } from 'l
 import { useData } from '../lib/useData';
 import type { Category, Product } from '../lib/types';
 import { MobileProductCard } from '../components/MobileProductCard';
-import { EmptyState, Modal, Spinner } from '../components/ui';
+import { EmptyState, Spinner } from '../components/ui';
 import { cx } from '../lib/utils';
+import { buildPriceBands, formatEtb, priceBounds } from '../lib/priceBands';
 
 const CIRCLE_TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#e9f0ec'];
 const SORTS = [
@@ -15,35 +16,6 @@ const SORTS = [
   { id: 'high', label: 'Price: high to low' },
   { id: 'name', label: 'Name A-Z' },
 ];
-type Band = { id: string; label: string; test: (value: number) => boolean };
-
-function formatEtb(value: number): string {
-  return `${Math.round(value).toLocaleString()} ETB`;
-}
-
-function buildPriceBands(products: Product[]): Band[] {
-  const prices = products
-    .filter((product) => !product.isAddon && product.price != null)
-    .map((product) => product.price as number)
-    .filter((price) => Number.isFinite(price) && price > 0)
-    .sort((a, b) => a - b);
-  if (prices.length === 0) return [];
-  const min = prices[0];
-  const max = prices[prices.length - 1];
-  if (min === max) return [{ id: 'actual-0', label: formatEtb(min), test: (value) => value === min }];
-  const bandCount = Math.min(4, Math.max(2, prices.length));
-  const step = (max - min) / bandCount;
-  return Array.from({ length: bandCount }, (_, index) => {
-    const lower = Math.floor(index === 0 ? min : min + step * index);
-    const upper = Math.ceil(index === bandCount - 1 ? max : min + step * (index + 1));
-    return {
-      id: `actual-${index}`,
-      label: `${formatEtb(lower)} - ${formatEtb(upper)}`,
-      test: (value: number) => (index === bandCount - 1 ? value >= lower && value <= max : value >= lower && value < upper),
-    };
-  });
-}
-
 function productSearchText(product: Product, categories: Category[]): string {
   const category = categories.find((c) => c.id === product.categoryId)?.name || '';
   const variants = (product.variants || [])
@@ -72,8 +44,7 @@ export function MobileCatalog() {
   const [bands, setBands] = useState<string[]>([]);
   const [min, setMin] = useState('');
   const [max, setMax] = useState('');
-  const [pendingCategoryFilters, setPendingCategoryFilters] = useState<string[]>([]);
-  const [appliedCategoryFilters, setAppliedCategoryFilters] = useState<string[]>([]);
+  const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
   const [showMoreCats, setShowMoreCats] = useState(false);
   const [sort, setSort] = useState('featured');
   const [filterOpen, setFilterOpen] = useState(false);
@@ -93,24 +64,24 @@ export function MobileCatalog() {
     [categories]
   );
   const priceBands = useMemo(() => buildPriceBands(products || []), [products]);
-  const minPrice = priceBands[0]?.label.split(' - ')[0] || 'Min';
-  const maxPrice = priceBands[priceBands.length - 1]?.label.split(' - ').pop() || 'Max';
+  const bounds = useMemo(() => priceBounds(products || []), [products]);
+  const minPrice = bounds.min != null ? formatEtb(bounds.min) : 'Min';
+  const maxPrice = bounds.max != null ? formatEtb(bounds.max) : 'Max';
   const sidebarCategories = showMoreCats ? (categories || []) : (categories || []).slice(0, 5);
-  const activeFilterCount = bands.length + appliedCategoryFilters.length + (min ? 1 : 0) + (max ? 1 : 0);
+  const activeFilterCount = bands.length + categoryFilters.length + (min ? 1 : 0) + (max ? 1 : 0);
 
   const clearAll = () => {
     setBands([]);
     setMin('');
     setMax('');
-    setPendingCategoryFilters([]);
-    setAppliedCategoryFilters([]);
+    setCategoryFilters([]);
     setCategory('');
   };
 
   const visible = useMemo(() => {
     let list = (products || []).filter((product) => !product.isAddon);
     if (activeCategory) list = list.filter((product) => product.categoryId === activeCategory);
-    if (appliedCategoryFilters.length) list = list.filter((product) => appliedCategoryFilters.includes(product.categoryId));
+    if (categoryFilters.length) list = list.filter((product) => categoryFilters.includes(product.categoryId));
     if (query.trim()) {
       const needle = query.trim().toLowerCase();
       list = list.filter((product) => productSearchText(product, categories || []).includes(needle));
@@ -132,7 +103,7 @@ export function MobileCatalog() {
         Number(b.featured) - Number(a.featured)
         || new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
     );
-  }, [activeCategory, appliedCategoryFilters, bands, categories, max, min, priceBands, products, query, sort]);
+  }, [activeCategory, categoryFilters, bands, categories, max, min, priceBands, products, query, sort]);
 
   const chips: { id: string; name: string; photo?: string }[] = [
     { id: '', name: 'All' },
@@ -180,26 +151,140 @@ export function MobileCatalog() {
         <span className="text-[12.5px] text-muted">{visible.length} designs</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 px-4 pb-2 pt-1">
-        <button
-          type="button"
-          onClick={() => setFilterOpen(true)}
-          className={cx(
-            'mena-press flex h-11 items-center justify-center gap-2 rounded-full border text-[13px] font-extrabold',
-            activeFilterCount ? 'border-pink bg-pink text-white' : 'border-edge bg-white text-ink'
-          )}
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-          Filter{activeFilterCount ? ` (${activeFilterCount})` : ''}
-        </button>
-        <button
-          type="button"
-          onClick={() => setSortOpen(true)}
-          className="mena-press flex h-11 items-center justify-center gap-2 rounded-full border border-edge bg-white px-3 text-[13px] font-extrabold text-ink"
-        >
-          <ArrowUpDown className="h-4 w-4" />
-          <span className="min-w-0 truncate">{sortLabel}</span>
-        </button>
+      <div className="relative z-20 px-4 pb-2 pt-1">
+        <div className="relative z-10 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => { setFilterOpen((value) => !value); setSortOpen(false); }}
+            className={cx(
+              'mena-press flex h-11 items-center justify-center gap-2 rounded-full border px-3 text-[13px] font-extrabold',
+              activeFilterCount ? 'border-pink bg-pink text-white' : 'border-edge bg-white text-ink'
+            )}
+          >
+            <SlidersHorizontal className="h-4 w-4 shrink-0" />
+            Filter{activeFilterCount ? ` (${activeFilterCount})` : ''}
+            <ChevronDown className={cx('h-4 w-4 shrink-0 transition-transform', filterOpen && 'rotate-180')} />
+          </button>
+          <button
+            type="button"
+            onClick={() => { setSortOpen((value) => !value); setFilterOpen(false); }}
+            className="mena-press flex h-11 items-center justify-center gap-1.5 rounded-full border border-edge bg-white px-3 text-[13px] font-extrabold text-ink"
+          >
+            <ArrowUpDown className="h-4 w-4 shrink-0" />
+            <span className="min-w-0 truncate">Sort<span className="font-semibold text-muted">: {sortLabel}</span></span>
+            <ChevronDown className={cx('h-4 w-4 shrink-0 transition-transform', sortOpen && 'rotate-180')} />
+          </button>
+        </div>
+
+        {(filterOpen || sortOpen) && (
+          <button
+            type="button"
+            aria-label="Close menu"
+            onClick={() => { setFilterOpen(false); setSortOpen(false); }}
+            className="fixed inset-0 z-0 cursor-default"
+          />
+        )}
+
+        {filterOpen && (
+          <div className="absolute inset-x-4 top-[calc(100%+8px)] z-10 max-h-[70vh] overflow-y-auto rounded-2xl border border-edge bg-white p-4 shadow-[0_16px_40px_rgba(28,26,25,0.16)]">
+            <div className="space-y-5">
+              <section className="border-b border-edge pb-5">
+                <h2 className="mb-3 text-sm font-extrabold">Price Range</h2>
+                {priceBands.length ? (
+                  <div className="space-y-2.5">
+                    {priceBands.map((band) => {
+                      const checked = bands.includes(band.id);
+                      return (
+                        <label key={band.id} className="mena-press flex cursor-pointer items-center gap-2.5 text-[13.5px] text-ink/80">
+                          <input type="checkbox" checked={checked} onChange={() => setBands((current) => checked ? current.filter((id) => id !== band.id) : [...current, band.id])} className="sr-only" />
+                          <span className={cx('flex h-5 w-5 items-center justify-center rounded-[5px] border', checked ? 'border-pink bg-pink' : 'border-[#d8cfc8] bg-white')}>
+                            {checked && <Check className="h-3 w-3 text-white" />}
+                          </span>
+                          {band.label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted">No exact prices yet.</p>
+                )}
+                <div className="mt-4 flex items-center gap-2">
+                  <input value={min} onChange={(e) => setMin(e.target.value)} inputMode="numeric" placeholder={minPrice} className="min-w-0 flex-1 rounded-lg border border-edge bg-white px-2.5 py-2 text-[13px] outline-none focus:border-pink" />
+                  <span className="font-bold text-muted">-</span>
+                  <input value={max} onChange={(e) => setMax(e.target.value)} inputMode="numeric" placeholder={maxPrice} className="min-w-0 flex-1 rounded-lg border border-edge bg-white px-2.5 py-2 text-[13px] outline-none focus:border-pink" />
+                </div>
+              </section>
+
+              <section>
+                <h2 className="mb-3 text-sm font-extrabold">Category</h2>
+                <div className="space-y-2.5">
+                  {sidebarCategories.map((category) => {
+                    const checked = categoryFilters.includes(category.id);
+                    return (
+                      <label key={category.id} className="mena-press flex cursor-pointer items-center gap-2.5 text-[13.5px] text-ink/80">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => setCategoryFilters((current) => checked ? current.filter((id) => id !== category.id) : [...current, category.id])}
+                          className="sr-only"
+                        />
+                        <span className={cx('flex h-5 w-5 items-center justify-center rounded-[5px] border', checked ? 'border-pink bg-pink' : 'border-[#d8cfc8] bg-white')}>
+                          {checked && <Check className="h-3 w-3 text-white" />}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate">{category.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                {(categories || []).length > 5 && (
+                  <button type="button" onClick={() => setShowMoreCats((value) => !value)} className="mena-press mt-3 flex items-center gap-1 text-[13px] font-bold text-pink">
+                    {showMoreCats ? 'Show less' : 'Show more'}
+                    <ChevronDown className={cx('h-4 w-4 transition-transform', showMoreCats && 'rotate-180')} />
+                  </button>
+                )}
+              </section>
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <button type="button" onClick={clearAll} className="btn-outline h-12 px-3">
+                <RotateCcw className="h-4 w-4" />
+                Reset
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterOpen(false)}
+                className="btn-primary h-12 px-3"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        )}
+
+        {sortOpen && (
+          <div className="absolute right-4 top-[calc(100%+8px)] z-10 w-[min(20rem,calc(100%-2rem))] rounded-2xl border border-edge bg-white p-2 shadow-[0_16px_40px_rgba(28,26,25,0.16)]">
+            {SORTS.map((item) => {
+              const active = sort === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setSort(item.id);
+                    setSortOpen(false);
+                  }}
+                  className={cx(
+                    'mena-press flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left text-[13.5px] font-bold',
+                    active ? 'bg-pink/10 text-pink' : 'text-ink hover:bg-surface2'
+                  )}
+                >
+                  {item.label}
+                  {active && <Check className="h-4 w-4" />}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {loading && !products ? (
@@ -220,108 +305,6 @@ export function MobileCatalog() {
           ))}
         </div>
       )}
-
-      <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filter designs">
-        <div className="space-y-5">
-          <section className="border-b border-edge pb-5">
-            <h2 className="mb-3 text-sm font-extrabold">Price Range</h2>
-            {priceBands.length ? (
-              <div className="space-y-2.5">
-                {priceBands.map((band) => {
-                  const checked = bands.includes(band.id);
-                  return (
-                    <label key={band.id} className="mena-press flex cursor-pointer items-center gap-2.5 text-[13.5px] text-ink/80">
-                      <input type="checkbox" checked={checked} onChange={() => setBands((current) => checked ? current.filter((id) => id !== band.id) : [...current, band.id])} className="sr-only" />
-                      <span className={cx('flex h-5 w-5 items-center justify-center rounded-[5px] border', checked ? 'border-pink bg-pink' : 'border-[#d8cfc8] bg-white')}>
-                        {checked && <Check className="h-3 w-3 text-white" />}
-                      </span>
-                      {band.label}
-                    </label>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-muted">No exact prices yet.</p>
-            )}
-            <div className="mt-4 flex items-center gap-2">
-              <input value={min} onChange={(e) => setMin(e.target.value)} inputMode="numeric" placeholder={minPrice} className="min-w-0 flex-1 rounded-lg border border-edge bg-white px-2.5 py-2 text-[13px] outline-none focus:border-pink" />
-              <span className="font-bold text-muted">-</span>
-              <input value={max} onChange={(e) => setMax(e.target.value)} inputMode="numeric" placeholder={maxPrice} className="min-w-0 flex-1 rounded-lg border border-edge bg-white px-2.5 py-2 text-[13px] outline-none focus:border-pink" />
-            </div>
-          </section>
-
-          <section>
-            <h2 className="mb-3 text-sm font-extrabold">Category</h2>
-            <div className="space-y-2.5">
-              {sidebarCategories.map((category) => {
-                const checked = pendingCategoryFilters.includes(category.id);
-                return (
-                  <label key={category.id} className="mena-press flex cursor-pointer items-center gap-2.5 text-[13.5px] text-ink/80">
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => setPendingCategoryFilters((current) => checked ? current.filter((id) => id !== category.id) : [...current, category.id])}
-                      className="sr-only"
-                    />
-                    <span className={cx('flex h-5 w-5 items-center justify-center rounded-[5px] border', checked ? 'border-pink bg-pink' : 'border-[#d8cfc8] bg-white')}>
-                      {checked && <Check className="h-3 w-3 text-white" />}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate">{category.name}</span>
-                  </label>
-                );
-              })}
-            </div>
-            {(categories || []).length > 5 && (
-              <button type="button" onClick={() => setShowMoreCats((value) => !value)} className="mena-press mt-3 flex items-center gap-1 text-[13px] font-bold text-pink">
-                {showMoreCats ? 'Show less' : 'Show more'}
-                <ChevronDown className={cx('h-4 w-4 transition-transform', showMoreCats && 'rotate-180')} />
-              </button>
-            )}
-          </section>
-        </div>
-
-        <div className="mt-5 grid grid-cols-2 gap-2">
-          <button type="button" onClick={clearAll} className="btn-outline h-12 px-3">
-            <RotateCcw className="h-4 w-4" />
-            Reset
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setAppliedCategoryFilters(pendingCategoryFilters);
-              setFilterOpen(false);
-            }}
-            className="btn-primary h-12 px-3"
-          >
-            Apply
-          </button>
-        </div>
-      </Modal>
-
-      <Modal open={sortOpen} onClose={() => setSortOpen(false)} title="Sort designs">
-        <div className="space-y-2.5">
-          {SORTS.map((item) => {
-            const active = sort === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => {
-                  setSort(item.id);
-                  setSortOpen(false);
-                }}
-                className={cx(
-                  'mena-press flex w-full items-center justify-between rounded-2xl border px-3.5 py-3 text-left text-sm font-extrabold',
-                  active ? 'border-pink bg-pink/5 text-pink' : 'border-edge bg-white text-ink'
-                )}
-              >
-                {item.label}
-                {active && <Check className="h-4 w-4" />}
-              </button>
-            );
-          })}
-        </div>
-      </Modal>
     </div>
   );
 }
