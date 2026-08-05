@@ -38,7 +38,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
       <StatusBanners />
       <Toasts />
 
-      <div className="mx-auto min-h-dvh w-full max-w-[430px] overflow-x-clip bg-bg shadow-none sm:shadow-[0_0_0_1px_rgba(28,26,25,0.06)]">
+      <div className="mx-auto min-h-dvh w-full overflow-x-clip bg-bg shadow-none sm:shadow-[0_0_0_1px_rgba(28,26,25,0.06)]">
         {showCatalogHeader && (
           <header className="sticky top-0 z-30 border-b border-edge bg-surface">
             <div className="flex h-16 items-center gap-0.5 px-3">
