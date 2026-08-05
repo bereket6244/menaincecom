@@ -8,7 +8,7 @@ import { EmptyState, Spinner } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { mobileProductTint } from '../components/MobileProductCard';
 import { COMPLIMENTARY_EXTRA_MAX_QTY, complimentaryAllowanceText, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
-import { cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
+import { cleanDescription, cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
 
 type SheetMode = 'add' | 'buy';
@@ -113,6 +113,7 @@ export function MobileProductDetail() {
     || product.photos[0];
   const missingVariant = product.variants.find((variant) => !selections[variant.name]);
   const tint = mobileProductTint(product);
+  const description = cleanDescription(product.description, product.name);
   const isQuote = product.pricingMode === 'quote';
   const complimentaryItems = complimentaryForProduct(product, qty, complimentarySelections);
   const complimentaryText = complimentarySummary(complimentaryItems);
@@ -214,7 +215,7 @@ export function MobileProductDetail() {
             {formatPrice(product)}
             {!isQuote && <span className="ml-1 text-[13px] font-medium text-muted">each</span>}
           </div>
-          {product.description && <p className="mt-3 whitespace-pre-line text-[14.5px] leading-[1.55] text-ink/70">{product.description}</p>}
+          {description && <p className="mt-3 whitespace-pre-line text-[14.5px] leading-[1.5] text-ink/70">{description}</p>}
         </section>
 
         <section className="space-y-4 px-[18px] pt-2">

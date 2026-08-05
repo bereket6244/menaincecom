@@ -6,6 +6,31 @@ export function formatPrice(product: Pick<Product, 'pricingMode' | 'price'>): st
   return product.pricingMode === 'starting' ? `From ${amount}` : amount;
 }
 
+/**
+ * Tidy a product description for customer display. The raw text (often a
+ * Telegram import) repeats the name/price, mentions complimentary items and
+ * colours that are chosen elsewhere in the UI, and ends in hashtags. We strip
+ * all of that and collapse blank lines so the copy reads tight. The original
+ * description is left untouched for search, so hashtags stay discoverable.
+ */
+export function cleanDescription(description: string | undefined, productName?: string): string {
+  if (!description) return '';
+  const nameLower = (productName || '').trim().toLowerCase();
+  return description
+    .split(/\r?\n/)
+    .map((line) => line.replace(/#[\p{L}\p{N}_]+/gu, '').replace(/\s{2,}/g, ' ').trim())
+    .filter((line) => {
+      if (!line) return false; // drops empties and collapses blank-line gaps
+      const lower = line.toLowerCase();
+      if (nameLower && lower === nameLower) return false; // repeated product name
+      if (/^\d[\d,.\s]*(etb|birr)?$/i.test(lower)) return false; // price-only line
+      if (/(complimentary|complementary)/i.test(lower)) return false; // covered below the fold
+      if (/available in all colou?rs?/i.test(lower)) return false; // colour chosen at checkout
+      return true;
+    })
+    .join('\n');
+}
+
 export function formatDate(value: string | undefined): string {
   if (!value) return '—';
   const d = new Date(value);

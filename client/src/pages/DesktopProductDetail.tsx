@@ -13,7 +13,7 @@ import {
   complimentarySummary,
   productWithResolvedComplimentary,
 } from '../lib/complimentary';
-import { cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
+import { cleanDescription, cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
 
 const ADD_TO_CART_BUTTON = 'btn-outline min-w-[180px]';
@@ -58,6 +58,7 @@ export function DesktopProductDetail() {
     .find((option) => Object.values(selections).includes(option.label) && option.photo)?.photo;
   const selectedPhoto = (photoPinned ? product.photos[photoIdx] : variantPhoto || product.photos[photoIdx]) || product.photos[0];
   const missingVariant = product.variants.find((variant) => !selections[variant.name]);
+  const description = cleanDescription(product.description, product.name);
   const isQuote = product.pricingMode === 'quote';
   const complimentaryOptions = complimentaryForProduct(product, qty, complimentarySelections);
   const complimentaryText = complimentarySummary(complimentaryOptions);
@@ -189,7 +190,7 @@ export function DesktopProductDetail() {
             {formatPrice(product)}
             {!isQuote && <span className="ml-2 text-sm font-medium text-muted">each</span>}
           </div>
-          {product.description && <p className="mt-5 whitespace-pre-line text-[15px] leading-[1.65] text-ink/70">{product.description}</p>}
+          {description && <p className="mt-5 whitespace-pre-line text-[15px] leading-[1.55] text-ink/70">{description}</p>}
 
           <div className="mt-7">{variantPickers}</div>
 

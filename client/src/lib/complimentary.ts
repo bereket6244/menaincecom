@@ -26,10 +26,13 @@ export function complimentaryForProduct(
   return (product.complimentaryItems || [])
     .filter((item) => item.enabled && item.name.trim() && item.qty > 0)
     .map((item) => {
-      const rawQty = item.type === 'multiplier'
+      const isMultiplier = item.type === 'multiplier';
+      const rawQty = isMultiplier
         ? Math.floor((Number(mainQty) || 0) * Number(item.qty))
         : Math.floor(Number(item.qty) || 0);
-      const freeQty = Math.min(rawQty, limit);
+      // Only per-card (multiplier) allowances scale with the order and get
+      // capped; a fixed allowance is exactly the number the admin entered.
+      const freeQty = isMultiplier ? Math.min(rawQty, limit) : rawQty;
       const selectedQty = selections ? clampSelected(selections[item.name.trim()], COMPLIMENTARY_EXTRA_MAX_QTY) : 0;
       const extraQty = Math.max(0, selectedQty - freeQty);
       const extraPriceEach = item.extraPriceEach == null ? null : Math.max(0, Number(item.extraPriceEach) || 0);
