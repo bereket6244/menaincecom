@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDown, Heart, Send, Search, ShoppingCart, User, X } from 'lucide-react';
+import { ChevronDown, Heart, MessageCircle, MessageSquareText, Send, Search, ShoppingCart, User, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useApp } from '../store/AppContext';
 import { StatusBanners, Toasts } from './ui';
@@ -8,7 +8,7 @@ import { cx } from '../lib/utils';
 import { BrandLogo } from './BrandLogo';
 import { useData } from '../lib/useData';
 import type { BusinessSettings } from '../lib/types';
-import { telegramContactUrl } from '../lib/share';
+import { smsContactUrl, telegramContactUrl, whatsappContactUrl } from '../lib/share';
 
 export function DesktopShell({ children }: { children: ReactNode }) {
   const { cart, user, wishlistProductIds } = useApp();
@@ -16,13 +16,35 @@ export function DesktopShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [q, setQ] = useState('');
+  const [contactOpen, setContactOpen] = useState(false);
+  const contactRef = useRef<HTMLDivElement>(null);
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
-  const telegramUrl = telegramContactUrl(business);
+  const contactChannels = [
+    { id: 'telegram', label: 'Telegram', icon: Send, accent: '#2b93d6', href: telegramContactUrl(business), external: true },
+    { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, accent: '#25a34f', href: whatsappContactUrl(business), external: true },
+    { id: 'sms', label: 'SMS', icon: MessageSquareText, accent: '#ee317b', href: smsContactUrl(business), external: false },
+  ];
 
   useEffect(() => {
     if (location.pathname !== '/catalog') return;
     setQ(new URLSearchParams(location.search).get('q') || '');
   }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    if (!contactOpen) return;
+    const closeOnOutside = (event: MouseEvent) => {
+      if (contactRef.current && !contactRef.current.contains(event.target as Node)) setContactOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setContactOpen(false);
+    };
+    document.addEventListener('mousedown', closeOnOutside);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutside);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [contactOpen]);
 
   const applySearch = (value: string, live = false) => {
     setQ(value);
@@ -48,15 +70,42 @@ export function DesktopShell({ children }: { children: ReactNode }) {
           <div className="flex-1" />
 
           <div className="flex shrink-0 items-center gap-2">
-            <a
-              href={telegramUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mena-press flex h-10 w-10 items-center justify-center text-ink hover:text-pink"
-              aria-label="Message Mena on Telegram"
-            >
-              <Send className="h-[22px] w-[22px]" />
-            </a>
+            <div ref={contactRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setContactOpen((open) => !open)}
+                aria-label="Message Mena"
+                aria-haspopup="menu"
+                aria-expanded={contactOpen}
+                className={cx('mena-press flex h-10 w-10 items-center justify-center text-ink hover:text-pink', contactOpen && 'text-pink')}
+              >
+                <Send className="h-[22px] w-[22px]" />
+              </button>
+              {contactOpen && (
+                <div
+                  role="menu"
+                  className="modal-panel absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-2xl border border-edge bg-white py-1.5 shadow-[0_16px_40px_rgba(28,26,25,0.18)]"
+                >
+                  <div className="px-4 pb-1.5 pt-2 text-[11px] font-bold uppercase tracking-[0.1em] text-muted">Message us on</div>
+                  {contactChannels.map(({ id, label, icon: Icon, accent, href, external }) => (
+                    <a
+                      key={id}
+                      href={href}
+                      role="menuitem"
+                      target={external ? '_blank' : undefined}
+                      rel={external ? 'noreferrer' : undefined}
+                      onClick={() => setContactOpen(false)}
+                      className="mena-press flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-ink hover:bg-surface2"
+                    >
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full text-white" style={{ background: accent }}>
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      {label}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
             <Link
               id="desktop-liked-target"
               to="/wishlist"

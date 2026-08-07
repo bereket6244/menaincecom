@@ -21,11 +21,22 @@ export function priceBounds(products: Product[]): { min: number | null; max: num
   return { min: prices[0], max: prices[prices.length - 1] };
 }
 
+function niceStep(value: number): number {
+  return value < 100 ? 5 : value < 500 ? 10 : value < 2000 ? 50 : 100;
+}
+
 /** Round to a human-friendly boundary whose step scales with magnitude (…, 55→55, 118→120, 340→350). */
 function niceRound(value: number): number {
   if (value <= 0) return 0;
-  const step = value < 100 ? 5 : value < 500 ? 10 : value < 2000 ? 50 : 100;
+  const step = niceStep(value);
   return Math.round(value / step) * step;
+}
+
+/** Like niceRound but never above the input, so the lowest band still contains the cheapest item. */
+function niceFloor(value: number): number {
+  if (value <= 0) return 0;
+  const step = niceStep(value);
+  return Math.floor(value / step) * step;
 }
 
 /** Linear-interpolated quantile of an ascending list. */
@@ -39,7 +50,7 @@ function quantile(sorted: number[], q: number): number {
 
 /**
  * Dynamic price buckets derived from the catalog's actual distribution — e.g.
- * "25 - 60 ETB", "60 - 120 ETB", "120 - 350 ETB", "Over 350 ETB". Boundaries sit
+ * "25 - 60 ETB", "60 - 120 ETB", "120 - 350 ETB", "350 ETB and up". Boundaries sit
  * at the quartiles (rounded to friendly numbers) so the buckets stay balanced as
  * prices change, and the top bucket is open-ended.
  */
@@ -53,7 +64,7 @@ export function buildPriceBands(products: Product[]): PriceBand[] {
 
   const distinct = [...new Set(prices)];
   const internalBreaks = Math.min(3, distinct.length - 1); // up to 3 cuts → up to 4 buckets
-  const floor = niceRound(min);
+  const floor = niceFloor(min);
 
   const boundaries: number[] = [floor];
   for (let i = 1; i <= internalBreaks; i += 1) {
@@ -65,7 +76,8 @@ export function buildPriceBands(products: Product[]): PriceBand[] {
   return boundaries.map((low, index) => {
     const isLast = index === boundaries.length - 1;
     if (isLast) {
-      return { id: `band-${index}`, label: `Over ${formatEtb(low)}`, test: (value: number) => value >= low };
+      // Inclusive of `low`, so the label says "and up" rather than "Over".
+      return { id: `band-${index}`, label: `${formatEtb(low)} and up`, test: (value: number) => value >= low };
     }
     const high = boundaries[index + 1];
     return {

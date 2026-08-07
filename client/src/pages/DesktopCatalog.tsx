@@ -5,7 +5,7 @@ import { useData } from '../lib/useData';
 import type { Category, Product, UniversalComplimentaryItem } from '../lib/types';
 import { DesktopProductCard } from '../components/DesktopProductCard';
 import { EmptyState, Spinner } from '../components/ui';
-import { cx } from '../lib/utils';
+import { cartPriceEach, cx } from '../lib/utils';
 import { useApp } from '../store/AppContext';
 import { complimentaryForProduct, productWithResolvedComplimentary } from '../lib/complimentary';
 import { buildPriceBands, formatEtb, priceBounds } from '../lib/priceBands';
@@ -76,14 +76,16 @@ export function DesktopCatalog() {
       const search = query.trim().toLowerCase();
       list = list.filter((p) => productSearchText(p, categories || []).includes(search));
     }
+    // A price filter is about price: quote-only items have none, so they are
+    // filtered out rather than shown regardless of the range.
     if (bands.length) {
       const active = priceBands.filter((b) => bands.includes(b.id));
-      list = list.filter((p) => p.price == null || active.some((b) => b.test(p.price as number)));
+      list = list.filter((p) => p.price != null && active.some((b) => b.test(p.price as number)));
     }
     const mn = parseFloat(min);
     const mx = parseFloat(max);
-    if (!Number.isNaN(mn)) list = list.filter((p) => p.price == null || (p.price as number) >= mn);
-    if (!Number.isNaN(mx)) list = list.filter((p) => p.price == null || (p.price as number) <= mx);
+    if (!Number.isNaN(mn)) list = list.filter((p) => p.price != null && (p.price as number) >= mn);
+    if (!Number.isNaN(mx)) list = list.filter((p) => p.price != null && (p.price as number) <= mx);
     if (sort === 'featured') return [...list].sort((a, b) => Number(b.featured) - Number(a.featured));
     if (sort === 'low') return [...list].sort((a, b) => (a.price ?? 1e9) - (b.price ?? 1e9));
     if (sort === 'high') return [...list].sort((a, b) => (b.price ?? -1) - (a.price ?? -1));
@@ -107,7 +109,7 @@ export function DesktopCatalog() {
       photo: product.photos[0] || '',
       isAddon: product.isAddon,
       pricingMode: product.pricingMode,
-      priceEach: product.pricingMode === 'exact' ? product.price : null,
+      priceEach: cartPriceEach(product),
       variantSelections: {},
       qty: 1,
       note: '',

@@ -11,7 +11,7 @@ const digitsOnly = (value: string) => (value || '').replace(/\D/g, '');
  * WhatsApp/Telegram. Built from the server-sanitized order so amounts always
  * match catalog prices.
  */
-export function buildOrderMessage(order: OrderRecord, business: BusinessSettings | null): string {
+export function buildOrderMessage(order: OrderRecord, business: BusinessSettings | null, origin?: string): string {
   const lines: string[] = [
     'Selam! I would like to place this order with mena inc.',
     `Order ref: ${order.id.slice(0, 8).toUpperCase()}`,
@@ -22,11 +22,13 @@ export function buildOrderMessage(order: OrderRecord, business: BusinessSettings
     const variants = Object.entries(item.variantSelections || {})
       .map(([k, v]) => `${k}: ${v}`)
       .join(', ');
+    const from = item.pricingMode === 'starting' ? 'from ' : '';
     const price =
       item.priceEach != null
-        ? `${item.priceEach.toLocaleString()} ETB each = ${(item.priceEach * item.qty).toLocaleString()} ETB`
+        ? `${from}${item.priceEach.toLocaleString()} ETB each = ${from}${(item.priceEach * item.qty).toLocaleString()} ETB`
         : 'price on request';
     lines.push(`• ${item.qty} × ${item.name}${variants ? ` (${variants})` : ''} — ${price}`);
+    if (origin) lines.push(`  ${productUrl(item.productId, origin)}`);
     const freebies = complimentarySummary(item.complimentaryItems);
     if (freebies) lines.push(`  Complimentary: ${freebies}`);
     for (const freeItem of item.complimentaryItems || []) {
@@ -40,7 +42,14 @@ export function buildOrderMessage(order: OrderRecord, business: BusinessSettings
   lines.push('');
   if (order.estimatedTotal != null) {
     const hasQuote = order.items.some((i) => i.priceEach == null);
-    lines.push(`Estimated total: ${order.estimatedTotal.toLocaleString()} ETB${hasQuote ? ' (plus items priced on request)' : ''}`);
+    const hasStarting = order.items.some((i) => i.pricingMode === 'starting');
+    const caveats = [
+      hasQuote ? 'plus items priced on request' : '',
+      hasStarting ? 'some items are starting prices' : '',
+    ].filter(Boolean);
+    lines.push(
+      `Estimated total: ${order.estimatedTotal.toLocaleString()} ETB${caveats.length ? ` (${caveats.join('; ')})` : ''}`
+    );
   }
   // Contact lines only when known — guests check out without credentials.
   if (order.customer.name && order.customer.name !== 'Guest') lines.push(`Name: ${order.customer.name}`);
@@ -124,6 +133,15 @@ export function telegramContactUrl(business: BusinessSettings | null): string {
 export function smsOrderUrl(business: BusinessSettings | null, text: string): string {
   const number = digitsOnly(business?.phone || '') || FALLBACK_WHATSAPP;
   return `sms:+${number}?body=${encodeURIComponent(text)}`;
+}
+
+/** Chat links without a prefilled order — used by the "message us" buttons. */
+export function whatsappContactUrl(business: BusinessSettings | null): string {
+  return `https://wa.me/${digitsOnly(business?.whatsappNumber || '') || FALLBACK_WHATSAPP}`;
+}
+
+export function smsContactUrl(business: BusinessSettings | null): string {
+  return `sms:+${digitsOnly(business?.phone || '') || FALLBACK_WHATSAPP}`;
 }
 
 export function isValidPhone(value: string): boolean {

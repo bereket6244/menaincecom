@@ -5,12 +5,13 @@ import { useApp } from '../store/AppContext';
 import { useData } from '../lib/useData';
 import { OFFLINE_MESSAGE } from '../lib/api';
 import type { BusinessSettings, Product, UniversalComplimentaryItem } from '../lib/types';
-import { buildCartOrderMessage, smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
+import { smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
+import { placeOrder } from '../lib/placeOrder';
 import { EmptyState } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { mobileProductTint } from '../components/MobileProductCard';
 import { complimentaryExtraTotal, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
-import { formatPrice } from '../lib/utils';
+import { cartPriceEach, formatCartTotal, formatLineTotal, formatPrice } from '../lib/utils';
 
 type Channel = 'whatsapp' | 'telegram' | 'sms';
 type Step = 'cart' | 'checkout';
@@ -21,13 +22,8 @@ const CHANNELS: { id: Channel; label: string; icon: typeof Send; accent: string;
   { id: 'sms', label: 'SMS', icon: MessageSquareText, accent: '#ee317b', tint: 'rgba(238,49,123,.08)' },
 ];
 
-function totalLabel(total: number | null, hasQuote: boolean) {
-  if (total != null) return `${total.toLocaleString()} ETB${hasQuote ? ' +' : ''}`;
-  return hasQuote ? 'Quote' : '0 ETB';
-}
-
 export function MobileOrderSummary() {
-  const { cart, addToCart, updateCartItem, removeFromCart, toast, online } = useApp();
+  const { cart, addToCart, updateCartItem, removeFromCart, toast, online, user } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const { data: products } = useData<Product[]>('/products');
@@ -91,6 +87,7 @@ export function MobileOrderSummary() {
     return priced.reduce((sum, item) => sum + (item.priceEach || 0) * item.qty, extras);
   }, [products, selectedItems, universalComplimentaryItems]);
   const hasQuoteItems = selectedItems.some((item) => item.priceEach == null);
+  const hasStartingItems = selectedItems.some((item) => item.pricingMode === 'starting');
   const selectedQty = selectedItems.reduce((sum, item) => sum + item.qty, 0);
   const cartQty = cart.reduce((sum, item) => sum + item.qty, 0);
 
@@ -143,17 +140,27 @@ export function MobileOrderSummary() {
     window.scrollTo({ top: 0 });
   };
 
-  const placeOrder = () => {
+  const submitOrder = async () => {
     if (!online) {
       toast('error', OFFLINE_MESSAGE);
       return;
     }
     if (!selectedItems.length) return;
     setSending(channel);
+    // The tab has to be opened inside the click, before any await, or the
+    // browser treats it as an unrequested popup and blocks it.
     const chatTab = channel === 'sms' ? null : window.open('', '_blank');
     if (chatTab) chatTab.opener = null;
     try {
-      const message = buildCartOrderMessage(selectedItemsForMessage, orderNote, window.location.origin);
+      const { message, order } = await placeOrder({
+        items: selectedItemsForMessage,
+        channel,
+        note: orderNote,
+        user,
+        business,
+        origin: window.location.origin,
+      });
+      if (!order) toast('info', 'We could not reach the studio server, so your order was not saved. Send the message and we will pick it up from chat.');
       const chatUrl =
         channel === 'whatsapp' ? whatsappOrderUrl(business, message)
         : channel === 'telegram' ? telegramOrderUrl(business, message)
@@ -255,7 +262,7 @@ export function MobileOrderSummary() {
                       </div>
                     )}
                     <div className="mt-1 flex items-center justify-between gap-2">
-                      <span className="text-sm font-extrabold text-[#ee0a24]">{item.priceEach != null ? `${(item.priceEach * item.qty).toLocaleString()} ETB` : 'Quote'}</span>
+                      <span className="text-sm font-extrabold text-[#ee0a24]">{formatLineTotal(item)}</span>
                       <span className="text-[12px] text-muted">x{item.qty}</span>
                     </div>
                   </div>
@@ -333,10 +340,10 @@ export function MobileOrderSummary() {
               </div>
               <div className="min-w-0 text-right">
               <div className="text-[11px] text-muted">Total</div>
-              <div className="truncate text-lg font-extrabold text-[#ee0a24]">{totalLabel(selectedTotal, hasQuoteItems)}</div>
+              <div className="truncate text-lg font-extrabold text-[#ee0a24]">{formatCartTotal(selectedTotal, { hasQuote: hasQuoteItems, hasStarting: hasStartingItems })}</div>
               </div>
             </div>
-            <button type="button" onClick={placeOrder} disabled={!online || sending !== null} className="btn-primary h-12 w-full px-5">
+            <button type="button" onClick={() => void submitOrder()} disabled={!online || sending !== null} className="btn-primary h-12 w-full px-5">
               {sending ? 'Opening...' : 'Place order'}
             </button>
           </div>
@@ -388,7 +395,7 @@ export function MobileOrderSummary() {
                     )}
                   </div>
                   <div className="shrink-0 text-right text-[15px] font-extrabold text-[#ee0a24]">
-                    {item.priceEach != null ? `${(item.priceEach * item.qty).toLocaleString()} ETB` : 'Quote'}
+                    {formatLineTotal(item)}
                   </div>
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-3">
@@ -442,7 +449,7 @@ export function MobileOrderSummary() {
                       photo: product.photos[0] || '',
                       isAddon: product.isAddon,
                       pricingMode: product.pricingMode,
-                      priceEach: product.pricingMode === 'exact' ? product.price : null,
+                      priceEach: cartPriceEach(product),
                       variantSelections: {},
                       qty: 1,
                       note: '',
@@ -475,7 +482,7 @@ export function MobileOrderSummary() {
             </div>
             <div className="min-w-0 text-right">
               <div className="text-[11px] text-muted">Total</div>
-              <div className="truncate text-lg font-extrabold text-[#ee0a24]">{totalLabel(selectedTotal, hasQuoteItems)}</div>
+              <div className="truncate text-lg font-extrabold text-[#ee0a24]">{formatCartTotal(selectedTotal, { hasQuote: hasQuoteItems, hasStarting: hasStartingItems })}</div>
             </div>
           </div>
           <button type="button" onClick={goCheckout} disabled={!selectedItems.length} className="btn-primary h-12 w-full px-5">

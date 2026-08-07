@@ -6,7 +6,7 @@ import { useApp } from '../store/AppContext';
 import { cx } from '../lib/utils';
 import { useData } from '../lib/useData';
 import type { BusinessSettings } from '../lib/types';
-import { telegramContactUrl } from '../lib/share';
+import { smsContactUrl, telegramContactUrl, whatsappContactUrl } from '../lib/share';
 import { StatusBanners, Toasts } from './ui';
 import { BrandLogo } from './BrandLogo';
 
@@ -27,6 +27,8 @@ export function MobileShell({ children }: { children: ReactNode }) {
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
   const likedCount = wishlistProductIds.length;
   const telegramUrl = telegramContactUrl(business);
+  const whatsappUrl = whatsappContactUrl(business);
+  const smsUrl = smsContactUrl(business);
   const showCatalogHeader = ['/catalog', '/', '/wishlist', '/gallery', '/contact'].includes(location.pathname);
 
   useEffect(() => {
@@ -217,7 +219,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
               <Send className="h-5 w-5" />
             </a>
             <a
-              href={`https://wa.me/${business?.whatsappNumber || ''}`}
+              href={whatsappUrl}
               target="_blank"
               rel="noreferrer"
               className="mena-press animate-in fade-in zoom-in-95 flex h-12 w-12 items-center justify-center rounded-full bg-[#25a34f] text-white shadow-lg hover:bg-[#1e8a3d] duration-200"
@@ -226,7 +228,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
               <MessageCircle className="h-5 w-5" />
             </a>
             <a
-              href={`sms:${business?.phone || ''}`}
+              href={smsUrl}
               className="mena-press animate-in fade-in zoom-in-95 flex h-12 w-12 items-center justify-center rounded-full bg-[#ee317b] text-white shadow-lg hover:bg-[#d41f66] duration-200"
               aria-label="Contact via SMS"
             >

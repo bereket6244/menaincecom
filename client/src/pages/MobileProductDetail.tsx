@@ -8,7 +8,7 @@ import { EmptyState, Spinner } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { mobileProductTint } from '../components/MobileProductCard';
 import { COMPLIMENTARY_EXTRA_MAX_QTY, complimentaryAllowanceText, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
-import { cleanDescription, cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
+import { cartPriceEach, cleanDescription, cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
 
 type SheetMode = 'add' | 'buy';
@@ -133,7 +133,7 @@ export function MobileProductDetail() {
       photo: product.photos[0] || '',
       isAddon: product.isAddon,
       pricingMode: product.pricingMode,
-      priceEach: product.pricingMode === 'exact' ? product.price : null,
+      priceEach: cartPriceEach(product),
       variantSelections: selections,
       qty,
       note: '',
@@ -308,7 +308,7 @@ export function MobileProductDetail() {
           </div>
           <div className="flex items-center gap-2.5">
             <div className="min-w-0 shrink">
-            <div className="text-[11px] text-muted">Total each</div>
+            <div className="text-[11px] text-muted">Price each</div>
             <div className="truncate text-[19px] font-extrabold text-[#ee0a24]">{formatPrice(product)}</div>
             </div>
             <button

@@ -86,14 +86,16 @@ export function MobileCatalog() {
       const needle = query.trim().toLowerCase();
       list = list.filter((product) => productSearchText(product, categories || []).includes(needle));
     }
+    // A price filter is about price: quote-only items have none, so they are
+    // filtered out rather than shown regardless of the range.
     if (bands.length) {
       const active = priceBands.filter((band) => bands.includes(band.id));
-      list = list.filter((product) => product.price == null || active.some((band) => band.test(product.price as number)));
+      list = list.filter((product) => product.price != null && active.some((band) => band.test(product.price as number)));
     }
     const mn = parseFloat(min);
     const mx = parseFloat(max);
-    if (!Number.isNaN(mn)) list = list.filter((product) => product.price == null || (product.price as number) >= mn);
-    if (!Number.isNaN(mx)) list = list.filter((product) => product.price == null || (product.price as number) <= mx);
+    if (!Number.isNaN(mn)) list = list.filter((product) => product.price != null && (product.price as number) >= mn);
+    if (!Number.isNaN(mx)) list = list.filter((product) => product.price != null && (product.price as number) <= mx);
     if (sort === 'low') return [...list].sort((a, b) => (a.price ?? 1e9) - (b.price ?? 1e9));
     if (sort === 'high') return [...list].sort((a, b) => (b.price ?? -1) - (a.price ?? -1));
     if (sort === 'name') return [...list].sort((a, b) => a.name.localeCompare(b.name));

@@ -149,9 +149,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUser(r.user);
   }, []);
 
+  // Cart and likes are per-person, not per-device: leaving them behind would
+  // show the next visitor the previous customer's items — and the login sync
+  // below would push those likes onto whichever account signs in next.
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
+    setCart([]);
+    setWishlistProductIds([]);
   }, []);
 
   const addToCart = useCallback((item: Omit<CartItem, 'key'>, mode: 'increment' | 'replace' = 'increment') => {

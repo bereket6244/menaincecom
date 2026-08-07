@@ -23,7 +23,8 @@ export function formatOrderMessage(order) {
     const variants = Object.entries(item.variantSelections || {})
       .map(([k, v]) => `${k}: ${v}`)
       .join(', ');
-    lines.push(`• ${item.qty} × ${item.name}${item.isAddon ? ' (add-on)' : ''}${variants ? ` [${variants}]` : ''}${item.priceEach != null ? ` — ${item.priceEach * item.qty} ETB` : ' — quote'}`);
+    const from = item.pricingMode === 'starting' ? 'from ' : '';
+    lines.push(`• ${item.qty} × ${item.name}${item.isAddon ? ' (add-on)' : ''}${variants ? ` [${variants}]` : ''}${item.priceEach != null ? ` — ${from}${item.priceEach * item.qty} ETB` : ' — quote'}`);
     const freebies = (item.complimentaryItems || [])
       .filter((freeItem) => freeItem?.qty > 0 && freeItem?.name)
       .map((freeItem) => `${Number(freeItem.qty).toLocaleString()} ${freeItem.name}`)
@@ -37,7 +38,12 @@ export function formatOrderMessage(order) {
     if (item.note) lines.push(`  Note: ${item.note}`);
   }
   if (order.note) lines.push('', `Order note: ${order.note}`);
-  if (order.estimatedTotal != null) lines.push('', `Estimated total: ${order.estimatedTotal} ETB (items without price excluded)`);
+  if (order.estimatedTotal != null) {
+    const caveats = ['includes paid extras'];
+    if (order.items.some((item) => item.priceEach == null)) caveats.push('quote-only items excluded');
+    if (order.items.some((item) => item.pricingMode === 'starting')) caveats.push('some items are starting prices');
+    lines.push('', `Estimated total: ${order.estimatedTotal} ETB (${caveats.join('; ')})`);
+  }
   return lines.join('\n');
 }
 

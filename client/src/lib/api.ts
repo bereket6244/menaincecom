@@ -12,9 +12,15 @@ export class ApiError extends Error {
 }
 
 type StatusListener = (writesUnavailable: boolean) => void;
-let statusListener: StatusListener | null = null;
+const statusListeners = new Set<StatusListener>();
+/** Subscribe to write-availability changes. Returns an unsubscribe function. */
 export function onDbStatus(fn: StatusListener) {
-  statusListener = fn;
+  statusListeners.add(fn);
+  return () => statusListeners.delete(fn);
+}
+
+function notifyDbStatus(writesUnavailable: boolean) {
+  for (const listener of statusListeners) listener(writesUnavailable);
 }
 
 export interface ApiHealth {
@@ -62,7 +68,7 @@ export async function checkApiHealth(): Promise<ApiHealth> {
     });
     const body = await res.json().catch(() => ({})) as Partial<ApiHealth>;
     const writable = res.ok && body.writable !== false;
-    statusListener?.(!writable);
+    notifyDbStatus(!writable);
     return {
       ok: res.ok && body.ok !== false,
       db: Boolean(body.db),
@@ -73,7 +79,7 @@ export async function checkApiHealth(): Promise<ApiHealth> {
       error: body.error,
     };
   } catch {
-    statusListener?.(true);
+    notifyDbStatus(true);
     return { ok: false, db: false, writable: false, error: 'server_unreachable' };
   }
 }
@@ -138,7 +144,7 @@ export async function apiGet<T>(path: string): Promise<T> {
     if (!res.ok) throw await parseError(res);
     const data = normalizeMediaUrls((await res.json()) as T);
     writeCache(path, data);
-    statusListener?.(false);
+    notifyDbStatus(false);
     return data;
   } catch (err) {
     if (err instanceof ApiError) {
@@ -172,11 +178,11 @@ export async function apiSend<T>(method: string, path: string, body?: unknown): 
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
-    statusListener?.(true);
+    notifyDbStatus(true);
     throw new ApiError('db', 'Could not reach the server.');
   }
   if (!res.ok) throw await parseError(res);
-  statusListener?.(false);
+  notifyDbStatus(false);
   return (await res.json()) as T;
 }
 

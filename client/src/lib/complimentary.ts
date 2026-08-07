@@ -9,6 +9,11 @@ export function complimentaryLimit(mainQty: number): number {
 
 export type ComplimentarySelections = Record<string, number>;
 
+/** Names are matched against the server's copy, which truncates at 100 chars. */
+export function complimentaryName(value: string): string {
+  return String(value || '').trim().slice(0, 100);
+}
+
 function clampSelected(value: number | undefined, maxQty: number): number {
   if (value == null) return 0;
   return Math.min(maxQty, Math.max(0, Math.floor(Number(value) || 0)));
@@ -33,11 +38,12 @@ export function complimentaryForProduct(
       // Only per-card (multiplier) allowances scale with the order and get
       // capped; a fixed allowance is exactly the number the admin entered.
       const freeQty = isMultiplier ? Math.min(rawQty, limit) : rawQty;
-      const selectedQty = selections ? clampSelected(selections[item.name.trim()], COMPLIMENTARY_EXTRA_MAX_QTY) : 0;
+      const name = complimentaryName(item.name);
+      const selectedQty = selections ? clampSelected(selections[name], COMPLIMENTARY_EXTRA_MAX_QTY) : 0;
       const extraQty = Math.max(0, selectedQty - freeQty);
       const extraPriceEach = item.extraPriceEach == null ? null : Math.max(0, Number(item.extraPriceEach) || 0);
       return {
-        name: item.name.trim(),
+        name,
         qty: selectedQty,
         maxQty: freeQty,
         freeQty,

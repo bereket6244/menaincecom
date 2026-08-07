@@ -13,7 +13,7 @@ import {
   complimentarySummary,
   productWithResolvedComplimentary,
 } from '../lib/complimentary';
-import { cleanDescription, cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
+import { cartPriceEach, cleanDescription, cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
 
 const ADD_TO_CART_BUTTON = 'btn-outline min-w-[180px]';
@@ -77,7 +77,7 @@ export function DesktopProductDetail() {
       photo: selectedPhoto || product.photos[0] || '',
       isAddon: product.isAddon,
       pricingMode: product.pricingMode,
-      priceEach: product.pricingMode === 'exact' ? product.price : null,
+      priceEach: cartPriceEach(product),
       variantSelections: selections,
       qty,
       note: '',
@@ -101,8 +101,11 @@ export function DesktopProductDetail() {
 
   const handleBuy = () => {
     if (requireOptions()) return;
+    // Same key addToCart derives, so checkout opens with just this item selected.
+    const key = `${product.id}|${JSON.stringify(selections)}`;
     add('replace');
     sessionStorage.setItem('mena_go_checkout', '1');
+    sessionStorage.setItem('mena_checkout_keys', JSON.stringify([key]));
     navigate('/order?checkout=1');
   };
 

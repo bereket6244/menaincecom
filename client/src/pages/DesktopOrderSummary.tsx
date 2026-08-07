@@ -5,11 +5,12 @@ import { useApp } from '../store/AppContext';
 import { useData } from '../lib/useData';
 import { OFFLINE_MESSAGE } from '../lib/api';
 import type { BusinessSettings, Product, UniversalComplimentaryItem } from '../lib/types';
-import { buildCartOrderMessage, smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
+import { smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
+import { placeOrder } from '../lib/placeOrder';
 import { EmptyState, IconButton } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { complimentaryExtraTotal, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
-import { cx, formatPrice } from '../lib/utils';
+import { cartPriceEach, cx, formatCartTotal, formatLineTotal, formatPrice } from '../lib/utils';
 
 type Channel = 'telegram' | 'whatsapp' | 'sms';
 type Step = 'cart' | 'checkout';
@@ -21,7 +22,7 @@ const CHANNELS: { id: Channel; label: string; icon: typeof Send; accent: string;
 ];
 
 export function DesktopOrderSummary() {
-  const { cart, addToCart, updateCartItem, removeFromCart, toast, online } = useApp();
+  const { cart, addToCart, updateCartItem, removeFromCart, toast, online, user } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const { data: products } = useData<Product[]>('/products');
@@ -49,8 +50,19 @@ export function DesktopOrderSummary() {
 
   useEffect(() => {
     const flagged = sessionStorage.getItem('mena_go_checkout') === '1' || new URLSearchParams(location.search).get('checkout') === '1';
+    const rawKeys = sessionStorage.getItem('mena_checkout_keys');
     sessionStorage.removeItem('mena_go_checkout');
+    sessionStorage.removeItem('mena_checkout_keys');
     if (!flagged || cart.length === 0) return;
+    // "Buy now" checks out only the item it was pressed on.
+    if (rawKeys) {
+      try {
+        const keys = JSON.parse(rawKeys);
+        if (Array.isArray(keys) && keys.length) setSelected(new Set(keys.filter((key) => typeof key === 'string')));
+      } catch {
+        /* ignore malformed session state */
+      }
+    }
     setStep('checkout');
     window.scrollTo({ top: 0 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -70,14 +82,17 @@ export function DesktopOrderSummary() {
   };
 
   const selectedTotal = useMemo(() => {
+    const priced = selectedItems.filter((item) => item.priceEach != null);
     const extras = selectedItems.reduce((sum, item) => sum + complimentaryExtraTotal(freebiesFor(item)), 0);
-    const pricedTotal = selectedItems.reduce((sum, item) => sum + (item.priceEach || 0) * item.qty, 0);
-    if (pricedTotal === 0 && extras === 0) return null;
-    return pricedTotal + extras;
+    if (!priced.length && extras === 0) return null;
+    return priced.reduce((sum, item) => sum + (item.priceEach || 0) * item.qty, extras);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedItems, productById]);
 
   const selectedCount = selectedItems.reduce((sum, item) => sum + item.qty, 0);
   const hasQuoteItems = selectedItems.some((item) => item.priceEach == null);
+  const hasStartingItems = selectedItems.some((item) => item.pricingMode === 'starting');
+  const totalText = formatCartTotal(selectedTotal, { hasQuote: hasQuoteItems, hasStarting: hasStartingItems });
   const selectedItemsForMessage = selectedItems.map((item) => ({ ...item, complimentaryItems: freebiesFor(item) }));
   const complimentaryRows = selectedItems.flatMap((item) =>
     freebiesFor(item).filter((freeItem) => freeItem.qty > 0).map((freeItem) => ({
@@ -111,17 +126,27 @@ export function DesktopOrderSummary() {
     window.scrollTo({ top: 0 });
   };
 
-  const placeOrder = () => {
+  const submitOrder = async () => {
     if (!online) {
       toast('error', OFFLINE_MESSAGE);
       return;
     }
     if (selectedItems.length === 0) return;
     setSending(channel);
+    // The tab has to be opened inside the click, before any await, or the
+    // browser treats it as an unrequested popup and blocks it.
     const chatTab = channel === 'sms' ? null : window.open('', '_blank');
     if (chatTab) chatTab.opener = null;
     try {
-      const message = buildCartOrderMessage(selectedItemsForMessage, orderNote, window.location.origin);
+      const { message, order } = await placeOrder({
+        items: selectedItemsForMessage,
+        channel,
+        note: orderNote,
+        user,
+        business,
+        origin: window.location.origin,
+      });
+      if (!order) toast('info', 'We could not reach the studio server, so your order was not saved. Send the message and we will pick it up from chat.');
       const chatUrl =
         channel === 'whatsapp' ? whatsappOrderUrl(business, message)
         : channel === 'telegram' ? telegramOrderUrl(business, message)
@@ -214,7 +239,7 @@ export function DesktopOrderSummary() {
                     )}
                   </div>
                   <div className="shrink-0 text-right">
-                    <div className="font-extrabold text-[#ee0a24]">{item.priceEach != null ? `${(item.priceEach * item.qty).toLocaleString()} ETB` : 'Quote'}</div>
+                    <div className="font-extrabold text-[#ee0a24]">{formatLineTotal(item)}</div>
                     <div className="mt-1 text-[12px] text-muted">x{item.qty}</div>
                   </div>
                 </div>
@@ -283,9 +308,9 @@ export function DesktopOrderSummary() {
             </div>
             <div className="min-w-0 text-right">
               <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted">Total</div>
-              <div className="text-2xl font-extrabold text-[#ee0a24]">{selectedTotal != null ? `${selectedTotal.toLocaleString()} ETB` : 'Quote'}</div>
+              <div className="text-2xl font-extrabold text-[#ee0a24]">{totalText}</div>
             </div>
-            <button type="button" onClick={placeOrder} disabled={!online || sending !== null} className="btn-primary h-14 px-10">
+            <button type="button" onClick={() => void submitOrder()} disabled={!online || sending !== null} className="btn-primary h-14 px-10">
               {sending ? 'Opening...' : 'Place order'}
             </button>
           </div>
@@ -343,7 +368,7 @@ export function DesktopOrderSummary() {
                           )}
                         </div>
                         <span className="shrink-0 text-[15px] font-extrabold text-[#ee0a24]">
-                          {item.priceEach != null ? `${(item.priceEach * item.qty).toLocaleString()} ETB` : 'Quote'}
+                          {formatLineTotal(item)}
                         </span>
                       </div>
                       <div className="mt-4 flex items-center gap-4">
@@ -393,7 +418,7 @@ export function DesktopOrderSummary() {
                           photo: addon.photos[0] || '',
                           isAddon: addon.isAddon,
                           pricingMode: addon.pricingMode,
-                          priceEach: addon.pricingMode === 'exact' ? addon.price : null,
+                          priceEach: cartPriceEach(addon),
                           variantSelections: {},
                           qty: 1,
                           note: '',
@@ -424,7 +449,7 @@ export function DesktopOrderSummary() {
             </div>
             <div className="flex justify-between text-muted">
               <span>Total</span>
-              <span className="font-extrabold text-[#ee0a24]">{selectedTotal != null ? `${selectedTotal.toLocaleString()} ETB` : 'Quote'}</span>
+              <span className="font-extrabold text-[#ee0a24]">{totalText}</span>
             </div>
           </div>
           <button type="button" onClick={goCheckout} disabled={selectedItems.length === 0} className="btn-primary h-12 w-full">

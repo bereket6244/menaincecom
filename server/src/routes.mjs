@@ -273,10 +273,14 @@ function complimentaryForProduct(product, qty, selections = {}) {
   return (product.complimentaryItems || [])
     .filter((item) => item?.enabled && String(item.name || '').trim() && Number(item.qty) > 0)
     .map((item) => {
-      const rawQty = item.type === 'multiplier'
+      const isMultiplier = item.type === 'multiplier';
+      const rawQty = isMultiplier
         ? Math.floor((Number(qty) || 0) * Number(item.qty))
         : Math.floor(Number(item.qty) || 0);
-      const freeQty = Math.min(rawQty, limit);
+      // Mirrors the client (lib/complimentary.ts): only per-card (multiplier)
+      // allowances scale with the order and get capped; a fixed allowance is
+      // exactly the number the admin entered.
+      const freeQty = isMultiplier ? Math.min(rawQty, limit) : rawQty;
       const name = String(item.name).trim().slice(0, 100);
       const hasSelection = Object.prototype.hasOwnProperty.call(selections, name);
       const selectedQty = hasSelection
@@ -315,6 +319,47 @@ function resolveComplimentaryProduct(product, universalItems) {
     ...product,
     complimentaryItems: [...universal, ...(product.complimentaryItems || [])],
   };
+}
+
+/**
+ * Every order creates or updates a lead so the studio can follow up. Matching
+ * is by phone first, then email — a returning customer bumps `orderCount`
+ * instead of adding a duplicate row. Orders with no contact details at all
+ * (guests who send from their own chat app) leave no lead behind.
+ */
+async function upsertLead(customer, channel, userId) {
+  const phone = customer.phone || '';
+  const email = (customer.email || '').toLowerCase();
+  if (!phone && !email) return null;
+
+  const existing = await records.find(
+    'leads',
+    (lead) =>
+      (phone && lead.phone === phone)
+      || (email && String(lead.email || '').toLowerCase() === email)
+  );
+
+  if (existing) {
+    return records.update('leads', existing.id, {
+      name: customer.name && customer.name !== 'Guest' ? customer.name : existing.name,
+      phone: phone || existing.phone,
+      email: customer.email || existing.email,
+      userId: userId || existing.userId || null,
+      source: userId ? 'account' : existing.source || 'guest',
+      lastChannel: channel,
+      orderCount: Math.max(0, Number(existing.orderCount) || 0) + 1,
+    });
+  }
+
+  return records.insert('leads', {
+    name: customer.name || 'Guest',
+    phone,
+    email: customer.email || '',
+    userId: userId || null,
+    source: userId ? 'account' : 'guest',
+    lastChannel: channel,
+    orderCount: 1,
+  });
 }
 
 api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
@@ -363,7 +408,9 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
         photo: product.photos?.[0] || '',
         isAddon: !!product.isAddon,
         pricingMode: product.pricingMode,
-        priceEach: product.pricingMode === 'exact' && product.price != null ? product.price : null,
+        // 'starting' prices are estimates the studio confirms — they still
+        // count towards the total. Only 'quote' items have no price.
+        priceEach: product.pricingMode !== 'quote' && product.price != null ? Number(product.price) : null,
         complimentaryItems: complimentaryForProduct(product, qty, complimentarySelections),
       };
     })
@@ -382,13 +429,15 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
     ? priced.reduce((sum, i) => sum + i.priceEach * i.qty, extraTotal)
     : null;
 
+  const orderCustomer = {
+    name: customer?.name ? String(customer.name).trim().slice(0, 100) : 'Guest',
+    phone,
+    email: customer?.email ? String(customer.email).trim().slice(0, 254) : '',
+  };
+
   const order = await records.insert('orders', {
     items,
-    customer: {
-      name: customer?.name ? String(customer.name).trim().slice(0, 100) : 'Guest',
-      phone,
-      email: customer?.email ? String(customer.email).trim().slice(0, 254) : '',
-    },
+    customer: orderCustomer,
     channel,
     note: note ? String(note).slice(0, 1000) : '',
     estimatedTotal,
@@ -396,10 +445,17 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
     userId: req.auth?.id || null,
   });
 
+  // A lead is a nice-to-have; never fail a saved order over it.
+  await upsertLead(orderCustomer, channel, req.auth?.id || null).catch((err) =>
+    console.error('[leads] upsert error:', err)
+  );
+
   // Outbound delivery + admin push run in the background; the customer gets
   // an immediate confirmation once the order is safely in the database.
+  // SMS orders reach the studio over Telegram — there is no outbound SMS
+  // gateway, and the customer's own SMS app carries the copy they send.
   const message = formatOrderMessage(order);
-  const deliver = channel === 'telegram' ? sendTelegram(message) : sendWhatsApp(message);
+  const deliver = channel === 'whatsapp' ? sendWhatsApp(message) : sendTelegram(message);
   deliver.catch((err) => console.error(`[${channel}] delivery error:`, err));
   pushToAdmins({
     title: 'New order — MENA INC.',
@@ -546,10 +602,18 @@ api.put('/admin/orders/:id', requireAdmin, dbRoute(async (req, res) => {
 
 api.get('/admin/leads', requireAdmin, dbRoute(async (_req, res) => {
   const [leads, users] = await Promise.all([records.list('leads'), records.list('users')]);
-  // Account holders who have not ordered yet still count as leads.
-  const leadPhones = new Set(leads.map((l) => l.phone));
+  // Account holders who have not ordered yet still count as leads. An account
+  // that has ordered is already represented by its lead row (matched on phone,
+  // email or user id), so it must not be listed twice.
+  const leadPhones = new Set(leads.map((l) => l.phone).filter(Boolean));
+  const leadEmails = new Set(leads.map((l) => String(l.email || '').toLowerCase()).filter(Boolean));
+  const leadUserIds = new Set(leads.map((l) => l.userId).filter(Boolean));
   const accountLeads = users
-    .filter((u) => u.role === 'customer' && !leadPhones.has(u.identifier))
+    .filter((u) => {
+      if (u.role !== 'customer' || leadUserIds.has(u.id)) return false;
+      const identifier = String(u.identifier || '');
+      return !leadPhones.has(identifier) && !leadEmails.has(identifier.toLowerCase());
+    })
     .map((u) => ({
       id: `user-${u.id}`,
       name: u.name,

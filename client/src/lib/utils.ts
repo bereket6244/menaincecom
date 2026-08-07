@@ -1,9 +1,37 @@
-import type { Product } from './types';
+import type { CartItem, Product } from './types';
 
 export function formatPrice(product: Pick<Product, 'pricingMode' | 'price'>): string {
   if (product.pricingMode === 'quote' || product.price == null) return 'Request a quote';
   const amount = `${product.price.toLocaleString()} ETB`;
   return product.pricingMode === 'starting' ? `From ${amount}` : amount;
+}
+
+/**
+ * The unit price a cart line carries. Anything with a real number counts —
+ * a 'starting' price is an estimate the studio confirms, not a quote-only item,
+ * so it has to reach the cart total instead of silently becoming "Quote".
+ */
+export function cartPriceEach(product: Pick<Product, 'pricingMode' | 'price'>): number | null {
+  return product.pricingMode !== 'quote' && product.price != null ? product.price : null;
+}
+
+/** Line total for a cart item, prefixed with "From" for starting prices. */
+export function formatLineTotal(item: Pick<CartItem, 'pricingMode' | 'priceEach' | 'qty'>): string {
+  if (item.priceEach == null) return 'Quote';
+  const amount = `${(item.priceEach * item.qty).toLocaleString()} ETB`;
+  return item.pricingMode === 'starting' ? `From ${amount}` : amount;
+}
+
+/**
+ * Cart/checkout total. `+` marks items priced on request, `From` marks a total
+ * that includes starting prices — both mean the studio confirms the final figure.
+ */
+export function formatCartTotal(
+  total: number | null,
+  { hasQuote = false, hasStarting = false }: { hasQuote?: boolean; hasStarting?: boolean } = {}
+): string {
+  if (total == null) return hasQuote ? 'Quote' : '0 ETB';
+  return `${hasStarting ? 'From ' : ''}${total.toLocaleString()} ETB${hasQuote ? ' +' : ''}`;
 }
 
 /**
