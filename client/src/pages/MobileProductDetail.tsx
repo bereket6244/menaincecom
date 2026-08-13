@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, ShoppingBag, X } from 'lucide-react';
+import { ChevronLeft, MessageCircle, MessageSquareText, Send, ShoppingBag, X } from 'lucide-react';
 import { useData } from '../lib/useData';
-import type { Category, Product, UniversalComplimentaryItem } from '../lib/types';
+import type { BusinessSettings, Category, Product, UniversalComplimentaryItem } from '../lib/types';
 import { useApp } from '../store/AppContext';
 import { EmptyState, Spinner } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
@@ -11,6 +11,7 @@ import { ProductImageFrame } from '../components/ProductImageFrame';
 import { COMPLIMENTARY_EXTRA_MAX_QTY, complimentaryAllowanceText, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
 import { cartPriceEach, cleanDescription, cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
+import { smsContactUrl, telegramContactUrl, whatsappContactUrl } from '../lib/share';
 
 type SheetMode = 'add' | 'buy';
 
@@ -65,6 +66,7 @@ export function MobileProductDetail() {
   const { data: products, loading } = useData<Product[]>('/products');
   const { data: categories } = useData<Category[]>('/categories');
   const { data: universalComplimentaryItems } = useData<UniversalComplimentaryItem[]>('/complimentary-items');
+  const { data: business } = useData<BusinessSettings>('/content/business');
   const product = useMemo(() => {
     const found = (products || []).find((p) => p.id === id) || null;
     return found ? productWithResolvedComplimentary(found, universalComplimentaryItems || undefined) : null;
@@ -77,7 +79,14 @@ export function MobileProductDetail() {
   const [photoPinned, setPhotoPinned] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetMode, setSheetMode] = useState<SheetMode>('add');
+  const [contactOpen, setContactOpen] = useState(false);
+  const contactRef = useRef<HTMLDivElement>(null);
   const cartCount = cart.reduce((n, item) => n + item.qty, 0);
+  const contactChannels = [
+    { id: 'telegram', label: 'Telegram', icon: Send, accent: '#2b93d6', href: telegramContactUrl(business), external: true },
+    { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, accent: '#25a34f', href: whatsappContactUrl(business), external: true },
+    { id: 'sms', label: 'SMS', icon: MessageSquareText, accent: '#ee317b', href: smsContactUrl(business), external: false },
+  ];
   const complimentaryOptions = useMemo(
     () => (product ? complimentaryForProduct(product, qty) : []),
     [product, qty]
@@ -94,6 +103,15 @@ export function MobileProductDetail() {
       return next;
     });
   }, [complimentaryOptions]);
+
+  useEffect(() => {
+    if (!contactOpen) return;
+    const closeOnOutside = (event: MouseEvent) => {
+      if (contactRef.current && !contactRef.current.contains(event.target as Node)) setContactOpen(false);
+    };
+    document.addEventListener('mousedown', closeOnOutside);
+    return () => document.removeEventListener('mousedown', closeOnOutside);
+  }, [contactOpen]);
 
   const goBack = () => {
     if (location.key === 'default') navigate('/catalog');
@@ -183,6 +201,41 @@ export function MobileProductDetail() {
           <ChevronLeft className="h-5.5 w-5.5" />
         </button>
         <div className="min-w-0 flex-1 truncate text-sm font-semibold text-muted">{categoryName}</div>
+        <div ref={contactRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setContactOpen((open) => !open)}
+            aria-label="Message Mena"
+            aria-haspopup="menu"
+            aria-expanded={contactOpen}
+            className={cx('mena-press flex h-10 w-10 items-center justify-center rounded-xl text-ink hover:bg-surface2', contactOpen && 'text-pink')}
+          >
+            <Send className="h-5.5 w-5.5" />
+          </button>
+          {contactOpen && (
+            <div
+              role="menu"
+              className="modal-panel absolute right-0 top-12 z-50 w-52 overflow-hidden rounded-2xl border border-edge bg-white py-1.5 shadow-[0_16px_40px_rgba(28,26,25,0.18)]"
+            >
+              {contactChannels.map(({ id, label, icon: Icon, accent, href, external }) => (
+                <a
+                  key={id}
+                  href={href}
+                  role="menuitem"
+                  target={external ? '_blank' : undefined}
+                  rel={external ? 'noreferrer' : undefined}
+                  onClick={() => setContactOpen(false)}
+                  className="mena-press flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-ink hover:bg-surface2"
+                >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full text-white" style={{ background: accent }}>
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  {label}
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
         <Link
           id="mena-cart-icon"
           to="/order"
@@ -212,6 +265,7 @@ export function MobileProductDetail() {
             setPhotoIdx((current) => (current + 1) % product.photos.length);
             setPhotoPinned(true);
           }}
+          preloadSrcs={product.photos}
           className="aspect-[5/7] max-h-[420px] w-full"
           placeholder={
             <div className="flex h-full flex-col items-center justify-center p-8 text-center" style={{ background: tint }}>

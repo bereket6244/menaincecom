@@ -43,9 +43,10 @@ export function DesktopProductCard({
           priority={priority}
           onOpen={() => onOpen(product)}
           showControls={hasMultiplePhotos}
-          onPrevious={() => setPhotoIndex((current) => (current - 1 + product.photos.length) % product.photos.length)}
-          onNext={() => setPhotoIndex((current) => (current + 1) % product.photos.length)}
-          className="aspect-square"
+        onPrevious={() => setPhotoIndex((current) => (current - 1 + product.photos.length) % product.photos.length)}
+        onNext={() => setPhotoIndex((current) => (current + 1) % product.photos.length)}
+        preloadSrcs={product.photos}
+        className="aspect-square"
           imageClassName="transition-transform duration-500 group-hover:scale-[1.025]"
           placeholder={
             <div className="flex h-full flex-col items-center justify-center p-5 text-center" style={{ background: tint }}>

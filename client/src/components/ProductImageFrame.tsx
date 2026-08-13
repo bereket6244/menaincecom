@@ -1,5 +1,6 @@
+import { useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { ReactNode, TouchEvent } from 'react';
 import { cx } from '../lib/utils';
 
 export function ProductImageFrame({
@@ -13,6 +14,7 @@ export function ProductImageFrame({
   showControls = false,
   onPrevious,
   onNext,
+  preloadSrcs = [],
 }: {
   src?: string;
   alt: string;
@@ -24,7 +26,41 @@ export function ProductImageFrame({
   showControls?: boolean;
   onPrevious?: () => void;
   onNext?: () => void;
+  preloadSrcs?: string[];
 }) {
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const ignoreClickRef = useRef(false);
+
+  useEffect(() => {
+    for (const url of preloadSrcs) {
+      if (!url) continue;
+      const image = new Image();
+      image.src = url;
+    }
+  }, [preloadSrcs]);
+
+  const handleTouchStart = (event: TouchEvent) => {
+    if (!showControls) return;
+    const touch = event.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (event: TouchEvent) => {
+    if (!showControls || !touchStartRef.current) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - touchStartRef.current.x;
+    const dy = touch.clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+    if (Math.abs(dx) < 38 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+
+    ignoreClickRef.current = true;
+    if (dx < 0) onNext?.();
+    else onPrevious?.();
+    window.setTimeout(() => {
+      ignoreClickRef.current = false;
+    }, 350);
+  };
+
   const image = src ? (
     <>
       <img
@@ -48,9 +84,24 @@ export function ProductImageFrame({
   );
 
   return (
-    <div className={cx('relative isolate overflow-hidden bg-surface2', className)}>
+    <div
+      className={cx('relative isolate overflow-hidden bg-surface2 touch-pan-y select-none', className)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       {onOpen ? (
-        <button type="button" onClick={onOpen} className="relative z-0 block h-full w-full cursor-pointer">
+        <button
+          type="button"
+          onClick={(event) => {
+            if (ignoreClickRef.current) {
+              event.preventDefault();
+              event.stopPropagation();
+              return;
+            }
+            onOpen();
+          }}
+          className="relative z-0 block h-full w-full cursor-pointer"
+        >
           {image}
         </button>
       ) : (

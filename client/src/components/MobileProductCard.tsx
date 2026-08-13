@@ -43,6 +43,7 @@ export function MobileProductCard({
           showControls={hasMultiplePhotos}
           onPrevious={() => setPhotoIndex((current) => (current - 1 + product.photos.length) % product.photos.length)}
           onNext={() => setPhotoIndex((current) => (current + 1) % product.photos.length)}
+          preloadSrcs={product.photos}
           className="mena-press aspect-[5/7] w-full rounded-xl text-left shadow-[0_1px_3px_rgba(28,26,25,0.08)]"
           placeholder={
             <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center" style={{ background: tint }}>

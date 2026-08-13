@@ -171,6 +171,7 @@ export function DesktopProductDetail() {
               setPhotoIdx((current) => (current + 1) % product.photos.length);
               setPhotoPinned(true);
             }}
+            preloadSrcs={product.photos}
             className="aspect-[5/6] rounded-[20px] shadow-[0_1px_3px_rgba(28,26,25,0.08)]"
             placeholder={
               <div className="flex h-full flex-col items-center justify-center bg-[#f3e7ea] p-8 text-center">
