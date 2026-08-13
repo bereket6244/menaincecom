@@ -62,7 +62,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
       <Toasts />
 
       <header className="sticky top-0 z-50 border-b border-edge bg-white">
-        <div className="mx-auto flex h-[74px] max-w-[1240px] items-center justify-between px-10">
+        <div className="mx-auto flex h-[74px] max-w-[1560px] items-center justify-between px-10 2xl:px-12">
           <Link to="/catalog" className="mena-press flex shrink-0 items-center gap-3">
             <BrandLogo size="md" />
           </Link>
@@ -150,7 +150,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
               e.preventDefault();
               applySearch(q);
             }}
-            className="relative mx-auto max-w-[1240px]"
+            className="relative mx-auto max-w-[1560px]"
           >
             <Search className="pointer-events-none absolute left-5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted/80" />
             <input
@@ -176,7 +176,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
       <main className="w-full flex-1">{children}</main>
 
       <footer className="border-t border-edge bg-white py-6">
-        <div className="mx-auto flex max-w-[1240px] items-center justify-between px-10 text-[12px] text-muted">
+        <div className="mx-auto flex max-w-[1560px] items-center justify-between px-10 text-[12px] text-muted 2xl:px-12">
           <span>© {new Date().getFullYear()} Mena INK Trading PLC · Addis Ababa, Ethiopia</span>
           <span className="font-bold uppercase tracking-[0.12em]">Invitations · Stationery · Print</span>
         </div>

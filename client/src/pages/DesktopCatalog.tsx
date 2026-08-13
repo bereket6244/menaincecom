@@ -119,7 +119,7 @@ export function DesktopCatalog() {
   };
 
   return (
-    <div className="mx-auto max-w-[1240px] px-10 py-9">
+    <div className="mx-auto max-w-[1560px] px-10 py-9 2xl:px-12">
       <div className="mena-cat-scroll -mx-3 mb-7 flex items-start gap-[22px] overflow-x-auto px-3 pb-2 pt-1">
         {chips.map((category, index) => {
           const active = activeCategory === category.id;
@@ -199,7 +199,7 @@ export function DesktopCatalog() {
         </div>
       </div>
 
-      <div className="grid h-[calc(100vh-272px)] min-h-[560px] grid-cols-[240px_minmax(0,1fr)] gap-9">
+      <div className="grid h-[calc(100vh-272px)] min-h-[560px] grid-cols-[250px_minmax(0,1fr)] gap-9">
         <aside className="mena-d-scroll overflow-y-auto rounded-2xl border border-edge bg-white p-[22px] shadow-[0_1px_3px_rgba(28,26,25,0.05)]">
           <div className="mb-5 flex items-center justify-between border-b border-edge pb-4">
             <span className="text-[17px] font-extrabold">Filters</span>
@@ -277,7 +277,7 @@ export function DesktopCatalog() {
           ) : visible.length === 0 ? (
             <EmptyState>No designs found{query ? ` for "${query}"` : ''}.</EmptyState>
           ) : (
-            <div className="grid grid-cols-3 gap-[26px]">
+            <div className="grid grid-cols-3 gap-[26px] xl:grid-cols-4">
               {visible.map((product, index) => (
                 <DesktopProductCard
                   key={product.id}

@@ -7,6 +7,7 @@ import { useApp } from '../store/AppContext';
 import { EmptyState, Spinner } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { mobileProductTint } from '../components/MobileProductCard';
+import { ProductImageFrame } from '../components/ProductImageFrame';
 import { COMPLIMENTARY_EXTRA_MAX_QTY, complimentaryAllowanceText, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
 import { cartPriceEach, cleanDescription, cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
@@ -72,6 +73,8 @@ export function MobileProductDetail() {
   const [selections, setSelections] = useState<Record<string, string>>({});
   const [complimentarySelections, setComplimentarySelections] = useState<Record<string, number>>({});
   const [qty, setQty] = useState(1);
+  const [photoIdx, setPhotoIdx] = useState(0);
+  const [photoPinned, setPhotoPinned] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetMode, setSheetMode] = useState<SheetMode>('add');
   const cartCount = cart.reduce((n, item) => n + item.qty, 0);
@@ -106,11 +109,10 @@ export function MobileProductDetail() {
     );
   }
 
-  const selectedPhoto =
-    product.variants
-      .flatMap((variant) => variant.options)
-      .find((option) => Object.values(selections).includes(option.label) && option.photo)?.photo
-    || product.photos[0];
+  const variantPhoto = product.variants
+    .flatMap((variant) => variant.options)
+    .find((option) => Object.values(selections).includes(option.label) && option.photo)?.photo;
+  const selectedPhoto = (photoPinned ? product.photos[photoIdx] : variantPhoto || product.photos[photoIdx]) || product.photos[0];
   const missingVariant = product.variants.find((variant) => !selections[variant.name]);
   const tint = mobileProductTint(product);
   const description = cleanDescription(product.description, product.name);
@@ -197,16 +199,27 @@ export function MobileProductDetail() {
       </header>
 
       <div className="mena-scroll overflow-y-auto">
-        <div className="aspect-[5/7] max-h-[420px] w-full bg-surface2" style={{ background: selectedPhoto ? undefined : tint }}>
-          {selectedPhoto ? (
-            <img src={selectedPhoto} alt={product.name} loading="eager" decoding="async" className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center p-8 text-center">
+        <ProductImageFrame
+          src={selectedPhoto}
+          alt={product.name}
+          priority
+          showControls={product.photos.length > 1}
+          onPrevious={() => {
+            setPhotoIdx((current) => (current - 1 + product.photos.length) % product.photos.length);
+            setPhotoPinned(true);
+          }}
+          onNext={() => {
+            setPhotoIdx((current) => (current + 1) % product.photos.length);
+            setPhotoPinned(true);
+          }}
+          className="aspect-[5/7] max-h-[420px] w-full"
+          placeholder={
+            <div className="flex h-full flex-col items-center justify-center p-8 text-center" style={{ background: tint }}>
               <span className="font-script text-[52px] leading-none text-pink">{product.name}</span>
               <span className="mt-4 text-[10px] tracking-[0.24em] text-ink/50">mena inc · Addis Ababa</span>
             </div>
-          )}
-        </div>
+          }
+        />
 
         <section className="px-[18px] pb-2 pt-[18px]">
           <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">{product.isAddon ? 'Add-on item' : categoryName}</div>
@@ -232,7 +245,10 @@ export function MobileProductDetail() {
                       <button
                         key={option.label}
                         type="button"
-                        onClick={() => setSelections((current) => ({ ...current, [group.name]: option.label }))}
+                        onClick={() => {
+                          setSelections((current) => ({ ...current, [group.name]: option.label }));
+                          setPhotoPinned(false);
+                        }}
                         className={cx(
                           'mena-press inline-flex items-center gap-2 rounded-full border-[1.5px] px-4 py-2.5 text-sm font-semibold',
                           active ? 'border-pink bg-pink/10 text-ink' : 'border-edge bg-white text-ink/70'
@@ -349,7 +365,7 @@ export function MobileProductDetail() {
         <div className="sticky top-0 z-10 flex items-start gap-3 border-b border-edge bg-surface px-4 py-4">
           <div className="h-16 w-14 shrink-0 overflow-hidden rounded-lg border border-edge bg-surface2" style={{ background: selectedPhoto ? undefined : tint }}>
             {selectedPhoto ? (
-              <img src={selectedPhoto} alt="" loading="eager" decoding="async" className="h-full w-full object-cover" />
+              <img src={selectedPhoto} alt="" loading="eager" decoding="async" className="h-full w-full object-contain" />
             ) : (
               <div className="flex h-full items-center justify-center font-script text-xl text-pink">M</div>
             )}
@@ -387,7 +403,10 @@ export function MobileProductDetail() {
                       <button
                         key={option.label}
                         type="button"
-                        onClick={() => setSelections((current) => ({ ...current, [group.name]: option.label }))}
+                        onClick={() => {
+                          setSelections((current) => ({ ...current, [group.name]: option.label }));
+                          setPhotoPinned(false);
+                        }}
                         className={cx(
                           'mena-press inline-flex items-center gap-2 rounded-full border-[1.5px] px-4 py-2.5 text-sm font-semibold',
                           active ? 'border-ink bg-white text-ink' : 'border-edge bg-white text-ink/75'

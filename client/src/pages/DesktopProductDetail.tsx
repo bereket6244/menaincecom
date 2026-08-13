@@ -6,6 +6,7 @@ import type { Product, UniversalComplimentaryItem } from '../lib/types';
 import { useApp } from '../store/AppContext';
 import { EmptyState, Spinner } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
+import { ProductImageFrame } from '../components/ProductImageFrame';
 import {
   COMPLIMENTARY_EXTRA_MAX_QTY,
   complimentaryAllowanceText,
@@ -149,24 +150,35 @@ export function DesktopProductDetail() {
   );
 
   return (
-    <div className="mx-auto max-w-[1120px] px-10 py-9 pb-24">
+    <div className="mx-auto max-w-[1360px] px-10 py-9 pb-24 2xl:px-12">
       <button onClick={goBack} className="mena-press mb-5 inline-flex items-center gap-1.5 text-[13.5px] font-bold text-muted hover:text-ink">
         <ChevronLeft className="h-4 w-4" />
         Back to catalog
       </button>
 
-      <div className="grid grid-cols-[minmax(0,1fr)_440px] items-start gap-14">
+      <div className="grid grid-cols-[minmax(0,1fr)_480px] items-start gap-16">
         <div className="sticky top-[176px] space-y-4">
-          <div className="aspect-[5/6] overflow-hidden rounded-[20px] bg-surface2 shadow-[0_1px_3px_rgba(28,26,25,0.08)]">
-            {selectedPhoto ? (
-              <img src={selectedPhoto} alt={product.name} loading="eager" decoding="async" className="h-full w-full object-cover" />
-            ) : (
+          <ProductImageFrame
+            src={selectedPhoto}
+            alt={product.name}
+            priority
+            showControls={product.photos.length > 1}
+            onPrevious={() => {
+              setPhotoIdx((current) => (current - 1 + product.photos.length) % product.photos.length);
+              setPhotoPinned(true);
+            }}
+            onNext={() => {
+              setPhotoIdx((current) => (current + 1) % product.photos.length);
+              setPhotoPinned(true);
+            }}
+            className="aspect-[5/6] rounded-[20px] shadow-[0_1px_3px_rgba(28,26,25,0.08)]"
+            placeholder={
               <div className="flex h-full flex-col items-center justify-center bg-[#f3e7ea] p-8 text-center">
                 <span className="font-script text-[68px] leading-none text-pink">{product.name}</span>
                 <span className="mt-5 text-[11px] tracking-[0.24em] text-ink/50">mena inc · Addis Ababa</span>
               </div>
-            )}
-          </div>
+            }
+          />
           {product.photos.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-1">
               {product.photos.map((photo, index) => (
@@ -179,7 +191,7 @@ export function DesktopProductDetail() {
                   }}
                   className={cx('mena-press h-20 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-surface2', index === photoIdx ? 'border-pink' : 'border-edge opacity-75')}
                 >
-                  <img src={photo} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                  <img src={photo} alt="" loading="lazy" decoding="async" className="h-full w-full object-contain" />
                 </button>
               ))}
             </div>
@@ -269,7 +281,7 @@ export function DesktopProductDetail() {
           >
             <div className="sticky top-0 z-10 flex items-start gap-3 border-b border-edge bg-white p-5">
               <div className="h-20 w-16 shrink-0 overflow-hidden rounded-lg bg-surface2">
-                {selectedPhoto && <img src={selectedPhoto} alt="" className="h-full w-full object-cover" />}
+                {selectedPhoto && <img src={selectedPhoto} alt="" className="h-full w-full object-contain" />}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="font-serif text-2xl font-semibold leading-tight">{product.name}</div>
