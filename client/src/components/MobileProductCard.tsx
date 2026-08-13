@@ -53,7 +53,7 @@ export function MobileProductCard({
         />
 
           {product.featured && (
-            <span className="absolute left-2 top-2 rounded-md bg-ink px-2 py-1 text-[9px] font-extrabold uppercase tracking-[0.08em] text-white">
+            <span className="absolute left-2 top-2 z-30 rounded-md bg-ink px-2 py-1 text-[9px] font-extrabold uppercase tracking-[0.08em] text-white">
               Featured
             </span>
           )}
@@ -64,7 +64,7 @@ export function MobileProductCard({
             void toggleWishlist(product.id);
           }}
           aria-label={wished ? 'Remove from liked items' : 'Save to liked items'}
-          className="mena-press absolute right-2 top-2 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-white/95 shadow-sm"
+          className="mena-press absolute right-2 top-2 z-30 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-white/95 shadow-sm"
         >
           <Heart className={cx('h-4 w-4', wished ? 'fill-pink text-pink' : 'text-ink/40')} />
         </button>

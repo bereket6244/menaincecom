@@ -48,9 +48,9 @@ export function ProductImageFrame({
   );
 
   return (
-    <div className={cx('relative overflow-hidden bg-surface2', className)}>
+    <div className={cx('relative isolate overflow-hidden bg-surface2', className)}>
       {onOpen ? (
-        <button type="button" onClick={onOpen} className="block h-full w-full cursor-pointer">
+        <button type="button" onClick={onOpen} className="relative z-0 block h-full w-full cursor-pointer">
           {image}
         </button>
       ) : (
@@ -66,7 +66,7 @@ export function ProductImageFrame({
               onPrevious?.();
             }}
             aria-label="Previous photo"
-            className="mena-press absolute left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/92 text-ink shadow-[0_2px_10px_rgba(28,26,25,0.16)] hover:text-pink"
+            className="mena-press absolute left-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/92 text-ink shadow-[0_2px_10px_rgba(28,26,25,0.16)] hover:text-pink"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -77,7 +77,7 @@ export function ProductImageFrame({
               onNext?.();
             }}
             aria-label="Next photo"
-            className="mena-press absolute right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/92 text-ink shadow-[0_2px_10px_rgba(28,26,25,0.16)] hover:text-pink"
+            className="mena-press absolute right-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/92 text-ink shadow-[0_2px_10px_rgba(28,26,25,0.16)] hover:text-pink"
           >
             <ChevronRight className="h-5 w-5" />
           </button>

@@ -56,7 +56,7 @@ export function DesktopProductCard({
         />
 
         {product.featured && (
-          <span className="absolute left-3 top-3 rounded-md bg-pink px-2.5 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-white">
+          <span className="absolute left-3 top-3 z-30 rounded-md bg-pink px-2.5 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-white">
             Featured
           </span>
         )}
@@ -69,7 +69,7 @@ export function DesktopProductCard({
             void toggleWishlist(product.id);
           }}
           aria-label={wished ? 'Remove from wishlist' : 'Save to wishlist'}
-          className="mena-press absolute right-3 top-3 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-white/95 shadow-[0_1px_4px_rgba(28,26,25,0.14)]"
+          className="mena-press absolute right-3 top-3 z-30 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-white/95 shadow-[0_1px_4px_rgba(28,26,25,0.14)]"
         >
           <Heart className={cx('h-4 w-4', wished ? 'fill-pink text-pink' : 'text-ink/45')} />
         </button>
