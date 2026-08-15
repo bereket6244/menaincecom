@@ -35,6 +35,7 @@ export interface Product {
   status?: 'draft' | 'published' | 'archived';
   name: string;
   categoryId: string;
+  categoryIds?: string[];
   description: string;
   photos: string[];
   pricingMode: PricingMode;

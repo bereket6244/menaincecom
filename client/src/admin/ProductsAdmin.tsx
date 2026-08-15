@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Check, Plus, Pencil, Search, Star, X } from 'lucide-react';
+import { Check, Plus, Pencil, Search, SlidersHorizontal, Star, X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import { apiSend } from '../lib/api';
 import type { Category, PricingMode, Product, UniversalComplimentaryItem, VariantGroup } from '../lib/types';
@@ -11,11 +11,21 @@ import { useApp } from '../store/AppContext';
 import { COMPLIMENTARY_MAX_MULTIPLIER } from '../lib/complimentary';
 import { cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 import { facetKey, optionValue } from '../lib/variantFacets';
+import { productCategoryIds, productCategoryNames } from '../lib/productCategories';
 
 type Draft = Omit<Product, 'id' | 'createdAt'> & { id?: string };
+type ProductBulkPatch = {
+  ids: string[];
+  set?: Partial<Pick<Product, 'status' | 'categoryId' | 'categoryIds' | 'featured' | 'isAddon' | 'pricingMode' | 'price'>>;
+  variants?: { mode: 'add' | 'replace'; groups: VariantGroup[] };
+  complimentaryItems?: { mode: 'add' | 'replace'; items: NonNullable<Product['complimentaryItems']> };
+  universalComplimentaryItemIds?: { mode: 'add' | 'replace'; ids: string[] };
+  suggestedAddonIds?: { mode: 'add' | 'replace'; ids: string[] };
+};
 
 const EMPTY: Draft = {
   name: '', categoryId: '', description: '', photos: [],
+  categoryIds: [],
   pricingMode: 'exact', price: null, variants: [],
   isAddon: false, suggestedAddonIds: [], complimentaryItems: [], universalComplimentaryItemIds: [], featured: false,
   status: 'published',
@@ -23,6 +33,33 @@ const EMPTY: Draft = {
 
 type VariantOption = VariantGroup['options'][number];
 type LibraryGroup = { name: string; options: Map<string, VariantOption> };
+
+function cleanVariants(variants: VariantGroup[]) {
+  return variants
+    .map((variant) => ({
+      ...variant,
+      name: variant.name.trim(),
+      options: variant.options
+        .map((option) => ({ ...option, label: option.label.trim() }))
+        .filter((option) => option.label),
+    }))
+    .filter((variant) => variant.name && variant.options.length > 0);
+}
+
+function cleanComplimentaryItems(items: NonNullable<Product['complimentaryItems']> | undefined) {
+  return (items || [])
+    .map((item) => ({
+      id: item.id,
+      enabled: !!item.enabled,
+      name: item.name.trim(),
+      type: item.type === 'multiplier' ? 'multiplier' as const : 'fixed' as const,
+      qty: item.type === 'multiplier'
+        ? Math.min(COMPLIMENTARY_MAX_MULTIPLIER, Math.max(0.01, Number(item.qty) || 1))
+        : Math.max(1, Math.floor(Number(item.qty) || 1)),
+      extraPriceEach: Math.max(0, Number(item.extraPriceEach) || 0),
+    }))
+    .filter((item) => item.name);
+}
 
 /**
  * Variant groups and option labels already used across the catalog. Lets a group
@@ -388,17 +425,300 @@ function VariantsEditor({
   );
 }
 
+function BulkEditProductsModal({
+  open, selectedCount, onClose, onApply, categories, products, universalComplimentaryItems, library,
+}: {
+  open: boolean;
+  selectedCount: number;
+  onClose: () => void;
+  onApply: (patch: Omit<ProductBulkPatch, 'ids'>) => Promise<void>;
+  categories: Category[] | null;
+  products: Product[] | null;
+  universalComplimentaryItems: UniversalComplimentaryItem[] | null;
+  library: Map<string, LibraryGroup>;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [shouldSetStatus, setShouldSetStatus] = useState(false);
+  const [status, setProductStatus] = useState<Product['status']>('published');
+  const [shouldSetCategory, setShouldSetCategory] = useState(false);
+  const [categoryIds, setCategoryIds] = useState<string[]>([]);
+  const [shouldSetFeatured, setShouldSetFeatured] = useState(false);
+  const [featured, setFeatured] = useState(false);
+  const [shouldSetAddon, setShouldSetAddon] = useState(false);
+  const [isAddon, setIsAddon] = useState(false);
+  const [shouldSetPricing, setShouldSetPricing] = useState(false);
+  const [pricingMode, setPricingMode] = useState<PricingMode>('exact');
+  const [price, setPrice] = useState<number | null>(null);
+  const [variantMode, setVariantMode] = useState<'off' | 'add' | 'replace'>('off');
+  const [bulkVariants, setBulkVariants] = useState<VariantGroup[]>([]);
+  const [freeMode, setFreeMode] = useState<'off' | 'add' | 'replace'>('off');
+  const [freeItems, setFreeItems] = useState<NonNullable<Product['complimentaryItems']>>([]);
+  const [universalMode, setUniversalMode] = useState<'off' | 'add' | 'replace'>('off');
+  const [universalIds, setUniversalIds] = useState<string[]>([]);
+  const [addonMode, setAddonMode] = useState<'off' | 'add' | 'replace'>('off');
+  const [addonIds, setAddonIds] = useState<string[]>([]);
+
+  const addonProducts = (products || []).filter((product) => product.isAddon);
+  const addFreeItem = () => {
+    setFreeItems((items) => [
+      ...items,
+      { id: crypto.randomUUID?.() || String(Date.now()), enabled: true, name: '', type: 'fixed', qty: 1, extraPriceEach: 0 },
+    ]);
+  };
+  const updateFreeItem = (id: string, patch: Partial<NonNullable<Product['complimentaryItems']>[number]>) => {
+    setFreeItems((items) => items.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  };
+  const toggleId = (ids: string[], id: string) => (
+    ids.includes(id) ? ids.filter((itemId) => itemId !== id) : [...ids, id]
+  );
+  const operationMode = (value: 'off' | 'add' | 'replace', setter: (next: 'off' | 'add' | 'replace') => void) => (
+    <select value={value} onChange={(e) => setter(e.target.value as 'off' | 'add' | 'replace')} className="field w-32 py-1 text-[12px]">
+      <option value="off">Do nothing</option>
+      <option value="add">Add</option>
+      <option value="replace">Replace</option>
+    </select>
+  );
+  const resetDraft = () => {
+    setShouldSetStatus(false);
+    setProductStatus('published');
+    setShouldSetCategory(false);
+    setCategoryIds([]);
+    setShouldSetFeatured(false);
+    setFeatured(false);
+    setShouldSetAddon(false);
+    setIsAddon(false);
+    setShouldSetPricing(false);
+    setPricingMode('exact');
+    setPrice(null);
+    setVariantMode('off');
+    setBulkVariants([]);
+    setFreeMode('off');
+    setFreeItems([]);
+    setUniversalMode('off');
+    setUniversalIds([]);
+    setAddonMode('off');
+    setAddonIds([]);
+  };
+  const close = () => {
+    resetDraft();
+    onClose();
+  };
+
+  const apply = async () => {
+    const patch: Omit<ProductBulkPatch, 'ids'> = {};
+    const set: NonNullable<ProductBulkPatch['set']> = {};
+    if (shouldSetStatus) set.status = status;
+    if (shouldSetCategory) {
+      set.categoryIds = categoryIds;
+      set.categoryId = categoryIds[0] || '';
+    }
+    if (shouldSetFeatured) set.featured = featured;
+    if (shouldSetAddon) set.isAddon = isAddon;
+    if (shouldSetPricing) {
+      set.pricingMode = pricingMode;
+      set.price = pricingMode === 'quote' ? null : price;
+    }
+    if (Object.keys(set).length > 0) patch.set = set;
+    const variants = cleanVariants(bulkVariants);
+    if (variantMode !== 'off' && variants.length > 0) patch.variants = { mode: variantMode, groups: variants };
+    const complimentaryItems = cleanComplimentaryItems(freeItems);
+    if (freeMode !== 'off') patch.complimentaryItems = { mode: freeMode, items: complimentaryItems };
+    if (universalMode !== 'off') patch.universalComplimentaryItemIds = { mode: universalMode, ids: universalIds };
+    if (addonMode !== 'off') patch.suggestedAddonIds = { mode: addonMode, ids: addonIds };
+    if (Object.keys(patch).length === 0) return;
+    setBusy(true);
+    try {
+      await onApply(patch);
+      close();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={close} title={`Bulk edit ${selectedCount} product${selectedCount === 1 ? '' : 's'}`} wide>
+      <div className="space-y-4">
+        <div className="rounded border border-edge bg-surface2 p-3">
+          <SysLabel>Basic fields</SysLabel>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            <label className="flex items-center gap-2 text-xs">
+              <input type="checkbox" checked={shouldSetStatus} onChange={(e) => setShouldSetStatus(e.target.checked)} className="accent-pink" />
+              Status
+              <select value={status} onChange={(e) => setProductStatus(e.target.value as Product['status'])} disabled={!shouldSetStatus} className="field py-1 text-[12px] disabled:opacity-40">
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="archived">Archived</option>
+              </select>
+            </label>
+            <label className="flex items-center gap-2 text-xs">
+              <input type="checkbox" checked={shouldSetCategory} onChange={(e) => setShouldSetCategory(e.target.checked)} className="accent-pink" />
+              Category
+            </label>
+            {shouldSetCategory && (
+              <div className="flex flex-wrap gap-1 sm:col-span-2">
+                {(categories || []).map((category) => {
+                  const active = categoryIds.includes(category.id);
+                  return (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={() => setCategoryIds((current) => active ? current.filter((id) => id !== category.id) : [...current, category.id])}
+                      className={cx('rounded border px-2 py-1 text-[11px]', active ? 'border-pink bg-pink/15 text-ink' : 'border-edge bg-surface text-muted hover:text-ink')}
+                    >
+                      {category.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <label className="flex items-center gap-2 text-xs">
+              <input type="checkbox" checked={shouldSetFeatured} onChange={(e) => setShouldSetFeatured(e.target.checked)} className="accent-pink" />
+              Featured
+              <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} disabled={!shouldSetFeatured} className="accent-pink disabled:opacity-40" />
+            </label>
+            <label className="flex items-center gap-2 text-xs">
+              <input type="checkbox" checked={shouldSetAddon} onChange={(e) => setShouldSetAddon(e.target.checked)} className="accent-pink" />
+              Add-on item
+              <select value={isAddon ? 'yes' : 'no'} onChange={(e) => setIsAddon(e.target.value === 'yes')} disabled={!shouldSetAddon} className="field py-1 text-[12px] disabled:opacity-40">
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div className="rounded border border-edge bg-surface2 p-3">
+          <label className="flex items-center gap-2 text-xs font-semibold">
+            <input type="checkbox" checked={shouldSetPricing} onChange={(e) => setShouldSetPricing(e.target.checked)} className="accent-pink" />
+            Pricing
+          </label>
+          <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_1fr]">
+            <select value={pricingMode} onChange={(e) => setPricingMode(e.target.value as PricingMode)} disabled={!shouldSetPricing} className="field py-1 text-[12px] disabled:opacity-40">
+              <option value="exact">Exact</option>
+              <option value="starting">From...</option>
+              <option value="quote">Request a quote</option>
+            </select>
+            <input
+              type="number"
+              min={0}
+              value={price ?? ''}
+              disabled={!shouldSetPricing || pricingMode === 'quote'}
+              onChange={(e) => setPrice(e.target.value === '' ? null : Number(e.target.value))}
+              className="field py-1 text-[12px] disabled:opacity-40"
+              placeholder={pricingMode === 'quote' ? 'Quoted on request' : 'ETB'}
+            />
+          </div>
+        </div>
+
+        <div className="rounded border border-edge bg-surface2 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <SysLabel>Variant groups/options</SysLabel>
+            {operationMode(variantMode, setVariantMode)}
+          </div>
+          {variantMode !== 'off' && (
+            <div className="mt-2">
+              <VariantsEditor variants={bulkVariants} onChange={setBulkVariants} library={library} />
+            </div>
+          )}
+        </div>
+
+        <div className="rounded border border-edge bg-surface2 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <SysLabel>Complimentary item rules</SysLabel>
+            {operationMode(freeMode, setFreeMode)}
+          </div>
+          {freeMode !== 'off' && (
+            <div className="mt-2 space-y-2">
+              {freeItems.map((item) => (
+                <div key={item.id} className="grid gap-2 rounded border border-edge bg-surface p-2 sm:grid-cols-[auto_1fr_120px_100px_120px_auto] sm:items-center">
+                  <input type="checkbox" checked={item.enabled} onChange={(e) => updateFreeItem(item.id, { enabled: e.target.checked })} className="accent-pink" aria-label="Enabled" />
+                  <input value={item.name} onChange={(e) => updateFreeItem(item.id, { name: e.target.value })} placeholder="Envelope, schedule card..." className="field py-1 text-[12px]" />
+                  <select value={item.type || 'fixed'} onChange={(e) => updateFreeItem(item.id, { type: e.target.value as 'fixed' | 'multiplier' })} className="field py-1 text-[12px]">
+                    <option value="fixed">Fixed qty</option>
+                    <option value="multiplier">Multiplier</option>
+                  </select>
+                  <input type="number" min={item.type === 'multiplier' ? 0.01 : 1} step={item.type === 'multiplier' ? 0.25 : 1} value={item.qty} onChange={(e) => updateFreeItem(item.id, { qty: Number(e.target.value) })} className="field py-1 text-[12px]" />
+                  <input type="number" min={0} value={item.extraPriceEach ?? 0} onChange={(e) => updateFreeItem(item.id, { extraPriceEach: Number(e.target.value) })} className="field py-1 text-[12px]" aria-label="Extra price each" />
+                  <IconButton icon={<X className="h-3.5 w-3.5" />} title="Remove complimentary item" danger onClick={() => setFreeItems((items) => items.filter((freeItem) => freeItem.id !== item.id))} />
+                </div>
+              ))}
+              <Button variant="outline" onClick={addFreeItem}><Plus className="h-3 w-3" /> Add free item</Button>
+            </div>
+          )}
+        </div>
+
+        {(universalComplimentaryItems || []).length > 0 && (
+          <div className="rounded border border-edge bg-surface2 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <SysLabel>Universal complimentary items</SysLabel>
+              {operationMode(universalMode, setUniversalMode)}
+            </div>
+            {universalMode !== 'off' && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {(universalComplimentaryItems || []).map((item) => {
+                  const active = universalIds.includes(item.id);
+                  return (
+                    <button key={item.id} type="button" onClick={() => setUniversalIds((ids) => toggleId(ids, item.id))} className={cx('rounded border px-2 py-1 text-[11px]', active ? 'border-green bg-green/15 text-green' : 'border-edge bg-surface text-muted hover:text-ink')}>
+                      {item.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {addonProducts.length > 0 && (
+          <div className="rounded border border-edge bg-surface2 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <SysLabel>Suggested add-ons</SysLabel>
+              {operationMode(addonMode, setAddonMode)}
+            </div>
+            {addonMode !== 'off' && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {addonProducts.map((item) => {
+                  const active = addonIds.includes(item.id);
+                  return (
+                    <button key={item.id} type="button" onClick={() => setAddonIds((ids) => toggleId(ids, item.id))} className={cx('rounded border px-2 py-1 text-[11px]', active ? 'border-pink bg-pink/15 text-ink' : 'border-edge bg-surface text-muted hover:text-ink')}>
+                      {item.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex justify-end gap-2 border-t border-edge pt-3">
+          <Button variant="ghost" onClick={close}>Cancel</Button>
+          <Button onClick={apply} busy={busy} disabled={shouldSetCategory && categoryIds.length === 0}>Apply changes</Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 export function ProductsAdmin() {
   const { data: products, loading, reload, setData } = useData<Product[]>('/admin/products');
   const { data: categories } = useData<Category[]>('/categories');
   const { data: universalComplimentaryItems } = useData<UniversalComplimentaryItem[]>('/admin/complimentary-items');
   const { toast, online } = useApp();
   const [editing, setEditing] = useState<Draft | null>(null);
+  const [bulkEditingIds, setBulkEditingIds] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
   const optionLibrary = useOptionLibrary(products);
-  const catName = (id: string) => (categories || []).find((c) => c.id === id)?.name || '—';
+  const catNames = (product: Pick<Product, 'categoryId' | 'categoryIds'>) => productCategoryNames(product, categories || []);
+  const catLabel = (product: Pick<Product, 'categoryId' | 'categoryIds'>) => catNames(product).join(', ') || '—';
   const addonOptions = (products || []).filter((p) => p.isAddon && p.id !== editing?.id);
+  const editingCategoryIds = editing ? productCategoryIds(editing) : [];
+  const toggleEditingCategory = (id: string) => {
+    if (!editing) return;
+    const next = editingCategoryIds.includes(id)
+      ? editingCategoryIds.filter((categoryId) => categoryId !== id)
+      : [...editingCategoryIds, id];
+    setEditing({ ...editing, categoryIds: next, categoryId: next[0] || '' });
+  };
 
   const updateComplimentaryItem = (
     id: string,
@@ -427,7 +747,8 @@ export function ProductsAdmin() {
   const save = async () => {
     if (!editing) return;
     if (!editing.name.trim()) { toast('error', 'Product name is required.'); return; }
-    if (!editing.isAddon && !editing.categoryId) { toast('error', 'Pick a category for this product.'); return; }
+    const selectedCategoryIds = productCategoryIds(editing);
+    if (!editing.isAddon && selectedCategoryIds.length === 0) { toast('error', 'Pick at least one category for this product.'); return; }
     if (editing.pricingMode !== 'quote' && (editing.price == null || editing.price <= 0)) {
       toast('error', 'Enter a price, or switch to "Request a quote".');
       return;
@@ -436,30 +757,13 @@ export function ProductsAdmin() {
     try {
       const payload = {
         ...editing,
+        categoryId: editing.isAddon ? '' : selectedCategoryIds[0] || '',
+        categoryIds: editing.isAddon ? [] : selectedCategoryIds,
         price: editing.pricingMode === 'quote' ? null : editing.price,
-        variants: editing.variants
-          .map((variant) => ({
-            ...variant,
-            name: variant.name.trim(),
-            options: variant.options
-              .map((option) => ({ ...option, label: option.label.trim() }))
-              .filter((option) => option.label),
-          }))
-          .filter((variant) => variant.name && variant.options.length > 0),
+        variants: cleanVariants(editing.variants),
         complimentaryItems: editing.isAddon
           ? []
-          : (editing.complimentaryItems || [])
-              .map((item) => ({
-                id: item.id,
-                enabled: !!item.enabled,
-                name: item.name.trim(),
-                type: item.type === 'multiplier' ? 'multiplier' : 'fixed',
-                qty: item.type === 'multiplier'
-                  ? Math.min(COMPLIMENTARY_MAX_MULTIPLIER, Math.max(0.01, Number(item.qty) || 1))
-                  : Math.max(1, Math.floor(Number(item.qty) || 1)),
-                extraPriceEach: Math.max(0, Number(item.extraPriceEach) || 0),
-              }))
-              .filter((item) => item.name),
+          : cleanComplimentaryItems(editing.complimentaryItems),
         universalComplimentaryItemIds: editing.isAddon ? [] : editing.universalComplimentaryItemIds || [],
       };
       if (editing.id) await apiSend('PUT', `/admin/products/${editing.id}`, payload);
@@ -485,6 +789,19 @@ export function ProductsAdmin() {
     }
   };
 
+  const bulkEdit = async (ids: string[], patch: Omit<ProductBulkPatch, 'ids'>) => {
+    try {
+      const res = await apiSend<{ products: Product[] }>('PATCH', '/admin/products/bulk', { ids, ...patch });
+      const updated = new Map(res.products.map((product) => [product.id, product]));
+      setData((current) => current ? current.map((product) => updated.get(product.id) || product) : current);
+      toast('success', `${res.products.length} product(s) updated.`);
+      reload();
+    } catch (err) {
+      toast('error', (err as Error).message);
+      throw err;
+    }
+  };
+
   const columns: Column<Product>[] = [
     {
       key: 'photo', label: '', width: '52px',
@@ -505,7 +822,7 @@ export function ProductsAdmin() {
       ),
       sortValue: (p) => p.name,
     },
-    { key: 'category', label: 'Category', render: (p) => (p.isAddon ? '—' : catName(p.categoryId)), sortValue: (p) => catName(p.categoryId) },
+    { key: 'category', label: 'Category', render: (p) => (p.isAddon ? '—' : catLabel(p)), sortValue: (p) => catLabel(p) },
     {
       key: 'status', label: 'Status',
       render: (p) => <span className="text-[11px] capitalize">{p.status || 'published'}</span>,
@@ -536,8 +853,13 @@ export function ProductsAdmin() {
         rows={products}
         columns={columns}
         loading={loading}
-        searchText={(p) => `${p.name} ${p.description} ${catName(p.categoryId)}`}
+        searchText={(p) => `${p.name} ${p.description} ${catLabel(p)}`}
         onRowClick={(p) => setEditing({ ...p })}
+        bulkActions={(ids) => (
+          <Button variant="outline" onClick={() => setBulkEditingIds(ids)} disabled={!online}>
+            <SlidersHorizontal className="h-3.5 w-3.5" /> Bulk edit {ids.length}
+          </Button>
+        )}
         onBulkDelete={bulkDelete}
         toolbar={
           <Button onClick={() => setEditing({ ...EMPTY })} disabled={!online}>
@@ -545,6 +867,17 @@ export function ProductsAdmin() {
           </Button>
         }
         emptyMessage="No products yet — add the first design."
+      />
+
+      <BulkEditProductsModal
+        open={bulkEditingIds.length > 0}
+        selectedCount={bulkEditingIds.length}
+        onClose={() => setBulkEditingIds([])}
+        onApply={(patch) => bulkEdit(bulkEditingIds, patch)}
+        categories={categories}
+        products={products}
+        universalComplimentaryItems={universalComplimentaryItems}
+        library={optionLibrary}
       />
 
       <button
@@ -566,15 +899,28 @@ export function ProductsAdmin() {
               </div>
               <div>
                 <SysLabel>Category</SysLabel>
-                <select
-                  value={editing.categoryId}
-                  onChange={(e) => setEditing({ ...editing, categoryId: e.target.value })}
-                  className="field mt-1"
-                  disabled={editing.isAddon}
-                >
-                  <option value="">{editing.isAddon ? 'Not needed for add-ons' : 'Choose…'}</option>
-                  {(categories || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                <div className={cx('mt-1 flex min-h-10 flex-wrap gap-1.5 rounded border border-edge bg-white p-1.5', editing.isAddon && 'opacity-40')}>
+                  {(categories || []).map((category) => {
+                    const active = editingCategoryIds.includes(category.id);
+                    return (
+                      <button
+                        key={category.id}
+                        type="button"
+                        disabled={editing.isAddon}
+                        onClick={() => toggleEditingCategory(category.id)}
+                        className={cx(
+                          'rounded border px-2.5 py-1.5 text-[11px] font-semibold disabled:cursor-not-allowed',
+                          active ? 'border-pink bg-pink/15 text-ink' : 'border-edge bg-surface text-muted hover:text-ink'
+                        )}
+                      >
+                        {category.name}
+                      </button>
+                    );
+                  })}
+                  {(categories || []).length === 0 && (
+                    <span className="px-2 py-1.5 text-[11px] text-muted">No categories yet.</span>
+                  )}
+                </div>
               </div>
             </div>
 

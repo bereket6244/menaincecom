@@ -12,6 +12,7 @@ import { COMPLIMENTARY_EXTRA_MAX_QTY, complimentaryAllowanceText, complimentaryF
 import { cartPriceEach, cleanDescription, cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
 import { smsContactUrl, telegramContactUrl, whatsappContactUrl } from '../lib/share';
+import { productCategoryNames } from '../lib/productCategories';
 
 type SheetMode = 'add' | 'buy';
 
@@ -71,7 +72,7 @@ export function MobileProductDetail() {
     const found = (products || []).find((p) => p.id === id) || null;
     return found ? productWithResolvedComplimentary(found, universalComplimentaryItems || undefined) : null;
   }, [products, id, universalComplimentaryItems]);
-  const categoryName = categories?.find((category) => category.id === product?.categoryId)?.name || 'Wedding Cards';
+  const categoryName = product ? productCategoryNames(product, categories || []).join(', ') || 'Wedding Cards' : 'Wedding Cards';
   const [selections, setSelections] = useState<Record<string, string>>({});
   const [complimentarySelections, setComplimentarySelections] = useState<Record<string, number>>({});
   const [qty, setQty] = useState(1);

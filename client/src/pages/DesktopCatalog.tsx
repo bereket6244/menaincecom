@@ -14,6 +14,7 @@ import {
 } from '../lib/variantFacets';
 import { VariantFacetFilters } from '../components/VariantFacetFilters';
 import { useResultAnimation } from '../lib/useResultAnimation';
+import { firstProductCategory, productCategoryIds, productCategoryNames } from '../lib/productCategories';
 
 const CIRCLE_TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#eeeeec', '#f6efdd', '#e9f0ec', '#e9e6ef'];
 const SORTS = [
@@ -24,7 +25,7 @@ const SORTS = [
 ];
 
 function productSearchText(product: Product, categories: Category[]): string {
-  const category = categories.find((c) => c.id === product.categoryId)?.name || '';
+  const category = productCategoryNames(product, categories).join(' ');
   const variants = (product.variants || [])
     .flatMap((group) => [group.name, ...group.options.map((option) => option.label)])
     .join(' ');
@@ -82,8 +83,8 @@ export function DesktopCatalog() {
   // from the products the shopper is actually looking at.
   const scoped = useMemo(() => {
     let list = (products || []).filter((p) => !p.isAddon);
-    if (activeCategory) list = list.filter((p) => p.categoryId === activeCategory);
-    if (categoryFilters.length) list = list.filter((p) => categoryFilters.includes(p.categoryId));
+    if (activeCategory) list = list.filter((p) => productCategoryIds(p).includes(activeCategory));
+    if (categoryFilters.length) list = list.filter((p) => productCategoryIds(p).some((id) => categoryFilters.includes(id)));
     if (query.trim()) {
       const search = query.trim().toLowerCase();
       list = list.filter((p) => productSearchText(p, categories || []).includes(search));
@@ -308,7 +309,7 @@ export function DesktopCatalog() {
                 <DesktopProductCard
                   key={product.id}
                   product={product}
-                  category={catById.get(product.categoryId)}
+                  category={firstProductCategory(product, [...catById.values()])}
                   index={index}
                   priority={index < 6}
                   onOpen={(p) => navigate(`/product/${p.id}`)}

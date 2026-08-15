@@ -493,6 +493,159 @@ api.get('/admin/products', requireAdmin, dbRoute(async (_req, res) => {
   res.json(products.filter((product) => !product.deletedAt));
 }));
 
+const COMPLIMENTARY_MAX_MULTIPLIER = 2.5;
+const cleanKey = (value) => String(value || '').trim().toLowerCase();
+
+function cleanVariantGroups(groups) {
+  return (Array.isArray(groups) ? groups : [])
+    .map((group) => ({
+      ...group,
+      name: String(group?.name || '').trim(),
+      options: (Array.isArray(group?.options) ? group.options : [])
+        .map((option) => ({ ...option, label: String(option?.label || '').trim() }))
+        .filter((option) => option.label),
+    }))
+    .filter((group) => group.name && group.options.length > 0);
+}
+
+function mergeVariantGroups(existing, incoming) {
+  const groups = cleanVariantGroups(existing);
+  for (const group of cleanVariantGroups(incoming)) {
+    const groupKey = cleanKey(group.name);
+    const target = groups.find((item) => cleanKey(item.name) === groupKey);
+    if (!target) {
+      groups.push(group);
+      continue;
+    }
+    const optionKeys = new Set(target.options.map((option) => cleanKey(option.label)));
+    for (const option of group.options) {
+      const optionKey = cleanKey(option.label);
+      if (!optionKeys.has(optionKey)) {
+        target.options.push(option);
+        optionKeys.add(optionKey);
+      }
+    }
+  }
+  return groups;
+}
+
+function cleanComplimentaryItems(items) {
+  return (Array.isArray(items) ? items : [])
+    .map((item) => {
+      const type = item?.type === 'multiplier' ? 'multiplier' : 'fixed';
+      return {
+        id: String(item?.id || crypto.randomUUID()),
+        enabled: !!item?.enabled,
+        name: String(item?.name || '').trim(),
+        type,
+        qty: type === 'multiplier'
+          ? Math.min(COMPLIMENTARY_MAX_MULTIPLIER, Math.max(0.01, Number(item?.qty) || 1))
+          : Math.max(1, Math.floor(Number(item?.qty) || 1)),
+        extraPriceEach: Math.max(0, Number(item?.extraPriceEach) || 0),
+      };
+    })
+    .filter((item) => item.name);
+}
+
+function mergeByIdentity(existing, incoming, identity) {
+  const merged = [...(Array.isArray(existing) ? existing : [])];
+  const keys = new Set(merged.map(identity).filter(Boolean));
+  for (const item of incoming) {
+    const key = identity(item);
+    if (!key || keys.has(key)) continue;
+    merged.push(item);
+    keys.add(key);
+  }
+  return merged;
+}
+
+function cleanIdList(ids) {
+  return [...new Set((Array.isArray(ids) ? ids : []).map((id) => String(id || '').trim()).filter(Boolean))];
+}
+
+function cleanCategoryIds(value, fallback) {
+  const ids = cleanIdList(value);
+  const legacy = String(fallback || '').trim();
+  return ids.length ? ids : legacy ? [legacy] : [];
+}
+
+function applyProductBulkPatch(product, body) {
+  const patch = {};
+  const set = body?.set && typeof body.set === 'object' ? body.set : {};
+  if (set.status !== undefined) patch.status = normalizeProductStatus(set.status);
+  if (set.categoryIds !== undefined || set.categoryId !== undefined) {
+    const categoryIds = cleanCategoryIds(set.categoryIds, set.categoryId);
+    patch.categoryIds = categoryIds;
+    patch.categoryId = categoryIds[0] || '';
+  }
+  if (set.featured !== undefined) patch.featured = !!set.featured;
+  if (set.isAddon !== undefined) {
+    patch.isAddon = !!set.isAddon;
+    if (patch.isAddon) {
+      patch.categoryId = '';
+      patch.categoryIds = [];
+      patch.complimentaryItems = [];
+      patch.universalComplimentaryItemIds = [];
+      patch.suggestedAddonIds = [];
+    }
+  }
+  if (set.pricingMode !== undefined || set.price !== undefined) {
+    const pricingMode = ['exact', 'starting', 'quote'].includes(set.pricingMode) ? set.pricingMode : product.pricingMode;
+    patch.pricingMode = pricingMode;
+    patch.price = pricingMode === 'quote' ? null : Math.max(0, Number(set.price) || 0);
+  }
+
+  const variants = body?.variants;
+  if (variants?.mode === 'replace') patch.variants = cleanVariantGroups(variants.groups);
+  if (variants?.mode === 'add') patch.variants = mergeVariantGroups(product.variants, variants.groups);
+
+  if (!patch.isAddon && !product.isAddon) {
+    const complimentaryItems = body?.complimentaryItems;
+    if (complimentaryItems?.mode === 'replace') {
+      patch.complimentaryItems = cleanComplimentaryItems(complimentaryItems.items);
+    }
+    if (complimentaryItems?.mode === 'add') {
+      patch.complimentaryItems = mergeByIdentity(
+        cleanComplimentaryItems(product.complimentaryItems),
+        cleanComplimentaryItems(complimentaryItems.items),
+        (item) => cleanKey(item.id) || cleanKey(item.name)
+      );
+    }
+
+    const universal = body?.universalComplimentaryItemIds;
+    if (universal?.mode === 'replace') patch.universalComplimentaryItemIds = cleanIdList(universal.ids);
+    if (universal?.mode === 'add') {
+      patch.universalComplimentaryItemIds = cleanIdList([...(product.universalComplimentaryItemIds || []), ...cleanIdList(universal.ids)]);
+    }
+
+    const addons = body?.suggestedAddonIds;
+    if (addons?.mode === 'replace') patch.suggestedAddonIds = cleanIdList(addons.ids);
+    if (addons?.mode === 'add') {
+      patch.suggestedAddonIds = cleanIdList([...(product.suggestedAddonIds || []), ...cleanIdList(addons.ids)]);
+    }
+  }
+
+  return patch;
+}
+
+api.patch('/admin/products/bulk', requireAdmin, dbRoute(async (req, res) => {
+  const ids = cleanIdList(req.body?.ids).slice(0, 200);
+  if (!ids.length) return res.status(400).json({ error: 'bad_request', message: 'Choose at least one product.' });
+  const updated = [];
+  for (const id of ids) {
+    const existing = await records.get('products', id);
+    if (!existing || existing.deletedAt) continue;
+    const patch = applyProductBulkPatch(existing, req.body);
+    if (Object.keys(patch).length === 0) continue;
+    const doc = await records.update('products', id, {
+      ...patch,
+      contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,
+    });
+    if (doc) updated.push(doc);
+  }
+  res.json({ ok: true, updated: updated.length, products: updated });
+}));
+
 api.post('/admin/products', requireAdmin, dbRoute(async (req, res) => {
   const input = { ...req.body, status: normalizeProductStatus(req.body?.status) };
   const identity = telegramProductIdentity(input);

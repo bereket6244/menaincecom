@@ -13,6 +13,7 @@ import {
 import { VariantFacetFilters } from '../components/VariantFacetFilters';
 import { FilterOverlay } from '../components/FilterOverlay';
 import { useResultAnimation } from '../lib/useResultAnimation';
+import { productCategoryIds, productCategoryNames } from '../lib/productCategories';
 
 const CIRCLE_TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#e9f0ec'];
 const SORTS = [
@@ -23,7 +24,7 @@ const SORTS = [
   { id: 'name', label: 'Name A-Z' },
 ];
 function productSearchText(product: Product, categories: Category[]): string {
-  const category = categories.find((c) => c.id === product.categoryId)?.name || '';
+  const category = productCategoryNames(product, categories).join(' ');
   const variants = (product.variants || [])
     .flatMap((group) => [group.name, ...group.options.map((option) => option.label)])
     .join(' ');
@@ -94,8 +95,8 @@ export function MobileCatalog() {
   // from the products the shopper is actually looking at.
   const scoped = useMemo(() => {
     let list = (products || []).filter((product) => !product.isAddon);
-    if (activeCategory) list = list.filter((product) => product.categoryId === activeCategory);
-    if (categoryFilters.length) list = list.filter((product) => categoryFilters.includes(product.categoryId));
+    if (activeCategory) list = list.filter((product) => productCategoryIds(product).includes(activeCategory));
+    if (categoryFilters.length) list = list.filter((product) => productCategoryIds(product).some((id) => categoryFilters.includes(id)));
     if (query.trim()) {
       const needle = query.trim().toLowerCase();
       list = list.filter((product) => productSearchText(product, categories || []).includes(needle));
@@ -337,7 +338,7 @@ export function MobileCatalog() {
             <MobileProductCard
               key={product.id}
               product={product}
-              categoryName={categoryById.get(product.categoryId) || 'Wedding Cards'}
+              categoryName={productCategoryIds(product).map((categoryId) => categoryById.get(categoryId)).find(Boolean) || 'Wedding Cards'}
               priority={index < 4}
             />
           ))}
