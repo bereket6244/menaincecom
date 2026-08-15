@@ -485,8 +485,12 @@ function crud(collection) {
   return r;
 }
 
+// Deleting a product soft-deletes it (see DELETE below) so it stays restorable
+// and Telegram re-imports do not resurrect it. Deleted products are hidden from
+// the admin list; products merely archived by hand still show.
 api.get('/admin/products', requireAdmin, dbRoute(async (_req, res) => {
-  res.json(await records.list('products'));
+  const products = await records.list('products');
+  res.json(products.filter((product) => !product.deletedAt));
 }));
 
 api.post('/admin/products', requireAdmin, dbRoute(async (req, res) => {

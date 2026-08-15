@@ -9,7 +9,7 @@ export function normalizeProductStatus(value) {
 }
 
 export function isPublicProduct(product) {
-  return normalizeProductStatus(product?.status) === 'published';
+  return !product?.deletedAt && normalizeProductStatus(product?.status) === 'published';
 }
 
 export function publicProduct(product) {

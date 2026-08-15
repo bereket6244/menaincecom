@@ -115,6 +115,27 @@ function writeCache(path: string, data: unknown) {
   }
 }
 
+function removeCache(paths: string[]) {
+  try {
+    paths.forEach((cachePath) => localStorage.removeItem(CACHE_PREFIX + cachePath));
+  } catch {
+    /* cache invalidation is best-effort */
+  }
+}
+
+function mutationCacheKeys(method: string, path: string) {
+  const keys = [path];
+  const productMatch = path.match(/^\/admin\/products(?:\/([^/]+))?/);
+  if (productMatch) {
+    keys.push('/admin/products', '/products');
+    if (productMatch[1]) keys.push(`/products/${productMatch[1]}`);
+  }
+  if (method !== 'GET' && path.startsWith('/admin/categories')) {
+    keys.push('/admin/categories', '/categories', '/products');
+  }
+  return [...new Set(keys)];
+}
+
 async function parseError(res: Response): Promise<ApiError> {
   let message = `Request failed (${res.status})`;
   let dbDown = false;
@@ -140,7 +161,7 @@ export async function apiGet<T>(path: string): Promise<T> {
     throw new ApiError('offline', OFFLINE_MESSAGE);
   }
   try {
-    const res = await fetch(apiUrl(path), { headers: headers(false) });
+    const res = await fetch(apiUrl(path), { headers: headers(false), cache: 'no-store' });
     if (!res.ok) throw await parseError(res);
     const data = normalizeMediaUrls((await res.json()) as T);
     writeCache(path, data);
@@ -183,7 +204,9 @@ export async function apiSend<T>(method: string, path: string, body?: unknown): 
   }
   if (!res.ok) throw await parseError(res);
   notifyDbStatus(false);
-  return (await res.json()) as T;
+  const data = (await res.json()) as T;
+  removeCache(mutationCacheKeys(method, path));
+  return data;
 }
 
 export async function apiUpload(files: File[]): Promise<string[]> {

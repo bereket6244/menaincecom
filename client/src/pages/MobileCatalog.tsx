@@ -7,6 +7,12 @@ import { MobileProductCard } from '../components/MobileProductCard';
 import { EmptyState, Spinner } from '../components/ui';
 import { cx } from '../lib/utils';
 import { buildPriceBands, formatEtb, priceBounds } from '../lib/priceBands';
+import {
+  buildVariantFacets, countVariantFilters, matchesVariantFilters, type VariantFilters,
+} from '../lib/variantFacets';
+import { VariantFacetFilters } from '../components/VariantFacetFilters';
+import { FilterOverlay } from '../components/FilterOverlay';
+import { useResultAnimation } from '../lib/useResultAnimation';
 
 const CIRCLE_TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#e9f0ec'];
 const SORTS = [
@@ -45,6 +51,7 @@ export function MobileCatalog() {
   const [min, setMin] = useState('');
   const [max, setMax] = useState('');
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
+  const [variantFilters, setVariantFilters] = useState<VariantFilters>({});
   const [showMoreCats, setShowMoreCats] = useState(false);
   const [sort, setSort] = useState('featured');
   const [filterOpen, setFilterOpen] = useState(false);
@@ -68,17 +75,24 @@ export function MobileCatalog() {
   const minPrice = bounds.min != null ? formatEtb(bounds.min) : 'Min';
   const maxPrice = bounds.max != null ? formatEtb(bounds.max) : 'Max';
   const sidebarCategories = showMoreCats ? (categories || []) : (categories || []).slice(0, 5);
-  const activeFilterCount = bands.length + categoryFilters.length + (min ? 1 : 0) + (max ? 1 : 0);
+  const activeFilterCount = bands.length + categoryFilters.length + countVariantFilters(variantFilters)
+    + (min ? 1 : 0) + (max ? 1 : 0);
+  const gridRef = useResultAnimation<HTMLDivElement>(
+    JSON.stringify([activeCategory, categoryFilters, bands, min, max, variantFilters, sort, query])
+  );
 
   const clearAll = () => {
     setBands([]);
     setMin('');
     setMax('');
     setCategoryFilters([]);
+    setVariantFilters({});
     setCategory('');
   };
 
-  const visible = useMemo(() => {
+  // Everything except the variant filters, so the variant facets can be built
+  // from the products the shopper is actually looking at.
+  const scoped = useMemo(() => {
     let list = (products || []).filter((product) => !product.isAddon);
     if (activeCategory) list = list.filter((product) => product.categoryId === activeCategory);
     if (categoryFilters.length) list = list.filter((product) => categoryFilters.includes(product.categoryId));
@@ -96,6 +110,13 @@ export function MobileCatalog() {
     const mx = parseFloat(max);
     if (!Number.isNaN(mn)) list = list.filter((product) => product.price != null && (product.price as number) >= mn);
     if (!Number.isNaN(mx)) list = list.filter((product) => product.price != null && (product.price as number) <= mx);
+    return list;
+  }, [activeCategory, categoryFilters, bands, categories, max, min, priceBands, products, query]);
+
+  const facets = useMemo(() => buildVariantFacets(scoped, variantFilters), [scoped, variantFilters]);
+
+  const visible = useMemo(() => {
+    const list = scoped.filter((product) => matchesVariantFilters(product, variantFilters));
     if (sort === 'low') return [...list].sort((a, b) => (a.price ?? 1e9) - (b.price ?? 1e9));
     if (sort === 'high') return [...list].sort((a, b) => (b.price ?? -1) - (a.price ?? -1));
     if (sort === 'name') return [...list].sort((a, b) => a.name.localeCompare(b.name));
@@ -105,7 +126,7 @@ export function MobileCatalog() {
         Number(b.featured) - Number(a.featured)
         || new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
     );
-  }, [activeCategory, categoryFilters, bands, categories, max, min, priceBands, products, query, sort]);
+  }, [scoped, variantFilters, sort]);
 
   const chips: { id: string; name: string; photo?: string }[] = [
     { id: '', name: 'All' },
@@ -165,7 +186,6 @@ export function MobileCatalog() {
           >
             <SlidersHorizontal className="h-4 w-4 shrink-0" />
             Filter{activeFilterCount ? ` (${activeFilterCount})` : ''}
-            <ChevronDown className={cx('h-4 w-4 shrink-0 transition-transform', filterOpen && 'rotate-180')} />
           </button>
           <button
             type="button"
@@ -178,17 +198,37 @@ export function MobileCatalog() {
           </button>
         </div>
 
-        {(filterOpen || sortOpen) && (
+        {/* The filter window brings its own backdrop; this one only dismisses the sort menu. */}
+        {sortOpen && (
           <button
             type="button"
             aria-label="Close menu"
-            onClick={() => { setFilterOpen(false); setSortOpen(false); }}
+            onClick={() => setSortOpen(false)}
             className="fixed inset-0 z-0 cursor-default"
           />
         )}
 
-        {filterOpen && (
-          <div className="absolute left-4 top-[calc(100%+8px)] z-10 w-[min(19rem,calc(100%-2rem))] max-h-[58vh] overflow-y-auto rounded-2xl border border-edge bg-white p-3.5 shadow-[0_16px_40px_rgba(28,26,25,0.16)]">
+        <FilterOverlay
+          fullScreen
+          open={filterOpen}
+          onClose={() => setFilterOpen(false)}
+          headerAction={
+            <button type="button" onClick={clearAll} className="mena-press text-[13px] font-bold text-pink hover:underline">
+              Clear all
+            </button>
+          }
+          footer={
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={clearAll} className="btn-outline h-11 px-3">
+                <RotateCcw className="h-4 w-4" />
+                Reset
+              </button>
+              <button type="button" onClick={() => setFilterOpen(false)} className="btn-primary h-11 px-3">
+                Show {visible.length} design{visible.length === 1 ? '' : 's'}
+              </button>
+            </div>
+          }
+        >
             <div className="space-y-4">
               <section className="border-b border-edge pb-4">
                 <h2 className="mb-3 text-sm font-extrabold">Price Range</h2>
@@ -248,23 +288,16 @@ export function MobileCatalog() {
                   </button>
                 )}
               </section>
-            </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <button type="button" onClick={clearAll} className="btn-outline h-10 px-3">
-                <RotateCcw className="h-4 w-4" />
-                Reset
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterOpen(false)}
-                className="btn-primary h-10 px-3"
-              >
-                Done
-              </button>
+              <VariantFacetFilters
+                facets={facets}
+                filters={variantFilters}
+                onChange={setVariantFilters}
+                sectionClassName="border-t border-edge pt-4"
+                size="h-9"
+              />
             </div>
-          </div>
-        )}
+        </FilterOverlay>
 
         {sortOpen && (
           <div className="absolute right-4 top-[calc(100%+8px)] z-10 w-[min(14rem,calc(100%-2rem))] rounded-2xl border border-edge bg-white p-1.5 shadow-[0_16px_40px_rgba(28,26,25,0.16)]">
@@ -299,7 +332,7 @@ export function MobileCatalog() {
           <EmptyState>No designs found{query ? ` for "${query}"` : ''}.</EmptyState>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-x-3.5 gap-y-6 px-4 pt-3">
+        <div ref={gridRef} className="grid grid-cols-2 gap-x-3.5 gap-y-6 px-4 pt-3">
           {visible.map((product, index) => (
             <MobileProductCard
               key={product.id}

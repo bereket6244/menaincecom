@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Pencil, Star, X } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Check, Plus, Pencil, Search, Star, X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import { apiSend } from '../lib/api';
 import type { Category, PricingMode, Product, UniversalComplimentaryItem, VariantGroup } from '../lib/types';
@@ -10,6 +10,7 @@ import { PhotoUpload } from './PhotoUpload';
 import { useApp } from '../store/AppContext';
 import { COMPLIMENTARY_MAX_MULTIPLIER } from '../lib/complimentary';
 import { cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
+import { facetKey, optionValue } from '../lib/variantFacets';
 
 type Draft = Omit<Product, 'id' | 'createdAt'> & { id?: string };
 
@@ -20,9 +21,106 @@ const EMPTY: Draft = {
   status: 'published',
 };
 
-function VariantsEditor({ variants, onChange }: { variants: VariantGroup[]; onChange: (v: VariantGroup[]) => void }) {
-  const hasGroup = (name: string) => variants.some((g) => g.name.trim().toLowerCase() === name);
+type LibraryGroup = { name: string; options: Map<string, string> };
+
+/**
+ * Variant groups and option labels already used across the catalog. Lets a group
+ * invented on one product ("Paper Weight") be reused on the next, with its options,
+ * instead of being retyped into a near-duplicate.
+ */
+function useOptionLibrary(products: Product[] | null) {
+  return useMemo(() => {
+    const library = new Map<string, LibraryGroup>();
+    for (const product of products || []) {
+      for (const group of product.variants || []) {
+        const key = facetKey(group.name);
+        if (!key) continue;
+        if (!library.has(key)) library.set(key, { name: group.name.trim(), options: new Map() });
+        const { options } = library.get(key) as LibraryGroup;
+        for (const option of group.options) {
+          const value = optionValue(option.label);
+          if (value && !options.has(value)) options.set(value, option.label.trim());
+        }
+      }
+    }
+    return library;
+  }, [products]);
+}
+
+function VariantsEditor({
+  variants, onChange, library,
+}: {
+  variants: VariantGroup[];
+  onChange: (v: VariantGroup[]) => void;
+  /** Groups and options used on other products, offered as reusable suggestions. */
+  library: Map<string, LibraryGroup>;
+}) {
+  const hasGroup = (name: string) => variants.some((g) => facetKey(g.name) === facetKey(name));
   const addGroup = (name: string) => onChange([...variants, { name, options: [] }]);
+  const [drafts, setDrafts] = useState<Record<number, string>>({});
+  const [searches, setSearches] = useState<Record<number, string>>({});
+  const [picked, setPicked] = useState<Record<number, string[]>>({});
+  const [groupSearch, setGroupSearch] = useState('');
+  const [pickedGroups, setPickedGroups] = useState<string[]>([]);
+
+  const addOptions = (gi: number, labels: string[]) => {
+    const group = variants[gi];
+    const taken = new Set(group.options.map((o) => optionValue(o.label)));
+    const fresh = labels
+      .map((label) => label.trim())
+      .filter((label) => label && !taken.has(optionValue(label)))
+      .filter((label, index, all) => all.findIndex((l) => optionValue(l) === optionValue(label)) === index);
+    if (!fresh.length) return;
+    onChange(variants.map((g, i) => (
+      i === gi ? { ...g, options: [...g.options, ...fresh.map((label) => ({ label }))] } : g
+    )));
+    setDrafts((current) => ({ ...current, [gi]: '' }));
+    setSearches((current) => ({ ...current, [gi]: '' }));
+    setPicked((current) => ({ ...current, [gi]: [] }));
+  };
+
+  const togglePick = (gi: number, value: string) => {
+    setPicked((current) => {
+      const list = current[gi] || [];
+      return { ...current, [gi]: list.includes(value) ? list.filter((v) => v !== value) : [...list, value] };
+    });
+  };
+
+  /** Every label used elsewhere for this group name that is not already on this group. */
+  const poolFor = (group: VariantGroup) => {
+    const pool = library.get(facetKey(group.name))?.options;
+    if (!pool) return [];
+    const taken = new Set(group.options.map((o) => optionValue(o.label)));
+    return [...pool.entries()]
+      .filter(([value]) => !taken.has(value))
+      .map(([value, label]) => ({ value, label }));
+  };
+
+  /** The pool narrowed by the panel's own search box. */
+  const suggestionsFor = (group: VariantGroup, gi: number) => {
+    const term = optionValue(searches[gi] || '');
+    return poolFor(group)
+      .filter(({ value }) => !term || value.includes(term))
+      .slice(0, 24);
+  };
+
+  // Custom groups invented on other products — Size and Color have their own buttons.
+  const groupPool = [...library.values()]
+    .filter((entry) => !['size', 'color'].includes(facetKey(entry.name)) && !hasGroup(entry.name))
+    .map((entry) => entry.name);
+  const groupTerm = groupSearch.trim().toLowerCase();
+  const groupMatches = groupPool.filter((name) => !groupTerm || name.toLowerCase().includes(groupTerm));
+  const canCreateSearched = groupSearch.trim().length > 0
+    && !groupMatches.some((name) => facetKey(name) === facetKey(groupSearch))
+    && !hasGroup(groupSearch);
+
+  const addGroups = (names: string[]) => {
+    const fresh = names.filter((name) => name.trim() && !hasGroup(name));
+    if (!fresh.length) return;
+    onChange([...variants, ...fresh.map((name) => ({ name: name.trim(), options: [] }))]);
+    setGroupSearch('');
+    setPickedGroups([]);
+  };
 
   return (
     <div className="space-y-2">
@@ -80,19 +178,90 @@ function VariantsEditor({ variants, onChange }: { variants: VariantGroup[]; onCh
                   </div>
                 );
               })}
+            </div>
+
+            <div className="mt-1.5 flex items-center gap-1">
               <input
-                placeholder={isColor ? 'e.g. ivory, gold, #c2185b + Enter' : 'Add option + Enter'}
-                className="field w-44 py-1 text-[11px]"
+                value={drafts[gi] || ''}
+                onChange={(e) => setDrafts((current) => ({ ...current, [gi]: e.target.value }))}
+                placeholder={isColor ? 'New option: ivory, gold, #c2185b' : 'New option'}
+                className="field w-52 py-1 text-[11px]"
                 onKeyDown={(e) => {
                   if (e.key !== 'Enter') return;
-                  e.preventDefault();
-                  const value = (e.target as HTMLInputElement).value.trim();
-                  if (!value) return;
-                  onChange(variants.map((g, i) => (i === gi ? { ...g, options: [...g.options, { label: value }] } : g)));
-                  (e.target as HTMLInputElement).value = '';
+                  e.preventDefault(); // Enter still works; the button is for everyone else.
+                  addOptions(gi, [drafts[gi] || '']);
                 }}
               />
+              <Button variant="outline" disabled={!(drafts[gi] || '').trim()} onClick={() => addOptions(gi, [drafts[gi] || ''])}>
+                <Plus className="h-3 w-3" /> Add
+              </Button>
             </div>
+
+            {/* Options from other products: search, tick as many as needed, add in one go.
+                Keyed off the whole pool so the search box never disappears mid-search. */}
+            {poolFor(group).length > 0 && (
+              <div className="mt-1.5 rounded border border-dashed border-edge p-1.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                    Used on other products ({poolFor(group).length})
+                  </span>
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted" />
+                    <input
+                      value={searches[gi] || ''}
+                      onChange={(e) => setSearches((current) => ({ ...current, [gi]: e.target.value }))}
+                      placeholder="Search these options"
+                      className="field w-44 py-1 pl-6 text-[11px]"
+                    />
+                  </div>
+                </div>
+                <div className="mt-1 flex flex-wrap items-center gap-1">
+                  {suggestionsFor(group, gi).map(({ value, label }) => {
+                    const swatch = isColor ? cssColor(label) : null;
+                    const checked = (picked[gi] || []).includes(value);
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        role="checkbox"
+                        aria-checked={checked}
+                        onClick={() => togglePick(gi, value)}
+                        className={cx(
+                          'mena-press flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px]',
+                          checked ? 'border-pink bg-pink/10 font-semibold text-pink' : 'border-edge bg-surface hover:border-pink/60'
+                        )}
+                      >
+                        <span className={cx(
+                          'flex h-3 w-3 items-center justify-center rounded-[3px] border',
+                          checked ? 'border-pink bg-pink' : 'border-[#d8cfc8] bg-white'
+                        )}>
+                          {checked && <Check className="h-2 w-2 text-white" />}
+                        </span>
+                        {swatch && <span className="h-2.5 w-2.5 rounded-full ring-1 ring-black/15" style={{ background: swatch }} />}
+                        {label}
+                      </button>
+                    );
+                  })}
+                  {suggestionsFor(group, gi).length === 0 && (
+                    <span className="text-[11px] text-muted">
+                      Nothing matches “{searches[gi]}” — type it in the New option box above to create it.
+                    </span>
+                  )}
+                </div>
+                {(picked[gi] || []).length > 0 && (
+                  <div className="mt-1.5">
+                    <Button
+                      onClick={() => addOptions(
+                        gi,
+                        (picked[gi] || []).map((value) => library.get(facetKey(group.name))?.options.get(value) || value)
+                      )}
+                    >
+                      <Plus className="h-3 w-3" /> Add {(picked[gi] || []).length} selected
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         );
       })}
@@ -107,21 +276,97 @@ function VariantsEditor({ variants, onChange }: { variants: VariantGroup[]; onCh
           <Plus className="h-3 w-3" /> Custom group
         </Button>
       </div>
+
+      {/* Custom groups from other products: search, tick several, add together — and if the
+          search matches nothing, create a group under that name straight from here. */}
+      {(groupPool.length > 0 || groupSearch) && (
+        <div className="rounded border border-dashed border-edge p-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+              Groups on other products ({groupPool.length})
+            </span>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted" />
+              <input
+                value={groupSearch}
+                onChange={(e) => setGroupSearch(e.target.value)}
+                placeholder="Search or name a group"
+                className="field w-48 py-1 pl-6 text-[11px]"
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter' || !canCreateSearched) return;
+                  e.preventDefault();
+                  addGroups([groupSearch]);
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="mt-1 flex flex-wrap items-center gap-1">
+            {groupMatches.map((name) => {
+              const checked = pickedGroups.includes(name);
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  role="checkbox"
+                  aria-checked={checked}
+                  onClick={() => setPickedGroups((current) => (
+                    current.includes(name) ? current.filter((n) => n !== name) : [...current, name]
+                  ))}
+                  className={cx(
+                    'mena-press flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px]',
+                    checked ? 'border-pink bg-pink/10 font-semibold text-pink' : 'border-edge bg-surface hover:border-pink/60'
+                  )}
+                >
+                  <span className={cx(
+                    'flex h-3 w-3 items-center justify-center rounded-[3px] border',
+                    checked ? 'border-pink bg-pink' : 'border-[#d8cfc8] bg-white'
+                  )}>
+                    {checked && <Check className="h-2 w-2 text-white" />}
+                  </span>
+                  {name}
+                </button>
+              );
+            })}
+            {groupMatches.length === 0 && !groupSearch.trim() && (
+              <span className="text-[11px] text-muted">No custom groups on other products yet.</span>
+            )}
+          </div>
+
+          {(pickedGroups.length > 0 || canCreateSearched) && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-1">
+              {pickedGroups.length > 0 && (
+                <Button onClick={() => addGroups(pickedGroups)}>
+                  <Plus className="h-3 w-3" /> Add {pickedGroups.length} selected
+                </Button>
+              )}
+              {canCreateSearched && (
+                <Button variant="outline" onClick={() => addGroups([groupSearch])}>
+                  <Plus className="h-3 w-3" /> Create “{groupSearch.trim()}”
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
       <p className="text-[10px] text-muted">
-        Size and Color options also show on the product card in the catalog — colour names or hex codes become swatches.
+        Search the dashed panels to reuse groups and options from other products — tick as many as you
+        need and add them together, or create what you searched for when it does not exist yet. Reusing
+        them keeps one catalog filter instead of near-duplicates. Colour names or hex codes become swatches.
       </p>
     </div>
   );
 }
 
 export function ProductsAdmin() {
-  const { data: products, loading, reload } = useData<Product[]>('/admin/products');
+  const { data: products, loading, reload, setData } = useData<Product[]>('/admin/products');
   const { data: categories } = useData<Category[]>('/categories');
   const { data: universalComplimentaryItems } = useData<UniversalComplimentaryItem[]>('/admin/complimentary-items');
   const { toast, online } = useApp();
   const [editing, setEditing] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
 
+  const optionLibrary = useOptionLibrary(products);
   const catName = (id: string) => (categories || []).find((c) => c.id === id)?.name || '—';
   const addonOptions = (products || []).filter((p) => p.isAddon && p.id !== editing?.id);
 
@@ -194,6 +439,7 @@ export function ProductsAdmin() {
   const bulkDelete = async (ids: string[]) => {
     try {
       await Promise.all(ids.map((id) => apiSend('DELETE', `/admin/products/${id}`)));
+      setData((current) => current ? current.filter((product) => !ids.includes(product.id)) : current);
       toast('success', `${ids.length} product(s) deleted.`);
       reload();
     } catch (err) {
@@ -355,7 +601,11 @@ export function ProductsAdmin() {
             <div>
               <SysLabel>Variants (material, finish, color, quantity tier…)</SysLabel>
               <div className="mt-1">
-                <VariantsEditor variants={editing.variants} onChange={(variants) => setEditing({ ...editing, variants })} />
+                <VariantsEditor
+                  variants={editing.variants}
+                  onChange={(variants) => setEditing({ ...editing, variants })}
+                  library={optionLibrary}
+                />
               </div>
             </div>
 

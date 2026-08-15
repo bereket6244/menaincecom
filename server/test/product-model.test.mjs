@@ -7,6 +7,7 @@ test('legacy products remain published while drafts stay private', () => {
   assert.equal(normalizeProductStatus(undefined), 'published');
   assert.equal(isPublicProduct({ name: 'Legacy' }), true);
   assert.equal(isPublicProduct({ status: 'draft' }), false);
+  assert.equal(isPublicProduct({ status: 'published', deletedAt: '2026-08-15T00:00:00.000Z' }), false);
 });
 
 test('public product strips import and synchronization metadata', () => {
