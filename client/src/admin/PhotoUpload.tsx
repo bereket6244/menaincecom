@@ -27,12 +27,13 @@ type Lift = {
  * follows the cursor and the other tiles open a slot where it will land.
  */
 export function PhotoUpload({
-  photos, onChange, max = 8, single,
+  photos, onChange, max = 8, single, showWatermark = true,
 }: {
   photos: string[];
   onChange: (photos: string[]) => void;
   max?: number;
   single?: boolean;
+  showWatermark?: boolean;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -62,7 +63,7 @@ export function PhotoUpload({
     setBusy(true);
     try {
       const compressed = await Promise.all(
-        [...files].map((file) => compressImage(file, { watermarkSrc: addWatermark ? watermarkImage : undefined }))
+        [...files].map((file) => compressImage(file, { watermarkSrc: showWatermark && addWatermark ? watermarkImage : undefined }))
       );
       const urls = await apiUpload(compressed);
       onChange(single ? urls.slice(0, 1) : [...photos, ...urls].slice(0, max));
@@ -157,15 +158,17 @@ export function PhotoUpload({
 
   return (
     <div className="space-y-2">
-      <label className="inline-flex items-center gap-2 text-[11px] font-semibold text-muted">
-        <input
-          type="checkbox"
-          checked={addWatermark}
-          onChange={(event) => setAddWatermark(event.target.checked)}
-          className="accent-pink"
-        />
-        Add watermark
-      </label>
+      {showWatermark && (
+        <label className="inline-flex items-center gap-2 text-[11px] font-semibold text-muted">
+          <input
+            type="checkbox"
+            checked={addWatermark}
+            onChange={(event) => setAddWatermark(event.target.checked)}
+            className="accent-pink"
+          />
+          Add watermark
+        </label>
+      )}
       <div className="flex flex-wrap gap-2">
         {list.map((p, index) => {
           const held = dragIndex === index;

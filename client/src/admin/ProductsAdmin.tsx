@@ -21,7 +21,8 @@ const EMPTY: Draft = {
   status: 'published',
 };
 
-type LibraryGroup = { name: string; options: Map<string, string> };
+type VariantOption = VariantGroup['options'][number];
+type LibraryGroup = { name: string; options: Map<string, VariantOption> };
 
 /**
  * Variant groups and option labels already used across the catalog. Lets a group
@@ -39,7 +40,7 @@ function useOptionLibrary(products: Product[] | null) {
         const { options } = library.get(key) as LibraryGroup;
         for (const option of group.options) {
           const value = optionValue(option.label);
-          if (value && !options.has(value)) options.set(value, option.label.trim());
+          if (value && !options.has(value)) options.set(value, { ...option, label: option.label.trim() });
         }
       }
     }
@@ -63,16 +64,22 @@ function VariantsEditor({
   const [groupSearch, setGroupSearch] = useState('');
   const [pickedGroups, setPickedGroups] = useState<string[]>([]);
 
-  const addOptions = (gi: number, labels: string[]) => {
+  const addOptions = (gi: number, optionsToAdd: VariantOption[]) => {
     const group = variants[gi];
     const taken = new Set(group.options.map((o) => optionValue(o.label)));
-    const fresh = labels
-      .map((label) => label.trim())
-      .filter((label) => label && !taken.has(optionValue(label)))
-      .filter((label, index, all) => all.findIndex((l) => optionValue(l) === optionValue(label)) === index);
+    const seen = new Set<string>();
+    const fresh = optionsToAdd
+      .map((option) => ({ ...option, label: option.label.trim() }))
+      .filter((option) => option.label && !taken.has(optionValue(option.label)))
+      .filter((option) => {
+        const value = optionValue(option.label);
+        if (seen.has(value)) return false;
+        seen.add(value);
+        return true;
+      });
     if (!fresh.length) return;
     onChange(variants.map((g, i) => (
-      i === gi ? { ...g, options: [...g.options, ...fresh.map((label) => ({ label }))] } : g
+      i === gi ? { ...g, options: [...g.options, ...fresh] } : g
     )));
     setDrafts((current) => ({ ...current, [gi]: '' }));
     setSearches((current) => ({ ...current, [gi]: '' }));
@@ -93,7 +100,7 @@ function VariantsEditor({
     const taken = new Set(group.options.map((o) => optionValue(o.label)));
     return [...pool.entries()]
       .filter(([value]) => !taken.has(value))
-      .map(([value, label]) => ({ value, label }));
+      .map(([value, option]) => ({ value, option }));
   };
 
   /** The pool narrowed by the panel's own search box. */
@@ -124,7 +131,7 @@ function VariantsEditor({
         const reused = library.get(facetKey(cleanName));
         return {
           name: reused?.name || cleanName,
-          options: reused ? [...reused.options.values()].map((label) => ({ label })) : [],
+          options: [],
         };
       }),
     ]);
@@ -153,6 +160,15 @@ function VariantsEditor({
                 return (
                   <div key={oi} className="rounded border border-edge bg-surface p-2">
                     <div className="mb-1.5 flex items-center gap-1 text-[11px]">
+                      <input
+                        type="checkbox"
+                        checked
+                        onChange={() => onChange(variants.map((g, i) => (
+                          i === gi ? { ...g, options: g.options.filter((_, j) => j !== oi) } : g
+                        )))}
+                        className="shrink-0 accent-pink"
+                        aria-label={`Include ${opt.label}`}
+                      />
                       {opt.photo ? (
                         <img src={opt.photo} alt="" className="h-5 w-5 shrink-0 rounded object-cover" />
                       ) : swatch ? (
@@ -171,6 +187,7 @@ function VariantsEditor({
                     <PhotoUpload
                       single
                       max={1}
+                      showWatermark={false}
                       photos={opt.photo ? [opt.photo] : []}
                       onChange={(photos) =>
                         onChange(variants.map((g, i) => (
@@ -199,16 +216,16 @@ function VariantsEditor({
                 onKeyDown={(e) => {
                   if (e.key !== 'Enter') return;
                   e.preventDefault(); // Enter still works; the button is for everyone else.
-                  addOptions(gi, [drafts[gi] || '']);
+                  addOptions(gi, [{ label: drafts[gi] || '' }]);
                 }}
               />
-              <Button variant="outline" disabled={!(drafts[gi] || '').trim()} onClick={() => addOptions(gi, [drafts[gi] || ''])}>
+              <Button variant="outline" disabled={!(drafts[gi] || '').trim()} onClick={() => addOptions(gi, [{ label: drafts[gi] || '' }])}>
                 <Plus className="h-3 w-3" /> Add
               </Button>
             </div>
 
-            {/* Options from other products: search, tick as many as needed, add in one go.
-                Keyed off the whole pool so the search box never disappears mid-search. */}
+            {/* Options from other products are staged here first, then saved into this
+                product with the explicit button below. */}
             {poolFor(group).length > 0 && (
               <div className="mt-1.5 rounded border border-dashed border-edge p-1.5">
                 <div className="flex flex-wrap items-center gap-2">
@@ -226,7 +243,8 @@ function VariantsEditor({
                   </div>
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-1">
-                  {suggestionsFor(group, gi).map(({ value, label }) => {
+                  {suggestionsFor(group, gi).map(({ value, option }) => {
+                    const label = option.label;
                     const swatch = isColor ? cssColor(label) : null;
                     const checked = (picked[gi] || []).includes(value);
                     return (
@@ -263,10 +281,12 @@ function VariantsEditor({
                     <Button
                       onClick={() => addOptions(
                         gi,
-                        (picked[gi] || []).map((value) => library.get(facetKey(group.name))?.options.get(value) || value)
+                        (picked[gi] || [])
+                          .map((value) => library.get(facetKey(group.name))?.options.get(value))
+                          .filter((option): option is VariantOption => !!option)
                       )}
                     >
-                      <Plus className="h-3 w-3" /> Add {(picked[gi] || []).length} selected
+                      <Plus className="h-3 w-3" /> Save {(picked[gi] || []).length} selected option{(picked[gi] || []).length === 1 ? '' : 's'} to this product
                     </Button>
                   </div>
                 )}
@@ -360,9 +380,9 @@ function VariantsEditor({
         </div>
       )}
       <p className="text-[10px] text-muted">
-        Search the dashed panels to reuse groups and options from other products — tick as many as you
-        need and add them together, or create what you searched for when it does not exist yet. Reusing
-        them keeps one catalog filter instead of near-duplicates. Colour names or hex codes become swatches.
+        Search the dashed panels to reuse groups and options from other products. Tick only the options
+        you want, save the selected options into this product, then Save product. Reusing names keeps one
+        catalog filter instead of near-duplicates. Colour names or hex codes become swatches.
       </p>
     </div>
   );
@@ -417,7 +437,15 @@ export function ProductsAdmin() {
       const payload = {
         ...editing,
         price: editing.pricingMode === 'quote' ? null : editing.price,
-        variants: editing.variants.filter((v) => v.name.trim() && v.options.length > 0),
+        variants: editing.variants
+          .map((variant) => ({
+            ...variant,
+            name: variant.name.trim(),
+            options: variant.options
+              .map((option) => ({ ...option, label: option.label.trim() }))
+              .filter((option) => option.label),
+          }))
+          .filter((variant) => variant.name && variant.options.length > 0),
         complimentaryItems: editing.isAddon
           ? []
           : (editing.complimentaryItems || [])
