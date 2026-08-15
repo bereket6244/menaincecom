@@ -102,12 +102,12 @@ export function AdminShell() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-bg">
+    <div className="flex h-dvh flex-col overflow-hidden bg-bg">
       <StatusBanners />
       <Toasts />
 
       {/* Top header */}
-      <header className="border-b border-edge bg-surface">
+      <header className="shrink-0 border-b border-edge bg-surface">
         <div className="flex h-11 items-center gap-3 px-3">
           <Link to="/admin" className="flex items-baseline gap-1.5">
             <BrandLogo showIcon={false} size="sm" />
@@ -147,7 +147,7 @@ export function AdminShell() {
         </nav>
       </header>
 
-      <main className="flex-1 p-3 pb-20 md:pb-4">
+      <main className="flex min-h-0 flex-1 flex-col overflow-hidden p-3 pb-20 md:pb-4">
         <Outlet />
       </main>
 

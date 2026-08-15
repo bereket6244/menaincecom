@@ -73,7 +73,7 @@ export function DataTable<T extends { id: string }>({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-2 overflow-hidden">
       {/* Compact toolbar */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-0 flex-1 sm:max-w-xs">
@@ -89,8 +89,8 @@ export function DataTable<T extends { id: string }>({
         <div className="ml-auto flex items-center gap-2">{toolbar}</div>
       </div>
 
-      <div className="overflow-hidden rounded-md border border-edge bg-surface">
-        <div className="max-h-[65vh] overflow-auto">
+      <div className="flex min-h-0 flex-1 overflow-hidden rounded-md border border-edge bg-surface">
+        <div className="mena-d-scroll h-full flex-1 overflow-auto">
           <table className="sheet w-full border-collapse">
             <thead>
               <tr>

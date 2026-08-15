@@ -117,7 +117,7 @@ export function ComplimentaryItemsAdmin() {
   ];
 
   return (
-    <div className="space-y-2">
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-2 overflow-hidden">
       <h1 className="text-sm font-bold">Universal Complimentary Items</h1>
       <DataTable
         rows={sorted}

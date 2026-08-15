@@ -31,7 +31,7 @@ export function LeadsAdmin() {
   ];
 
   return (
-    <div className="space-y-2">
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-2 overflow-hidden">
       <div>
         <h1 className="text-sm font-bold">Leads</h1>
         <p className="text-[11px] text-muted">Every captured contact — guest orders and registered accounts — in one list for outreach.</p>

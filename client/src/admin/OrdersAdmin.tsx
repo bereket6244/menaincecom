@@ -80,7 +80,7 @@ export function OrdersAdmin() {
   ];
 
   return (
-    <div className="space-y-2">
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-2 overflow-hidden">
       <div className="flex items-center justify-between">
         <h1 className="text-sm font-bold">Orders / Leads inbox</h1>
       </div>
