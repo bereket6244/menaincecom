@@ -117,7 +117,17 @@ function VariantsEditor({
   const addGroups = (names: string[]) => {
     const fresh = names.filter((name) => name.trim() && !hasGroup(name));
     if (!fresh.length) return;
-    onChange([...variants, ...fresh.map((name) => ({ name: name.trim(), options: [] }))]);
+    onChange([
+      ...variants,
+      ...fresh.map((name) => {
+        const cleanName = name.trim();
+        const reused = library.get(facetKey(cleanName));
+        return {
+          name: reused?.name || cleanName,
+          options: reused ? [...reused.options.values()].map((label) => ({ label })) : [],
+        };
+      }),
+    ]);
     setGroupSearch('');
     setPickedGroups([]);
   };

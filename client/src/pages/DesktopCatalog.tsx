@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowUpDown, Check, ChevronDown, RotateCcw, SlidersHorizontal } from 'lucide-react';
+import { ArrowUpDown, Check, ChevronDown, RotateCcw } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { Category, Product, UniversalComplimentaryItem } from '../lib/types';
 import { DesktopProductCard } from '../components/DesktopProductCard';
@@ -10,10 +10,9 @@ import { useApp } from '../store/AppContext';
 import { complimentaryForProduct, productWithResolvedComplimentary } from '../lib/complimentary';
 import { buildPriceBands, formatEtb, priceBounds } from '../lib/priceBands';
 import {
-  buildVariantFacets, countVariantFilters, matchesVariantFilters, type VariantFilters,
+  buildVariantFacets, matchesVariantFilters, type VariantFilters,
 } from '../lib/variantFacets';
 import { VariantFacetFilters } from '../components/VariantFacetFilters';
-import { FilterOverlay } from '../components/FilterOverlay';
 import { useResultAnimation } from '../lib/useResultAnimation';
 
 const CIRCLE_TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#eeeeec', '#f6efdd', '#e9f0ec', '#e9e6ef'];
@@ -53,15 +52,12 @@ export function DesktopCatalog() {
   const [variantFilters, setVariantFilters] = useState<VariantFilters>({});
   const [showMoreCats, setShowMoreCats] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
-  const [filterOpen, setFilterOpen] = useState(false);
 
   const priceBands = useMemo(() => buildPriceBands(products || []), [products]);
   const bounds = useMemo(() => priceBounds(products || []), [products]);
   const catById = useMemo(() => new Map((categories || []).map((cat) => [cat.id, cat])), [categories]);
   const minPrice = bounds.min != null ? formatEtb(bounds.min) : 'Min';
   const maxPrice = bounds.max != null ? formatEtb(bounds.max) : 'Max';
-  const activeFilterCount = bands.length + categoryFilters.length + countVariantFilters(variantFilters)
-    + (min ? 1 : 0) + (max ? 1 : 0);
   const gridRef = useResultAnimation<HTMLDivElement>(
     JSON.stringify([activeCategory, categoryFilters, bands, min, max, variantFilters, sort, query])
   );
@@ -184,17 +180,6 @@ export function DesktopCatalog() {
           <p className="mt-2 text-sm text-muted">{visible.length} designs available</p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setFilterOpen(true)}
-            className={cx(
-              'mena-press flex h-11 items-center gap-2 rounded-full border px-5 text-[13.5px] font-extrabold',
-              activeFilterCount ? 'border-pink bg-pink text-white' : 'border-edge bg-white text-ink'
-            )}
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            Filters{activeFilterCount ? ` (${activeFilterCount})` : ''}
-          </button>
           <div className="relative">
             <button
               type="button"
@@ -233,27 +218,15 @@ export function DesktopCatalog() {
         </div>
       </div>
 
-      <div className="h-[calc(100vh-272px)] min-h-[560px]">
-        <FilterOverlay
-          open={filterOpen}
-          onClose={() => setFilterOpen(false)}
-          headerAction={
+      <div className="grid h-[calc(100vh-272px)] min-h-[560px] grid-cols-[250px_minmax(0,1fr)] gap-9">
+        <aside className="mena-d-scroll overflow-y-auto rounded-2xl border border-edge bg-white p-[22px] shadow-[0_1px_3px_rgba(28,26,25,0.05)]">
+          <div className="mb-5 flex items-center justify-between border-b border-edge pb-4">
+            <span className="text-[17px] font-extrabold">Filters</span>
             <button type="button" onClick={clearAll} className="mena-press text-[13px] font-bold text-pink hover:underline">
               Clear all
             </button>
-          }
-          footer={
-            <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={clearAll} className="btn-outline h-11 px-3">
-                <RotateCcw className="h-4 w-4" />
-                Reset
-              </button>
-              <button type="button" onClick={() => setFilterOpen(false)} className="btn-primary h-11 px-3">
-                Show {visible.length} design{visible.length === 1 ? '' : 's'}
-              </button>
-            </div>
-          }
-        >
+          </div>
+
           <section className="border-b border-edge pb-5">
             <h2 className="mb-3 text-sm font-extrabold">Price Range</h2>
             <div className="space-y-2.5">
@@ -315,7 +288,14 @@ export function DesktopCatalog() {
             onChange={setVariantFilters}
             sectionClassName="border-b border-edge py-5 last:border-b-0"
           />
-        </FilterOverlay>
+
+          <div className="pt-5">
+            <button type="button" onClick={clearAll} className="btn-outline w-full py-3">
+              <RotateCcw className="h-4 w-4" />
+              Reset
+            </button>
+          </div>
+        </aside>
 
         <div className="mena-d-scroll h-full overflow-y-auto pr-3">
           {loading && !products ? (
