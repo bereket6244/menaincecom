@@ -212,29 +212,32 @@ export function MobileShell({ children }: { children: ReactNode }) {
           {fabOpen && (
             <>
               <a
-                href={telegramUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="mena-press animate-in fade-in zoom-in-95 flex h-12 w-12 items-center justify-center rounded-full bg-[#2b93d6] text-white shadow-lg hover:bg-[#2380c0] duration-200"
-                aria-label="Contact on Telegram"
-              >
-                <Send className="h-5 w-5" />
-              </a>
-              <a
                 href={whatsappUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mena-press animate-in fade-in zoom-in-95 flex h-12 w-12 items-center justify-center rounded-full bg-[#25a34f] text-white shadow-lg hover:bg-[#1e8a3d] duration-200"
+                className="mena-press animate-in fade-in zoom-in-95 flex h-12 items-center gap-2 rounded-full bg-[#25a34f] px-4 text-sm font-extrabold text-white shadow-lg hover:bg-[#1e8a3d] duration-200"
                 aria-label="Contact on WhatsApp"
               >
                 <MessageCircle className="h-5 w-5" />
+                <span>WhatsApp</span>
+              </a>
+              <a
+                href={telegramUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mena-press animate-in fade-in zoom-in-95 flex h-12 items-center gap-2 rounded-full bg-[#2b93d6] px-4 text-sm font-extrabold text-white shadow-lg hover:bg-[#2380c0] duration-200"
+                aria-label="Contact on Telegram"
+              >
+                <Send className="h-5 w-5" />
+                <span>Telegram</span>
               </a>
               <a
                 href={smsUrl}
-                className="mena-press animate-in fade-in zoom-in-95 flex h-12 w-12 items-center justify-center rounded-full bg-[#ee317b] text-white shadow-lg hover:bg-[#d41f66] duration-200"
+                className="mena-press animate-in fade-in zoom-in-95 flex h-12 items-center gap-2 rounded-full bg-[#ee317b] px-4 text-sm font-extrabold text-white shadow-lg hover:bg-[#d41f66] duration-200"
                 aria-label="Contact via SMS"
               >
                 <MessageSquareText className="h-5 w-5" />
+                <span>SMS</span>
               </a>
             </>
           )}

@@ -80,7 +80,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
                 className={cx('mena-press flex h-10 items-center gap-2 px-1.5 text-[13px] font-medium text-ink/80 hover:text-pink', contactOpen && 'text-pink')}
               >
                 <Send className="h-[19px] w-[19px]" />
-                <span>Track Order</span>
+                <span>Message</span>
               </button>
               {contactOpen && (
                 <div

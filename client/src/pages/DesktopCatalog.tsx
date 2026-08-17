@@ -22,6 +22,7 @@ const SORTS = [
   { id: 'high', label: 'Price: high to low' },
   { id: 'name', label: 'Name A-Z' },
 ];
+const CIRCLE_TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#eeeeec', '#f6efdd', '#e9f0ec', '#e9e6ef'];
 
 type FilterChip = {
   id: string;
@@ -270,21 +271,36 @@ export function DesktopCatalog() {
   return (
     <div className="bg-bg">
       <nav className="border-b border-edge bg-white shadow-[0_2px_10px_rgba(28,26,25,0.035)]">
-        <div className="mena-cat-scroll mx-auto flex max-w-[1560px] gap-8 overflow-x-auto px-10 2xl:px-12">
-          {chips.map((category) => {
+        <div className="mena-cat-scroll mx-auto flex max-w-[1560px] items-start gap-7 overflow-x-auto px-10 pb-4 pt-5 2xl:px-12">
+          {chips.map((category, index) => {
             const active = activeCategory === category.id;
             return (
               <button
                 key={category.id || 'all'}
                 type="button"
                 onClick={() => setCategory(category.id)}
-                className={cx(
-                  'mena-press relative h-12 shrink-0 text-[14px] font-semibold text-ink/80 hover:text-pink',
-                  active && 'text-pink'
-                )}
+                className="mena-press flex w-[108px] shrink-0 flex-col items-center gap-2"
               >
-                {category.name}
-                <span className={cx('absolute inset-x-0 bottom-0 h-[3px] rounded-t-full bg-pink transition-opacity', active ? 'opacity-100' : 'opacity-0')} />
+                <span
+                  className={cx(
+                    'flex h-[74px] w-[74px] items-center justify-center rounded-full border-[3px] p-[3px] transition',
+                    active ? 'border-pink bg-bg shadow-[0_8px_22px_rgba(238,49,123,0.16)]' : 'border-transparent bg-transparent'
+                  )}
+                >
+                  <span
+                    className="flex h-[62px] w-[62px] items-center justify-center overflow-hidden rounded-full ring-1 ring-edge"
+                    style={{ background: category.photo ? undefined : CIRCLE_TINTS[index % CIRCLE_TINTS.length] }}
+                  >
+                    {category.photo ? (
+                      <img src={category.photo} alt="" loading={index < 5 ? 'eager' : 'lazy'} decoding="async" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="font-serif text-[24px] italic text-ink/45">{category.name.slice(0, 1)}</span>
+                    )}
+                  </span>
+                </span>
+                <span className={cx('text-center text-[13px] font-semibold leading-tight', active ? 'text-pink' : 'text-ink/75')}>
+                  {category.name}
+                </span>
               </button>
             );
           })}
@@ -357,7 +373,7 @@ export function DesktopCatalog() {
         </div>
 
         <div className="grid grid-cols-[234px_minmax(0,1fr)] gap-7">
-          <aside className="sticky top-[145px] self-start rounded-xl border border-edge bg-white p-4 shadow-[0_1px_5px_rgba(28,26,25,0.045)]">
+          <aside className="mena-d-scroll sticky top-[145px] max-h-[calc(100vh-165px)] self-start overflow-y-auto rounded-xl border border-edge bg-white p-4 shadow-[0_1px_5px_rgba(28,26,25,0.045)]">
             <div className="mb-1 flex items-center justify-between pb-2">
               <span className="text-[17px] font-extrabold">Filters</span>
               <button type="button" onClick={clearAll} className="mena-press text-[13px] font-bold text-pink hover:underline">

@@ -94,7 +94,7 @@ export function DesktopProductCard({
             onClick={() => onQuickAdd(product)}
             className="btn-outline h-9 w-full whitespace-nowrap px-4 py-0 text-[12px]"
           >
-            {isQuote ? 'Request Quote' : 'Add to Order'}
+            {isQuote ? 'Request Quote' : 'Add to Cart'}
           </button>
         </div>
       </div>
