@@ -493,7 +493,6 @@ api.get('/admin/products', requireAdmin, dbRoute(async (_req, res) => {
   res.json(products.filter((product) => !product.deletedAt));
 }));
 
-const COMPLIMENTARY_MAX_MULTIPLIER = 2.5;
 const cleanKey = (value) => String(value || '').trim().toLowerCase();
 
 function cleanVariantGroups(groups) {
