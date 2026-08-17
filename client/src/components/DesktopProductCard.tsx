@@ -87,12 +87,12 @@ export function DesktopProductCard({
         >
           {product.name}
         </button>
-        <div className="mt-3.5 flex items-center justify-between gap-3">
-          <span className="text-[15px] font-extrabold text-pink">{formatPrice(product)}</span>
+        <div className="mt-3.5 flex flex-col items-stretch gap-2.5">
+          <span className="text-[15px] font-extrabold leading-tight text-pink">{formatPrice(product)}</span>
           <button
             type="button"
             onClick={() => onQuickAdd(product)}
-            className="btn-outline h-[36px] min-w-[120px] whitespace-nowrap px-5 py-0 text-[12.5px]"
+            className="btn-outline h-[36px] w-full whitespace-nowrap px-4 py-0 text-[12.5px]"
           >
             {isQuote ? 'Request Quote' : 'Add to Order'}
           </button>
