@@ -61,15 +61,15 @@ export function DesktopShell({ children }: { children: ReactNode }) {
       <StatusBanners />
       <Toasts />
 
-      <header className="sticky top-0 z-50 border-b border-edge bg-white">
-        <div className="mx-auto flex h-[74px] max-w-[1560px] items-center justify-between px-10 2xl:px-12">
+      <header className="sticky top-0 z-50 border-b border-edge bg-white/98 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-[1560px] items-center justify-between px-10 2xl:px-12">
           <Link to="/catalog" className="mena-press flex shrink-0 items-center gap-3">
             <BrandLogo size="md" />
           </Link>
 
           <div className="flex-1" />
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-3">
             <div ref={contactRef} className="relative">
               <button
                 type="button"
@@ -77,9 +77,10 @@ export function DesktopShell({ children }: { children: ReactNode }) {
                 aria-label="Message Mena"
                 aria-haspopup="menu"
                 aria-expanded={contactOpen}
-                className={cx('mena-press flex h-10 w-10 items-center justify-center text-ink hover:text-pink', contactOpen && 'text-pink')}
+                className={cx('mena-press flex h-10 items-center gap-2 px-1.5 text-[13px] font-medium text-ink/80 hover:text-pink', contactOpen && 'text-pink')}
               >
-                <Send className="h-[22px] w-[22px]" />
+                <Send className="h-[19px] w-[19px]" />
+                <span>Track Order</span>
               </button>
               {contactOpen && (
                 <div
@@ -110,9 +111,10 @@ export function DesktopShell({ children }: { children: ReactNode }) {
               id="desktop-liked-target"
               to="/wishlist"
               aria-label={`Liked items, ${wishlistProductIds.length} saved`}
-              className="mena-press relative flex h-10 w-10 items-center justify-center text-ink hover:text-pink"
+              className="mena-press relative flex h-10 items-center gap-2 px-1.5 text-[13px] font-medium text-ink/80 hover:text-pink"
             >
-              <Heart className={cx('h-[22px] w-[22px]', wishlistProductIds.length > 0 && 'fill-pink text-pink')} />
+              <Heart className={cx('h-[19px] w-[19px]', wishlistProductIds.length > 0 && 'fill-pink text-pink')} />
+              <span>Wishlist</span>
               {wishlistProductIds.length > 0 && (
                 <span className="mena-pop absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-pink px-1 text-[10px] font-extrabold text-white">
                   {wishlistProductIds.length > 99 ? '99+' : wishlistProductIds.length}
@@ -123,9 +125,10 @@ export function DesktopShell({ children }: { children: ReactNode }) {
               id="desktop-cart-target"
               to="/order"
               aria-label={`Cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
-              className="mena-press relative flex h-10 w-10 items-center justify-center text-ink hover:text-pink"
+              className="mena-press relative flex h-10 items-center gap-2 px-1.5 text-[13px] font-medium text-ink/80 hover:text-pink"
             >
-              <ShoppingCart className="h-[22px] w-[22px]" />
+              <ShoppingCart className="h-[19px] w-[19px]" />
+              <span>Cart</span>
               {cartCount > 0 && (
                 <span className="mena-pop absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-pink px-1 text-[10px] font-extrabold text-white">
                   {cartCount > 99 ? '99+' : cartCount}
@@ -137,13 +140,13 @@ export function DesktopShell({ children }: { children: ReactNode }) {
               className="mena-press inline-flex items-center gap-2 rounded-full bg-pink px-5 py-2.5 text-[13px] font-extrabold text-white hover:bg-pink-dim"
             >
               <User className="h-4 w-4" />
-              {user ? user.name.split(' ')[0] : 'Mena'}
+              {user ? user.name.split(' ')[0] : 'Local'}
               <ChevronDown className="h-3.5 w-3.5" />
             </Link>
           </div>
         </div>
 
-        <div className="relative bg-[#fdeef5] px-10 py-[18px]">
+        <div className="relative border-t border-edge/70 bg-white px-10 py-3">
           <div className="pointer-events-none absolute inset-y-0 left-0 w-56 opacity-40" />
           <form
             onSubmit={(e) => {
@@ -152,12 +155,12 @@ export function DesktopShell({ children }: { children: ReactNode }) {
             }}
             className="relative mx-auto max-w-[1560px]"
           >
-            <Search className="pointer-events-none absolute left-5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted/80" />
+            <Search className="pointer-events-none absolute left-5 top-1/2 h-[17px] w-[17px] -translate-y-1/2 text-muted/80" />
             <input
               value={q}
               onChange={(e) => applySearch(e.target.value, true)}
               placeholder="Search wedding cards, save-the-dates, menus..."
-              className="h-12 w-full rounded-full border-0 bg-white pl-14 pr-14 text-[15px] text-ink shadow-[0_1px_4px_rgba(28,26,25,0.06)] outline-none placeholder:text-muted/70 focus:shadow-[0_2px_12px_rgba(28,26,25,0.12)]"
+              className="h-11 w-full rounded-full border border-edge bg-white pl-12 pr-14 text-[14px] text-ink shadow-[0_1px_3px_rgba(28,26,25,0.04)] outline-none placeholder:text-muted/65 focus:border-pink/50 focus:shadow-[0_2px_12px_rgba(28,26,25,0.08)]"
             />
             {q && (
               <button
