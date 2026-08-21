@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { isPublicProduct, normalizeProductStatus, publicProduct, telegramProductIdentity } from '../src/product-model.mjs';
-import { formatProductCaption, shouldCreateTelegramPost, shouldUpdateTelegramPost } from '../src/product-telegram.mjs';
+import {
+  formatProductCaption,
+  shouldCreateTelegramPost,
+  shouldDeleteTelegramPost,
+  shouldUpdateTelegramPost,
+} from '../src/product-telegram.mjs';
 
 test('legacy products remain published while drafts stay private', () => {
   assert.equal(normalizeProductStatus(undefined), 'published');
@@ -53,6 +58,20 @@ test('published Telegram products update when the content version changes', () =
       { status: 'published', contentVersion: 2 },
       { status: 'draft', contentVersion: 3, telegramChannelId: '-1001', telegramMessageId: 42 }
     ), false);
+  } finally {
+    if (original === undefined) delete process.env.TELEGRAM_SYNC_ENABLED;
+    else process.env.TELEGRAM_SYNC_ENABLED = original;
+  }
+});
+
+test('Telegram products delete only when sync is enabled and message identity exists', () => {
+  const original = process.env.TELEGRAM_SYNC_ENABLED;
+  process.env.TELEGRAM_SYNC_ENABLED = 'true';
+  try {
+    assert.equal(shouldDeleteTelegramPost({ telegramChannelId: '-1001', telegramMessageId: 42 }), true);
+    assert.equal(shouldDeleteTelegramPost({ telegramChannelId: '-1001' }), false);
+    process.env.TELEGRAM_SYNC_ENABLED = 'false';
+    assert.equal(shouldDeleteTelegramPost({ telegramChannelId: '-1001', telegramMessageId: 42 }), false);
   } finally {
     if (original === undefined) delete process.env.TELEGRAM_SYNC_ENABLED;
     else process.env.TELEGRAM_SYNC_ENABLED = original;

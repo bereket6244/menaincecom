@@ -111,6 +111,11 @@ export function shouldUpdateTelegramPost(previous, next) {
   return Math.max(1, Number(previous?.contentVersion) || 1) < Math.max(1, Number(next?.contentVersion) || 1);
 }
 
+export function shouldDeleteTelegramPost(product) {
+  if (process.env.TELEGRAM_SYNC_ENABLED !== 'true') return false;
+  return !!telegramProductIdentity(product);
+}
+
 function localUpload(photo) {
   const match = String(photo || '').match(/^(?:\/shop)?\/uploads\/([^/]+)$/);
   if (!match) return null;
@@ -237,6 +242,46 @@ export async function updateTelegramProductPost(product) {
     return syncedTelegramPatch(product);
   } catch (error) {
     if (isNotModified(error)) return syncedTelegramPatch(product);
+    error.telegram = sanitizedTelegramError(error);
+    throw error;
+  }
+}
+
+function isAlreadyDeleted(error) {
+  return error?.code === 400 && /(message to delete not found|message identifier is not specified|message can't be deleted)/i.test(String(error.message || ''));
+}
+
+export async function deleteTelegramProductPost(product) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = product.telegramChannelId || configuredChannelId();
+  const messageIds = [...new Set([
+    ...(Array.isArray(product.telegramMessageIds) ? product.telegramMessageIds : []),
+    product.telegramMessageId,
+  ]
+    .map((id) => Number(id))
+    .filter((id) => Number.isInteger(id) && id > 0))];
+
+  if (!token || !chatId || messageIds.length === 0) {
+    throw new Error('Telegram product synchronization is not configured.');
+  }
+
+  try {
+    const failures = [];
+    for (const messageId of messageIds) {
+      try {
+        await telegramApi(token, 'deleteMessage', { chat_id: chatId, message_id: messageId });
+      } catch (error) {
+        if (!isAlreadyDeleted(error)) failures.push(error);
+      }
+    }
+    if (failures.length) throw failures[0];
+    return {
+      telegramSyncStatus: 'deleted',
+      telegramDeletedAt: new Date().toISOString(),
+      telegramLastSyncedAt: new Date().toISOString(),
+      telegramSyncError: null,
+    };
+  } catch (error) {
     error.telegram = sanitizedTelegramError(error);
     throw error;
   }

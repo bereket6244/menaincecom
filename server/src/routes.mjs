@@ -17,7 +17,9 @@ import {
 } from './product-model.mjs';
 import {
   createTelegramProductPost,
+  deleteTelegramProductPost,
   shouldCreateTelegramPost,
+  shouldDeleteTelegramPost,
   shouldUpdateTelegramPost,
   updateTelegramProductPost,
 } from './product-telegram.mjs';
@@ -599,6 +601,22 @@ async function syncExistingTelegramProduct(previous, next) {
   }
 }
 
+async function deleteExistingTelegramProduct(product) {
+  if (!shouldDeleteTelegramPost(product)) return { patch: {}, action: null };
+  try {
+    return {
+      patch: await deleteTelegramProductPost(product),
+      action: 'deleted',
+    };
+  } catch (error) {
+    error.patch = {
+      telegramSyncStatus: 'failed',
+      telegramSyncError: error.telegram || { message: 'Telegram deletion failed.' },
+    };
+    throw error;
+  }
+}
+
 function applyProductBulkPatch(product, body) {
   const patch = {};
   const set = body?.set && typeof body.set === 'object' ? body.set : {};
@@ -777,12 +795,29 @@ api.put('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
 api.delete('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
   const existing = await records.get('products', req.params.id);
   if (!existing) return res.status(404).json({ error: 'not_found' });
+  let telegram = { patch: {}, action: null };
+  try {
+    telegram = await deleteExistingTelegramProduct(existing);
+  } catch (error) {
+    const doc = await records.update('products', req.params.id, {
+      status: 'archived',
+      deletedAt: new Date().toISOString(),
+      contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,
+      ...error.patch,
+    });
+    return res.status(502).json({
+      error: 'telegram_delete_failed',
+      message: 'Product was deleted from the website, but Telegram could not be deleted.',
+      product: doc,
+    });
+  }
   const doc = await records.update('products', req.params.id, {
     status: 'archived',
     deletedAt: new Date().toISOString(),
     contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,
+    ...telegram.patch,
   });
-  res.json({ ok: true, product: doc });
+  res.json({ ok: true, product: doc, telegramPublishAction: telegram.action });
 }));
 
 api.post('/admin/products/:id/restore', requireAdmin, dbRoute(async (req, res) => {
