@@ -861,6 +861,9 @@ export function ProductsAdmin() {
           </Button>
         )}
         onBulkDelete={bulkDelete}
+        deleteConfirmation={(ids) =>
+          `Delete ${ids.length} product${ids.length === 1 ? '' : 's'}?\n\nThis hides ${ids.length === 1 ? 'it' : 'them'} from the website and deletes the linked Telegram channel post${ids.length === 1 ? '' : 's'} when Telegram sync is enabled. This cannot be undone from the admin table.`
+        }
         toolbar={
           <Button onClick={() => setEditing({ ...EMPTY })} disabled={!online}>
             <Plus className="h-3.5 w-3.5" /> New product

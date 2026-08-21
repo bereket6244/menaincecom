@@ -20,6 +20,7 @@ interface Props<T extends { id: string }> {
   loading?: boolean;
   onRowClick?: (row: T) => void;
   onBulkDelete?: (ids: string[]) => void;
+  deleteConfirmation?: string | ((ids: string[]) => string);
   bulkActions?: (ids: string[], clearSelection: () => void) => ReactNode;
   toolbar?: ReactNode;
   emptyMessage?: string;
@@ -28,7 +29,7 @@ interface Props<T extends { id: string }> {
 /** Dense spreadsheet-style table: search, sorting, selection, bulk actions. */
 export function DataTable<T extends { id: string }>({
   rows, columns, searchText, searchPlaceholder = 'Search…', loading,
-  onRowClick, onBulkDelete, bulkActions, toolbar, emptyMessage = 'No records.',
+  onRowClick, onBulkDelete, deleteConfirmation, bulkActions, toolbar, emptyMessage = 'No records.',
 }: Props<T>) {
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState<string | null>(null);
@@ -75,6 +76,15 @@ export function DataTable<T extends { id: string }>({
       return next;
     });
   };
+  const confirmAndDelete = () => {
+    if (!onBulkDelete) return;
+    const message = typeof deleteConfirmation === 'function'
+      ? deleteConfirmation(selectedIds)
+      : deleteConfirmation;
+    if (message && !window.confirm(message)) return;
+    onBulkDelete(selectedIds);
+    clearSelection();
+  };
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-2 overflow-hidden">
@@ -87,7 +97,7 @@ export function DataTable<T extends { id: string }>({
         <span className="syslabel hidden sm:inline">{visible.length} rows</span>
         {selected.size > 0 && bulkActions?.(selectedIds, clearSelection)}
         {onBulkDelete && selected.size > 0 && (
-          <Button variant="danger" onClick={() => { onBulkDelete(selectedIds); clearSelection(); }}>
+          <Button variant="danger" onClick={confirmAndDelete}>
             <Trash2 className="h-3.5 w-3.5" /> Delete {selected.size}
           </Button>
         )}
