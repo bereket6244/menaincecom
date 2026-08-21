@@ -15,7 +15,12 @@ import {
   publicProduct,
   telegramProductIdentity,
 } from './product-model.mjs';
-import { createTelegramProductPost, shouldCreateTelegramPost } from './product-telegram.mjs';
+import {
+  createTelegramProductPost,
+  shouldCreateTelegramPost,
+  shouldUpdateTelegramPost,
+  updateTelegramProductPost,
+} from './product-telegram.mjs';
 
 export const api = Router();
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -568,6 +573,32 @@ function cleanCategoryIds(value, fallback) {
   return ids.length ? ids : legacy ? [legacy] : [];
 }
 
+function withTelegramCategoryNames(product, categories) {
+  const ids = cleanCategoryIds(product?.categoryIds, product?.categoryId);
+  const byId = new Map((categories || []).map((category) => [category.id, category.name]));
+  const categoryNames = ids.map((id) => byId.get(id)).filter(Boolean);
+  return { ...product, categoryNames };
+}
+
+async function syncExistingTelegramProduct(previous, next) {
+  if (!shouldUpdateTelegramPost(previous, next)) return { product: next, action: null };
+  try {
+    const categories = await records.list('categories');
+    const telegram = await updateTelegramProductPost(withTelegramCategoryNames(next, categories));
+    return {
+      product: await records.update('products', next.id, telegram),
+      action: 'updated',
+    };
+  } catch (error) {
+    const product = await records.update('products', next.id, {
+      telegramSyncStatus: 'failed',
+      telegramSyncError: error.telegram || { message: 'Telegram update failed.' },
+    });
+    error.product = product;
+    throw error;
+  }
+}
+
 function applyProductBulkPatch(product, body) {
   const patch = {};
   const set = body?.set && typeof body.set === 'object' ? body.set : {};
@@ -631,18 +662,31 @@ api.patch('/admin/products/bulk', requireAdmin, dbRoute(async (req, res) => {
   const ids = cleanIdList(req.body?.ids).slice(0, 200);
   if (!ids.length) return res.status(400).json({ error: 'bad_request', message: 'Choose at least one product.' });
   const updated = [];
+  const telegramFailures = [];
   for (const id of ids) {
     const existing = await records.get('products', id);
     if (!existing || existing.deletedAt) continue;
     const patch = applyProductBulkPatch(existing, req.body);
     if (Object.keys(patch).length === 0) continue;
-    const doc = await records.update('products', id, {
+    let doc = await records.update('products', id, {
       ...patch,
       contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,
     });
+    try {
+      const synced = await syncExistingTelegramProduct(existing, doc);
+      doc = synced.product || doc;
+    } catch (error) {
+      doc = error.product || doc;
+      telegramFailures.push({ id, error: error.telegram || { message: 'Telegram update failed.' } });
+    }
     if (doc) updated.push(doc);
   }
-  res.json({ ok: true, updated: updated.length, products: updated });
+  res.json({
+    ok: telegramFailures.length === 0,
+    updated: updated.length,
+    telegramFailures,
+    products: updated,
+  });
 }));
 
 api.post('/admin/products', requireAdmin, dbRoute(async (req, res) => {
@@ -660,7 +704,8 @@ api.post('/admin/products', requireAdmin, dbRoute(async (req, res) => {
   });
   if (shouldPost) {
     try {
-      const telegram = await createTelegramProductPost({ ...product, status: 'published' });
+      const categories = await records.list('categories');
+      const telegram = await createTelegramProductPost(withTelegramCategoryNames({ ...product, status: 'published' }, categories));
       product = await records.update('products', product.id, { ...telegram, status: 'published' });
       return res.status(201).json({ ...product, telegramPublishAction: 'created' });
     } catch (error) {
@@ -698,7 +743,8 @@ api.put('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
   });
   if (shouldPost) {
     try {
-      const telegram = await createTelegramProductPost({ ...doc, status: 'published' });
+      const categories = await records.list('categories');
+      const telegram = await createTelegramProductPost(withTelegramCategoryNames({ ...doc, status: 'published' }, categories));
       doc = await records.update('products', req.params.id, { ...telegram, status: 'published' });
       return res.json({ ...doc, telegramPublishAction: 'created' });
     } catch (error) {
@@ -713,6 +759,17 @@ api.put('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
         product: doc,
       });
     }
+  }
+  try {
+    const synced = await syncExistingTelegramProduct(existing, doc);
+    doc = synced.product || doc;
+    if (synced.action) return res.json({ ...doc, telegramPublishAction: synced.action });
+  } catch (error) {
+    return res.status(502).json({
+      error: 'telegram_update_failed',
+      message: 'Product was updated on the website, but Telegram could not be edited.',
+      product: error.product || doc,
+    });
   }
   res.json(doc);
 }));

@@ -23,6 +23,60 @@ function productPrice(product) {
   return product.pricingMode === 'starting' ? `Price: From ${amount}` : `Price: ${amount}`;
 }
 
+function compactText(value, limit = 80) {
+  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, limit).trim();
+}
+
+function hashtag(value) {
+  const tag = compactText(value, 48)
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}_]+/gu, '_')
+    .replace(/^_+|_+$/g, '');
+  return tag ? `#${tag}` : '';
+}
+
+function productCategories(product) {
+  return [...new Set([
+    ...(Array.isArray(product.categoryNames) ? product.categoryNames : []),
+    ...(Array.isArray(product.categoryLabels) ? product.categoryLabels : []),
+  ].map((item) => compactText(item)).filter(Boolean))];
+}
+
+function productDetails(product) {
+  const details = [];
+  const categories = productCategories(product);
+  if (product.isAddon) details.push('Item type: Add-on');
+  if (categories.length) details.push(`Item type: ${categories.join(', ')}`);
+  for (const group of Array.isArray(product.variants) ? product.variants : []) {
+    const name = compactText(group?.name, 32);
+    const options = (Array.isArray(group?.options) ? group.options : [])
+      .map((option) => compactText(option?.label, 32))
+      .filter(Boolean);
+    if (name && options.length) details.push(`${name}: ${options.join(', ')}`);
+  }
+  return details;
+}
+
+function productHashtags(product) {
+  const tags = new Set([
+    hashtag('mena inc'),
+    hashtag(product.isAddon ? 'add on' : 'product'),
+    ...productCategories(product).map(hashtag),
+  ].filter(Boolean));
+
+  for (const group of Array.isArray(product.variants) ? product.variants : []) {
+    const groupName = compactText(group?.name, 32);
+    if (groupName) tags.add(hashtag(groupName));
+    for (const option of Array.isArray(group?.options) ? group.options : []) {
+      const optionLabel = compactText(option?.label, 32);
+      if (optionLabel) tags.add(hashtag(optionLabel));
+      if (groupName && optionLabel) tags.add(hashtag(`${groupName} ${optionLabel}`));
+    }
+  }
+
+  return [...tags].filter(Boolean).slice(0, 28);
+}
+
 function truncate(value, limit) {
   const text = String(value || '').trim();
   if (text.length <= limit) return text;
@@ -37,6 +91,10 @@ export function formatProductCaption(product) {
     sections.push(description);
   }
   sections.push(productPrice(product));
+  const details = productDetails(product);
+  if (details.length) sections.push(`Details:\n${details.join('\n')}`);
+  const tags = productHashtags(product);
+  if (tags.length) sections.push(tags.join(' '));
   if (product.id) sections.push(`${shopUrl}/product/${encodeURIComponent(product.id)}`);
   return truncate(sections.filter(Boolean).join('\n\n'), TELEGRAM_CAPTION_LIMIT);
 }
@@ -45,6 +103,12 @@ export function shouldCreateTelegramPost(previous, next) {
   if (process.env.TELEGRAM_SYNC_ENABLED !== 'true') return false;
   if (next?.status !== 'published' || telegramProductIdentity(next)) return false;
   return !previous || previous.status !== 'published';
+}
+
+export function shouldUpdateTelegramPost(previous, next) {
+  if (process.env.TELEGRAM_SYNC_ENABLED !== 'true') return false;
+  if (next?.status !== 'published' || !telegramProductIdentity(next)) return false;
+  return Math.max(1, Number(previous?.contentVersion) || 1) < Math.max(1, Number(next?.contentVersion) || 1);
 }
 
 function localUpload(photo) {
@@ -138,4 +202,51 @@ export async function createTelegramProductPost(product) {
     error.telegram = sanitizedTelegramError(error);
     throw error;
   }
+}
+
+function isNotModified(error) {
+  return error?.code === 400 && /message is not modified/i.test(String(error.message || ''));
+}
+
+export async function updateTelegramProductPost(product) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = product.telegramChannelId || configuredChannelId();
+  const messageId = Number(product.telegramMessageId);
+  if (!token || !chatId || !Number.isInteger(messageId) || messageId <= 0) {
+    throw new Error('Telegram product synchronization is not configured.');
+  }
+  const caption = formatProductCaption(product);
+
+  try {
+    try {
+      await telegramApi(token, 'editMessageCaption', {
+        chat_id: chatId,
+        message_id: messageId,
+        caption,
+      });
+    } catch (error) {
+      if (isNotModified(error)) {
+        return syncedTelegramPatch(product);
+      }
+      await telegramApi(token, 'editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: caption,
+      });
+    }
+    return syncedTelegramPatch(product);
+  } catch (error) {
+    if (isNotModified(error)) return syncedTelegramPatch(product);
+    error.telegram = sanitizedTelegramError(error);
+    throw error;
+  }
+}
+
+function syncedTelegramPatch(product) {
+  return {
+    telegramSyncStatus: 'synced',
+    telegramSyncedVersion: Math.max(1, Number(product.contentVersion) || 1),
+    telegramLastSyncedAt: new Date().toISOString(),
+    telegramSyncError: null,
+  };
 }

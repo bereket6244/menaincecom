@@ -75,6 +75,7 @@ Optional integrations:
 | Feature | Env vars |
 | --- | --- |
 | Telegram delivery | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` |
+| Telegram product sync | `TELEGRAM_SYNC_ENABLED=true`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHANNEL_ID`, `TELEGRAM_CHANNEL_USERNAME`, `PUBLIC_SHOP_URL` |
 | WhatsApp delivery | `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_TEAM_NUMBER` |
 | Admin push | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` |
 
@@ -103,6 +104,9 @@ in the admin panel.
 - **Admin creation**: only an authenticated current admin can create another admin. New admin passwords
   must be at least 14 characters and include uppercase, lowercase, a number, and a symbol.
 - **Pricing modes**: products can have exact price, starting price, or quote-only pricing.
+- **Telegram product sync**: when enabled, publishing a product creates a channel post, and later
+  published product edits update the existing Telegram message caption/text with current price,
+  details, variant options, hashtags, and the storefront link.
 - **Add-ons**: add-on products are hidden from the main catalog and surfaced as suggestions on product
   pages and the order summary.
 - **Complimentary items**: admins can attach free items to products directly, or create reusable
