@@ -326,7 +326,7 @@ export function DesktopOrderSummary() {
               <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted">Total</div>
               <div className="text-2xl font-extrabold text-[#ee0a24]">{totalText}</div>
             </div>
-            <button type="button" onClick={() => void submitOrder()} disabled={!online || sending !== null} className="btn-primary btn-metallic-order h-14 px-10">
+            <button type="button" onClick={() => void submitOrder()} disabled={!online || sending !== null} className="btn-primary btn-order-gradient h-14 px-10">
               {sending ? 'Opening...' : 'Place order'}
             </button>
           </div>
