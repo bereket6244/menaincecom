@@ -6,6 +6,7 @@ import { cx, formatPrice } from '../lib/utils';
 import { flyToLiked } from '../lib/fly';
 import { useApp } from '../store/AppContext';
 import { ProductImageFrame } from './ProductImageFrame';
+import { productLimitText } from '../lib/orderLimits';
 
 const TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#eeeeec', '#f6efdd', '#e9f0ec', '#e9e6ef'];
 
@@ -31,6 +32,7 @@ export function MobileProductCard({
   const [photoIndex, setPhotoIndex] = useState(0);
   const selectedPhoto = product.photos[photoIndex] || product.photos[0];
   const hasMultiplePhotos = product.photos.length > 1;
+  const limitText = productLimitText(product);
 
   return (
     <div className="mena-fade-up flex min-w-0 flex-col">
@@ -76,6 +78,7 @@ export function MobileProductCard({
         {product.name}
       </button>
       <div className="mt-1 text-[15px] font-extrabold text-[#ee0a24]">{formatPrice(product)}</div>
+      {limitText && <div className="mt-0.5 text-[11px] font-semibold text-[#ee0a24]">{limitText}</div>}
     </div>
   );
 }

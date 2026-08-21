@@ -1,4 +1,4 @@
-import { apiSend } from './api';
+import { ApiError, apiSend } from './api';
 import type { BusinessSettings, CartItem, OrderRecord, User } from './types';
 import { buildCartOrderMessage, buildOrderMessage } from './share';
 
@@ -58,7 +58,8 @@ export async function placeOrder({
       })),
     });
     return { message: buildOrderMessage(response.order, business, origin), order: response.order };
-  } catch {
+  } catch (error) {
+    if (error instanceof ApiError && error.kind === 'http') throw error;
     return { message: buildCartOrderMessage(items, note, origin), order: null };
   }
 }

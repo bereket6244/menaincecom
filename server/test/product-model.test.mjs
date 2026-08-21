@@ -16,8 +16,8 @@ test('legacy products remain published while drafts stay private', () => {
 });
 
 test('public product strips import and synchronization metadata', () => {
-  const result = publicProduct({ id: '1', name: 'Card', telegramOriginalCaption: 'metadata', importBatchId: 'batch' });
-  assert.deepEqual(result, { id: '1', name: 'Card' });
+  const result = publicProduct({ id: '1', name: 'Card', maxOrderQty: 25, telegramOriginalCaption: 'metadata', importBatchId: 'batch' });
+  assert.deepEqual(result, { id: '1', name: 'Card', maxOrderQty: 25 });
 });
 
 test('Telegram identity is stable per channel and message', () => {
@@ -82,6 +82,7 @@ test('Telegram product caption includes price and storefront link', () => {
   const caption = formatProductCaption({
     id: 'product 1', name: 'Pocket Card', description: 'Printed on premium stock',
     pricingMode: 'starting', price: 125,
+    maxOrderQty: 50,
     categoryNames: ['Wedding Invitations'],
     variants: [
       { name: 'Size', options: [{ label: 'A6' }, { label: 'A5' }] },
@@ -91,8 +92,10 @@ test('Telegram product caption includes price and storefront link', () => {
   assert.match(caption, /Pocket Card/);
   assert.match(caption, /Price: From 125 ETB/);
   assert.match(caption, /Item type: Wedding Invitations/);
+  assert.match(caption, /Limited quantity: only 50 available/);
   assert.match(caption, /Size: A6, A5/);
   assert.match(caption, /#wedding_invitations/);
+  assert.match(caption, /#limited/);
   assert.match(caption, /#size_a6/);
   assert.match(caption, /#paper_matte_300gsm/);
   assert.match(caption, /\/product\/product%201/);

@@ -13,6 +13,7 @@ import { cartPriceEach, cleanDescription, cx, cssColor, formatPrice, isColorGrou
 import type { AddToCartResult } from '../store/AppContext';
 import { smsContactUrl, telegramContactUrl, whatsappContactUrl } from '../lib/share';
 import { productCategoryNames } from '../lib/productCategories';
+import { clampOrderQty, productLimitText, productMaxOrderQty } from '../lib/orderLimits';
 
 type SheetMode = 'add' | 'buy';
 
@@ -94,6 +95,10 @@ export function MobileProductDetail() {
   );
 
   useEffect(() => {
+    if (product) setQty((current) => clampOrderQty(current, product));
+  }, [product]);
+
+  useEffect(() => {
     setComplimentarySelections((current) => {
       const next: Record<string, number> = {};
       for (const item of complimentaryOptions) {
@@ -138,6 +143,9 @@ export function MobileProductDetail() {
   const isQuote = product.pricingMode === 'quote';
   const complimentaryItems = complimentaryForProduct(product, qty, complimentarySelections);
   const complimentaryText = complimentarySummary(complimentaryItems);
+  const maxOrderQty = productMaxOrderQty(product);
+  const limitText = productLimitText(product);
+  const setLimitedQty = (nextQty: number) => setQty(clampOrderQty(nextQty, product));
 
   const notifyAdded = (result: AddToCartResult) => {
     toast(
@@ -155,8 +163,9 @@ export function MobileProductDetail() {
       isAddon: product.isAddon,
       pricingMode: product.pricingMode,
       priceEach: cartPriceEach(product),
+      maxOrderQty: product.maxOrderQty ?? null,
       variantSelections: selections,
-      qty,
+      qty: clampOrderQty(qty, product),
       note: '',
       complimentaryItems: selectedComplimentaryItems,
     }, mode);
@@ -283,6 +292,7 @@ export function MobileProductDetail() {
             {formatPrice(product)}
             {!isQuote && <span className="ml-1 text-[13px] font-medium text-muted">each</span>}
           </div>
+          {limitText && <div className="mt-2 text-[13px] font-extrabold text-[#ee0a24]">{limitText}</div>}
           {description && <p className="mt-3 whitespace-pre-line text-[14.5px] leading-[1.5] text-ink/70">{description}</p>}
         </section>
 
@@ -322,7 +332,7 @@ export function MobileProductDetail() {
 
         <section className="px-[18px] pt-5">
           <div className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.06em] text-muted">Amount</div>
-          <QuantityPicker value={qty} onChange={setQty} presets={[100, 250, 500, 1000]} />
+          <QuantityPicker value={qty} onChange={setLimitedQty} max={maxOrderQty} presets={[100, 250, 500, 1000]} />
         </section>
 
         {complimentaryOptions.length > 0 && (
@@ -375,7 +385,7 @@ export function MobileProductDetail() {
               <div className="text-[11px] text-muted">Amount</div>
               <div className="text-sm font-semibold text-ink">{qty.toLocaleString()} item(s)</div>
             </div>
-            <QuantityPicker size="sm" value={qty} onChange={setQty} />
+            <QuantityPicker size="sm" value={qty} onChange={setLimitedQty} max={maxOrderQty} />
           </div>
           <div className="flex items-center gap-2.5">
             <div className="min-w-0 shrink">
@@ -479,7 +489,7 @@ export function MobileProductDetail() {
 
           <div>
             <h3 className="mb-3 text-lg font-extrabold text-ink">Qty</h3>
-            <QuantityPicker value={qty} onChange={setQty} presets={[100, 250, 500, 1000]} />
+            <QuantityPicker value={qty} onChange={setLimitedQty} max={maxOrderQty} presets={[100, 250, 500, 1000]} />
           </div>
         </div>
 

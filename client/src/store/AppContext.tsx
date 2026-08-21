@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { CartItem, User } from '../lib/types';
 import { apiGet, apiSend, checkApiHealth, onDbStatus, setToken } from '../lib/api';
 import { readLocalWishlist, writeLocalWishlist } from '../lib/wishlist';
+import { clampOrderQty } from '../lib/orderLimits';
 
 export interface Toast {
   id: number;
@@ -166,20 +167,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const existing = c.find((x) => x.key === key);
       if (existing) {
         result = 'updated';
-        const qty = mode === 'replace' ? item.qty : existing.qty + item.qty;
+        const qty = clampOrderQty(mode === 'replace' ? item.qty : existing.qty + item.qty, item);
         const note =
           existing.note && item.note && existing.note !== item.note
             ? `${existing.note} | ${item.note}`
             : existing.note || item.note;
         return c.map((x) => (x.key === key ? { ...x, qty, note, complimentaryItems: item.complimentaryItems } : x));
       }
-      return [...c, { ...item, key }];
+      return [...c, { ...item, qty: clampOrderQty(item.qty, item), key }];
     });
     return result;
   }, []);
 
   const updateCartItem = useCallback((key: string, patch: Partial<CartItem>) => {
-    setCart((c) => c.map((x) => (x.key === key ? { ...x, ...patch } : x)));
+    setCart((c) => c.map((x) => {
+      if (x.key !== key) return x;
+      const next = { ...x, ...patch };
+      return { ...next, qty: clampOrderQty(next.qty, next) };
+    }));
   }, []);
 
   const removeFromCart = useCallback((key: string) => {

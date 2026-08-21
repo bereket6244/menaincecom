@@ -40,6 +40,7 @@ export interface Product {
   photos: string[];
   pricingMode: PricingMode;
   price: number | null; // ETB; used by 'exact' and 'starting'
+  maxOrderQty?: number | null; // blank means unlimited
   variants: VariantGroup[];
   isAddon: boolean; // complimentary/add-on item (entrance cards, schedule cards…)
   suggestedAddonIds: string[];
@@ -73,6 +74,7 @@ export interface CartItem {
   isAddon: boolean;
   pricingMode: PricingMode;
   priceEach: number | null;
+  maxOrderQty?: number | null;
   variantSelections: Record<string, string>;
   qty: number;
   note: string;

@@ -45,8 +45,10 @@ function productCategories(product) {
 function productDetails(product) {
   const details = [];
   const categories = productCategories(product);
+  const maxOrderQty = Math.floor(Number(product.maxOrderQty) || 0);
   if (product.isAddon) details.push('Item type: Add-on');
   if (categories.length) details.push(`Item type: ${categories.join(', ')}`);
+  if (maxOrderQty > 0) details.push(`Limited quantity: only ${maxOrderQty.toLocaleString('en-US')} available`);
   for (const group of Array.isArray(product.variants) ? product.variants : []) {
     const name = compactText(group?.name, 32);
     const options = (Array.isArray(group?.options) ? group.options : [])
@@ -63,6 +65,7 @@ function productHashtags(product) {
     hashtag(product.isAddon ? 'add on' : 'product'),
     ...productCategories(product).map(hashtag),
   ].filter(Boolean));
+  if (Math.floor(Number(product.maxOrderQty) || 0) > 0) tags.add(hashtag('limited'));
 
   for (const group of Array.isArray(product.variants) ? product.variants : []) {
     const groupName = compactText(group?.name, 32);
@@ -117,7 +120,10 @@ export function shouldDeleteTelegramPost(product) {
 }
 
 function localUpload(photo) {
-  const match = String(photo || '').match(/^(?:\/shop)?\/uploads\/([^/]+)$/);
+  const value = String(photo || '').trim();
+  const shopUrl = String(process.env.PUBLIC_SHOP_URL || 'https://menaincet.com/shop').replace(/\/$/, '');
+  const escapedShopUrl = shopUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = value.match(new RegExp(`^(?:${escapedShopUrl})?(?:/shop)?/uploads/([^/]+)$`));
   if (!match) return null;
   const filename = path.basename(match[1]);
   return filename === match[1] ? { filename, filePath: path.join(uploadsDir, filename) } : null;
@@ -134,12 +140,23 @@ function imageMime(filename) {
 
 async function appendPhoto(form, field, photo) {
   const local = localUpload(photo);
-  if (!local) {
-    form.set(field, String(photo));
+  if (local) {
+    const data = await fs.readFile(local.filePath);
+    form.set(field, new Blob([data], { type: imageMime(local.filename) }), local.filename);
     return;
   }
-  const data = await fs.readFile(local.filePath);
-  form.set(field, new Blob([data], { type: imageMime(local.filename) }), local.filename);
+
+  const url = String(photo || '').trim();
+  if (/^https?:\/\//i.test(url)) {
+    const response = await fetch(url, { signal: AbortSignal.timeout(30_000) });
+    if (!response.ok) throw new Error(`Could not read product photo (${response.status}).`);
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    const buffer = await response.arrayBuffer();
+    form.set(field, new Blob([buffer], { type: contentType }), path.basename(new URL(url).pathname) || `${field}.jpg`);
+    return;
+  }
+
+  form.set(field, url);
 }
 
 async function telegramMultipart(token, method, form) {
@@ -193,11 +210,14 @@ export async function createTelegramProductPost(product) {
     const messages = await sendProductPost(product);
     const first = messages[0];
     const username = channelUsername();
+    const photos = (product.photos || []).filter(Boolean).slice(0, TELEGRAM_ALBUM_LIMIT);
     return {
       telegramChannelId: configuredChannelId(),
       telegramMessageId: first.message_id,
       telegramMessageIds: messages.map((message) => message.message_id),
       telegramPostUrl: username ? `https://t.me/${username}/${first.message_id}` : null,
+      telegramPostType: photos.length === 0 ? 'text' : photos.length === 1 ? 'photo' : 'album',
+      telegramSyncedPhotos: photos,
       telegramSyncStatus: 'synced',
       telegramSyncedVersion: Math.max(1, Number(product.contentVersion) || 1),
       telegramLastSyncedAt: new Date().toISOString(),
@@ -213,6 +233,35 @@ function isNotModified(error) {
   return error?.code === 400 && /message is not modified/i.test(String(error.message || ''));
 }
 
+function syncedPhotos(product) {
+  return (product.photos || []).filter(Boolean).slice(0, TELEGRAM_ALBUM_LIMIT);
+}
+
+function telegramPostType(product) {
+  const photos = syncedPhotos(product);
+  return photos.length === 0 ? 'text' : photos.length === 1 ? 'photo' : 'album';
+}
+
+function samePhotoList(a, b) {
+  const left = Array.isArray(a) ? a : [];
+  const right = Array.isArray(b) ? b : [];
+  return left.length === right.length && left.every((item, index) => item === right[index]);
+}
+
+async function replaceTelegramProductPost(product) {
+  await deleteTelegramProductPost(product);
+  return createTelegramProductPost(product);
+}
+
+async function editSinglePhotoPost(token, chatId, messageId, product, caption) {
+  const form = new FormData();
+  form.set('chat_id', chatId);
+  form.set('message_id', String(messageId));
+  form.set('media', JSON.stringify({ type: 'photo', media: 'attach://photo', caption }));
+  await appendPhoto(form, 'photo', syncedPhotos(product)[0]);
+  return telegramMultipart(token, 'editMessageMedia', form);
+}
+
 export async function updateTelegramProductPost(product) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = product.telegramChannelId || configuredChannelId();
@@ -221,8 +270,23 @@ export async function updateTelegramProductPost(product) {
     throw new Error('Telegram product synchronization is not configured.');
   }
   const caption = formatProductCaption(product);
+  const photos = syncedPhotos(product);
+  const nextPostType = telegramPostType(product);
 
   try {
+    if (photos.length === 1) {
+      await editSinglePhotoPost(token, chatId, messageId, product, caption);
+      return syncedTelegramPatch(product);
+    }
+
+    if (
+      (photos.length === 0 && product.telegramPostType && product.telegramPostType !== 'text')
+      || (photos.length > 1 && product.telegramSyncedPhotos && !samePhotoList(product.telegramSyncedPhotos, photos))
+      || (photos.length > 1 && product.telegramPostType && product.telegramPostType !== nextPostType)
+    ) {
+      return replaceTelegramProductPost(product);
+    }
+
     try {
       await telegramApi(token, 'editMessageCaption', {
         chat_id: chatId,
@@ -288,7 +352,10 @@ export async function deleteTelegramProductPost(product) {
 }
 
 function syncedTelegramPatch(product) {
+  const photos = syncedPhotos(product);
   return {
+    telegramPostType: telegramPostType(product),
+    telegramSyncedPhotos: photos,
     telegramSyncStatus: 'synced',
     telegramSyncedVersion: Math.max(1, Number(product.contentVersion) || 1),
     telegramLastSyncedAt: new Date().toISOString(),

@@ -392,6 +392,19 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
   const productById = new Map(products.map((p) => [p.id, resolveComplimentaryProduct(p, universalComplimentaryItems)]));
 
   // Prices always come from the catalog — never trust amounts sent by the browser.
+  for (const raw of rawItems) {
+    const product = productById.get(String(raw?.productId || ''));
+    if (!product) continue;
+    const qty = Math.min(100000, Math.max(1, Math.floor(Number(raw?.qty)) || 1));
+    const maxOrderQty = cleanMaxOrderQty(product.maxOrderQty);
+    if (maxOrderQty && qty > maxOrderQty) {
+      return res.status(400).json({
+        error: 'quantity_limit_exceeded',
+        message: `${product.name} is limited to ${maxOrderQty.toLocaleString('en-US')} item(s). Please lower the quantity before ordering.`,
+      });
+    }
+  }
+
   const items = rawItems
     .map((raw) => {
       const product = productById.get(String(raw?.productId || ''));
@@ -575,6 +588,19 @@ function cleanCategoryIds(value, fallback) {
   return ids.length ? ids : legacy ? [legacy] : [];
 }
 
+function cleanMaxOrderQty(value) {
+  const limit = Math.floor(Number(value) || 0);
+  return limit > 0 ? Math.min(100000, limit) : null;
+}
+
+function cleanProductInput(input, { includeDefaultLimit = false } = {}) {
+  const next = { ...input };
+  if (includeDefaultLimit || Object.prototype.hasOwnProperty.call(next, 'maxOrderQty')) {
+    next.maxOrderQty = cleanMaxOrderQty(next.maxOrderQty);
+  }
+  return next;
+}
+
 function withTelegramCategoryNames(product, categories) {
   const ids = cleanCategoryIds(product?.categoryIds, product?.categoryId);
   const byId = new Map((categories || []).map((category) => [category.id, category.name]));
@@ -642,6 +668,7 @@ function applyProductBulkPatch(product, body) {
     patch.pricingMode = pricingMode;
     patch.price = pricingMode === 'quote' ? null : Math.max(0, Number(set.price) || 0);
   }
+  if (set.maxOrderQty !== undefined) patch.maxOrderQty = cleanMaxOrderQty(set.maxOrderQty);
 
   const variants = body?.variants;
   if (variants?.mode === 'replace') patch.variants = cleanVariantGroups(variants.groups);
@@ -708,7 +735,10 @@ api.patch('/admin/products/bulk', requireAdmin, dbRoute(async (req, res) => {
 }));
 
 api.post('/admin/products', requireAdmin, dbRoute(async (req, res) => {
-  const input = { ...req.body, status: normalizeProductStatus(req.body?.status) };
+  const input = cleanProductInput(
+    { ...req.body, status: normalizeProductStatus(req.body?.status) },
+    { includeDefaultLimit: true }
+  );
   const identity = telegramProductIdentity(input);
   if (identity) {
     const existing = await records.find('products', (product) => telegramProductIdentity(product) === identity);
@@ -746,15 +776,16 @@ api.put('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
   const existing = await records.get('products', req.params.id);
   if (!existing) return res.status(404).json({ error: 'not_found' });
   const nextVersion = Math.max(1, Number(existing.contentVersion) || 1) + 1;
+  const body = cleanProductInput(req.body);
   const input = {
     ...existing,
-    ...req.body,
+    ...body,
     status: normalizeProductStatus(req.body?.status ?? existing.status),
     contentVersion: nextVersion,
   };
   const shouldPost = shouldCreateTelegramPost(existing, input);
   let doc = await records.update('products', req.params.id, {
-    ...req.body,
+    ...body,
     status: shouldPost ? 'draft' : input.status,
     ...(shouldPost ? { telegramSyncStatus: 'pending' } : {}),
     contentVersion: nextVersion,

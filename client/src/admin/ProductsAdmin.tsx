@@ -16,7 +16,7 @@ import { productCategoryIds, productCategoryNames } from '../lib/productCategori
 type Draft = Omit<Product, 'id' | 'createdAt'> & { id?: string };
 type ProductBulkPatch = {
   ids: string[];
-  set?: Partial<Pick<Product, 'status' | 'categoryId' | 'categoryIds' | 'featured' | 'isAddon' | 'pricingMode' | 'price'>>;
+  set?: Partial<Pick<Product, 'status' | 'categoryId' | 'categoryIds' | 'featured' | 'isAddon' | 'pricingMode' | 'price' | 'maxOrderQty'>>;
   variants?: { mode: 'add' | 'replace'; groups: VariantGroup[] };
   complimentaryItems?: { mode: 'add' | 'replace'; items: NonNullable<Product['complimentaryItems']> };
   universalComplimentaryItemIds?: { mode: 'add' | 'replace'; ids: string[] };
@@ -26,7 +26,7 @@ type ProductBulkPatch = {
 const EMPTY: Draft = {
   name: '', categoryId: '', description: '', photos: [],
   categoryIds: [],
-  pricingMode: 'exact', price: null, variants: [],
+  pricingMode: 'exact', price: null, maxOrderQty: null, variants: [],
   isAddon: false, suggestedAddonIds: [], complimentaryItems: [], universalComplimentaryItemIds: [], featured: false,
   status: 'published',
 };
@@ -449,6 +449,8 @@ function BulkEditProductsModal({
   const [shouldSetPricing, setShouldSetPricing] = useState(false);
   const [pricingMode, setPricingMode] = useState<PricingMode>('exact');
   const [price, setPrice] = useState<number | null>(null);
+  const [shouldSetLimit, setShouldSetLimit] = useState(false);
+  const [maxOrderQty, setMaxOrderQty] = useState<number | null>(null);
   const [variantMode, setVariantMode] = useState<'off' | 'add' | 'replace'>('off');
   const [bulkVariants, setBulkVariants] = useState<VariantGroup[]>([]);
   const [freeMode, setFreeMode] = useState<'off' | 'add' | 'replace'>('off');
@@ -490,6 +492,8 @@ function BulkEditProductsModal({
     setShouldSetPricing(false);
     setPricingMode('exact');
     setPrice(null);
+    setShouldSetLimit(false);
+    setMaxOrderQty(null);
     setVariantMode('off');
     setBulkVariants([]);
     setFreeMode('off');
@@ -518,6 +522,7 @@ function BulkEditProductsModal({
       set.pricingMode = pricingMode;
       set.price = pricingMode === 'quote' ? null : price;
     }
+    if (shouldSetLimit) set.maxOrderQty = maxOrderQty;
     if (Object.keys(set).length > 0) patch.set = set;
     const variants = cleanVariants(bulkVariants);
     if (variantMode !== 'off' && variants.length > 0) patch.variants = { mode: variantMode, groups: variants };
@@ -608,6 +613,22 @@ function BulkEditProductsModal({
               placeholder={pricingMode === 'quote' ? 'Quoted on request' : 'ETB'}
             />
           </div>
+        </div>
+
+        <div className="rounded border border-edge bg-surface2 p-3">
+          <label className="flex items-center gap-2 text-xs font-semibold">
+            <input type="checkbox" checked={shouldSetLimit} onChange={(e) => setShouldSetLimit(e.target.checked)} className="accent-pink" />
+            Order limit
+          </label>
+          <input
+            type="number"
+            min={1}
+            value={maxOrderQty ?? ''}
+            disabled={!shouldSetLimit}
+            onChange={(e) => setMaxOrderQty(e.target.value === '' ? null : Number(e.target.value))}
+            className="field mt-2 py-1 text-[12px] disabled:opacity-40"
+            placeholder="Blank means unlimited"
+          />
         </div>
 
         <div className="rounded border border-edge bg-surface2 p-3">
@@ -760,6 +781,7 @@ export function ProductsAdmin() {
         categoryId: editing.isAddon ? '' : selectedCategoryIds[0] || '',
         categoryIds: editing.isAddon ? [] : selectedCategoryIds,
         price: editing.pricingMode === 'quote' ? null : editing.price,
+        maxOrderQty: editing.maxOrderQty && editing.maxOrderQty > 0 ? Math.floor(editing.maxOrderQty) : null,
         variants: cleanVariants(editing.variants),
         complimentaryItems: editing.isAddon
           ? []
@@ -836,6 +858,12 @@ export function ProductsAdmin() {
       sortValue: (p) => p.price ?? -1,
     },
     { key: 'variants', label: 'Variants', render: (p) => p.variants.length || '—' },
+    {
+      key: 'limit',
+      label: 'Limit',
+      render: (p) => p.maxOrderQty ? p.maxOrderQty.toLocaleString() : '—',
+      sortValue: (p) => p.maxOrderQty ?? 1e9,
+    },
     {
       key: 'actions', label: '', width: '40px',
       render: (p) => (
@@ -983,6 +1011,19 @@ export function ProductsAdmin() {
                   placeholder={editing.pricingMode === 'quote' ? 'Quoted on request' : 'e.g. 85'}
                 />
               </div>
+            </div>
+
+            <div>
+              <SysLabel>Order limit</SysLabel>
+              <input
+                type="number"
+                min={1}
+                value={editing.maxOrderQty ?? ''}
+                onChange={(e) => setEditing({ ...editing, maxOrderQty: e.target.value === '' ? null : Number(e.target.value) })}
+                className="field mt-1"
+                placeholder="Blank means unlimited"
+              />
+              <p className="mt-1 text-[10px] text-muted">Use this when a card has limited available quantity. Customers cannot order above this number.</p>
             </div>
 
             <div>

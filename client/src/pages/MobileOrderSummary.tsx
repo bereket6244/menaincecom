@@ -12,6 +12,7 @@ import { QuantityPicker } from '../components/QuantityPicker';
 import { mobileProductTint } from '../components/MobileProductCard';
 import { complimentaryExtraTotal, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
 import { cartPriceEach, formatCartTotal, formatLineTotal, formatPrice } from '../lib/utils';
+import { productLimitText, productMaxOrderQty } from '../lib/orderLimits';
 
 type Channel = 'whatsapp' | 'telegram' | 'sms';
 type Step = 'cart' | 'checkout';
@@ -74,6 +75,21 @@ export function MobileOrderSummary() {
     () => new Map((products || []).map((product) => [product.id, productWithResolvedComplimentary(product, universalComplimentaryItems || undefined)])),
     [products, universalComplimentaryItems]
   );
+
+  useEffect(() => {
+    for (const item of cart) {
+      const product = productById.get(item.productId);
+      if (!product) continue;
+      const maxOrderQty = productMaxOrderQty(product);
+      if (item.qty > maxOrderQty || item.maxOrderQty !== (product.maxOrderQty ?? null)) {
+        updateCartItem(item.key, {
+          qty: Math.min(item.qty, maxOrderQty),
+          maxOrderQty: product.maxOrderQty ?? null,
+        });
+      }
+    }
+  }, [cart, productById, updateCartItem]);
+
   const allSelected = cart.length > 0 && selectedItems.length === cart.length;
   const selectedTotal = useMemo(() => {
     const priced = selectedItems.filter((item) => item.priceEach != null);
@@ -365,6 +381,9 @@ export function MobileOrderSummary() {
       <div className="px-4 pt-1">
         {cart.map((item) => {
           const checked = selected.has(item.key);
+          const product = productById.get(item.productId);
+          const maxOrderQty = productMaxOrderQty(product || item);
+          const limitText = productLimitText(product || item);
           return (
             <div key={item.key} className="mena-fade-up flex gap-3 border-b border-edge py-4">
               <button
@@ -393,6 +412,7 @@ export function MobileOrderSummary() {
                         Complimentary: {complimentarySummary(freebiesFor(item))}
                       </div>
                     )}
+                    {limitText && <div className="mt-1 text-[12px] font-semibold text-[#ee0a24]">{limitText}</div>}
                   </div>
                   <div className="shrink-0 text-right text-[15px] font-extrabold text-[#ee0a24]">
                     {formatLineTotal(item)}
@@ -402,9 +422,11 @@ export function MobileOrderSummary() {
                   <QuantityPicker
                     size="sm"
                     value={item.qty}
+                    max={maxOrderQty}
                     onChange={(qty) =>
                       updateCartItem(item.key, {
                         qty,
+                        maxOrderQty: product?.maxOrderQty ?? item.maxOrderQty ?? null,
                         complimentaryItems: productById.get(item.productId)
                           ? complimentaryForProduct(
                               productById.get(item.productId)!,
@@ -450,6 +472,7 @@ export function MobileOrderSummary() {
                       isAddon: product.isAddon,
                       pricingMode: product.pricingMode,
                       priceEach: cartPriceEach(product),
+                      maxOrderQty: product.maxOrderQty ?? null,
                       variantSelections: {},
                       qty: 1,
                       note: '',

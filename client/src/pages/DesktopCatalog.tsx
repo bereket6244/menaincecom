@@ -198,6 +198,7 @@ export function DesktopCatalog() {
       isAddon: product.isAddon,
       pricingMode: product.pricingMode,
       priceEach: cartPriceEach(product),
+      maxOrderQty: product.maxOrderQty ?? null,
       variantSelections: {},
       qty: 1,
       note: '',

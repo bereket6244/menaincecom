@@ -1,7 +1,7 @@
 const PUBLIC_PRODUCT_FIELDS = new Set([
   'id', 'name', 'categoryId', 'categoryIds', 'description', 'photos', 'pricingMode', 'price', 'variants',
   'isAddon', 'suggestedAddonIds', 'complimentaryItems', 'universalComplimentaryItemIds',
-  'featured', 'createdAt', 'updatedAt',
+  'featured', 'maxOrderQty', 'createdAt', 'updatedAt',
 ]);
 
 export function normalizeProductStatus(value) {

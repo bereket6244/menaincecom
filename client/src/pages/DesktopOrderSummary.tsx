@@ -11,6 +11,7 @@ import { EmptyState, IconButton } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { complimentaryExtraTotal, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
 import { cartPriceEach, cx, formatCartTotal, formatLineTotal, formatPrice } from '../lib/utils';
+import { productLimitText, productMaxOrderQty } from '../lib/orderLimits';
 
 type Channel = 'telegram' | 'whatsapp' | 'sms';
 type Step = 'cart' | 'checkout';
@@ -72,6 +73,21 @@ export function DesktopOrderSummary() {
     () => new Map((products || []).map((product) => [product.id, productWithResolvedComplimentary(product, universalComplimentaryItems || undefined)])),
     [products, universalComplimentaryItems]
   );
+
+  useEffect(() => {
+    for (const item of cart) {
+      const product = productById.get(item.productId);
+      if (!product) continue;
+      const maxOrderQty = productMaxOrderQty(product);
+      if (item.qty > maxOrderQty || item.maxOrderQty !== (product.maxOrderQty ?? null)) {
+        updateCartItem(item.key, {
+          qty: Math.min(item.qty, maxOrderQty),
+          maxOrderQty: product.maxOrderQty ?? null,
+        });
+      }
+    }
+  }, [cart, productById, updateCartItem]);
+
   const selectedItems = useMemo(() => cart.filter((item) => selected.has(item.key)), [cart, selected]);
   const allSelected = cart.length > 0 && selectedItems.length === cart.length;
 
@@ -343,6 +359,9 @@ export function DesktopOrderSummary() {
             <div className="divide-y divide-edge">
               {cart.map((item) => {
                 const checked = selected.has(item.key);
+                const product = productById.get(item.productId);
+                const maxOrderQty = productMaxOrderQty(product || item);
+                const limitText = productLimitText(product || item);
                 return (
                   <div key={item.key} className="flex gap-4 p-5">
                     <button
@@ -366,6 +385,7 @@ export function DesktopOrderSummary() {
                           {complimentarySummary(freebiesFor(item)) && (
                             <div className="mt-1 text-[13px] font-bold text-green">Complimentary: {complimentarySummary(freebiesFor(item))}</div>
                           )}
+                          {limitText && <div className="mt-1 text-[13px] font-bold text-[#ee0a24]">{limitText}</div>}
                         </div>
                         <span className="shrink-0 text-[15px] font-extrabold text-[#ee0a24]">
                           {formatLineTotal(item)}
@@ -375,9 +395,11 @@ export function DesktopOrderSummary() {
                         <QuantityPicker
                           size="sm"
                           value={item.qty}
+                          max={maxOrderQty}
                           onChange={(qty) =>
                             updateCartItem(item.key, {
                               qty,
+                              maxOrderQty: product?.maxOrderQty ?? item.maxOrderQty ?? null,
                               complimentaryItems: productById.get(item.productId)
                                 ? complimentaryForProduct(
                                     productById.get(item.productId)!,
@@ -419,6 +441,7 @@ export function DesktopOrderSummary() {
                           isAddon: addon.isAddon,
                           pricingMode: addon.pricingMode,
                           priceEach: cartPriceEach(addon),
+                          maxOrderQty: addon.maxOrderQty ?? null,
                           variantSelections: {},
                           qty: 1,
                           note: '',

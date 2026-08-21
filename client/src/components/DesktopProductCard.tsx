@@ -5,6 +5,7 @@ import { useApp } from '../store/AppContext';
 import { cx, formatPrice } from '../lib/utils';
 import { flyToLiked } from '../lib/fly';
 import { ProductImageFrame } from './ProductImageFrame';
+import { productLimitText } from '../lib/orderLimits';
 
 const TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#e9f0ec', '#f6efdd'];
 
@@ -30,6 +31,7 @@ export function DesktopProductCard({
   const [photoIndex, setPhotoIndex] = useState(0);
   const selectedPhoto = product.photos[photoIndex] || product.photos[0];
   const hasMultiplePhotos = product.photos.length > 1;
+  const limitText = productLimitText(product);
 
   return (
     <article
@@ -89,6 +91,7 @@ export function DesktopProductCard({
         </button>
         <div className="mt-2.5 flex flex-col items-stretch gap-2.5">
           <span className="text-[15px] font-extrabold leading-tight text-pink">{formatPrice(product)}</span>
+          {limitText && <span className="text-[11px] font-bold text-[#ee0a24]">{limitText}</span>}
           <button
             type="button"
             onClick={() => onQuickAdd(product)}

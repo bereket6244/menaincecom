@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Check, ChevronLeft, Clock, ShoppingBag, X } from 'lucide-react';
 import { useData } from '../lib/useData';
@@ -16,6 +16,7 @@ import {
 } from '../lib/complimentary';
 import { cartPriceEach, cleanDescription, cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
+import { clampOrderQty, productLimitText, productMaxOrderQty } from '../lib/orderLimits';
 
 const ADD_TO_CART_BUTTON = 'btn-outline min-w-[180px]';
 const BUY_NOW_BUTTON = 'btn-primary min-w-[180px]';
@@ -40,6 +41,10 @@ export function DesktopProductDetail() {
   const [qty, setQty] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
 
+  useEffect(() => {
+    if (product) setQty((current) => clampOrderQty(current, product));
+  }, [product]);
+
   const goBack = () => {
     if (location.key === 'default') navigate('/catalog');
     else navigate(-1);
@@ -63,6 +68,9 @@ export function DesktopProductDetail() {
   const isQuote = product.pricingMode === 'quote';
   const complimentaryOptions = complimentaryForProduct(product, qty, complimentarySelections);
   const complimentaryText = complimentarySummary(complimentaryOptions);
+  const maxOrderQty = productMaxOrderQty(product);
+  const limitText = productLimitText(product);
+  const setLimitedQty = (nextQty: number) => setQty(clampOrderQty(nextQty, product));
 
   const notifyAdded = (name: string, result: AddToCartResult) => {
     toast(
@@ -79,8 +87,9 @@ export function DesktopProductDetail() {
       isAddon: product.isAddon,
       pricingMode: product.pricingMode,
       priceEach: cartPriceEach(product),
+      maxOrderQty: product.maxOrderQty ?? null,
       variantSelections: selections,
-      qty,
+      qty: clampOrderQty(qty, product),
       note: '',
       complimentaryItems: complimentaryOptions,
     }, mode);
@@ -206,13 +215,14 @@ export function DesktopProductDetail() {
             {formatPrice(product)}
             {!isQuote && <span className="ml-2 text-sm font-medium text-muted">each</span>}
           </div>
+          {limitText && <div className="mt-2 text-sm font-extrabold text-[#ee0a24]">{limitText}</div>}
           {description && <p className="mt-5 whitespace-pre-line text-[15px] leading-[1.55] text-ink/70">{description}</p>}
 
           <div className="mt-7">{variantPickers}</div>
 
           <div className="mt-7">
             <div className="mb-2.5 text-[12.5px] font-bold uppercase tracking-[0.08em] text-muted">Quantity</div>
-            <QuantityPicker value={qty} onChange={setQty} presets={[100, 250, 500, 1000]} />
+            <QuantityPicker value={qty} onChange={setLimitedQty} max={maxOrderQty} presets={[100, 250, 500, 1000]} />
           </div>
 
           {complimentaryOptions.length > 0 && (
@@ -298,7 +308,7 @@ export function DesktopProductDetail() {
               {variantPickers}
               <div>
                 <div className="mb-2.5 text-[12.5px] font-bold uppercase tracking-[0.08em] text-muted">Quantity</div>
-                <QuantityPicker value={qty} onChange={setQty} presets={[100, 250, 500, 1000]} />
+                <QuantityPicker value={qty} onChange={setLimitedQty} max={maxOrderQty} presets={[100, 250, 500, 1000]} />
               </div>
             </div>
             <div className="sticky bottom-0 flex gap-3 border-t border-edge bg-white p-4">
