@@ -11,7 +11,7 @@ const digitsOnly = (value: string) => (value || '').replace(/\D/g, '');
  * WhatsApp/Telegram. Built from the server-sanitized order so amounts always
  * match catalog prices.
  */
-export function buildOrderMessage(order: OrderRecord, business: BusinessSettings | null, origin?: string): string {
+export function buildOrderMessage(order: OrderRecord, _business: BusinessSettings | null, origin?: string): string {
   const lines: string[] = [
     'Selam! I would like to place this order with mena inc.',
     `Order ref: ${order.id.slice(0, 8).toUpperCase()}`,
@@ -56,13 +56,6 @@ export function buildOrderMessage(order: OrderRecord, business: BusinessSettings
   if (order.customer.phone) lines.push(`Phone: ${order.customer.phone}`);
   if (order.customer.email) lines.push(`Email: ${order.customer.email}`);
   if (order.note) lines.push(`Order note: ${order.note}`);
-
-  if (business?.paymentAccountNumber) {
-    lines.push('', 'Payment account:');
-    if (business.paymentAccountName) lines.push(`Account Name: ${business.paymentAccountName}`);
-    lines.push(`Account Number: ${business.paymentAccountNumber}`);
-  }
-  if (business?.pickupLocation) lines.push('', 'Pickup location:', business.pickupLocation);
 
   lines.push('', 'Thank you!');
   return lines.join('\n');
