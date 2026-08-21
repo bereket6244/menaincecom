@@ -359,7 +359,7 @@ export function MobileOrderSummary() {
               <div className="truncate text-lg font-extrabold text-[#ee0a24]">{formatCartTotal(selectedTotal, { hasQuote: hasQuoteItems, hasStarting: hasStartingItems })}</div>
               </div>
             </div>
-            <button type="button" onClick={() => void submitOrder()} disabled={!online || sending !== null} className="btn-primary h-12 w-full px-5">
+            <button type="button" onClick={() => void submitOrder()} disabled={!online || sending !== null} className="btn-primary btn-metallic-order h-12 w-full px-5">
               {sending ? 'Opening...' : 'Place order'}
             </button>
           </div>
