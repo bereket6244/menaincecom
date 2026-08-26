@@ -90,8 +90,8 @@ async function seed() {
       hours: 'Mon-Sat, 9:00-18:00',
       whatsappNumber: '251929639939',
       telegramHandle: '+251929639939',
-      paymentAccountName: 'CBE (Bereket Girma)',
-      paymentAccountNumber: '1000530092732',
+      paymentAccountName: '',
+      paymentAccountNumber: '',
       pickupLocation: 'Reality Plaza, 1st Floor, Office No. 104\nBole, next to Yougo Church',
     });
     console.log('[seed] business settings created');

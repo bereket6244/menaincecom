@@ -60,7 +60,7 @@ export function BusinessAdmin() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-sm font-bold">Business settings</h1>
-          <p className="text-[11px] text-muted">Contact details, order-forwarding numbers, payment account and pickup location.</p>
+          <p className="text-[11px] text-muted">Contact details, order-forwarding numbers, and the shop address shown in order messages.</p>
         </div>
         <Button onClick={save} busy={busy} disabled={!online}>
           <Save className="h-3.5 w-3.5" /> Save
@@ -92,12 +92,8 @@ export function BusinessAdmin() {
       </div>
 
       <div className="space-y-3 rounded-lg border border-edge bg-surface p-4">
-        <SysLabel>Payment &amp; pickup (included in the order message)</SysLabel>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {field('Account name', 'paymentAccountName', { placeholder: 'CBE (Bereket Girma)' })}
-          {field('Account number', 'paymentAccountNumber', { placeholder: '1000530092732' })}
-        </div>
-        {field('Pickup location', 'pickupLocation', { textarea: true })}
+        <SysLabel>Shop location (included in the order message)</SysLabel>
+        {field('Shop address', 'pickupLocation', { textarea: true })}
       </div>
     </div>
   );

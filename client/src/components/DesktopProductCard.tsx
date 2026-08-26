@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Heart } from 'lucide-react';
-import type { Product, Category } from '../lib/types';
+import type { Product } from '../lib/types';
 import { useApp } from '../store/AppContext';
-import { cx, formatPrice } from '../lib/utils';
+import { cleanDescription, cx, formatPrice } from '../lib/utils';
 import { flyToLiked } from '../lib/fly';
 import { ProductImageFrame } from './ProductImageFrame';
 import { productLimitText } from '../lib/orderLimits';
@@ -11,14 +11,12 @@ const TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#e9f0ec', '#f6efdd']
 
 export function DesktopProductCard({
   product,
-  category,
   priority = false,
   index = 0,
   onOpen,
   onQuickAdd,
 }: {
   product: Product;
-  category?: Category;
   priority?: boolean;
   index?: number;
   onOpen: (product: Product) => void;
@@ -32,6 +30,7 @@ export function DesktopProductCard({
   const selectedPhoto = product.photos[photoIndex] || product.photos[0];
   const hasMultiplePhotos = product.photos.length > 1;
   const limitText = productLimitText(product);
+  const description = cleanDescription(product.description, product.name);
 
   return (
     <article
@@ -79,16 +78,18 @@ export function DesktopProductCard({
       </div>
 
       <div className="p-3.5 pb-3">
-        <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted/75">
-          {category?.name || (product.isAddon ? 'Add-on' : 'Design')}
-        </div>
         <button
           type="button"
           onClick={() => onOpen(product)}
-          className="mena-press mt-1 block min-h-[40px] text-left text-[15px] font-extrabold leading-tight text-ink hover:text-pink"
+          className="mena-press block min-h-[22px] text-left text-[15px] font-extrabold leading-tight text-ink hover:text-pink"
         >
           {product.name}
         </button>
+        {description && (
+          <p className="mt-1.5 line-clamp-2 min-h-[34px] text-[12.5px] font-medium leading-[1.35] text-ink/55">
+            {description}
+          </p>
+        )}
         <div className="mt-2.5 flex flex-col items-stretch gap-2.5">
           <span className="text-[15px] font-extrabold leading-tight text-pink">{formatPrice(product)}</span>
           {limitText && <span className="text-[11px] font-bold text-[#ee0a24]">{limitText}</span>}

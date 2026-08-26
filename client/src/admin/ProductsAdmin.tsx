@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Check, Plus, Pencil, Search, SlidersHorizontal, Star, X } from 'lucide-react';
+import { Check, GripVertical, MoreHorizontal, Pencil, Plus, Search, SlidersHorizontal, Star, Tags, X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import { apiSend } from '../lib/api';
 import type { Category, PricingMode, Product, UniversalComplimentaryItem, VariantGroup } from '../lib/types';
@@ -94,12 +94,18 @@ function VariantsEditor({
   library: Map<string, LibraryGroup>;
 }) {
   const hasGroup = (name: string) => variants.some((g) => facetKey(g.name) === facetKey(name));
-  const addGroup = (name: string) => onChange([...variants, { name, options: [] }]);
   const [drafts, setDrafts] = useState<Record<number, string>>({});
   const [searches, setSearches] = useState<Record<number, string>>({});
   const [picked, setPicked] = useState<Record<number, string[]>>({});
   const [groupSearch, setGroupSearch] = useState('');
-  const [pickedGroups, setPickedGroups] = useState<string[]>([]);
+  const [customGroupName, setCustomGroupName] = useState('');
+  const [addingGroup, setAddingGroup] = useState(false);
+  const [openGroupMenu, setOpenGroupMenu] = useState<number | null>(null);
+  const [draggingGroup, setDraggingGroup] = useState<number | null>(null);
+  const [editingGroups, setEditingGroups] = useState<Record<number, string>>({});
+  const [editingOptions, setEditingOptions] = useState<Record<string, string>>({});
+  const [confirmingRemoveGroup, setConfirmingRemoveGroup] = useState<number | null>(null);
+  const [confirmingRemoveOption, setConfirmingRemoveOption] = useState<string | null>(null);
 
   const addOptions = (gi: number, optionsToAdd: VariantOption[]) => {
     const group = variants[gi];
@@ -148,15 +154,13 @@ function VariantsEditor({
       .slice(0, 24);
   };
 
-  // Custom groups invented on other products — Size and Color have their own buttons.
+  // Groups used elsewhere but not assigned to this product.
   const groupPool = [...library.values()]
-    .filter((entry) => !['size', 'color'].includes(facetKey(entry.name)) && !hasGroup(entry.name))
+    .filter((entry) => !hasGroup(entry.name))
     .map((entry) => entry.name);
   const groupTerm = groupSearch.trim().toLowerCase();
   const groupMatches = groupPool.filter((name) => !groupTerm || name.toLowerCase().includes(groupTerm));
-  const canCreateSearched = groupSearch.trim().length > 0
-    && !groupMatches.some((name) => facetKey(name) === facetKey(groupSearch))
-    && !hasGroup(groupSearch);
+  const canCreateCustom = customGroupName.trim().length > 0 && !hasGroup(customGroupName);
 
   const addGroups = (names: string[]) => {
     const fresh = names.filter((name) => name.trim() && !hasGroup(name));
@@ -173,54 +177,392 @@ function VariantsEditor({
       }),
     ]);
     setGroupSearch('');
-    setPickedGroups([]);
+    setCustomGroupName('');
+    setAddingGroup(false);
+    setOpenGroupMenu(null);
+    setConfirmingRemoveGroup(null);
+  };
+
+  const removeGroup = (index: number) => {
+    onChange(variants.filter((_, i) => i !== index));
+    setOpenGroupMenu(null);
+    setConfirmingRemoveGroup(null);
+    setEditingGroups({});
+    setEditingOptions({});
+    setConfirmingRemoveOption(null);
+  };
+
+  const clearEditState = () => {
+    setOpenGroupMenu(null);
+    setEditingGroups({});
+    setEditingOptions({});
+    setConfirmingRemoveGroup(null);
+    setConfirmingRemoveOption(null);
+  };
+
+  const groupNameConflict = (name: string, index: number) => {
+    const key = facetKey(name);
+    return key && variants.some((group, i) => i !== index && facetKey(group.name) === key);
+  };
+
+  const beginGroupEdit = (index: number, name: string) => {
+    setEditingGroups((current) => ({ ...current, [index]: name }));
+    setOpenGroupMenu(null);
+    setConfirmingRemoveGroup(null);
+  };
+
+  const cancelGroupEdit = (index: number) => {
+    setEditingGroups((current) => {
+      const next = { ...current };
+      delete next[index];
+      return next;
+    });
+  };
+
+  const confirmGroupEdit = (index: number) => {
+    const name = (editingGroups[index] || '').trim();
+    if (!name || groupNameConflict(name, index)) return;
+    onChange(variants.map((group, i) => (i === index ? { ...group, name } : group)));
+    cancelGroupEdit(index);
+  };
+
+  const optionEditKey = (groupIndex: number, optionIndex: number) => `${groupIndex}:${optionIndex}`;
+
+  const optionNameConflict = (name: string, groupIndex: number, optionIndex: number) => {
+    const key = optionValue(name);
+    return key && variants[groupIndex]?.options.some((option, i) => i !== optionIndex && optionValue(option.label) === key);
+  };
+
+  const beginOptionEdit = (groupIndex: number, optionIndex: number, label: string) => {
+    setEditingOptions((current) => ({ ...current, [optionEditKey(groupIndex, optionIndex)]: label }));
+    setConfirmingRemoveOption(null);
+  };
+
+  const cancelOptionEdit = (groupIndex: number, optionIndex: number) => {
+    setEditingOptions((current) => {
+      const next = { ...current };
+      delete next[optionEditKey(groupIndex, optionIndex)];
+      return next;
+    });
+  };
+
+  const confirmOptionEdit = (groupIndex: number, optionIndex: number) => {
+    const key = optionEditKey(groupIndex, optionIndex);
+    const label = (editingOptions[key] || '').trim();
+    if (!label || optionNameConflict(label, groupIndex, optionIndex)) return;
+    onChange(variants.map((group, i) => (
+      i === groupIndex
+        ? {
+            ...group,
+            options: group.options.map((option, j) => (
+              j === optionIndex ? { ...option, label } : option
+            )),
+          }
+        : group
+    )));
+    cancelOptionEdit(groupIndex, optionIndex);
+  };
+
+  const removeOption = (groupIndex: number, optionIndex: number) => {
+    onChange(variants.map((group, i) => (
+      i === groupIndex ? { ...group, options: group.options.filter((_, j) => j !== optionIndex) } : group
+    )));
+    setConfirmingRemoveOption(null);
+    cancelOptionEdit(groupIndex, optionIndex);
+  };
+
+  const moveGroup = (from: number, to: number) => {
+    if (from === to || from < 0 || to < 0) return;
+    const next = [...variants];
+    const [moved] = next.splice(from, 1);
+    if (!moved) return;
+    next.splice(to, 0, moved);
+    onChange(next);
+    setDraggingGroup(null);
+    clearEditState();
+  };
+
+  const focusGroupEditor = (index: number) => {
+    beginGroupEdit(index, variants[index]?.name || '');
+    setOpenGroupMenu(null);
+    window.requestAnimationFrame(() => {
+      document.getElementById(`variant-group-editor-${index}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById(`variant-group-name-${index}`)?.focus();
+    });
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
+      <div className="rounded-xl border border-edge bg-surface p-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-extrabold text-ink">Active groups</h3>
+            <p className="mt-0.5 text-[11px] text-muted">These groups define the variants for this product.</p>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {variants.map((group, gi) => (
+            <div
+              key={`${gi}:${group.name}`}
+              draggable
+              onDragStart={() => setDraggingGroup(gi)}
+              onDragEnd={() => setDraggingGroup(null)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={() => draggingGroup != null && moveGroup(draggingGroup, gi)}
+              title="Drag to reorder"
+              className="relative flex min-h-10 items-center gap-1.5 rounded-xl border border-edge bg-white px-2.5 py-1.5 text-[12px] shadow-[0_1px_2px_rgba(28,26,25,0.04)]"
+            >
+              <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted/70" aria-hidden="true" />
+              <Tags className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden="true" />
+              <span className="max-w-[180px] truncate font-extrabold text-ink">
+                {group.name || 'Untitled group'}
+              </span>
+              {!library.has(facetKey(group.name)) && (
+                <span className="rounded-full border border-edge bg-surface2 px-1.5 py-0.5 text-[10px] font-bold text-muted">
+                  Custom
+                </span>
+              )}
+              <span className="rounded-full bg-surface2 px-1.5 py-0.5 text-[10px] font-bold text-muted">
+                {group.options.length}
+              </span>
+              <button
+                type="button"
+                onClick={() => setOpenGroupMenu((current) => (current === gi ? null : gi))}
+                className="mena-press ml-0.5 flex h-6 w-6 items-center justify-center rounded-full text-muted hover:bg-surface2 hover:text-ink"
+                aria-label={`Actions for ${group.name || 'variant group'}`}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+              {openGroupMenu === gi && (
+                <div className="absolute right-0 top-[calc(100%+6px)] z-20 w-40 rounded-lg border border-edge bg-white p-1 shadow-[0_10px_24px_rgba(28,26,25,0.12)]">
+                  {confirmingRemoveGroup === gi ? (
+                    <div className="space-y-1 px-1 py-1">
+                      <p className="text-[11px] font-semibold text-ink">Remove this group?</p>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => removeGroup(gi)}
+                          className="mena-press flex-1 rounded-md bg-rose-500 px-2 py-1 text-[11px] font-extrabold text-white hover:bg-rose-600"
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmingRemoveGroup(null)}
+                          className="mena-press flex-1 rounded-md border border-edge px-2 py-1 text-[11px] font-extrabold text-muted hover:bg-surface2 hover:text-ink"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => focusGroupEditor(gi)}
+                        className="mena-press w-full rounded-md px-2 py-1.5 text-left text-[12px] font-semibold text-ink hover:bg-surface2"
+                      >
+                        Rename group
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmingRemoveGroup(gi)}
+                        className="mena-press w-full rounded-md px-2 py-1.5 text-left text-[12px] font-semibold text-rose-500 hover:bg-rose-50"
+                      >
+                        Remove group
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={() => setAddingGroup((value) => !value)}
+            className="mena-press flex min-h-10 items-center gap-1.5 rounded-xl border border-dashed border-pink/45 bg-pink/5 px-3 py-1.5 text-[12px] font-extrabold text-pink hover:bg-pink/10"
+          >
+            <Plus className="h-3.5 w-3.5" /> Add group
+          </button>
+        </div>
+
+        {addingGroup && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-edge bg-surface2 p-2">
+            <Button variant="outline" disabled={hasGroup('size')} onClick={() => addGroups(['Size'])}>
+              <Plus className="h-3 w-3" /> Size
+            </Button>
+            <Button variant="outline" disabled={hasGroup('color')} onClick={() => addGroups(['Color'])}>
+              <Plus className="h-3 w-3" /> Color
+            </Button>
+            <div className="flex min-w-[220px] flex-1 items-center gap-1.5">
+              <input
+                value={customGroupName}
+                onChange={(e) => setCustomGroupName(e.target.value)}
+                placeholder="Custom group name"
+                className="field py-1 text-[12px]"
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter' || !canCreateCustom) return;
+                  e.preventDefault();
+                  addGroups([customGroupName]);
+                }}
+              />
+              <Button variant="outline" disabled={!canCreateCustom} onClick={() => addGroups([customGroupName])}>
+                <Plus className="h-3 w-3" /> Create
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {variants.length > 0 && (
+        <div>
+          <h3 className="text-xs font-extrabold uppercase tracking-wide text-muted">Group details</h3>
+          <p className="text-[11px] text-muted">Edit group names, option names, photos, and reusable options below.</p>
+        </div>
+      )}
+
       {variants.map((group, gi) => {
         const isColor = isColorGroupName(group.name);
+        const groupDraft = editingGroups[gi];
+        const isEditingGroup = groupDraft !== undefined;
+        const groupDraftInvalid = isEditingGroup && (!groupDraft.trim() || groupNameConflict(groupDraft, gi));
+        const groupDraftError = !isEditingGroup
+          ? ''
+          : !groupDraft.trim()
+            ? 'Group name is required.'
+            : groupNameConflict(groupDraft, gi)
+              ? 'That group already exists on this product.'
+              : '';
         return (
-          <div key={gi} className="rounded border border-edge bg-surface2 p-2">
-            <div className="flex items-center gap-2">
-              <input
-                value={group.name}
-                onChange={(e) => onChange(variants.map((g, i) => (i === gi ? { ...g, name: e.target.value } : g)))}
-                placeholder="Variant name (e.g. Material)"
-                className="field py-1 text-[11px]"
-              />
-              <IconButton icon={<X className="h-3.5 w-3.5" />} title="Remove variant group" danger onClick={() => onChange(variants.filter((_, i) => i !== gi))} />
+          <div key={gi} id={`variant-group-editor-${gi}`} className="rounded border border-edge bg-surface2 p-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {isEditingGroup ? (
+                <div className="flex min-w-[240px] flex-1 items-center gap-1.5">
+                  <input
+                    id={`variant-group-name-${gi}`}
+                    value={groupDraft}
+                    onChange={(e) => setEditingGroups((current) => ({ ...current, [gi]: e.target.value }))}
+                    placeholder="Variant name (e.g. Material)"
+                    className="field py-1 text-[11px]"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        confirmGroupEdit(gi);
+                      }
+                      if (e.key === 'Escape') cancelGroupEdit(gi);
+                    }}
+                  />
+                  <IconButton icon={<Check className="h-3.5 w-3.5" />} title="Confirm group name" onClick={() => confirmGroupEdit(gi)} disabled={!!groupDraftInvalid} />
+                  <IconButton icon={<X className="h-3.5 w-3.5" />} title="Cancel group rename" onClick={() => cancelGroupEdit(gi)} />
+                </div>
+              ) : (
+                <div className="flex min-w-[220px] flex-1 items-center gap-1.5">
+                  <Tags className="h-3.5 w-3.5 shrink-0 text-muted" />
+                  <span className="min-w-0 flex-1 truncate text-[12px] font-extrabold">{group.name || 'Untitled group'}</span>
+                  <IconButton icon={<Pencil className="h-3.5 w-3.5" />} title="Edit group name" onClick={() => beginGroupEdit(gi, group.name)} />
+                </div>
+              )}
+              {confirmingRemoveGroup === gi ? (
+                <div className="ml-auto flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-bold text-rose-600">
+                  Remove?
+                  <IconButton icon={<Check className="h-3 w-3" />} title="Confirm remove group" danger onClick={() => removeGroup(gi)} className="h-6 w-6 bg-white" />
+                  <IconButton icon={<X className="h-3 w-3" />} title="Cancel remove group" onClick={() => setConfirmingRemoveGroup(null)} className="h-6 w-6 bg-white" />
+                </div>
+              ) : (
+                <IconButton icon={<X className="h-3.5 w-3.5" />} title="Remove variant group" danger onClick={() => setConfirmingRemoveGroup(gi)} />
+              )}
             </div>
+            {groupDraftError && (
+              <p className="mt-1 text-[10px] font-semibold text-rose-500">
+                {groupDraftError}
+              </p>
+            )}
             <div className="mt-1.5 flex flex-wrap items-center gap-1">
               {group.options.map((opt, oi) => {
                 const swatch = isColor ? cssColor(opt.label) : null;
+                const editKey = optionEditKey(gi, oi);
+                const optionDraft = editingOptions[editKey];
+                const isEditingOption = optionDraft !== undefined;
+                const optionDraftInvalid = isEditingOption && (!optionDraft.trim() || optionNameConflict(optionDraft, gi, oi));
+                const optionDraftError = !isEditingOption
+                  ? ''
+                  : !optionDraft.trim()
+                    ? 'Option name is required.'
+                    : optionNameConflict(optionDraft, gi, oi)
+                      ? 'That option already exists in this group.'
+                      : '';
                 return (
                   <div key={oi} className="rounded border border-edge bg-surface p-2">
                     <div className="mb-1.5 flex items-center gap-1 text-[11px]">
-                      <input
-                        type="checkbox"
-                        checked
-                        onChange={() => onChange(variants.map((g, i) => (
-                          i === gi ? { ...g, options: g.options.filter((_, j) => j !== oi) } : g
-                        )))}
-                        className="shrink-0 accent-pink"
-                        aria-label={`Include ${opt.label}`}
-                      />
+                      <span className="flex h-3 w-3 shrink-0 items-center justify-center rounded-[3px] border border-pink bg-pink" aria-hidden="true">
+                        <Check className="h-2 w-2 text-white" />
+                      </span>
                       {opt.photo ? (
                         <img src={opt.photo} alt="" className="h-5 w-5 shrink-0 rounded object-cover" />
                       ) : swatch ? (
                         <span className="h-3 w-3 shrink-0 rounded-full ring-1 ring-black/15" style={{ background: swatch }} />
                       ) : null}
-                      <span className="font-semibold">{opt.label}</span>
-                      <button
-                        type="button"
-                        onClick={() => onChange(variants.map((g, i) => (i === gi ? { ...g, options: g.options.filter((_, j) => j !== oi) } : g)))}
-                        className="ml-auto text-muted hover:text-rose-400"
-                        aria-label={`Remove ${opt.label}`}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
+                      {isEditingOption ? (
+                        <>
+                          <input
+                            value={optionDraft}
+                            onChange={(e) => setEditingOptions((current) => ({ ...current, [editKey]: e.target.value }))}
+                            placeholder="Option name"
+                            className="field min-w-[120px] flex-1 py-0.5 text-[11px] font-semibold"
+                            aria-label={`Edit ${opt.label || 'option'} name`}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                confirmOptionEdit(gi, oi);
+                              }
+                              if (e.key === 'Escape') cancelOptionEdit(gi, oi);
+                            }}
+                          />
+                          <IconButton icon={<Check className="h-3 w-3" />} title="Confirm option name" onClick={() => confirmOptionEdit(gi, oi)} disabled={!!optionDraftInvalid} />
+                          <IconButton icon={<X className="h-3 w-3" />} title="Cancel option rename" onClick={() => cancelOptionEdit(gi, oi)} />
+                        </>
+                      ) : (
+                        <>
+                          <span className="min-w-[90px] flex-1 truncate font-semibold">{opt.label || 'Untitled option'}</span>
+                          <IconButton icon={<Pencil className="h-3 w-3" />} title="Edit option name" onClick={() => beginOptionEdit(gi, oi, opt.label)} />
+                        </>
+                      )}
+                      {confirmingRemoveOption === editKey ? (
+                        <div className="ml-auto flex items-center gap-1 rounded-full bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold text-rose-600">
+                          Remove?
+                          <button
+                            type="button"
+                            onClick={() => removeOption(gi, oi)}
+                            className="mena-press rounded-full bg-rose-500 p-0.5 text-white hover:bg-rose-600"
+                            aria-label={`Confirm remove ${opt.label}`}
+                          >
+                            <Check className="h-2.5 w-2.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmingRemoveOption(null)}
+                            className="mena-press rounded-full bg-white p-0.5 text-muted hover:text-ink"
+                            aria-label={`Cancel remove ${opt.label}`}
+                          >
+                            <X className="h-2.5 w-2.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmingRemoveOption(editKey)}
+                          className="ml-auto text-muted hover:text-rose-400"
+                          aria-label={`Remove ${opt.label}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
                     </div>
+                    {optionDraftError && (
+                      <p className="mb-1 text-[10px] font-semibold text-rose-500">{optionDraftError}</p>
+                    )}
                     <PhotoUpload
                       single
                       max={1}
@@ -332,94 +674,44 @@ function VariantsEditor({
           </div>
         );
       })}
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" disabled={hasGroup('size')} onClick={() => addGroup('Size')}>
-          <Plus className="h-3 w-3" /> Size
-        </Button>
-        <Button variant="outline" disabled={hasGroup('color')} onClick={() => addGroup('Color')}>
-          <Plus className="h-3 w-3" /> Color
-        </Button>
-        <Button variant="outline" onClick={() => addGroup('')}>
-          <Plus className="h-3 w-3" /> Custom group
-        </Button>
-      </div>
+      <div className="rounded-xl border border-edge bg-surface p-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 className="text-sm font-extrabold text-ink">Reuse from other products</h3>
+            <p className="mt-0.5 text-[11px] text-muted">Search and reuse existing groups to keep your catalog organized.</p>
+          </div>
+          <div className="relative sm:w-52">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
+            <input
+              value={groupSearch}
+              onChange={(e) => setGroupSearch(e.target.value)}
+              placeholder="Search groups"
+              className="field py-1.5 pl-8 text-[12px]"
+            />
+          </div>
+        </div>
 
-      {/* Custom groups from other products: search, tick several, add together — and if the
-          search matches nothing, create a group under that name straight from here. */}
-      {(groupPool.length > 0 || groupSearch) && (
-        <div className="rounded border border-dashed border-edge p-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
-              Groups on other products ({groupPool.length})
+        <div className="mt-3 flex flex-wrap gap-2">
+          {groupMatches.map((name) => (
+            <button
+              key={name}
+              type="button"
+              onClick={() => addGroups([name])}
+              className="mena-press flex min-h-9 items-center gap-1.5 rounded-xl border border-edge bg-white px-3 py-1.5 text-[12px] font-extrabold text-ink shadow-[0_1px_2px_rgba(28,26,25,0.04)] hover:border-pink/50 hover:text-pink"
+            >
+              <Tags className="h-3.5 w-3.5 text-muted" />
+              {name}
+            </button>
+          ))}
+          {groupMatches.length === 0 && (
+            <span className="text-[11px] text-muted">
+              {groupSearch.trim() ? `No reusable groups match "${groupSearch.trim()}".` : 'No reusable groups available.'}
             </span>
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted" />
-              <input
-                value={groupSearch}
-                onChange={(e) => setGroupSearch(e.target.value)}
-                placeholder="Search or name a group"
-                className="field w-48 py-1 pl-6 text-[11px]"
-                onKeyDown={(e) => {
-                  if (e.key !== 'Enter' || !canCreateSearched) return;
-                  e.preventDefault();
-                  addGroups([groupSearch]);
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="mt-1 flex flex-wrap items-center gap-1">
-            {groupMatches.map((name) => {
-              const checked = pickedGroups.includes(name);
-              return (
-                <button
-                  key={name}
-                  type="button"
-                  role="checkbox"
-                  aria-checked={checked}
-                  onClick={() => setPickedGroups((current) => (
-                    current.includes(name) ? current.filter((n) => n !== name) : [...current, name]
-                  ))}
-                  className={cx(
-                    'mena-press flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px]',
-                    checked ? 'border-pink bg-pink/10 font-semibold text-pink' : 'border-edge bg-surface hover:border-pink/60'
-                  )}
-                >
-                  <span className={cx(
-                    'flex h-3 w-3 items-center justify-center rounded-[3px] border',
-                    checked ? 'border-pink bg-pink' : 'border-[#d8cfc8] bg-white'
-                  )}>
-                    {checked && <Check className="h-2 w-2 text-white" />}
-                  </span>
-                  {name}
-                </button>
-              );
-            })}
-            {groupMatches.length === 0 && !groupSearch.trim() && (
-              <span className="text-[11px] text-muted">No custom groups on other products yet.</span>
-            )}
-          </div>
-
-          {(pickedGroups.length > 0 || canCreateSearched) && (
-            <div className="mt-1.5 flex flex-wrap items-center gap-1">
-              {pickedGroups.length > 0 && (
-                <Button onClick={() => addGroups(pickedGroups)}>
-                  <Plus className="h-3 w-3" /> Add {pickedGroups.length} selected
-                </Button>
-              )}
-              {canCreateSearched && (
-                <Button variant="outline" onClick={() => addGroups([groupSearch])}>
-                  <Plus className="h-3 w-3" /> Create “{groupSearch.trim()}”
-                </Button>
-              )}
-            </div>
           )}
         </div>
-      )}
+      </div>
       <p className="text-[10px] text-muted">
-        Search the dashed panels to reuse groups and options from other products. Tick only the options
-        you want, save the selected options into this product, then Save product. Reusing names keeps one
-        catalog filter instead of near-duplicates. Colour names or hex codes become swatches.
+        Reusing group names keeps one catalog filter instead of near-duplicates. Colour names or hex codes become swatches.
       </p>
     </div>
   );

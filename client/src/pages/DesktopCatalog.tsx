@@ -14,7 +14,7 @@ import {
   buildVariantFacets, matchesVariantFilters, toggleVariantOption, type Facet, type VariantFilters,
 } from '../lib/variantFacets';
 import { useResultAnimation } from '../lib/useResultAnimation';
-import { firstProductCategory, productCategoryIds, productCategoryNames } from '../lib/productCategories';
+import { productCategoryIds, productCategoryNames } from '../lib/productCategories';
 
 const SORTS = [
   { id: 'featured', label: 'Featured' },
@@ -423,7 +423,6 @@ export function DesktopCatalog() {
                   <DesktopProductCard
                     key={product.id}
                     product={product}
-                    category={firstProductCategory(product, [...catById.values()])}
                     index={index}
                     priority={index < 8}
                     onOpen={(p) => navigate(`/product/${p.id}`)}

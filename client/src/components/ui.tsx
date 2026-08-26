@@ -51,12 +51,13 @@ export function Button({
 }
 
 export function IconButton({
-  icon, onClick, title, danger, className = '',
+  icon, onClick, title, danger, disabled, className = '',
 }: {
   icon: ReactNode;
   onClick?: () => void;
   title: string;
   danger?: boolean;
+  disabled?: boolean;
   className?: string;
 }) {
   return (
@@ -65,8 +66,9 @@ export function IconButton({
       title={title}
       aria-label={title}
       onClick={onClick}
+      disabled={disabled}
       className={cx(
-        'inline-flex h-7 w-7 items-center justify-center rounded-full border border-transparent text-muted transition-colors hover:border-edge hover:bg-surface2',
+        'inline-flex h-7 w-7 items-center justify-center rounded-full border border-transparent text-muted transition-colors hover:border-edge hover:bg-surface2 disabled:cursor-not-allowed disabled:opacity-40',
         danger ? 'hover:text-rose-500' : 'hover:text-ink',
         className
       )}
@@ -121,7 +123,7 @@ export function Toasts() {
     info: <Info className="h-4 w-4 shrink-0 text-muted" />,
   };
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-2 z-[60] flex flex-col items-center gap-1.5 px-3 sm:items-end sm:px-4">
+    <div className="pointer-events-none fixed inset-x-0 top-4 z-[120] flex flex-col items-center gap-1.5 px-3 sm:items-end sm:px-4">
       {toasts.map((t) => (
         <button
           key={t.id}

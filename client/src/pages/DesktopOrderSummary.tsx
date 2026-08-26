@@ -142,21 +142,22 @@ export function DesktopOrderSummary() {
     window.scrollTo({ top: 0 });
   };
 
-  const submitOrder = async () => {
+  const submitOrder = async (orderChannel: Channel = channel) => {
     if (!online) {
       toast('error', OFFLINE_MESSAGE);
       return;
     }
     if (selectedItems.length === 0) return;
-    setSending(channel);
+    setChannel(orderChannel);
+    setSending(orderChannel);
     // The tab has to be opened inside the click, before any await, or the
     // browser treats it as an unrequested popup and blocks it.
-    const chatTab = channel === 'sms' ? null : window.open('', '_blank');
+    const chatTab = orderChannel === 'sms' ? null : window.open('', '_blank');
     if (chatTab) chatTab.opener = null;
     try {
       const { message, order } = await placeOrder({
         items: selectedItemsForMessage,
-        channel,
+        channel: orderChannel,
         note: orderNote,
         user,
         business,
@@ -164,11 +165,11 @@ export function DesktopOrderSummary() {
       });
       if (!order) toast('info', 'We could not reach the studio server, so your order was not saved. Send the message and we will pick it up from chat.');
       const chatUrl =
-        channel === 'whatsapp' ? whatsappOrderUrl(business, message)
-        : channel === 'telegram' ? telegramOrderUrl(business, message)
+        orderChannel === 'whatsapp' ? whatsappOrderUrl(business, message)
+        : orderChannel === 'telegram' ? telegramOrderUrl(business, message)
         : smsOrderUrl(business, message);
-      setSent({ channel, chatUrl, keys: selectedItems.map((item) => item.key) });
-      if (channel === 'sms') window.location.href = chatUrl;
+      setSent({ channel: orderChannel, chatUrl, keys: selectedItems.map((item) => item.key) });
+      if (orderChannel === 'sms') window.location.href = chatUrl;
       else if (chatTab) chatTab.location.replace(chatUrl);
     } catch (error) {
       chatTab?.close();
@@ -288,8 +289,9 @@ export function DesktopOrderSummary() {
                   <button
                     key={id}
                     type="button"
-                    onClick={() => setChannel(id)}
-                    className="mena-press flex flex-col items-center gap-2 rounded-2xl border p-4 text-center"
+                    onClick={() => void submitOrder(id)}
+                    disabled={!online || sending !== null}
+                    className="mena-press flex flex-col items-center gap-2 rounded-2xl border p-4 text-center disabled:cursor-not-allowed disabled:opacity-60"
                     style={{ borderColor: active ? accent : '#ece7e2', background: active ? tint : '#fff' }}
                   >
                     <span className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: active ? accent : '#f4f0ec', color: active ? '#fff' : '#8a8580' }}>
@@ -316,7 +318,7 @@ export function DesktopOrderSummary() {
           {hasQuoteItems && <p className="text-[12px] text-muted">Some items are quoted on request. The studio confirms them with you.</p>}
         </div>
 
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-edge bg-white/95 px-10 py-4 shadow-[0_-10px_30px_rgba(28,26,25,0.08)] backdrop-blur">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-edge bg-white/95 px-10 py-5 shadow-[0_-14px_36px_rgba(28,26,25,0.12)] backdrop-blur">
           <div className="mx-auto flex max-w-[980px] items-center gap-6">
             <div className="min-w-0 flex-1">
               <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted">Amount</div>
@@ -326,7 +328,12 @@ export function DesktopOrderSummary() {
               <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted">Total</div>
               <div className="text-2xl font-extrabold text-[#ee0a24]">{totalText}</div>
             </div>
-            <button type="button" onClick={() => void submitOrder()} disabled={!online || sending !== null} className="btn-primary btn-order-gradient h-14 px-10">
+            <button
+              type="button"
+              onClick={() => void submitOrder()}
+              disabled={!online || sending !== null}
+              className="btn-primary btn-order-gradient h-16 px-12 text-[15px]"
+            >
               {sending ? 'Opening...' : 'Place order'}
             </button>
           </div>

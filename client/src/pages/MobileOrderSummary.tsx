@@ -156,21 +156,22 @@ export function MobileOrderSummary() {
     window.scrollTo({ top: 0 });
   };
 
-  const submitOrder = async () => {
+  const submitOrder = async (orderChannel: Channel = channel) => {
     if (!online) {
       toast('error', OFFLINE_MESSAGE);
       return;
     }
     if (!selectedItems.length) return;
-    setSending(channel);
+    setChannel(orderChannel);
+    setSending(orderChannel);
     // The tab has to be opened inside the click, before any await, or the
     // browser treats it as an unrequested popup and blocks it.
-    const chatTab = channel === 'sms' ? null : window.open('', '_blank');
+    const chatTab = orderChannel === 'sms' ? null : window.open('', '_blank');
     if (chatTab) chatTab.opener = null;
     try {
       const { message, order } = await placeOrder({
         items: selectedItemsForMessage,
-        channel,
+        channel: orderChannel,
         note: orderNote,
         user,
         business,
@@ -178,11 +179,11 @@ export function MobileOrderSummary() {
       });
       if (!order) toast('info', 'We could not reach the studio server, so your order was not saved. Send the message and we will pick it up from chat.');
       const chatUrl =
-        channel === 'whatsapp' ? whatsappOrderUrl(business, message)
-        : channel === 'telegram' ? telegramOrderUrl(business, message)
+        orderChannel === 'whatsapp' ? whatsappOrderUrl(business, message)
+        : orderChannel === 'telegram' ? telegramOrderUrl(business, message)
         : smsOrderUrl(business, message);
-      setSent({ channel, chatUrl, keys: selectedItems.map((item) => item.key) });
-      if (channel === 'sms') window.location.href = chatUrl;
+      setSent({ channel: orderChannel, chatUrl, keys: selectedItems.map((item) => item.key) });
+      if (orderChannel === 'sms') window.location.href = chatUrl;
       else if (chatTab) chatTab.location.replace(chatUrl);
     } catch (err) {
       chatTab?.close();
@@ -320,8 +321,9 @@ export function MobileOrderSummary() {
                   <button
                     key={id}
                     type="button"
-                    onClick={() => setChannel(id)}
-                    className="mena-press flex min-w-0 flex-col items-center gap-2.5 rounded-2xl border-[1.5px] px-2 py-4"
+                    onClick={() => void submitOrder(id)}
+                    disabled={!online || sending !== null}
+                    className="mena-press flex min-w-0 flex-col items-center gap-2.5 rounded-2xl border-[1.5px] px-2 py-4 disabled:cursor-not-allowed disabled:opacity-60"
                     style={{ borderColor: active ? accent : '#ece7e2', background: active ? tint : '#fff' }}
                   >
                     <span className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: active ? accent : '#f4f0ec', color: active ? '#fff' : '#a8a29d' }}>

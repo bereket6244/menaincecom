@@ -85,10 +85,21 @@ export function findVariantGroup(product: Pick<Product, 'variants'>, kind: 'colo
   return (product.variants || []).find((g) => match(g.name)) || null;
 }
 
-/** CSS colour for a variant label like "ivory" or "#c2185b", or null if the browser can't render it. */
+const NAMED_SWATCHES: Record<string, string> = {
+  blush: '#f5b5c8',
+  cream: '#fff5dc',
+  gold: '#ffd21f',
+  ivory: '#fffef0',
+  navy: '#000080',
+  sage: '#b8c8a7',
+  terracotta: '#c86f4a',
+};
+
+/** CSS colour for a variant label like "Sage", "ivory" or "#c2185b", or null if it cannot be rendered. */
 export function cssColor(label: string): string | null {
   const value = label.trim().toLowerCase();
   if (!value) return null;
+  if (NAMED_SWATCHES[value]) return NAMED_SWATCHES[value];
   return typeof CSS !== 'undefined' && CSS.supports?.('color', value) ? value : null;
 }
 
