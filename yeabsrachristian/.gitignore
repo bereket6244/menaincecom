@@ -24,6 +24,7 @@ Engagement Invitation.dc.html
 assets/*.jpg
 assets/*.png
 assets/*.webp
+assets/*.webm
 !assets/yeabsra-christian-engagement.ics
 
 # OS

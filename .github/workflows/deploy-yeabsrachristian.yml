@@ -99,8 +99,11 @@ jobs:
           await Promise.all([
             'butterfly-crop.png',
             'couple.jpg',
+            'doves-fast.webm',
+            'doves-fast.webp',
+            'doves-mobile.webm',
+            'doves-mobile.webp',
             'doves-poster.webp',
-            'doves.webp',
             'envelope-closed.jpg',
             'envelope-open.jpg',
             'flower-petal.png'
@@ -117,10 +120,13 @@ jobs:
             -F "overwrite=1" \
             -F "file-1=@assets/butterfly-crop.png" \
             -F "file-2=@assets/couple.jpg" \
-            -F "file-3=@assets/doves-poster.webp" \
-            -F "file-4=@assets/doves.webp" \
-            -F "file-5=@assets/envelope-closed.jpg" \
-            -F "file-6=@assets/envelope-open.jpg" \
-            -F "file-7=@assets/flower-petal.png" \
-            -F "file-8=@assets/yeabsra-christian-engagement.ics" \
+            -F "file-3=@assets/doves-fast.webm" \
+            -F "file-4=@assets/doves-fast.webp" \
+            -F "file-5=@assets/doves-mobile.webm" \
+            -F "file-6=@assets/doves-mobile.webp" \
+            -F "file-7=@assets/doves-poster.webp" \
+            -F "file-8=@assets/envelope-closed.jpg" \
+            -F "file-9=@assets/envelope-open.jpg" \
+            -F "file-10=@assets/flower-petal.png" \
+            -F "file-11=@assets/yeabsra-christian-engagement.ics" \
             "https://${CPANEL_HOST}:2083/execute/Fileman/upload_files"

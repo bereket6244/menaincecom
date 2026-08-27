@@ -12,6 +12,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" as="image" href="assets/doves-poster.webp" fetchpriority="high">
+  <link rel="preload" as="video" href="assets/doves-mobile.webm" media="(max-width: 640px)">
+  <link rel="preload" as="video" href="assets/doves-fast.webm" media="(min-width: 641px)">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&amp;family=Pinyon+Script&amp;display=swap" rel="stylesheet">
   <style>
     html, body { margin: 0; padding: 0; background: #F1E7D3; scrollbar-color: #A08464 #EFE1C7; scrollbar-width: thin; }
@@ -415,7 +417,7 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;butterflyCount&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 7, &quot;min&quot;: 0, &quot;max&quot;: 16, &quot;step&quot;: 1, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Atmosphere&quot;}, &quot;butterflySpeed&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 1, &quot;min&quot;: 0.4, &quot;max&quot;: 2, &quot;step&quot;: 0.1, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Atmosphere&quot;}, &quot;fallingPetals&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Atmosphere&quot;}}">
 class Component extends DCLogic {
-  state = { opened: false, playing: false, hasMusic: false, dovesReady: false };
+  state = { opened: false, playing: false, hasMusic: false, dovesReady: false, dovesVideoFailed: false };
 
   constructor(props) {
     super(props);
@@ -853,10 +855,17 @@ class Component extends DCLogic {
 
   heroButterflyEl() {
     const h = React.createElement;
+    const isMobile = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+    const videoSrc = isMobile ? 'assets/doves-mobile.webm' : 'assets/doves-fast.webm';
+    const fallbackSrc = isMobile ? 'assets/doves-mobile.webp' : 'assets/doves-fast.webp';
+    const markDovesReady = () => {
+      if (!this.state.dovesReady) this.setState({ dovesReady: true });
+    };
     const imageStyle = {
       display: 'block',
       width: 'min(84vw, 440px)',
-      height: 'auto',
+      aspectRatio: '1 / 1',
+      objectFit: 'contain',
       pointerEvents: 'none'
     };
     return h('div', {
@@ -874,13 +883,23 @@ class Component extends DCLogic {
           transition: 'opacity 0.28s ease, visibility 0s linear ' + (this.state.dovesReady ? '0.28s' : '0s')
         }
       }),
-      h('img', {
-        src: 'assets/doves.webp',
-        alt: '',
-        decoding: 'async',
-        fetchPriority: 'low',
-        onLoad: () => {
-          if (!this.state.dovesReady) this.setState({ dovesReady: true });
+      !this.state.dovesVideoFailed && h('video', {
+        ref: (el) => {
+          if (el && el.readyState >= 2 && !this.state.dovesReady) setTimeout(markDovesReady, 0);
+        },
+        src: videoSrc,
+        autoPlay: true,
+        muted: true,
+        loop: true,
+        playsInline: true,
+        preload: 'auto',
+        poster: 'assets/doves-poster.webp',
+        'aria-label': 'Animated doves',
+        onLoadedData: markDovesReady,
+        onCanPlay: markDovesReady,
+        onPlaying: markDovesReady,
+        onError: () => {
+          this.setState({ dovesVideoFailed: true, dovesReady: false });
         },
         style: {
           ...imageStyle,
@@ -889,7 +908,22 @@ class Component extends DCLogic {
           opacity: this.state.dovesReady ? 1 : 0,
           transition: 'opacity 0.45s ease'
         }
-      })
+      }),
+      this.state.dovesVideoFailed && h('img', {
+        src: fallbackSrc,
+        alt: '',
+        loading: 'eager',
+        decoding: 'async',
+        onLoad: markDovesReady,
+        style: {
+          ...imageStyle,
+          position: 'absolute',
+          inset: 0,
+          opacity: this.state.dovesReady ? 1 : 0,
+          transition: 'opacity 0.45s ease'
+        }
+      }
+      )
     );
   }
 
