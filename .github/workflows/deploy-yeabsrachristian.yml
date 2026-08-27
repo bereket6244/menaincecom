@@ -59,17 +59,6 @@ jobs:
             }).catch(() => {});
           }
 
-          async function removeRemote(file) {
-            await cpanel('/json-api/cpanel', {
-              cpanel_jsonapi_apiversion: '2',
-              cpanel_jsonapi_module: 'Fileman',
-              cpanel_jsonapi_func: 'fileop',
-              op: 'unlink',
-              sourcefiles: file,
-              doubledecode: '0'
-            }).catch(() => {});
-          }
-
           async function saveTextFile(dir, file, content) {
             const form = new URLSearchParams();
             form.set('dir', dir);
@@ -80,22 +69,6 @@ jobs:
             const response = await fetch(`https://${host}:2083/execute/Fileman/save_file_content`, {
               method: 'POST',
               headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded' },
-              body: form
-            });
-            const json = await response.json();
-            if (!response.ok || !json.status) throw new Error(JSON.stringify(json.errors || json));
-          }
-
-          async function upload(dir, files) {
-            const form = new FormData();
-            form.set('dir', dir);
-            files.forEach((file, index) => {
-              const data = fs.readFileSync(file);
-              form.set(`file-${index + 1}`, new Blob([data]), path.basename(file));
-            });
-            const response = await fetch(`https://${host}:2083/execute/Fileman/upload_files`, {
-              method: 'POST',
-              headers,
               body: form
             });
             const json = await response.json();
@@ -137,24 +110,17 @@ jobs:
           await saveTextFile(targetDir, 'support.js', fs.readFileSync('support.js', 'utf8'));
           await saveTextFile(`${targetDir}/api`, 'photos.php', fs.readFileSync('api/photos.php', 'utf8'));
           await saveTextFile(`${targetDir}/admin`, 'index.html', fs.readFileSync('admin/index.html', 'utf8'));
-          await Promise.all([
-            `${targetDir}/assets/butterfly-crop.png`,
-            `${targetDir}/assets/couple.jpg`,
-            `${targetDir}/assets/doves-poster.webp`,
-            `${targetDir}/assets/doves.webp`,
-            `${targetDir}/assets/envelope-closed.jpg`,
-            `${targetDir}/assets/envelope-open.jpg`,
-            `${targetDir}/assets/flower-petal.png`,
-            `${targetDir}/assets/yeabsra-christian-engagement.ics`
-          ].map(removeRemote));
-          await upload(`${targetDir}/assets`, [
-            'assets/butterfly-crop.png',
-            'assets/couple.jpg',
-            'assets/doves-poster.webp',
-            'assets/doves.webp',
-            'assets/envelope-closed.jpg',
-            'assets/envelope-open.jpg',
-            'assets/flower-petal.png',
-            'assets/yeabsra-christian-engagement.ics'
-          ]);
           NODE
+          curl --fail-with-body --show-error --silent \
+            -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+            -F "dir=${CPANEL_TARGET_DIR}/assets" \
+            -F "overwrite=1" \
+            -F "file-1=@assets/butterfly-crop.png" \
+            -F "file-2=@assets/couple.jpg" \
+            -F "file-3=@assets/doves-poster.webp" \
+            -F "file-4=@assets/doves.webp" \
+            -F "file-5=@assets/envelope-closed.jpg" \
+            -F "file-6=@assets/envelope-open.jpg" \
+            -F "file-7=@assets/flower-petal.png" \
+            -F "file-8=@assets/yeabsra-christian-engagement.ics" \
+            "https://${CPANEL_HOST}:2083/execute/Fileman/upload_files"
