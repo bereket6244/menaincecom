@@ -17,6 +17,10 @@ api/config.php
 # Local dev
 node_modules/
 vite-dev.*.log
+support.js
+package.json
+package-lock.json
+Engagement Invitation.dc.html
 assets/*.jpg
 assets/*.png
 assets/*.webp
