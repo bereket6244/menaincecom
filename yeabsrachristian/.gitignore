@@ -17,6 +17,10 @@ api/config.php
 # Local dev
 node_modules/
 vite-dev.*.log
+assets/*.jpg
+assets/*.png
+assets/*.webp
+!assets/yeabsra-christian-engagement.ics
 
 # OS
 .DS_Store

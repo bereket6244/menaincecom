@@ -115,10 +115,28 @@ jobs:
             if (!response.ok || !json.status) throw new Error(JSON.stringify(json.errors || json));
           }
 
+          async function downloadLiveAsset(file) {
+            const assetPath = path.join('assets', file);
+            if (fs.existsSync(assetPath)) return;
+            const response = await fetch(`https://menaincet.com/yeabsrachristian/assets/${file}`);
+            if (!response.ok) throw new Error(`Could not download live asset ${file}: ${response.status}`);
+            const bytes = Buffer.from(await response.arrayBuffer());
+            fs.writeFileSync(assetPath, bytes);
+          }
+
           await ensureDir('/home/menainpy/public_html', 'yeabsrachristian');
           await ensureDir(targetDir, 'assets');
           await ensureDir(targetDir, 'api');
           await ensureDir(targetDir, 'admin');
+          fs.mkdirSync('assets', { recursive: true });
+          await Promise.all([
+            'butterfly-crop.png',
+            'couple.jpg',
+            'doves.webp',
+            'envelope-closed.jpg',
+            'envelope-open.jpg',
+            'flower-petal.png'
+          ].map(downloadLiveAsset));
           await saveTextFile(targetDir, 'index.html', fs.readFileSync('index.html', 'utf8'));
           await saveTextFile(targetDir, 'support.js', fs.readFileSync('support.js', 'utf8'));
           await saveTextFile(`${targetDir}/api`, 'photos.php', fs.readFileSync('api/photos.php', 'utf8'));
