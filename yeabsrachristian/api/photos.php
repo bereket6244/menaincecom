@@ -162,6 +162,32 @@ function downloadZip(PDO $pdo, array $config): void
     exit;
 }
 
+function downloadPhoto(PDO $pdo, array $config): void
+{
+    if (!isAdmin($config)) respond(['error' => 'Unauthorized.'], 401);
+    $id = (string)($_GET['id'] ?? '');
+    if (!preg_match('/^[a-f0-9-]{36}$/i', $id)) respond(['error' => 'Invalid photo id.'], 400);
+
+    $stmt = $pdo->prepare('SELECT id, image_data, created_at FROM guest_photos WHERE id = ? LIMIT 1');
+    $stmt->execute([$id]);
+    $row = $stmt->fetch();
+    if (!$row) respond(['error' => 'Photo not found.'], 404);
+
+    $parsed = parseDataUri((string)$row['image_data']);
+    if (!$parsed) respond(['error' => 'Photo data is not available.'], 404);
+
+    $mime = $parsed['extension'] === 'jpg' ? 'image/jpeg' : 'image/' . $parsed['extension'];
+    $date = gmdate('Ymd-His', strtotime($row['created_at']));
+    $filename = 'yeabsra-christian-' . $date . '-' . $row['id'] . '.' . $parsed['extension'];
+
+    header_remove('Content-Type');
+    header('Content-Type: ' . $mime);
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Content-Length: ' . strlen($parsed['bytes']));
+    echo $parsed['bytes'];
+    exit;
+}
+
 try {
     $pdo = pdo($config);
     ensureTable($pdo);
@@ -169,6 +195,7 @@ try {
 
     if ($method === 'GET') {
         if (($_GET['download'] ?? '') === 'zip') downloadZip($pdo, $config);
+        if (($_GET['download'] ?? '') === 'photo') downloadPhoto($pdo, $config);
         $deviceId = (string)($_GET['device_id'] ?? '');
         $admin = isAdmin($config);
         $stmt = $admin

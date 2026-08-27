@@ -25,12 +25,12 @@
   .status { min-height: 24px; margin-top: 18px; text-align: center; color: #8B7A66; font-style: italic; font-size: 18px; }
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; margin-top: 36px; }
   .card { border: 1px solid #BCA987; background: linear-gradient(145deg, #FBF5E9 0%, #EFE1C7 100%); padding: 10px; box-shadow: 0 18px 42px rgba(74, 64, 54, 0.1); }
-  .card.hidden { opacity: 0.58; }
-  .card.deleted { opacity: 0.38; filter: grayscale(0.55); }
+  .card.hidden img { opacity: 0.58; }
+  .card.deleted img { opacity: 0.38; filter: grayscale(0.55); }
   .card img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; display: block; border: 1px solid rgba(160, 132, 100, 0.38); }
   .meta { padding: 12px 4px 2px; display: flex; flex-direction: column; gap: 10px; align-items: center; color: #8B7A66; font-style: italic; }
   .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
-  .actions button { padding: 9px 14px; min-height: 36px; font-size: 13px; }
+  .actions button, .actions .photo-download { padding: 9px 14px; min-height: 36px; font-size: 13px; }
   .empty { margin-top: 46px; text-align: center; color: #8B7A66; font-style: italic; font-size: 20px; }
 </style>
 </head>
@@ -115,6 +115,11 @@
       const state = photo.deleted ? ' - deleted' : (photo.hidden ? ' - hidden' : '');
       card.innerHTML = '<img alt="Guest photo" src="' + photo.src + '"><div class="meta"><span>' + formatDate(photo.createdAt) + state + '</span><div class="actions"></div></div>';
       const actions = card.querySelector('.actions');
+      const download = document.createElement('a');
+      download.className = 'button photo-download';
+      download.textContent = 'DOWNLOAD';
+      download.href = apiUrl + '?download=photo&id=' + encodeURIComponent(photo.id) + '&admin_key=' + encodeURIComponent(adminKey);
+      download.download = 'yeabsra-christian-photo.jpg';
       const hide = document.createElement('button');
       hide.type = 'button';
       hide.textContent = photo.hidden ? 'SHOW' : 'HIDE';
@@ -145,7 +150,7 @@
           await load();
         }
       });
-      actions.append(hide, del);
+      actions.append(download, hide, del);
       grid.appendChild(card);
     });
   }

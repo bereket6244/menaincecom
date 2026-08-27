@@ -126,13 +126,19 @@ jobs:
           await Promise.all([
             `${targetDir}/assets/butterfly-crop.png`,
             `${targetDir}/assets/couple.jpg`,
+            `${targetDir}/assets/doves.webp`,
             `${targetDir}/assets/envelope-closed.jpg`,
-            `${targetDir}/assets/envelope-open.jpg`
+            `${targetDir}/assets/envelope-open.jpg`,
+            `${targetDir}/assets/flower-petal.png`,
+            `${targetDir}/assets/yeabsra-christian-engagement.ics`
           ].map(removeRemote));
           await upload(`${targetDir}/assets`, [
             'assets/butterfly-crop.png',
             'assets/couple.jpg',
+            'assets/doves.webp',
             'assets/envelope-closed.jpg',
-            'assets/envelope-open.jpg'
+            'assets/envelope-open.jpg',
+            'assets/flower-petal.png',
+            'assets/yeabsra-christian-engagement.ics'
           ]);
           NODE
