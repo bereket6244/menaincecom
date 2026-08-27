@@ -1,0 +1,138 @@
+name: Deploy Yeabsra Christian Engagement
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "yeabsrachristian/**"
+      - ".github/workflows/deploy-yeabsrachristian.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: yeabsrachristian
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: yeabsrachristian/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build check
+        run: npm run build
+
+      - name: Deploy invitation with cPanel API
+        env:
+          CPANEL_HOST: menaincet.com
+          CPANEL_USER: menainpy
+          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
+          CPANEL_TARGET_DIR: /home/menainpy/public_html/yeabsrachristian
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+
+          const host = process.env.CPANEL_HOST;
+          const user = process.env.CPANEL_USER;
+          const token = process.env.CPANEL_TOKEN;
+          const targetDir = process.env.CPANEL_TARGET_DIR;
+          const headers = { Authorization: `cpanel ${user}:${token}` };
+
+          if (!token) throw new Error('Missing CPANEL_TOKEN secret');
+
+          async function cpanel(pathname, params = {}) {
+            const url = new URL(`https://${host}:2083${pathname}`);
+            for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+            const response = await fetch(url, { headers });
+            const json = await response.json();
+            if (!response.ok || json.status === 0 || json?.cpanelresult?.event?.result === 0) {
+              throw new Error(JSON.stringify(json.errors || json?.cpanelresult?.event?.reason || json));
+            }
+            return json;
+          }
+
+          async function ensureDir(parent, name) {
+            await cpanel('/json-api/cpanel', {
+              cpanel_jsonapi_apiversion: '2',
+              cpanel_jsonapi_module: 'Fileman',
+              cpanel_jsonapi_func: 'mkdir',
+              path: parent,
+              name,
+              permissions: '0755'
+            }).catch(() => {});
+          }
+
+          async function removeRemote(file) {
+            await cpanel('/json-api/cpanel', {
+              cpanel_jsonapi_apiversion: '2',
+              cpanel_jsonapi_module: 'Fileman',
+              cpanel_jsonapi_func: 'fileop',
+              op: 'unlink',
+              sourcefiles: file,
+              doubledecode: '0'
+            }).catch(() => {});
+          }
+
+          async function saveTextFile(dir, file, content) {
+            const form = new URLSearchParams();
+            form.set('dir', dir);
+            form.set('file', file);
+            form.set('content', content);
+            form.set('from_charset', 'UTF-8');
+            form.set('to_charset', 'UTF-8');
+            const response = await fetch(`https://${host}:2083/execute/Fileman/save_file_content`, {
+              method: 'POST',
+              headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: form
+            });
+            const json = await response.json();
+            if (!response.ok || !json.status) throw new Error(JSON.stringify(json.errors || json));
+          }
+
+          async function upload(dir, files) {
+            const form = new FormData();
+            form.set('dir', dir);
+            files.forEach((file, index) => {
+              const data = fs.readFileSync(file);
+              form.set(`file-${index + 1}`, new Blob([data]), path.basename(file));
+            });
+            const response = await fetch(`https://${host}:2083/execute/Fileman/upload_files`, {
+              method: 'POST',
+              headers,
+              body: form
+            });
+            const json = await response.json();
+            if (!response.ok || !json.status) throw new Error(JSON.stringify(json.errors || json));
+          }
+
+          await ensureDir('/home/menainpy/public_html', 'yeabsrachristian');
+          await ensureDir(targetDir, 'assets');
+          await ensureDir(targetDir, 'api');
+          await ensureDir(targetDir, 'admin');
+          await saveTextFile(targetDir, 'index.html', fs.readFileSync('index.html', 'utf8'));
+          await saveTextFile(targetDir, 'support.js', fs.readFileSync('support.js', 'utf8'));
+          await saveTextFile(`${targetDir}/api`, 'photos.php', fs.readFileSync('api/photos.php', 'utf8'));
+          await saveTextFile(`${targetDir}/admin`, 'index.html', fs.readFileSync('admin/index.html', 'utf8'));
+          await Promise.all([
+            `${targetDir}/assets/butterfly-crop.png`,
+            `${targetDir}/assets/couple.jpg`,
+            `${targetDir}/assets/envelope-closed.jpg`,
+            `${targetDir}/assets/envelope-open.jpg`
+          ].map(removeRemote));
+          await upload(`${targetDir}/assets`, [
+            'assets/butterfly-crop.png',
+            'assets/couple.jpg',
+            'assets/envelope-closed.jpg',
+            'assets/envelope-open.jpg'
+          ]);
+          NODE
