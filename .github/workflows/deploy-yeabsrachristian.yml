@@ -126,6 +126,7 @@ jobs:
           await Promise.all([
             'butterfly-crop.png',
             'couple.jpg',
+            'doves-poster.webp',
             'doves.webp',
             'envelope-closed.jpg',
             'envelope-open.jpg',
@@ -139,6 +140,7 @@ jobs:
           await Promise.all([
             `${targetDir}/assets/butterfly-crop.png`,
             `${targetDir}/assets/couple.jpg`,
+            `${targetDir}/assets/doves-poster.webp`,
             `${targetDir}/assets/doves.webp`,
             `${targetDir}/assets/envelope-closed.jpg`,
             `${targetDir}/assets/envelope-open.jpg`,
@@ -148,6 +150,7 @@ jobs:
           await upload(`${targetDir}/assets`, [
             'assets/butterfly-crop.png',
             'assets/couple.jpg',
+            'assets/doves-poster.webp',
             'assets/doves.webp',
             'assets/envelope-closed.jpg',
             'assets/envelope-open.jpg',
