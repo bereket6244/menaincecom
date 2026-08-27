@@ -867,7 +867,12 @@ class Component extends DCLogic {
         alt: 'Two doves',
         decoding: 'async',
         fetchPriority: 'high',
-        style: imageStyle
+        style: {
+          ...imageStyle,
+          opacity: this.state.dovesReady ? 0 : 1,
+          visibility: this.state.dovesReady ? 'hidden' : 'visible',
+          transition: 'opacity 0.28s ease, visibility 0s linear ' + (this.state.dovesReady ? '0.28s' : '0s')
+        }
       }),
       h('img', {
         src: 'assets/doves.webp',
