@@ -29,6 +29,7 @@ jobs:
           const fs = require('fs');
           const path = require('path');
 
+          (async () => {
           const host = process.env.CPANEL_HOST;
           const user = process.env.CPANEL_USER;
           const token = process.env.CPANEL_TOKEN;
@@ -115,6 +116,7 @@ jobs:
           await saveTextFile(targetDir, 'support.js', fs.readFileSync('support.js', 'utf8'));
           await saveTextFile(`${targetDir}/api`, 'photos.php', fs.readFileSync('api/photos.php', 'utf8'));
           await saveTextFile(`${targetDir}/admin`, 'index.html', fs.readFileSync('admin/index.html', 'utf8'));
+          })();
           NODE
           curl --fail-with-body --show-error --silent \
             -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
