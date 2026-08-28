@@ -182,7 +182,8 @@ function downloadPhoto(PDO $pdo, array $config): void
 
     header_remove('Content-Type');
     header('Content-Type: ' . $mime);
-    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    $disposition = !empty($_GET['inline']) ? 'inline' : 'attachment';
+    header('Content-Disposition: ' . $disposition . '; filename="' . $filename . '"');
     header('Content-Length: ' . strlen($parsed['bytes']));
     echo $parsed['bytes'];
     exit;
@@ -201,10 +202,16 @@ try {
         $stmt = $admin
             ? $pdo->query('SELECT id, owner_id, image_data, hidden, deleted_at, created_at FROM guest_photos ORDER BY created_at DESC LIMIT 300')
             : $pdo->query('SELECT id, owner_id, image_data, hidden, deleted_at, created_at FROM guest_photos WHERE hidden = 0 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 80');
-        $photos = array_map(function ($row) use ($deviceId, $admin) {
+        $photos = array_map(function ($row) use ($deviceId, $admin, $config) {
+            $src = $row['image_data'];
+            if ($admin) {
+                $src = '/yeabsrachristian/api/photos.php?download=photo&inline=1&id='
+                    . rawurlencode((string)$row['id'])
+                    . '&admin_key=' . rawurlencode((string)$config['admin_key']);
+            }
             return [
                 'id' => $row['id'],
-                'src' => $row['image_data'],
+                'src' => $src,
                 'createdAt' => gmdate('c', strtotime($row['created_at'])),
                 'hidden' => (bool)$row['hidden'],
                 'deleted' => $row['deleted_at'] !== null,
