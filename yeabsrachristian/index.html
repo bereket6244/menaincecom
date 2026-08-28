@@ -12,6 +12,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" as="image" href="assets/doves-poster.webp" fetchpriority="high">
+  <link rel="preload" as="video" href="assets/doves-mobile.webm" type="video/webm" media="(max-width: 640px)">
+  <link rel="preload" as="video" href="assets/doves-fast.webm" type="video/webm" media="(min-width: 641px)">
   <link rel="preload" as="image" href="assets/doves-mobile-hq.webp" media="(max-width: 640px)">
   <link rel="preload" as="image" href="assets/doves-fast-hq.webp" media="(min-width: 641px)">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&amp;family=Pinyon+Script&amp;display=swap" rel="stylesheet">
@@ -979,7 +981,10 @@ class Component extends DCLogic {
   heroButterflyEl() {
     const h = React.createElement;
     const isMobile = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+    const canUseWebm = typeof document !== 'undefined'
+      && document.createElement('video').canPlayType('video/webm; codecs="vp9"');
     const animatedSrc = isMobile ? 'assets/doves-mobile-hq.webp' : 'assets/doves-fast-hq.webp';
+    const videoSrc = isMobile ? 'assets/doves-mobile.webm' : 'assets/doves-fast.webm';
     const markDovesReady = () => {
       if (!this.state.dovesReady) this.setState({ dovesReady: true });
     };
@@ -1005,7 +1010,25 @@ class Component extends DCLogic {
           transition: 'opacity 0.28s ease, visibility 0s linear ' + (this.state.dovesReady ? '0.28s' : '0s')
         }
       }),
-      h('img', {
+      canUseWebm ? h('video', {
+        src: videoSrc,
+        autoPlay: true,
+        muted: true,
+        loop: true,
+        playsInline: true,
+        preload: 'auto',
+        poster: 'assets/doves-poster.webp',
+        'aria-hidden': 'true',
+        onLoadedData: markDovesReady,
+        onCanPlay: markDovesReady,
+        style: {
+          ...imageStyle,
+          position: 'absolute',
+          inset: 0,
+          opacity: this.state.dovesReady ? 1 : 0,
+          transition: 'opacity 0.45s ease'
+        }
+      }) : h('img', {
         src: animatedSrc,
         alt: '',
         fetchPriority: 'low',
