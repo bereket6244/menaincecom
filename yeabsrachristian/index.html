@@ -193,6 +193,19 @@
       border: 1px solid rgba(160, 132, 100, 0.38);
       filter: sepia(0.08) saturate(0.92);
     }
+    .guest-photo-view {
+      display: block;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: zoom-in;
+      font: inherit;
+    }
+    .guest-photo-view:focus-visible {
+      outline: 2px solid #A38044;
+      outline-offset: 4px;
+    }
     .guest-photo-meta {
       display: flex;
       align-items: center;
@@ -252,6 +265,57 @@
     .guest-gallery-arrow[data-direction="prev"] { left: max(24px, calc((100vw - 960px) / 2)); }
     .guest-gallery-arrow[data-direction="next"] { right: max(24px, calc((100vw - 960px) / 2)); }
     .guest-gallery-arrow.is-visible { display: inline-flex; }
+    .guest-photo-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(18px, 4vw, 42px);
+      box-sizing: border-box;
+      background: rgba(52, 42, 30, 0.78);
+      backdrop-filter: blur(10px);
+    }
+    .guest-photo-lightbox.is-open { display: flex; }
+    .guest-photo-lightbox-frame {
+      position: relative;
+      width: min(94vw, 1040px);
+      height: min(88vh, 920px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .guest-photo-lightbox-img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border: 1px solid rgba(250, 246, 238, 0.5);
+      background: #F1E7D3;
+      box-shadow: 0 28px 80px rgba(20, 15, 10, 0.34);
+    }
+    .guest-photo-lightbox-close {
+      position: absolute;
+      top: -14px;
+      right: -14px;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: 1px solid #A08464;
+      background: rgba(250, 246, 238, 0.96);
+      color: #8A6B4C;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 28px rgba(20, 15, 10, 0.24);
+    }
+    .guest-photo-lightbox-close:focus-visible {
+      outline: 2px solid #F1E7D3;
+      outline-offset: 3px;
+    }
     @media (hover: none), (pointer: coarse) {
       .guest-gallery-arrow.is-visible { display: none; }
     }
@@ -404,6 +468,14 @@
       <div id="guest-gallery-empty" class="guest-gallery-empty">Your shared photos will appear here.</div>
     </div>
   </section>
+  <div id="guest-photo-lightbox" class="guest-photo-lightbox" role="dialog" aria-modal="true" aria-label="Guest photo viewer">
+    <div class="guest-photo-lightbox-frame">
+      <img id="guest-photo-lightbox-img" class="guest-photo-lightbox-img" alt="Guest engagement ceremony memory">
+      <button id="guest-photo-lightbox-close" class="guest-photo-lightbox-close" type="button" aria-label="Close photo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" stroke="#8A6B4C" stroke-width="1.8" stroke-linecap="round"></path></svg>
+      </button>
+    </div>
+  </div>
 
   <!-- ═══ Footer ═══ -->
   <section data-screen-label="Footer" style="padding: 70px 24px 72px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0;">
@@ -587,7 +659,10 @@ class Component extends DCLogic {
     const empty = root && root.querySelector('#guest-gallery-empty');
     const prevArrow = root && root.querySelector('.guest-gallery-arrow[data-direction="prev"]');
     const nextArrow = root && root.querySelector('.guest-gallery-arrow[data-direction="next"]');
-    if (!input || !uploadLabel || !uploadText || !uploadCount || !uploadStatus || !track || !empty || !prevArrow || !nextArrow) {
+    const lightbox = root && root.querySelector('#guest-photo-lightbox');
+    const lightboxImg = root && root.querySelector('#guest-photo-lightbox-img');
+    const lightboxClose = root && root.querySelector('#guest-photo-lightbox-close');
+    if (!input || !uploadLabel || !uploadText || !uploadCount || !uploadStatus || !track || !empty || !prevArrow || !nextArrow || !lightbox || !lightboxImg || !lightboxClose) {
       setTimeout(() => this.initGuestGallery(), 120);
       return;
     }
@@ -603,6 +678,7 @@ class Component extends DCLogic {
 
     let photos = [];
     let touchedUntil = 0;
+    let lightboxOpen = false;
     const formatDate = (value) => new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(new Date(value));
     const setUploading = (isUploading, message, progress, countText) => {
       uploadLabel.classList.toggle('is-uploading', isUploading);
@@ -679,6 +755,28 @@ class Component extends DCLogic {
       prevArrow.disabled = !hasOverflow || track.scrollLeft <= 2;
       nextArrow.disabled = !hasOverflow || track.scrollLeft + track.clientWidth >= track.scrollWidth - 2;
     };
+    const closeViewer = () => {
+      if (!lightboxOpen) return;
+      lightboxOpen = false;
+      lightbox.classList.remove('is-open');
+      lightbox.setAttribute('aria-hidden', 'true');
+      lightboxImg.removeAttribute('src');
+      document.body.style.overflow = '';
+    };
+    const openViewer = (photo) => {
+      lightboxOpen = true;
+      touchedUntil = Date.now() + 12000;
+      lightboxImg.src = photo.src;
+      lightboxImg.alt = 'Guest engagement ceremony memory from ' + formatDate(photo.createdAt);
+      lightbox.classList.add('is-open');
+      lightbox.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      lightboxClose.focus();
+    };
+    window.__openGuestPhotoById = (photoId) => {
+      const photo = photos.find(item => item.id === photoId);
+      if (photo) openViewer(photo);
+    };
     const render = () => {
       track.innerHTML = '';
       empty.style.display = photos.length ? 'none' : 'block';
@@ -686,7 +784,7 @@ class Component extends DCLogic {
       photos.forEach(photo => {
         const card = document.createElement('article');
         card.className = 'guest-photo-card';
-        card.innerHTML = '<img alt="Guest engagement ceremony memory" src="' + photo.src + '"><div class="guest-photo-meta"><span>' + formatDate(photo.createdAt) + '</span></div>';
+        card.innerHTML = '<button class="guest-photo-view" type="button" data-photo-id="' + photo.id + '" onclick="window.__openGuestPhotoById &amp;&amp; window.__openGuestPhotoById(this.dataset.photoId)" aria-label="View photo without cropping"><img alt="Guest engagement ceremony memory" src="' + photo.src + '"></button><div class="guest-photo-meta"><span>' + formatDate(photo.createdAt) + '</span></div>';
         if (photo.canDelete) {
           const button = document.createElement('button');
           button.className = 'guest-photo-delete';
@@ -719,6 +817,12 @@ class Component extends DCLogic {
     ['pointerdown', 'touchstart', 'wheel', 'keydown'].forEach(eventName => {
       track.addEventListener(eventName, () => { touchedUntil = Date.now() + 6500; }, { passive: true });
     });
+    track.addEventListener('click', event => {
+      const button = event.target.closest && event.target.closest('.guest-photo-view');
+      if (!button) return;
+      const photo = photos.find(item => item.id === button.dataset.photoId);
+      if (photo) openViewer(photo);
+    });
     const scrollByCard = (direction) => {
       const card = track.querySelector('.guest-photo-card');
       const step = card ? card.getBoundingClientRect().width + 30 : Math.round(track.clientWidth * 0.8);
@@ -729,6 +833,14 @@ class Component extends DCLogic {
     nextArrow.addEventListener('click', () => scrollByCard(1));
     track.addEventListener('scroll', () => requestAnimationFrame(() => { updateActivePhoto(); updateArrows(); }), { passive: true });
     window.addEventListener('resize', () => requestAnimationFrame(() => { updateActivePhoto(); updateArrows(); }));
+    lightbox.setAttribute('aria-hidden', 'true');
+    lightbox.addEventListener('click', event => {
+      if (event.target === lightbox) closeViewer();
+    });
+    lightboxClose.addEventListener('click', closeViewer);
+    window.addEventListener('keydown', event => {
+      if (event.key === 'Escape') closeViewer();
+    });
 
     input.addEventListener('change', async () => {
       const files = Array.from(input.files || []).filter(file => file.type.startsWith('image/'));
@@ -771,7 +883,7 @@ class Component extends DCLogic {
     });
 
     setInterval(() => {
-      if (!photos.length || Date.now() < touchedUntil || track.scrollWidth <= track.clientWidth) return;
+      if (lightboxOpen || !photos.length || Date.now() < touchedUntil || track.scrollWidth <= track.clientWidth) return;
       const atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 2;
       track.scrollLeft = atEnd ? 0 : track.scrollLeft + 0.38;
       updateActivePhoto();
@@ -1019,6 +1131,44 @@ class Component extends DCLogic {
     };
   }
 }
+</script>
+<script>
+(() => {
+  const openViewer = (source, altText) => {
+    const lightbox = document.getElementById('guest-photo-lightbox');
+    const image = document.getElementById('guest-photo-lightbox-img');
+    const close = document.getElementById('guest-photo-lightbox-close');
+    if (!lightbox || !image || !source) return;
+    image.src = source;
+    image.alt = altText || 'Guest engagement ceremony memory';
+    lightbox.classList.add('is-open');
+    lightbox.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    if (close) close.focus();
+  };
+  const closeViewer = () => {
+    const lightbox = document.getElementById('guest-photo-lightbox');
+    const image = document.getElementById('guest-photo-lightbox-img');
+    if (!lightbox || !lightbox.classList.contains('is-open')) return;
+    lightbox.classList.remove('is-open');
+    lightbox.setAttribute('aria-hidden', 'true');
+    if (image) image.removeAttribute('src');
+    document.body.style.overflow = '';
+  };
+  document.addEventListener('click', event => {
+    const viewButton = event.target.closest && event.target.closest('.guest-photo-view');
+    if (viewButton) {
+      const image = viewButton.querySelector('img');
+      openViewer(image && image.src, image && image.alt);
+      return;
+    }
+    if (event.target && event.target.id === 'guest-photo-lightbox') closeViewer();
+    if (event.target.closest && event.target.closest('#guest-photo-lightbox-close')) closeViewer();
+  });
+  window.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeViewer();
+  });
+})();
 </script>
 </body>
 </html>
