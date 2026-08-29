@@ -14,6 +14,7 @@
   <link rel="preload" as="image" href="assets/doves-poster.webp" fetchpriority="high">
   <link rel="preload" as="video" href="assets/doves-mobile.webm" type="video/webm" media="(max-width: 640px)">
   <link rel="preload" as="video" href="assets/doves-fast.webm" type="video/webm" media="(min-width: 641px)">
+  <link rel="preload" as="video" href="assets/doves-ios.mp4" type="video/mp4" media="(max-width: 640px)">
   <link rel="preload" as="image" href="assets/doves-mobile-hq.webp" media="(max-width: 640px)">
   <link rel="preload" as="image" href="assets/doves-fast-hq.webp" media="(min-width: 641px)">
   <link rel="preload" as="audio" href="assets/engagement-music.mp3" type="audio/mpeg">
@@ -323,6 +324,13 @@
     .guest-photo-lightbox-close:focus-visible {
       outline: 2px solid #F1E7D3;
       outline-offset: 3px;
+    }
+    .hero-dove-video::-webkit-media-controls,
+    .hero-dove-video::-webkit-media-controls-start-playback-button,
+    .hero-dove-video::-webkit-media-controls-overlay-play-button {
+      display: none !important;
+      opacity: 0 !important;
+      -webkit-appearance: none;
     }
     @media (hover: none), (pointer: coarse) {
       .guest-gallery-arrow.is-visible { display: none; }
@@ -961,28 +969,38 @@ class Component extends DCLogic {
     const isIOS = /iPad|iPhone|iPod/.test(ua) || (platform === 'MacIntel' && maxTouchPoints > 1);
     const isWebKit = /AppleWebKit/.test(ua) && !/Chrome|CriOS|Edg|OPR|Firefox|FxiOS/.test(ua);
     const videoProbe = typeof document !== 'undefined' ? document.createElement('video') : null;
+    const canUseIOSVideo = !!videoProbe && isIOS && !!videoProbe.canPlayType('video/mp4');
     const canUseWebm = !!videoProbe
       && !isIOS
       && !(isWebKit && /Apple/.test(vendor))
       && !!videoProbe.canPlayType('video/webm; codecs="vp9"');
     const animatedSrc = isMobile ? 'assets/doves-mobile-hq.webp' : 'assets/doves-fast-hq.webp';
-    const videoSrc = isMobile ? 'assets/doves-mobile.webm' : 'assets/doves-fast.webm';
+    const videoSrc = canUseIOSVideo ? 'assets/doves-ios.mp4' : (isMobile ? 'assets/doves-mobile.webm' : 'assets/doves-fast.webm');
+    const posterSrc = canUseIOSVideo ? 'assets/doves-ios-poster.jpg' : 'assets/doves-poster.webp';
+    const doveFilter = canUseIOSVideo
+      ? 'saturate(0.12) sepia(0.1) brightness(1.06) contrast(1.02)'
+      : 'saturate(0.42) sepia(0.08) brightness(1.04)';
     const markDovesReady = () => {
       if (!this.state.dovesReady) this.setState({ dovesReady: true });
+    };
+    const playDoves = (event) => {
+      markDovesReady();
+      const play = event.currentTarget.play && event.currentTarget.play();
+      if (play && play.catch) play.catch(() => {});
     };
     const imageStyle = {
       display: 'block',
       width: 'min(84vw, 440px)',
       aspectRatio: '1 / 1',
       objectFit: 'contain',
-      filter: 'saturate(0.42) sepia(0.08) brightness(1.04)',
+      filter: doveFilter,
       pointerEvents: 'none'
     };
     return h('div', {
       style: { position: 'relative', width: 'min(84vw, 440px)' }
     },
       h('img', {
-        src: 'assets/doves-poster.webp',
+        src: posterSrc,
         alt: 'Two doves',
         decoding: 'async',
         fetchPriority: 'high',
@@ -993,20 +1011,21 @@ class Component extends DCLogic {
           transition: 'opacity 0.28s ease, visibility 0s linear ' + (this.state.dovesReady ? '0.28s' : '0s')
         }
       }),
-      canUseWebm ? h('video', {
+      (canUseWebm || canUseIOSVideo) ? h('video', {
+        className: 'hero-dove-video',
         src: videoSrc,
         autoPlay: true,
         muted: true,
         loop: true,
         playsInline: true,
         preload: 'auto',
-        poster: 'assets/doves-poster.webp',
+        poster: posterSrc,
         controls: false,
         disablePictureInPicture: true,
         controlsList: 'nodownload nofullscreen noremoteplayback',
         'aria-hidden': 'true',
-        onLoadedData: markDovesReady,
-        onCanPlay: markDovesReady,
+        onLoadedData: playDoves,
+        onCanPlay: playDoves,
         style: {
           ...imageStyle,
           position: 'absolute',
