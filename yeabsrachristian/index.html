@@ -953,8 +953,18 @@ class Component extends DCLogic {
   heroButterflyEl() {
     const h = React.createElement;
     const isMobile = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
-    const canUseWebm = typeof document !== 'undefined'
-      && document.createElement('video').canPlayType('video/webm; codecs="vp9"');
+    const nav = typeof navigator !== 'undefined' ? navigator : {};
+    const ua = nav.userAgent || '';
+    const vendor = nav.vendor || '';
+    const platform = nav.platform || '';
+    const maxTouchPoints = nav.maxTouchPoints || 0;
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (platform === 'MacIntel' && maxTouchPoints > 1);
+    const isWebKit = /AppleWebKit/.test(ua) && !/Chrome|CriOS|Edg|OPR|Firefox|FxiOS/.test(ua);
+    const videoProbe = typeof document !== 'undefined' ? document.createElement('video') : null;
+    const canUseWebm = !!videoProbe
+      && !isIOS
+      && !(isWebKit && /Apple/.test(vendor))
+      && !!videoProbe.canPlayType('video/webm; codecs="vp9"');
     const animatedSrc = isMobile ? 'assets/doves-mobile-hq.webp' : 'assets/doves-fast-hq.webp';
     const videoSrc = isMobile ? 'assets/doves-mobile.webm' : 'assets/doves-fast.webm';
     const markDovesReady = () => {
