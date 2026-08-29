@@ -16,6 +16,7 @@
   <link rel="preload" as="video" href="assets/doves-fast.webm" type="video/webm" media="(min-width: 641px)">
   <link rel="preload" as="image" href="assets/doves-mobile-hq.webp" media="(max-width: 640px)">
   <link rel="preload" as="image" href="assets/doves-fast-hq.webp" media="(min-width: 641px)">
+  <link rel="preload" as="audio" href="assets/engagement-music.mp3" type="audio/mpeg">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&amp;family=Pinyon+Script&amp;display=swap" rel="stylesheet">
   <style>
     html, body { margin: 0; padding: 0; background: #F1E7D3; scrollbar-color: #A08464 #EFE1C7; scrollbar-width: thin; }
@@ -331,7 +332,7 @@
 
 <div style="position: relative; overflow: clip; background: #F1E7D3; color: #4A4036; font-family: 'Cormorant Garamond', serif; min-height: 100vh;">
 
-  <iframe ref="{{ ytRef }}" src="https://www.youtube.com/embed/bDj3_B51f-U?enablejsapi=1&amp;playsinline=1&amp;loop=1&amp;playlist=bDj3_B51f-U&amp;autoplay=1&amp;mute=1" allow="autoplay; encrypted-media" title="Background music" style="position: fixed; left: 0; bottom: 0; width: 2px; height: 2px; opacity: 0.01; pointer-events: none; border: 0; z-index: 1;"></iframe>
+  <audio ref="{{ audioRef }}" src="assets/engagement-music.mp3" preload="auto" loop playsinline style="position: fixed; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none;"></audio>
 
   {{ goboLayer }}
   {{ butterflyLayer }}
@@ -511,7 +512,6 @@ class Component extends DCLogic {
     this.openRef = React.createRef();
     this.glowRef = React.createRef();
     this.audioRef = React.createRef();
-    this.ytRef = React.createRef();
     this._revealed = false;
     this._opening = false;
   }
@@ -521,14 +521,11 @@ class Component extends DCLogic {
     // Keep visitors on the sealed-envelope screen — no scrolling past it
     // until they open it and the hero butterfly is front and center.
     this.lockScroll();
-    // The hidden YouTube embed autoplays muted on load. Browsers block
-    // *audible* autoplay until the visitor interacts, so unmute at the very
-    // first interaction anywhere on the page (opening the envelope counts) —
-    // music then starts on its own. The corner button mutes/unmutes anytime.
-    // We bind the official IFrame Player API so commands only fire once the
-    // player is actually ready (raw postMessage before onReady was dropped,
-    // which is why the music needed a manual pause/play to kick in).
-    this.loadYT();
+    const audio = this.audioRef.current;
+    if (audio) {
+      audio.volume = 0.85;
+      audio.load();
+    }
     const kick = () => {
       this.startMusic();
       ['pointerdown', 'touchstart', 'keydown', 'scroll'].forEach(ev =>
@@ -593,54 +590,29 @@ class Component extends DCLogic {
     window.removeEventListener('keydown', this._blockKeys);
   }
 
-  // ---- music (YouTube IFrame API) ----
-  loadYT() {
-    const bind = () => {
-      if (!this.ytRef.current || this._player) return;
-      this._player = new YT.Player(this.ytRef.current, {
-        events: {
-          onReady: () => {
-            this._ytReady = true;
-            this._player.playVideo();            // keep the muted loop rolling
-            if (this._wantAudio) this.startMusic();
-          }
-        }
-      });
-    };
-    if (window.YT && window.YT.Player) { bind(); return; }
-    const prev = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => { if (prev) prev(); bind(); };
-    if (!document.getElementById('yt-iframe-api')) {
-      const s = document.createElement('script');
-      s.id = 'yt-iframe-api';
-      s.src = 'https://www.youtube.com/iframe_api';
-      document.head.appendChild(s);
-    }
-  }
-  // Fallback used only before the API player has finished loading.
-  ytCmd(func) {
-    const f = this.ytRef.current;
-    if (f && f.contentWindow) {
-      f.contentWindow.postMessage(JSON.stringify({ event: 'command', func: func, args: [] }), '*');
-    }
-  }
+  // ---- music ----
   startMusic() {
     this._wantAudio = true;
-    if (this._player && this._ytReady) {
-      this._player.unMute();
-      this._player.setVolume(100);
-      this._player.playVideo();
-    } else {
-      this.ytCmd('unMute');
-      this.ytCmd('playVideo');
+    const audio = this.audioRef.current;
+    if (!audio) return;
+    audio.loop = true;
+    const play = audio.play();
+    if (play && play.then) {
+      play.then(() => {
+        if (!this.state.playing) this.setState({ playing: true });
+      }).catch(() => {
+        if (this.state.playing) this.setState({ playing: false });
+      });
+    } else if (!this.state.playing) {
+      this.setState({ playing: true });
     }
-    if (!this.state.playing) this.setState({ playing: true });
   }
   tryPlay() { this.startMusic(); }
   toggleMusic = () => {
+    const audio = this.audioRef.current;
+    if (!audio) return;
     if (this.state.playing) {
-      if (this._player && this._ytReady) this._player.pauseVideo();
-      else this.ytCmd('pauseVideo');
+      audio.pause();
       this.setState({ playing: false });
     } else {
       this.startMusic();
@@ -993,6 +965,7 @@ class Component extends DCLogic {
       width: 'min(84vw, 440px)',
       aspectRatio: '1 / 1',
       objectFit: 'contain',
+      filter: 'saturate(0.42) sepia(0.08) brightness(1.04)',
       pointerEvents: 'none'
     };
     return h('div', {
@@ -1018,6 +991,9 @@ class Component extends DCLogic {
         playsInline: true,
         preload: 'auto',
         poster: 'assets/doves-poster.webp',
+        controls: false,
+        disablePictureInPicture: true,
+        controlsList: 'nodownload nofullscreen noremoteplayback',
         'aria-hidden': 'true',
         onLoadedData: markDovesReady,
         onCanPlay: markDovesReady,
@@ -1146,11 +1122,9 @@ class Component extends DCLogic {
       openRef: this.openRef,
       glowRef: this.glowRef,
       audioRef: this.audioRef,
-      ytRef: this.ytRef,
       scrollToInvite: this.scrollToInvite,
       goboLayer: this._gobo,
       hasMusic: this.state.hasMusic,
-      musicSrc: this.state.hasMusic ? 'music.mp3' : undefined,
       playing: this.state.playing,
       notPlaying: !this.state.playing,
       toggleMusic: this.toggleMusic,
