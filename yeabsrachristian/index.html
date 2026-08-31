@@ -351,6 +351,10 @@
   {{ butterflyLayer }}
   {{ petalLayer }}
 
+  <button onClick="{{ toggleLanguage }}" aria-label="{{ languageToggleAria }}" style="position: fixed; right: 20px; top: 20px; z-index: 61; width: 52px; height: 52px; border-radius: 50%; border: 1px solid #A08464; background: rgba(250, 246, 238, 0.92); color: #8A6B4C; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 18px rgba(90, 70, 50, 0.18); font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 600; letter-spacing: 0.04em;">
+    {{ languageToggleLabel }}
+  </button>
+
   <!-- Music toggle -->
   <sc-if value="{{ hasMusic }}" hint-placeholder-val="{{ false }}">
     <button onClick="{{ toggleMusic }}" aria-label="Toggle music" style="position: fixed; right: 20px; bottom: 20px; z-index: 60; width: 52px; height: 52px; border-radius: 50%; border: 1px solid #A08464; background: rgba(250, 246, 238, 0.92); color: #8A6B4C; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 18px rgba(90, 70, 50, 0.18);">
@@ -379,11 +383,11 @@
     <div style="position: relative; animation: heroFloat 7s ease-in-out infinite;">
       {{ heroButterfly }}
     </div>
-    <div data-reveal="0" style="margin-top: 46px; font-size: 21px; font-weight: 500; letter-spacing: 0.5em; text-indent: 0.5em; color: #3E3222;">YOU&rsquo;RE</div>
-    <div data-reveal="0.2" style="margin-top: 16px; font-size: clamp(50px, 12vw, 86px); font-weight: 400; letter-spacing: 0.06em; text-indent: 0.06em; color: #3A2E1E; line-height: 1;">CORDIALLY</div>
+    <div data-reveal="0" style="margin-top: 46px; font-size: 21px; font-weight: 500; letter-spacing: 0.5em; text-indent: 0.5em; color: #3E3222;">{{ heroEyebrow }}</div>
+    <div data-reveal="0.2" style="margin-top: 16px; font-size: clamp(50px, 12vw, 86px); font-weight: 400; letter-spacing: 0.06em; text-indent: 0.06em; color: #3A2E1E; line-height: 1;">{{ heroTitle }}</div>
     <div data-reveal="0.4" style="margin-top: 22px; display: flex; align-items: center; justify-content: center; gap: 20px; color: #6E5432;">
       <div style="font-size: 22px; line-height: 1;">&middot;</div>
-      <div style="font-size: 24px; font-weight: 500; letter-spacing: 0.45em; text-indent: 0.45em;">INVITED</div>
+      <div style="font-size: 24px; font-weight: 500; letter-spacing: 0.45em; text-indent: 0.45em;">{{ heroInviteWord }}</div>
       <div style="font-size: 22px; line-height: 1;">&middot;</div>
     </div>
     <div data-reveal="0.55" style="margin-top: 52px; width: min(74vw, 430px); display: flex; align-items: center; gap: 10px;">
@@ -393,8 +397,8 @@
       <div style="flex: 1; height: 1px; background: #B99B69;"></div>
       <div style="width: 5px; height: 5px; border: 1px solid #B0925E; transform: rotate(45deg);"></div>
     </div>
-    <div data-reveal="0.7" style="margin-top: 36px; font-size: clamp(13px, 4.2vw, 16px); font-weight: 500; letter-spacing: 0.22em; text-indent: 0.22em; line-height: 1.8; color: #8A6B4C; max-width: min(90vw, 760px);">to celebrate the beginning of our life together</div>
-    <div data-write="0.4" style="margin-top: 26px; font-family: 'Pinyon Script', cursive; font-size: clamp(40px, 9vw, 58px); color: #3A2E1E; line-height: 1.25; padding: 0 8px;">Yeabsra &nbsp;&amp;&nbsp; Christian</div>
+    <div data-reveal="0.7" style="margin-top: 36px; font-size: clamp(13px, 4.2vw, 16px); font-weight: 500; letter-spacing: 0.22em; text-indent: 0.22em; line-height: 1.8; color: #8A6B4C; max-width: min(90vw, 760px);">{{ heroTagline }}</div>
+    <div data-write="0.4" style="margin-top: 26px; font-family: 'Pinyon Script', cursive; font-size: clamp(40px, 9vw, 58px); color: #3A2E1E; line-height: 1.25; padding: 0 8px;">{{ coupleNames }}</div>
     <div style="position: absolute; bottom: 22px; left: 50%; animation: bobDown 2s ease-in-out infinite;">
       <svg width="18" height="11" viewBox="0 0 16 10" fill="none"><path d="M1 1l7 7 7-7" stroke="#A38044" stroke-width="1.2"></path></svg>
     </div>
@@ -418,24 +422,24 @@
       <div style="width: 7px; height: 7px; border: 1px solid #A08464; transform: rotate(45deg);"></div>
       <div style="width: 60px; height: 1px; background: #C0B098;"></div>
     </div>
-    <div data-reveal="0.08" style="width: 100%; text-align: center; font-size: 18px; letter-spacing: 0.42em; text-indent: 0.42em; color: #8A6B4C; margin-bottom: 18px;">DATE:</div>
-    <div data-reveal="0.1" style="width: 100%; text-align: center; font-size: 26px; letter-spacing: 0.5em; text-indent: 0.5em; color: #8B7A66; margin-bottom: 24px;">SUNDAY</div>
+    <div data-reveal="0.08" style="width: 100%; text-align: center; font-size: 18px; letter-spacing: 0.42em; text-indent: 0.42em; color: #8A6B4C; margin-bottom: 18px;">{{ dateLabel }}</div>
+    <div data-reveal="0.1" style="width: 100%; text-align: center; font-size: 26px; letter-spacing: 0.5em; text-indent: 0.5em; color: #8B7A66; margin-bottom: 24px;">{{ dayText }}</div>
     <div data-reveal="0.2" style="display: grid; grid-template-columns: minmax(0, 1fr) 1px auto 1px minmax(0, 1fr); align-items: center; column-gap: clamp(10px, 3.2vw, 28px); width: min(92vw, 760px);">
-      <div style="font-size: clamp(14px, 4vw, 24px); letter-spacing: 0.34em; text-indent: 0.34em; color: #6E5B49; text-align: right;">SEPT</div>
+      <div style="font-size: clamp(14px, 4vw, 24px); letter-spacing: 0.34em; text-indent: 0.34em; color: #6E5B49; text-align: right;">{{ monthText }}</div>
       <div style="width: 1px; height: 64px; background: #B3A288;"></div>
       <div style="font-size: clamp(60px, 15vw, 104px); font-weight: 300; color: #4A4036; line-height: 1;">20</div>
       <div style="width: 1px; height: 64px; background: #B3A288;"></div>
-      <div style="font-size: clamp(16px, 4.4vw, 26px); letter-spacing: 0.3em; text-indent: 0.3em; color: #6E5B49; text-align: left;">2026</div>
+      <div style="font-size: clamp(16px, 4.4vw, 26px); letter-spacing: 0.3em; text-indent: 0.3em; color: #6E5B49; text-align: left;">{{ yearText }}</div>
     </div>
-    <div data-reveal="0.35" style="margin-top: 18px; font-size: 24px; letter-spacing: 0.32em; text-indent: 0.32em; color: #8B7A66;">AT 5:30 PM</div>
-    <a class="invitation-cta" data-reveal="0.45" href="assets/yeabsra-christian-engagement.ics" download="yeabsra-christian-engagement.ics" type="text/calendar" style="margin-top: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 14px; border: 1px solid #A38044; border-radius: 999px; background: rgba(250, 246, 238, 0.38); padding: 15px clamp(22px, 6vw, 38px); font-size: clamp(13px, 3.8vw, 15px); font-weight: 500; letter-spacing: 0.35em; text-indent: 0.35em; color: #8A6B4C; text-decoration: none; white-space: nowrap; box-shadow: 0 8px 22px rgba(90, 70, 50, 0.08);">ADD TO CALENDAR <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3v3M17 3v3M4.5 9.5h15M6.5 5h11A2.5 2.5 0 0 1 20 7.5v10A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-10A2.5 2.5 0 0 1 6.5 5Z" stroke="#8A6B4C" stroke-width="1.25" stroke-linecap="round"></path><path d="M12 12v5M9.5 14.5h5" stroke="#8A6B4C" stroke-width="1.25" stroke-linecap="round"></path></svg></a>
+    <div data-reveal="0.35" style="margin-top: 18px; font-size: 24px; letter-spacing: 0.32em; text-indent: 0.32em; color: #8B7A66;">{{ timeText }}</div>
+    <a class="invitation-cta" data-reveal="0.45" href="assets/yeabsra-christian-engagement.ics" download="yeabsra-christian-engagement.ics" type="text/calendar" style="margin-top: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 14px; border: 1px solid #A38044; border-radius: 999px; background: rgba(250, 246, 238, 0.38); padding: 15px clamp(22px, 6vw, 38px); font-size: clamp(13px, 3.8vw, 15px); font-weight: 500; letter-spacing: 0.35em; text-indent: 0.35em; color: #8A6B4C; text-decoration: none; white-space: nowrap; box-shadow: 0 8px 22px rgba(90, 70, 50, 0.08);">{{ addCalendarText }} <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3v3M17 3v3M4.5 9.5h15M6.5 5h11A2.5 2.5 0 0 1 20 7.5v10A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-10A2.5 2.5 0 0 1 6.5 5Z" stroke="#8A6B4C" stroke-width="1.25" stroke-linecap="round"></path><path d="M12 12v5M9.5 14.5h5" stroke="#8A6B4C" stroke-width="1.25" stroke-linecap="round"></path></svg></a>
   </section>
 
   <!-- ═══ Map preview ═══ -->
   <section data-screen-label="Map Preview" style="padding: 38px 24px 58px; display: flex; flex-direction: column; align-items: center; text-align: center; background: #F1E7D3;">
     <div data-reveal="0" style="display: flex; flex-direction: column; align-items: center; line-height: 1;">
-      <div style="font-size: 18px; letter-spacing: 0.42em; text-indent: 0.42em; font-weight: 400; color: #8A6B4C; text-transform: uppercase;">VENUE:</div>
-      <div style="margin-top: 16px; font-size: clamp(16px, 4vw, 20px); letter-spacing: 0.22em; text-indent: 0.22em; font-weight: 400; color: #6E5B49; text-transform: uppercase;">AT THE FAMILY RESIDENCE, BOLE BULBULA</div>
+      <div style="font-size: 18px; letter-spacing: 0.42em; text-indent: 0.42em; font-weight: 400; color: #8A6B4C; text-transform: uppercase;">{{ venueLabel }}</div>
+      <div style="margin-top: 16px; font-size: clamp(16px, 4vw, 20px); letter-spacing: 0.22em; text-indent: 0.22em; font-weight: 400; color: #6E5B49; text-transform: uppercase;">{{ venueText }}</div>
     </div>
 
     <div data-reveal="0.12" style="margin-top: 28px; width: min(92vw, 760px); position: relative;">
@@ -448,7 +452,7 @@
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
           <div style="width: 5px; height: 5px; border: 1px solid #B0925E; transform: rotate(45deg);"></div>
           <div style="flex: 1; height: 1px; background: #C0B098;"></div>
-          <div style="font-size: 13px; letter-spacing: 0.42em; text-indent: 0.42em; color: #A08464; white-space: nowrap;">LOCATION</div>
+          <div style="font-size: 13px; letter-spacing: 0.42em; text-indent: 0.42em; color: #A08464; white-space: nowrap;">{{ locationText }}</div>
           <div style="flex: 1; height: 1px; background: #C0B098;"></div>
           <div style="width: 5px; height: 5px; border: 1px solid #B0925E; transform: rotate(45deg);"></div>
         </div>
@@ -459,19 +463,19 @@
       </div>
     </div>
 
-    <a class="invitation-cta" data-reveal="0.35" href="https://maps.app.goo.gl/yyGedyGNWSn4TGHV9?g_st=it" target="_blank" rel="noopener" style="margin-top: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 14px; border: 1px solid #A38044; border-radius: 999px; background: rgba(250, 246, 238, 0.38); padding: 15px clamp(22px, 6vw, 38px); font-size: clamp(13px, 3.8vw, 15px); font-weight: 500; letter-spacing: 0.35em; text-indent: 0.35em; color: #8A6B4C; text-decoration: none; white-space: nowrap; box-shadow: 0 8px 22px rgba(90, 70, 50, 0.08);">OPEN MAP <svg width="22" height="10" viewBox="0 0 22 10" fill="none"><path d="M0 5h20M16 1l4 4-4 4" stroke="#8A6B4C" stroke-width="1.1"></path></svg></a>
+    <a class="invitation-cta" data-reveal="0.35" href="https://maps.app.goo.gl/yyGedyGNWSn4TGHV9?g_st=it" target="_blank" rel="noopener" style="margin-top: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 14px; border: 1px solid #A38044; border-radius: 999px; background: rgba(250, 246, 238, 0.38); padding: 15px clamp(22px, 6vw, 38px); font-size: clamp(13px, 3.8vw, 15px); font-weight: 500; letter-spacing: 0.35em; text-indent: 0.35em; color: #8A6B4C; text-decoration: none; white-space: nowrap; box-shadow: 0 8px 22px rgba(90, 70, 50, 0.08);">{{ openMapText }} <svg width="22" height="10" viewBox="0 0 22 10" fill="none"><path d="M0 5h20M16 1l4 4-4 4" stroke="#8A6B4C" stroke-width="1.1"></path></svg></a>
   </section>
 
   <!-- ═══ Guest photos ═══ -->
   <section id="guest-photos" data-screen-label="Guest Photos" style="background: #F1E7D3; padding: 46px 0 30px; display: flex; flex-direction: column; align-items: center; text-align: center; overflow: hidden;">
     <div data-reveal="0" style="display: flex; flex-direction: column; align-items: center; line-height: 1; padding: 0 24px;">
-      <div style="font-size: 34px; letter-spacing: 0.4em; text-indent: 0.4em; font-weight: 300; color: #6E5B49;">GUEST</div>
-      <div style="font-family: 'Pinyon Script', cursive; font-size: clamp(44px, 9vw, 56px); color: #8A6B4C; margin-top: -6px; line-height: 1.2;">memories</div>
-      <p style="margin: 20px auto 0; max-width: 560px; font-size: clamp(17px, 4.2vw, 20px); line-height: 1.55; font-style: italic; color: #7D6A55;">Share your favorite moments from the celebration. Photos appear here for everyone, and you can remove the photos you upload from this same device.</p>
+      <div style="font-size: 34px; letter-spacing: 0.4em; text-indent: 0.4em; font-weight: 300; color: #6E5B49;">{{ guestTitle }}</div>
+      <div style="font-family: 'Pinyon Script', cursive; font-size: clamp(44px, 9vw, 56px); color: #8A6B4C; margin-top: -6px; line-height: 1.2;">{{ memoriesTitle }}</div>
+      <p style="margin: 20px auto 0; max-width: 560px; font-size: clamp(17px, 4.2vw, 20px); line-height: 1.55; font-style: italic; color: #7D6A55;">{{ memoriesDescription }}</p>
     </div>
 
     <button id="guest-photo-upload-label" onClick="{{ openGuestPhotoPicker }}" data-reveal="0.12" class="guest-photo-upload invitation-cta" type="button" style="font-family: 'Cormorant Garamond', serif; margin-top: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 14px; border: 1px solid #A38044; border-radius: 999px; background: rgba(250, 246, 238, 0.42); padding: 15px clamp(22px, 6vw, 38px); font-size: clamp(13px, 3.8vw, 15px); font-weight: 500; letter-spacing: 0.35em; text-indent: 0.35em; color: #8A6B4C; box-shadow: 0 8px 22px rgba(90, 70, 50, 0.08); cursor: pointer;">
-      <span id="guest-photo-upload-text">SHARE PHOTO</span>
+      <span id="guest-photo-upload-text">{{ sharePhotoText }}</span>
       <span id="guest-photo-upload-count" class="guest-upload-count"></span>
       <span class="guest-upload-spinner" aria-hidden="true"></span>
       <svg class="guest-upload-plus" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="#8A6B4C" stroke-width="1.4" stroke-linecap="round"></path></svg>
@@ -488,7 +492,7 @@
       <button class="guest-gallery-arrow" data-direction="next" type="button" aria-label="Next photo">
         <svg width="24" height="14" viewBox="0 0 24 14" fill="none" aria-hidden="true"><path d="M0 7h22M16 1l6 6-6 6" stroke="#8A6B4C" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"></path></svg>
       </button>
-      <div id="guest-gallery-empty" class="guest-gallery-empty">Your shared photos will appear here.</div>
+      <div id="guest-gallery-empty" class="guest-gallery-empty">{{ emptyGalleryText }}</div>
     </div>
   </section>
   <div id="guest-photo-lightbox" class="guest-photo-lightbox" role="dialog" aria-modal="true" aria-label="Guest photo viewer">
@@ -503,9 +507,9 @@
   <!-- ═══ Footer ═══ -->
   <section data-screen-label="Footer" style="padding: 36px 24px 64px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0;">
     {{ footerButterfly }}
-    <div data-reveal="0.1" style="margin-top: 36px; font-family: 'Pinyon Script', cursive; font-size: 42px; color: #8A6B4C; line-height: 1.2;">with love,</div>
-    <div data-reveal="0.2" style="margin-top: 26px; font-size: clamp(24px, 5vw, 30px); letter-spacing: 0.35em; text-indent: 0.35em; color: #5F4F3F;">YEABI &amp; CHRIS</div>
-    <div data-reveal="0.3" style="margin-top: 18px; max-width: 560px; font-size: clamp(17px, 4.2vw, 20px); line-height: 1.55; font-style: italic; color: #7D6A55;">Your presence means the world to us.</div>
+    <div data-reveal="0.1" style="margin-top: 36px; font-family: 'Pinyon Script', cursive; font-size: 42px; color: #8A6B4C; line-height: 1.2;">{{ withLoveText }}</div>
+    <div data-reveal="0.2" style="margin-top: 26px; font-size: clamp(24px, 5vw, 30px); letter-spacing: 0.35em; text-indent: 0.35em; color: #5F4F3F;">{{ footerNames }}</div>
+    <div data-reveal="0.3" style="margin-top: 18px; max-width: 560px; font-size: clamp(17px, 4.2vw, 20px); line-height: 1.55; font-style: italic; color: #7D6A55;">{{ footerNote }}</div>
     <div data-reveal="0.4" style="margin-top: 56px; display: flex; align-items: center; gap: 12px;">
       <div style="width: 40px; height: 1px; background: #C9B896;"></div>
       <a href="https://menaincet.com" target="_blank" rel="noopener" style="font-size: 12px; letter-spacing: 0.4em; text-indent: 0.4em; color: #A99677; text-decoration: none;">MENA INC &middot; 2026</a>
@@ -516,7 +520,7 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;butterflyCount&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 4, &quot;min&quot;: 0, &quot;max&quot;: 16, &quot;step&quot;: 1, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Atmosphere&quot;}, &quot;butterflySpeed&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 1, &quot;min&quot;: 0.4, &quot;max&quot;: 2, &quot;step&quot;: 0.1, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Atmosphere&quot;}, &quot;fallingPetals&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Atmosphere&quot;}}">
 class Component extends DCLogic {
-  state = { opened: false, playing: false, hasMusic: false, dovesReady: false };
+  state = { opened: false, playing: false, hasMusic: false, dovesReady: false, isAmharic: false };
 
   constructor(props) {
     super(props);
@@ -527,6 +531,116 @@ class Component extends DCLogic {
     this.audioRef = React.createRef();
     this._revealed = false;
     this._opening = false;
+  }
+
+  copy() {
+    return this.state.isAmharic ? {
+      languageToggleLabel: 'EN',
+      languageToggleAria: 'Switch to English',
+      heroEyebrow: 'እርስዎ',
+      heroTitle: 'በክብር',
+      heroInviteWord: 'ተጋብዘዋል',
+      heroTagline: 'የአብሮነታችንን አዲስ ጅማሬ ለማክበር',
+      coupleNames: 'Yeabsra  &  Christian',
+      dateLabel: 'ቀን:',
+      dayText: 'እሁድ',
+      monthText: 'መስከ',
+      yearText: '2026',
+      timeText: 'ከቀኑ 5:30',
+      addCalendarText: 'ወደ ቀን መቁጠሪያ',
+      venueLabel: 'ቦታ:',
+      venueText: 'በቤተሰብ መኖሪያ፣ ቦሌ ቡልቡላ',
+      locationText: 'አቅጣጫ',
+      openMapText: 'ካርታ ክፈት',
+      guestTitle: 'እንግዶች',
+      memoriesTitle: 'ትዝታዎች',
+      memoriesDescription: 'ከክብረ በዓሉ የምትወዷቸውን ጊዜዎች በፎቶ ያጋሩ። ፎቶዎቹ ለሁሉም ይታያሉ፣ እና ከዚህ መሣሪያ ያስገባችኋቸውን ፎቶዎች ማጥፋት ትችላላችሁ።',
+      sharePhotoText: 'ፎቶ ያጋሩ',
+      uploadingText: 'በመጫን ላይ',
+      emptyGalleryText: 'ያጋራችኋቸው ፎቶዎች እዚህ ይታያሉ።',
+      galleryUnavailableText: 'የእንግዶች ፎቶዎች ለጊዜው አይገኙም።',
+      uploadFailedText: 'ጭነቱ አልተጠናቀቀም። ያነሱ ወይም ትንንሽ ፎቶዎች ይሞክሩ።',
+      deleteFailedText: 'ያንን ፎቶ ማጥፋት አልተቻለም። እባክዎ እንደገና ይሞክሩ።',
+      photoSingular: '1 ፎቶ',
+      photoPlural: count => count + ' ፎቶዎች',
+      readPrefix: 'በማንበብ ላይ ',
+      preparePrefix: 'በማዘጋጀት ላይ ',
+      uploadPrefix: 'በመጫን ላይ ',
+      finishUploadText: 'ጭነቱ በመጠናቀቅ ላይ...',
+      limitNoteText: ' የመጀመሪያዎቹን 12 ብቻ በመጫን ላይ።',
+      addedText: count => count === 1 ? '1 ፎቶ ታክሏል።' : count + ' ፎቶዎች ታክለዋል።',
+      skippedText: count => count + ' ተዘለዋል።',
+      photoAlt: 'የእንግዶች የእጮኝነት ሥነ ሥርዓት ትዝታ',
+      photoAltFrom: date => 'የእንግዶች የእጮኝነት ሥነ ሥርዓት ትዝታ ከ' + date,
+      withLoveText: 'በፍቅር፣',
+      footerNames: 'ዬቢ & ክሪስ',
+      footerNote: 'መገኘታችሁ ለእኛ ትልቅ ዋጋ አለው።'
+    } : {
+      languageToggleLabel: 'አማ',
+      languageToggleAria: 'Switch to Amharic',
+      heroEyebrow: 'YOU’RE',
+      heroTitle: 'CORDIALLY',
+      heroInviteWord: 'INVITED',
+      heroTagline: 'to celebrate the beginning of our life together',
+      coupleNames: 'Yeabsra  &  Christian',
+      dateLabel: 'DATE:',
+      dayText: 'SUNDAY',
+      monthText: 'SEPT',
+      yearText: '2026',
+      timeText: 'AT 5:30 PM',
+      addCalendarText: 'ADD TO CALENDAR',
+      venueLabel: 'VENUE:',
+      venueText: 'AT THE FAMILY RESIDENCE, BOLE BULBULA',
+      locationText: 'LOCATION',
+      openMapText: 'OPEN MAP',
+      guestTitle: 'GUEST',
+      memoriesTitle: 'memories',
+      memoriesDescription: 'Share your favorite moments from the celebration. Photos appear here for everyone, and you can remove the photos you upload from this same device.',
+      sharePhotoText: 'SHARE PHOTO',
+      uploadingText: 'UPLOADING',
+      emptyGalleryText: 'Your shared photos will appear here.',
+      galleryUnavailableText: 'Guest photos are temporarily unavailable.',
+      uploadFailedText: 'Upload could not finish. Try fewer or smaller photos.',
+      deleteFailedText: 'Could not delete that photo. Please try again.',
+      photoSingular: '1 photo',
+      photoPlural: count => count + ' photos',
+      readPrefix: 'Reading ',
+      preparePrefix: 'Preparing ',
+      uploadPrefix: 'Uploading ',
+      finishUploadText: 'Finishing upload...',
+      limitNoteText: ' Uploading the first 12.',
+      addedText: count => count === 1 ? '1 photo added.' : count + ' photos added.',
+      skippedText: count => count + ' skipped.',
+      photoAlt: 'Guest engagement ceremony memory',
+      photoAltFrom: date => 'Guest engagement ceremony memory from ' + date,
+      withLoveText: 'with love,',
+      footerNames: 'YEABI & CHRIS',
+      footerNote: 'Your presence means the world to us.'
+    };
+  }
+
+  toggleLanguage = () => {
+    this.setState(prev => ({ isAmharic: !prev.isAmharic }), () => {
+      document.documentElement.lang = this.state.isAmharic ? 'am' : 'en';
+      this.refreshGuestGalleryLanguage();
+    });
+  };
+
+  refreshGuestGalleryLanguage() {
+    const root = document.querySelector('.sc-host');
+    if (!root) return;
+    const text = this.copy();
+    const uploadLabel = root.querySelector('#guest-photo-upload-label');
+    const uploadText = root.querySelector('#guest-photo-upload-text');
+    const empty = root.querySelector('#guest-gallery-empty');
+    if (uploadText && (!uploadLabel || !uploadLabel.classList.contains('is-uploading'))) {
+      uploadText.textContent = text.sharePhotoText;
+    }
+    if (empty && empty.dataset.unavailable === 'true') {
+      empty.textContent = text.galleryUnavailableText;
+    } else if (empty) {
+      empty.textContent = text.emptyGalleryText;
+    }
   }
 
   componentDidMount() {
@@ -673,10 +787,12 @@ class Component extends DCLogic {
     let photos = [];
     let touchedUntil = 0;
     let lightboxOpen = false;
+    const getText = () => this.copy();
     const formatDate = (value) => new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(new Date(value));
     const setUploading = (isUploading, message, progress, countText) => {
+      const text = getText();
       uploadLabel.classList.toggle('is-uploading', isUploading);
-      uploadText.textContent = isUploading ? 'UPLOADING' : 'SHARE PHOTO';
+      uploadText.textContent = isUploading ? text.uploadingText : text.sharePhotoText;
       uploadCount.textContent = countText || '';
       input.disabled = isUploading;
       uploadStatus.textContent = message || '';
@@ -758,10 +874,11 @@ class Component extends DCLogic {
       document.body.style.overflow = '';
     };
     const openViewer = (photo) => {
+      const text = getText();
       lightboxOpen = true;
       touchedUntil = Date.now() + 12000;
       lightboxImg.src = photo.src;
-      lightboxImg.alt = 'Guest engagement ceremony memory from ' + formatDate(photo.createdAt);
+      lightboxImg.alt = text.photoAltFrom(formatDate(photo.createdAt));
       lightbox.classList.add('is-open');
       lightbox.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
@@ -776,9 +893,10 @@ class Component extends DCLogic {
       empty.style.display = photos.length ? 'none' : 'block';
       track.style.display = photos.length ? 'flex' : 'none';
       photos.forEach(photo => {
+        const text = getText();
         const card = document.createElement('article');
         card.className = 'guest-photo-card';
-        card.innerHTML = '<button class="guest-photo-view" type="button" data-photo-id="' + photo.id + '" onclick="window.__openGuestPhotoById &amp;&amp; window.__openGuestPhotoById(this.dataset.photoId)" aria-label="View photo without cropping"><img alt="Guest engagement ceremony memory" src="' + photo.src + '"></button><div class="guest-photo-meta"><span>' + formatDate(photo.createdAt) + '</span></div>';
+        card.innerHTML = '<button class="guest-photo-view" type="button" data-photo-id="' + photo.id + '" onclick="window.__openGuestPhotoById &amp;&amp; window.__openGuestPhotoById(this.dataset.photoId)" aria-label="View photo without cropping"><img alt="' + text.photoAlt + '" src="' + photo.src + '"></button><div class="guest-photo-meta"><span>' + formatDate(photo.createdAt) + '</span></div>';
         if (photo.canDelete) {
           const button = document.createElement('button');
           button.className = 'guest-photo-delete';
@@ -796,7 +914,7 @@ class Component extends DCLogic {
               await deletePhoto(photo.id);
             } catch {
               photos = previousPhotos;
-              alert('Could not delete that photo. Please try again.');
+              alert(getText().deleteFailedText);
               render();
             }
           });
@@ -839,25 +957,26 @@ class Component extends DCLogic {
     input.addEventListener('change', async () => {
       const files = Array.from(input.files || []).filter(file => file.type.startsWith('image/'));
       if (!files.length) return;
+      const text = getText();
       const selected = files.slice(0, 12);
-      const label = selected.length === 1 ? '1 photo' : selected.length + ' photos';
-      const limitNote = files.length > selected.length ? ' Uploading the first 12.' : '';
-      setUploading(true, 'Reading ' + label + '...' + limitNote, 4, '0/' + selected.length);
+      const label = selected.length === 1 ? text.photoSingular : text.photoPlural(selected.length);
+      const limitNote = files.length > selected.length ? text.limitNoteText : '';
+      setUploading(true, text.readPrefix + label + '...' + limitNote, 4, '0/' + selected.length);
       let uploadedCount = 0;
       let skippedCount = 0;
       try {
         let preparedCount = 0;
         const sources = await Promise.all(selected.map(file => readImageFile(file).then(src => {
           preparedCount += 1;
-          setUploading(true, 'Preparing ' + label + '...' + limitNote, Math.round((preparedCount / selected.length) * 30), preparedCount + '/' + selected.length);
+          setUploading(true, getText().preparePrefix + label + '...' + limitNote, Math.round((preparedCount / selected.length) * 30), preparedCount + '/' + selected.length);
           return src;
         })));
-        setUploading(true, 'Uploading ' + label + '...', 34, '0/' + selected.length);
+        setUploading(true, getText().uploadPrefix + label + '...', 34, '0/' + selected.length);
         const result = await uploadPhotos(sources, percent => {
           const uploadProgress = 34 + Math.round(percent * 0.66);
-          setUploading(true, 'Uploading ' + label + '...', uploadProgress, Math.max(1, Math.min(selected.length, Math.ceil((percent / 100) * selected.length))) + '/' + selected.length);
+          setUploading(true, getText().uploadPrefix + label + '...', uploadProgress, Math.max(1, Math.min(selected.length, Math.ceil((percent / 100) * selected.length))) + '/' + selected.length);
         });
-        setUploading(true, 'Finishing upload...', 100, selected.length + '/' + selected.length);
+        setUploading(true, getText().finishUploadText, 100, selected.length + '/' + selected.length);
         uploadedCount = result.added || 0;
         skippedCount = result.skipped || 0;
       } catch {
@@ -867,10 +986,10 @@ class Component extends DCLogic {
       render();
       track.scrollTo({ left: 0, behavior: 'smooth' });
       if (uploadedCount) {
-        const addedText = uploadedCount === 1 ? '1 photo added.' : uploadedCount + ' photos added.';
-        setUploading(false, skippedCount ? addedText + ' ' + skippedCount + ' skipped.' : addedText, 0, '');
+        const addedText = getText().addedText(uploadedCount);
+        setUploading(false, skippedCount ? addedText + ' ' + getText().skippedText(skippedCount) : addedText, 0, '');
       } else {
-        setUploading(false, 'Upload could not finish. Try fewer or smaller photos.', 0, '');
+        setUploading(false, getText().uploadFailedText, 0, '');
       }
       setTimeout(() => setUploading(false, ''), uploadedCount ? 2600 : 4200);
       input.value = '';
@@ -887,7 +1006,8 @@ class Component extends DCLogic {
       photos = fetched;
       render();
     }).catch(() => {
-      empty.textContent = 'Guest photos are temporarily unavailable.';
+      empty.dataset.unavailable = 'true';
+      empty.textContent = getText().galleryUnavailableText;
       render();
     });
   }
@@ -1149,12 +1269,15 @@ class Component extends DCLogic {
     const count = Math.max(0, Math.min(16, this.props.butterflyCount ?? 4));
     const speed = this.props.butterflySpeed ?? 1;
     const petalsOn = this.props.fallingPetals ?? true;
+    const text = this.copy();
     this.buildLayers(count, speed, petalsOn);
     this.buildGobos();
     return {
+      ...text,
       showOverlay: !this.state.opened,
       openEnvelope: this.openEnvelope,
       openGuestPhotoPicker: this.openGuestPhotoPicker,
+      toggleLanguage: this.toggleLanguage,
       overlayRef: this.overlayRef,
       closedRef: this.closedRef,
       openRef: this.openRef,
