@@ -452,7 +452,7 @@
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
           <div style="width: 5px; height: 5px; border: 1px solid #B0925E; transform: rotate(45deg);"></div>
           <div style="flex: 1; height: 1px; background: #C0B098;"></div>
-          <div style="font-size: 13px; letter-spacing: 0.42em; text-indent: 0.42em; color: #A08464; white-space: nowrap;">{{ locationText }}</div>
+          <div style="font-size: {{ locationTextFontSize }}; letter-spacing: 0.42em; text-indent: 0.42em; color: #A08464; white-space: nowrap;">{{ locationText }}</div>
           <div style="flex: 1; height: 1px; background: #C0B098;"></div>
           <div style="width: 5px; height: 5px; border: 1px solid #B0925E; transform: rotate(45deg);"></div>
         </div>
@@ -469,9 +469,9 @@
   <!-- ═══ Guest photos ═══ -->
   <section id="guest-photos" data-screen-label="Guest Photos" style="background: #F1E7D3; padding: 46px 0 30px; display: flex; flex-direction: column; align-items: center; text-align: center; overflow: hidden;">
     <div data-reveal="0" style="display: flex; flex-direction: column; align-items: center; line-height: 1; padding: 0 24px;">
-      <div style="font-size: 34px; letter-spacing: 0.4em; text-indent: 0.4em; font-weight: 300; color: #6E5B49;">{{ guestTitle }}</div>
+      <div style="font-size: {{ guestTitleFontSize }}; letter-spacing: 0.4em; text-indent: 0.4em; font-weight: 300; color: #6E5B49;">{{ guestTitle }}</div>
       <div style="font-family: 'Pinyon Script', cursive; font-size: clamp(44px, 9vw, 56px); color: #8A6B4C; margin-top: -6px; line-height: 1.2;">{{ memoriesTitle }}</div>
-      <p style="margin: 20px auto 0; max-width: 560px; font-size: clamp(17px, 4.2vw, 20px); line-height: 1.55; font-style: italic; color: #7D6A55;">{{ memoriesDescription }}</p>
+      <p style="margin: 20px auto 0; max-width: 560px; font-size: {{ memoriesDescriptionFontSize }}; line-height: 1.55; font-style: italic; letter-spacing: {{ memoriesDescriptionLetterSpacing }}; text-indent: {{ memoriesDescriptionLetterSpacing }}; color: #7D6A55;">{{ memoriesDescription }}</p>
     </div>
 
     <button id="guest-photo-upload-label" onClick="{{ openGuestPhotoPicker }}" data-reveal="0.12" class="guest-photo-upload invitation-cta" type="button" style="font-family: 'Cormorant Garamond', serif; margin-top: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 14px; border: 1px solid #A38044; border-radius: 999px; background: rgba(250, 246, 238, 0.42); padding: 15px clamp(22px, 6vw, 38px); font-size: clamp(13px, 3.8vw, 15px); font-weight: 500; letter-spacing: 0.35em; text-indent: 0.35em; color: #8A6B4C; box-shadow: 0 8px 22px rgba(90, 70, 50, 0.08); cursor: pointer;">
@@ -492,7 +492,7 @@
       <button class="guest-gallery-arrow" data-direction="next" type="button" aria-label="Next photo">
         <svg width="24" height="14" viewBox="0 0 24 14" fill="none" aria-hidden="true"><path d="M0 7h22M16 1l6 6-6 6" stroke="#8A6B4C" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"></path></svg>
       </button>
-      <div id="guest-gallery-empty" class="guest-gallery-empty">{{ emptyGalleryText }}</div>
+      <div id="guest-gallery-empty" class="guest-gallery-empty" style="letter-spacing: {{ emptyGalleryLetterSpacing }}; text-indent: {{ emptyGalleryLetterSpacing }};">{{ emptyGalleryText }}</div>
     </div>
   </section>
   <div id="guest-photo-lightbox" class="guest-photo-lightbox" role="dialog" aria-modal="true" aria-label="Guest photo viewer">
@@ -509,7 +509,7 @@
     {{ footerButterfly }}
     <div data-reveal="0.1" style="margin-top: 36px; font-family: 'Pinyon Script', cursive; font-size: 42px; color: #8A6B4C; line-height: 1.2;">{{ withLoveText }}</div>
     <div data-reveal="0.2" style="margin-top: 26px; font-size: clamp(24px, 5vw, 30px); letter-spacing: 0.35em; text-indent: 0.35em; color: #5F4F3F;">{{ footerNames }}</div>
-    <div data-reveal="0.3" style="margin-top: 18px; max-width: 560px; font-size: clamp(17px, 4.2vw, 20px); line-height: 1.55; font-style: italic; color: #7D6A55;">{{ footerNote }}</div>
+    <div data-reveal="0.3" style="margin-top: 18px; max-width: 560px; font-size: clamp(17px, 4.2vw, 20px); line-height: 1.55; font-style: italic; letter-spacing: {{ footerNoteLetterSpacing }}; text-indent: {{ footerNoteLetterSpacing }}; color: #7D6A55;">{{ footerNote }}</div>
     <div data-reveal="0.4" style="margin-top: 56px; display: flex; align-items: center; gap: 12px;">
       <div style="width: 40px; height: 1px; background: #C9B896;"></div>
       <a href="https://menaincet.com" target="_blank" rel="noopener" style="font-size: 12px; letter-spacing: 0.4em; text-indent: 0.4em; color: #A99677; text-decoration: none;">MENA INC &middot; 2026</a>
@@ -541,23 +541,28 @@ class Component extends DCLogic {
       heroTitle: 'በክብር',
       heroInviteWord: 'ተጋብዘዋል',
       heroTagline: 'የአብሮነታችንን አዲስ ጅማሬ ለማክበር',
-      coupleNames: 'Yeabsra  &  Christian',
+      coupleNames: 'የአብስራ & ክርስትያን',
       dateLabel: 'ቀን:',
       dayText: 'እሁድ',
       monthText: 'መስከ',
       yearText: '2026',
       timeText: 'ከቀኑ 5:30',
-      addCalendarText: 'ወደ ቀን መቁጠሪያ',
+      addCalendarText: 'ቀን መቁጠራ ላይ ያስፍሩ',
       venueLabel: 'ቦታ:',
       venueText: 'በቤተሰብ መኖሪያ፣ ቦሌ ቡልቡላ',
       locationText: 'አቅጣጫ',
+      locationTextFontSize: '16px',
       openMapText: 'ካርታ ክፈት',
       guestTitle: 'እንግዶች',
+      guestTitleFontSize: '28px',
       memoriesTitle: 'ትዝታዎች',
+      memoriesDescriptionFontSize: 'clamp(14px, 3.6vw, 17px)',
+      memoriesDescriptionLetterSpacing: '0.08em',
       memoriesDescription: 'ከክብረ በዓሉ የምትወዷቸውን ጊዜዎች በፎቶ ያጋሩ። ፎቶዎቹ ለሁሉም ይታያሉ፣ እና ከዚህ መሣሪያ ያስገባችኋቸውን ፎቶዎች ማጥፋት ትችላላችሁ።',
       sharePhotoText: 'ፎቶ ያጋሩ',
       uploadingText: 'በመጫን ላይ',
       emptyGalleryText: 'ያጋራችኋቸው ፎቶዎች እዚህ ይታያሉ።',
+      emptyGalleryLetterSpacing: '0.08em',
       galleryUnavailableText: 'የእንግዶች ፎቶዎች ለጊዜው አይገኙም።',
       uploadFailedText: 'ጭነቱ አልተጠናቀቀም። ያነሱ ወይም ትንንሽ ፎቶዎች ይሞክሩ።',
       deleteFailedText: 'ያንን ፎቶ ማጥፋት አልተቻለም። እባክዎ እንደገና ይሞክሩ።',
@@ -573,8 +578,9 @@ class Component extends DCLogic {
       photoAlt: 'የእንግዶች የእጮኝነት ሥነ ሥርዓት ትዝታ',
       photoAltFrom: date => 'የእንግዶች የእጮኝነት ሥነ ሥርዓት ትዝታ ከ' + date,
       withLoveText: 'በፍቅር፣',
-      footerNames: 'ዬቢ & ክሪስ',
-      footerNote: 'መገኘታችሁ ለእኛ ትልቅ ዋጋ አለው።'
+      footerNames: 'ያቢ & ክሪስ',
+      footerNote: 'መገኘታችሁ ለእኛ ትልቅ ዋጋ አለው።',
+      footerNoteLetterSpacing: '0.08em'
     } : {
       languageToggleLabel: 'አማ',
       languageToggleAria: 'Switch to Amharic',
@@ -592,13 +598,18 @@ class Component extends DCLogic {
       venueLabel: 'VENUE:',
       venueText: 'AT THE FAMILY RESIDENCE, BOLE BULBULA',
       locationText: 'LOCATION',
+      locationTextFontSize: '13px',
       openMapText: 'OPEN MAP',
       guestTitle: 'GUEST',
+      guestTitleFontSize: '34px',
       memoriesTitle: 'memories',
+      memoriesDescriptionFontSize: 'clamp(17px, 4.2vw, 20px)',
+      memoriesDescriptionLetterSpacing: '0',
       memoriesDescription: 'Share your favorite moments from the celebration. Photos appear here for everyone, and you can remove the photos you upload from this same device.',
       sharePhotoText: 'SHARE PHOTO',
       uploadingText: 'UPLOADING',
       emptyGalleryText: 'Your shared photos will appear here.',
+      emptyGalleryLetterSpacing: '0',
       galleryUnavailableText: 'Guest photos are temporarily unavailable.',
       uploadFailedText: 'Upload could not finish. Try fewer or smaller photos.',
       deleteFailedText: 'Could not delete that photo. Please try again.',
@@ -615,7 +626,8 @@ class Component extends DCLogic {
       photoAltFrom: date => 'Guest engagement ceremony memory from ' + date,
       withLoveText: 'with love,',
       footerNames: 'YEABI & CHRIS',
-      footerNote: 'Your presence means the world to us.'
+      footerNote: 'Your presence means the world to us.',
+      footerNoteLetterSpacing: '0'
     };
   }
 
@@ -640,6 +652,10 @@ class Component extends DCLogic {
       empty.textContent = text.galleryUnavailableText;
     } else if (empty) {
       empty.textContent = text.emptyGalleryText;
+    }
+    if (empty) {
+      empty.style.letterSpacing = text.emptyGalleryLetterSpacing;
+      empty.style.textIndent = text.emptyGalleryLetterSpacing;
     }
   }
 
