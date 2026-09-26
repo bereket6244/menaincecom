@@ -130,23 +130,8 @@ jobs:
           fi
 
           echo "CPANEL_BASE_URL=${base_url}" >> "$GITHUB_ENV"
-          resolved_ip="$(getent ahostsv4 "${host}" 2>/dev/null | awk 'NR == 1 { print $1 }' || true)"
-          if [ -z "${resolved_ip}" ]; then
-            resolved_ip="$(getent hosts "${host}" 2>/dev/null | awk 'NR == 1 { print $1 }' || true)"
-          fi
-          if [ -n "${resolved_ip}" ]; then
-            echo "Pinning ${host}:${port} to resolved IP ${resolved_ip} for curl."
-            echo "CPANEL_CURL_RESOLVE=${host}:${port}:${resolved_ip}" >> "$GITHUB_ENV"
-          else
-            echo "Could not capture a cPanel IP address for curl pinning." >&2
-          fi
-
-          curl_resolve_args=()
-          if [ -n "${resolved_ip}" ]; then
-            curl_resolve_args=(--resolve "${host}:${port}:${resolved_ip}")
-          fi
+          echo "Using cPanel DNS/TLS routing for ${host}:${port}."
           curl --show-error --silent --head \
-            "${curl_resolve_args[@]}" \
             --connect-timeout 15 \
             --max-time 30 \
             --retry 2 \
@@ -176,11 +161,37 @@ jobs:
           echo "Deploying frontend to ${CPANEL_TARGET_DIR}"
           echo "CPANEL_TARGET_DIR=${CPANEL_TARGET_DIR}" >> "$GITHUB_ENV"
 
+          auth_json="$(curl --show-error --silent \
+            --connect-timeout 20 \
+            --max-time 60 \
+            --retry 2 \
+            -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+            "${CPANEL_BASE_URL}/execute/Variables/get_user_information")"
+
+          if ! printf '%s' "${auth_json}" | jq -e '.status == 1' >/dev/null; then
+            echo "cPanel authentication failed. Regenerate CPANEL_TOKEN for the CPANEL_USER account with File Manager/UAPI access." >&2
+            printf '%s\n' "${auth_json}" | jq -r '.errors? // .messages? // .metadata? // .' >&2 || printf '%s\n' "${auth_json}" >&2
+            exit 1
+          fi
+
+          target_json="$(curl --show-error --silent --get \
+            --connect-timeout 20 \
+            --max-time 60 \
+            --retry 2 \
+            -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+            --data-urlencode "dir=${CPANEL_TARGET_DIR}" \
+            "${CPANEL_BASE_URL}/execute/Fileman/list_files")"
+
+          if ! printf '%s' "${target_json}" | jq -e '.status == 1' >/dev/null; then
+            echo "cPanel can authenticate, but cannot access CPANEL_TARGET_DIR. Check that the directory belongs to CPANEL_USER and that the token has File Manager access." >&2
+            printf '%s\n' "${target_json}" | jq -r '.errors? // .messages? // .metadata? // .' >&2 || printf '%s\n' "${target_json}" >&2
+            exit 1
+          fi
+
       - name: Upload archive to cPanel
         env:
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
-          CPANEL_TARGET_DIR: ${{ secrets.CPANEL_TARGET_DIR }}
         run: |
           curl_resolve_args=()
           if [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then
@@ -201,7 +212,6 @@ jobs:
         env:
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
-          CPANEL_TARGET_DIR: ${{ secrets.CPANEL_TARGET_DIR }}
         run: |
           curl_resolve_args=()
           if [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then
@@ -225,7 +235,6 @@ jobs:
       - name: Resolve cPanel server directory
         if: steps.changes.outputs.server_changed == 'true'
         env:
-          CPANEL_TARGET_DIR: ${{ secrets.CPANEL_TARGET_DIR }}
           CPANEL_SERVER_DIR: ${{ secrets.CPANEL_SERVER_DIR }}
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
