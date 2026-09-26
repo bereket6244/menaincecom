@@ -822,10 +822,15 @@ api.put('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
     doc = synced.product || doc;
     if (synced.action) return res.json({ ...doc, telegramPublishAction: synced.action });
   } catch (error) {
-    return res.status(502).json({
-      error: 'telegram_update_failed',
-      message: 'Product was updated on the website, but Telegram could not be edited.',
-      product: error.product || doc,
+    doc = error.product || doc;
+    return res.json({
+      ...doc,
+      telegramPublishAction: 'failed',
+      telegramPublishWarning: {
+        error: 'telegram_update_failed',
+        message: 'Product was updated on the website, but Telegram could not be edited.',
+      },
+      product: doc,
     });
   }
   res.json(doc);
@@ -844,10 +849,14 @@ api.delete('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
       contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,
       ...error.patch,
     });
-    return res.status(502).json({
-      error: 'telegram_delete_failed',
-      message: 'Product was deleted from the website, but Telegram could not be deleted.',
+    return res.json({
+      ok: true,
       product: doc,
+      telegramPublishAction: 'failed',
+      telegramPublishWarning: {
+        error: 'telegram_delete_failed',
+        message: 'Product was deleted from the website, but Telegram could not be deleted.',
+      },
     });
   }
   const doc = await records.update('products', req.params.id, {
