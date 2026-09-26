@@ -31,7 +31,7 @@ jobs:
 
           changed_files="$(git diff --name-only HEAD^ HEAD)"
           printf '%s\n' "${changed_files}"
-          if printf '%s\n' "${changed_files}" | grep -Eq '^server/'; then
+          if printf '%s\n' "${changed_files}" | grep -Eq '^(server/|\.github/workflows/deploy\.yml$)'; then
             echo "server_changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "server_changed=false" >> "$GITHUB_OUTPUT"
