@@ -1,6 +1,8 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /shop/
+  Options -Indexes
+  RewriteRule ^(app\.js|package(-lock)?\.json|src/|tmp/|server-deploy\.zip|shop-deploy\.zip) - [F,L]
   RewriteRule ^index\.html$ - [L]
   RewriteRule ^(api|uploads)/ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f

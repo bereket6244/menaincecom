@@ -192,7 +192,7 @@ jobs:
             exit 1
           fi
 
-      - name: Upload archive to cPanel
+      - name: Upload frontend files to cPanel
         env:
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
@@ -201,42 +201,37 @@ jobs:
           if [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then
             curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")
           fi
-          curl --fail-with-body --show-error --silent \
-            "${curl_resolve_args[@]}" \
-            --connect-timeout 20 \
-            --max-time 120 \
-            --retry 2 \
-            -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-            -F "dir=${CPANEL_FILEMAN_TARGET_DIR}" \
-            -F "overwrite=1" \
-            -F "file=@shop-deploy.zip;filename=shop-deploy.zip" \
-            "${CPANEL_BASE_URL}/execute/Fileman/upload_files"
+
+          upload_file() {
+            local local_file="$1"
+            local remote_dir="$2"
+            local remote_name="$3"
+            echo "Uploading ${local_file} to ${remote_dir}/${remote_name}"
+            curl --fail-with-body --show-error --silent \
+              "${curl_resolve_args[@]}" \
+              --connect-timeout 20 \
+              --max-time 120 \
+              --retry 2 \
+              -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+              -F "dir=${remote_dir}" \
+              -F "overwrite=1" \
+              -F "file=@${local_file};filename=${remote_name}" \
+              "${CPANEL_BASE_URL}/execute/Fileman/upload_files" >/dev/null
+          }
+
+          while IFS= read -r -d '' file; do
+            rel="${file#client/dist/}"
+            dir_name="$(dirname "${rel}")"
+            remote_dir="${CPANEL_FILEMAN_TARGET_DIR}"
+            if [ "${dir_name}" != "." ]; then
+              remote_dir="${remote_dir}/${dir_name}"
+            fi
+            upload_file "${file}" "${remote_dir}" "$(basename "${rel}")"
+          done < <(find client/dist -type f -print0)
 
       - name: Extract archive on cPanel
-        env:
-          CPANEL_USER: ${{ secrets.CPANEL_USER }}
-          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
         run: |
-          curl_resolve_args=()
-          if [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then
-            curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")
-          fi
-          extract_json="$(curl --fail-with-body --show-error --silent --get \
-            "${curl_resolve_args[@]}" \
-            --connect-timeout 20 \
-            --max-time 120 \
-            --retry 2 \
-            -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-            --data-urlencode "op=extract" \
-            --data-urlencode "sourcefiles=${CPANEL_FILEMAN_TARGET_DIR}/shop-deploy.zip" \
-            --data-urlencode "destfiles=${CPANEL_FILEMAN_TARGET_DIR}" \
-            --data-urlencode "doubledecode=1" \
-            "${CPANEL_BASE_URL}/execute/Fileman/fileop")"
-          echo "${extract_json}"
-          if ! printf '%s' "${extract_json}" | jq -e '(.status == 1) or (.cpanelresult.event.result == 1) or ((.data // []) | any(.result == 1))' >/dev/null; then
-            echo "cPanel archive extraction failed." >&2
-            exit 1
-          fi
+          echo "Frontend files were uploaded directly; no archive extraction needed."
 
       - name: Resolve cPanel server directory
         if: steps.changes.outputs.server_changed == 'true'
@@ -309,14 +304,10 @@ jobs:
             server_targets+=("${target}")
           }
 
+          add_server_target "${CPANEL_TARGET_DIR}"
           if [ -n "${CPANEL_SERVER_DIR:-}" ]; then
             add_server_target "${CPANEL_SERVER_DIR}"
           fi
-          if [[ "${CPANEL_TARGET_DIR}" == */public_html/* ]]; then
-            home_dir="${CPANEL_TARGET_DIR%%/public_html/*}"
-            add_server_target "${home_dir}/mena-shop-app-v2/server"
-          fi
-          add_server_target "${CPANEL_TARGET_DIR}"
           if [ -n "${discovered_app_path}" ]; then
             add_server_target "${discovered_app_path}"
           fi
@@ -332,7 +323,7 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_ENV"
 
-      - name: Upload server archive to cPanel
+      - name: Upload server files to cPanel
         if: steps.changes.outputs.server_changed == 'true'
         env:
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
@@ -342,53 +333,42 @@ jobs:
           if [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then
             curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")
           fi
-          while IFS= read -r target; do
-            [ -n "${target}" ] || continue
-            fileman_server_dir="${target%%::*}"
-            echo "Uploading server archive to ${fileman_server_dir}"
+
+          upload_file() {
+            local local_file="$1"
+            local remote_dir="$2"
+            local remote_name="$3"
+            echo "Uploading ${local_file} to ${remote_dir}/${remote_name}"
             curl --fail-with-body --show-error --silent \
               "${curl_resolve_args[@]}" \
               --connect-timeout 20 \
               --max-time 120 \
               --retry 2 \
               -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-              -F "dir=${fileman_server_dir}" \
+              -F "dir=${remote_dir}" \
               -F "overwrite=1" \
-              -F "file=@server-deploy.zip;filename=server-deploy.zip" \
-              "${CPANEL_BASE_URL}/execute/Fileman/upload_files"
+              -F "file=@${local_file};filename=${remote_name}" \
+              "${CPANEL_BASE_URL}/execute/Fileman/upload_files" >/dev/null
+          }
+
+          while IFS= read -r target; do
+            [ -n "${target}" ] || continue
+            fileman_server_dir="${target%%::*}"
+            while IFS= read -r -d '' file; do
+              rel="${file#server-deploy/}"
+              dir_name="$(dirname "${rel}")"
+              remote_dir="${fileman_server_dir}"
+              if [ "${dir_name}" != "." ]; then
+                remote_dir="${remote_dir}/${dir_name}"
+              fi
+              upload_file "${file}" "${remote_dir}" "$(basename "${rel}")"
+            done < <(find server-deploy -type f -print0)
           done <<< "${CPANEL_SERVER_TARGETS}"
 
       - name: Extract server archive on cPanel
         if: steps.changes.outputs.server_changed == 'true'
-        env:
-          CPANEL_USER: ${{ secrets.CPANEL_USER }}
-          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
         run: |
-          curl_resolve_args=()
-          if [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then
-            curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")
-          fi
-          while IFS= read -r target; do
-            [ -n "${target}" ] || continue
-            fileman_server_dir="${target%%::*}"
-            echo "Extracting server archive in ${fileman_server_dir}"
-            extract_json="$(curl --fail-with-body --show-error --silent --get \
-              "${curl_resolve_args[@]}" \
-              --connect-timeout 20 \
-              --max-time 120 \
-              --retry 2 \
-              -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-              --data-urlencode "op=extract" \
-              --data-urlencode "sourcefiles=${fileman_server_dir}/server-deploy.zip" \
-              --data-urlencode "destfiles=${fileman_server_dir}" \
-              --data-urlencode "doubledecode=1" \
-              "${CPANEL_BASE_URL}/execute/Fileman/fileop")"
-            echo "${extract_json}"
-            if ! printf '%s' "${extract_json}" | jq -e '(.status == 1) or (.cpanelresult.event.result == 1) or ((.data // []) | any(.result == 1))' >/dev/null; then
-              echo "cPanel server archive extraction failed for ${fileman_server_dir}." >&2
-              exit 1
-            fi
-          done <<< "${CPANEL_SERVER_TARGETS}"
+          echo "Server files were uploaded directly; no archive extraction needed."
 
       - name: Install server dependencies on cPanel
         if: steps.changes.outputs.server_changed == 'true'
