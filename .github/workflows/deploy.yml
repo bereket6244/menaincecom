@@ -1,4 +1,5 @@
 name: Deploy Shop
+# Touch this workflow to allow manual deploy retries through a workflow-only push.
 
 on:
   push:
