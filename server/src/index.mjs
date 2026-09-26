@@ -56,6 +56,11 @@ const staticOptions = {
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
   },
 };
+const privateRuntimeAsset = /^\/(?:app\.js|package(?:-lock)?\.json|src(?:\/|$)|tmp(?:\/|$)|server-deploy\.zip|shop-deploy\.zip)/;
+app.use(mountPath, (req, res, next) => {
+  if (privateRuntimeAsset.test(req.path)) return res.status(404).send('Not found');
+  next();
+});
 app.use(mountPath, express.static(clientDist, staticOptions));
 const sendClientIndex = (_req, res) => {
   res.setHeader('Cache-Control', 'no-cache');
@@ -63,6 +68,10 @@ const sendClientIndex = (_req, res) => {
 };
 app.get(`${mountPath}/*`, sendClientIndex);
 if (mountPath !== '/') {
+  app.use((req, res, next) => {
+    if (privateRuntimeAsset.test(req.path)) return res.status(404).send('Not found');
+    next();
+  });
   app.use(express.static(clientDist, staticOptions));
   app.get(/^(?!\/(api|uploads)\/).*/, sendClientIndex);
 }
