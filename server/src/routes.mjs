@@ -15,14 +15,6 @@ import {
   publicProduct,
   telegramProductIdentity,
 } from './product-model.mjs';
-import {
-  createTelegramProductPost,
-  deleteTelegramProductPost,
-  shouldCreateTelegramPost,
-  shouldDeleteTelegramPost,
-  shouldUpdateTelegramPost,
-  updateTelegramProductPost,
-} from './product-telegram.mjs';
 
 export const api = Router();
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -601,48 +593,6 @@ function cleanProductInput(input, { includeDefaultLimit = false } = {}) {
   return next;
 }
 
-function withTelegramCategoryNames(product, categories) {
-  const ids = cleanCategoryIds(product?.categoryIds, product?.categoryId);
-  const byId = new Map((categories || []).map((category) => [category.id, category.name]));
-  const categoryNames = ids.map((id) => byId.get(id)).filter(Boolean);
-  return { ...product, categoryNames };
-}
-
-async function syncExistingTelegramProduct(previous, next) {
-  if (!shouldUpdateTelegramPost(previous, next)) return { product: next, action: null };
-  try {
-    const categories = await records.list('categories');
-    const telegram = await updateTelegramProductPost(withTelegramCategoryNames(next, categories));
-    return {
-      product: await records.update('products', next.id, telegram),
-      action: 'updated',
-    };
-  } catch (error) {
-    const product = await records.update('products', next.id, {
-      telegramSyncStatus: 'failed',
-      telegramSyncError: error.telegram || { message: 'Telegram update failed.' },
-    });
-    error.product = product;
-    throw error;
-  }
-}
-
-async function deleteExistingTelegramProduct(product) {
-  if (!shouldDeleteTelegramPost(product)) return { patch: {}, action: null };
-  try {
-    return {
-      patch: await deleteTelegramProductPost(product),
-      action: 'deleted',
-    };
-  } catch (error) {
-    error.patch = {
-      telegramSyncStatus: 'failed',
-      telegramSyncError: error.telegram || { message: 'Telegram deletion failed.' },
-    };
-    throw error;
-  }
-}
-
 function applyProductBulkPatch(product, body) {
   const patch = {};
   const set = body?.set && typeof body.set === 'object' ? body.set : {};
@@ -707,29 +657,20 @@ api.patch('/admin/products/bulk', requireAdmin, dbRoute(async (req, res) => {
   const ids = cleanIdList(req.body?.ids).slice(0, 200);
   if (!ids.length) return res.status(400).json({ error: 'bad_request', message: 'Choose at least one product.' });
   const updated = [];
-  const telegramFailures = [];
   for (const id of ids) {
     const existing = await records.get('products', id);
     if (!existing || existing.deletedAt) continue;
     const patch = applyProductBulkPatch(existing, req.body);
     if (Object.keys(patch).length === 0) continue;
-    let doc = await records.update('products', id, {
+    const doc = await records.update('products', id, {
       ...patch,
       contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,
     });
-    try {
-      const synced = await syncExistingTelegramProduct(existing, doc);
-      doc = synced.product || doc;
-    } catch (error) {
-      doc = error.product || doc;
-      telegramFailures.push({ id, error: error.telegram || { message: 'Telegram update failed.' } });
-    }
     if (doc) updated.push(doc);
   }
   res.json({
-    ok: telegramFailures.length === 0,
+    ok: true,
     updated: updated.length,
-    telegramFailures,
     products: updated,
   });
 }));
@@ -744,35 +685,10 @@ api.post('/admin/products', requireAdmin, dbRoute(async (req, res) => {
     const existing = await records.find('products', (product) => telegramProductIdentity(product) === identity);
     if (existing) return res.json({ ...existing, importAction: 'skipped_existing' });
   }
-  const shouldPost = shouldCreateTelegramPost(null, input);
-  let product = await records.insert('products', {
+  const product = await records.insert('products', {
     ...input,
-    ...(shouldPost ? { status: 'draft', telegramSyncStatus: 'pending' } : {}),
     contentVersion: Math.max(1, Number(input.contentVersion) || 1),
   });
-  if (shouldPost) {
-    try {
-      const categories = await records.list('categories');
-      const telegram = await createTelegramProductPost(withTelegramCategoryNames({ ...product, status: 'published' }, categories));
-      product = await records.update('products', product.id, { ...telegram, status: 'published' });
-      return res.status(201).json({ ...product, telegramPublishAction: 'created' });
-    } catch (error) {
-      product = await records.update('products', product.id, {
-        status: 'published',
-        telegramSyncStatus: 'failed',
-        telegramSyncError: error.telegram || { message: 'Telegram publication failed.' },
-      });
-      return res.status(201).json({
-        ...product,
-        telegramPublishAction: 'failed',
-        telegramPublishWarning: {
-          error: 'telegram_publish_failed',
-          message: 'Product was published on the website, but Telegram publication failed.',
-        },
-        product,
-      });
-    }
-  }
   res.status(201).json(product);
 }));
 
@@ -787,85 +703,23 @@ api.put('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
     status: normalizeProductStatus(req.body?.status ?? existing.status),
     contentVersion: nextVersion,
   };
-  const shouldPost = shouldCreateTelegramPost(existing, input);
-  let doc = await records.update('products', req.params.id, {
+  const doc = await records.update('products', req.params.id, {
     ...body,
-    status: shouldPost ? 'draft' : input.status,
-    ...(shouldPost ? { telegramSyncStatus: 'pending' } : {}),
+    status: input.status,
     contentVersion: nextVersion,
   });
-  if (shouldPost) {
-    try {
-      const categories = await records.list('categories');
-      const telegram = await createTelegramProductPost(withTelegramCategoryNames({ ...doc, status: 'published' }, categories));
-      doc = await records.update('products', req.params.id, { ...telegram, status: 'published' });
-      return res.json({ ...doc, telegramPublishAction: 'created' });
-    } catch (error) {
-      doc = await records.update('products', req.params.id, {
-        status: 'published',
-        telegramSyncStatus: 'failed',
-        telegramSyncError: error.telegram || { message: 'Telegram publication failed.' },
-      });
-      return res.json({
-        ...doc,
-        telegramPublishAction: 'failed',
-        telegramPublishWarning: {
-          error: 'telegram_publish_failed',
-          message: 'Product was published on the website, but Telegram publication failed.',
-        },
-        product: doc,
-      });
-    }
-  }
-  try {
-    const synced = await syncExistingTelegramProduct(existing, doc);
-    doc = synced.product || doc;
-    if (synced.action) return res.json({ ...doc, telegramPublishAction: synced.action });
-  } catch (error) {
-    doc = error.product || doc;
-    return res.json({
-      ...doc,
-      telegramPublishAction: 'failed',
-      telegramPublishWarning: {
-        error: 'telegram_update_failed',
-        message: 'Product was updated on the website, but Telegram could not be edited.',
-      },
-      product: doc,
-    });
-  }
   res.json(doc);
 }));
 
 api.delete('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
   const existing = await records.get('products', req.params.id);
   if (!existing) return res.status(404).json({ error: 'not_found' });
-  let telegram = { patch: {}, action: null };
-  try {
-    telegram = await deleteExistingTelegramProduct(existing);
-  } catch (error) {
-    const doc = await records.update('products', req.params.id, {
-      status: 'archived',
-      deletedAt: new Date().toISOString(),
-      contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,
-      ...error.patch,
-    });
-    return res.json({
-      ok: true,
-      product: doc,
-      telegramPublishAction: 'failed',
-      telegramPublishWarning: {
-        error: 'telegram_delete_failed',
-        message: 'Product was deleted from the website, but Telegram could not be deleted.',
-      },
-    });
-  }
   const doc = await records.update('products', req.params.id, {
     status: 'archived',
     deletedAt: new Date().toISOString(),
     contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,
-    ...telegram.patch,
   });
-  res.json({ ok: true, product: doc, telegramPublishAction: telegram.action });
+  res.json({ ok: true, product: doc });
 }));
 
 api.post('/admin/products/:id/restore', requireAdmin, dbRoute(async (req, res) => {
