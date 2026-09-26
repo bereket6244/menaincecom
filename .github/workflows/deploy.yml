@@ -278,38 +278,56 @@ jobs:
             | (.path // .app_root // .app_path // empty)
           ')"
 
+          server_targets=()
+          add_server_target() {
+            local raw_dir="$1"
+            local server_dir app_path fileman_server_dir target
+            [ -n "${raw_dir}" ] || return 0
+            raw_dir="${raw_dir%/}"
+            if [[ "${raw_dir}" = /* ]]; then
+              server_dir="${raw_dir}"
+              app_path="${server_dir#/home/${CPANEL_USER}/}"
+            else
+              app_path="${raw_dir#/}"
+              server_dir="/home/${CPANEL_USER}/${app_path}"
+            fi
+
+            fileman_server_dir="${server_dir}"
+            if [[ "${fileman_server_dir}" == "/home/${CPANEL_USER}/"* ]]; then
+              fileman_server_dir="${fileman_server_dir#/home/${CPANEL_USER}/}"
+            fi
+            fileman_server_dir="${fileman_server_dir#/}"
+            target="${fileman_server_dir}::${app_path}"
+            for existing in "${server_targets[@]}"; do
+              if [ "${existing}" = "${target}" ]; then
+                return 0
+              fi
+            done
+            echo "Will deploy server to ${server_dir}"
+            server_targets+=("${target}")
+          }
+
           if [ -n "${CPANEL_SERVER_DIR:-}" ]; then
-            server_dir="${CPANEL_SERVER_DIR%/}"
-            app_path="${server_dir#/home/${CPANEL_USER}/}"
-          elif [[ "${CPANEL_TARGET_DIR}" == */public_html/* ]]; then
+            add_server_target "${CPANEL_SERVER_DIR}"
+          fi
+          if [[ "${CPANEL_TARGET_DIR}" == */public_html/* ]]; then
             home_dir="${CPANEL_TARGET_DIR%%/public_html/*}"
-            server_dir="${home_dir}/mena-shop-app-v2/server"
-            app_path="${server_dir#/home/${CPANEL_USER}/}"
-          elif [ -n "${discovered_app_path}" ] && [[ "${discovered_app_path}" = /* ]]; then
-            server_dir="${discovered_app_path%/}"
-            app_path="${server_dir#/home/${CPANEL_USER}/}"
-          elif [ -n "${discovered_app_path}" ]; then
-            app_path="${discovered_app_path%/}"
-            server_dir="/home/${CPANEL_USER}/${app_path}"
-          else
+            add_server_target "${home_dir}/mena-shop-app-v2/server"
+          fi
+          if [ -n "${discovered_app_path}" ]; then
+            add_server_target "${discovered_app_path}"
+          fi
+
+          if [ "${#server_targets[@]}" -eq 0 ]; then
             echo "CPANEL_SERVER_DIR is required when the Passenger app cannot be discovered." >&2
             exit 1
           fi
 
-          if [ -z "${server_dir:-}" ] || [ -z "${app_path:-}" ]; then
-            echo "Could not resolve the cPanel Passenger app directory." >&2
-            exit 1
-          fi
-
-          echo "Deploying server to ${server_dir}"
-          fileman_server_dir="${server_dir}"
-          if [[ "${fileman_server_dir}" == "/home/${CPANEL_USER}/"* ]]; then
-            fileman_server_dir="${fileman_server_dir#/home/${CPANEL_USER}/}"
-          fi
-          fileman_server_dir="${fileman_server_dir#/}"
-          echo "CPANEL_SERVER_DIR_RESOLVED=${server_dir}" >> "$GITHUB_ENV"
-          echo "CPANEL_FILEMAN_SERVER_DIR=${fileman_server_dir}" >> "$GITHUB_ENV"
-          echo "CPANEL_APP_PATH_RESOLVED=${app_path}" >> "$GITHUB_ENV"
+          {
+            echo "CPANEL_SERVER_TARGETS<<EOF"
+            printf '%s\n' "${server_targets[@]}"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
 
       - name: Upload server archive to cPanel
         if: steps.changes.outputs.server_changed == 'true'
@@ -321,16 +339,21 @@ jobs:
           if [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then
             curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")
           fi
-          curl --fail-with-body --show-error --silent \
-            "${curl_resolve_args[@]}" \
-            --connect-timeout 20 \
-            --max-time 120 \
-            --retry 2 \
-            -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-            -F "dir=${CPANEL_FILEMAN_SERVER_DIR}" \
-            -F "overwrite=1" \
-            -F "file=@server-deploy.zip;filename=server-deploy.zip" \
-            "${CPANEL_BASE_URL}/execute/Fileman/upload_files"
+          while IFS= read -r target; do
+            [ -n "${target}" ] || continue
+            fileman_server_dir="${target%%::*}"
+            echo "Uploading server archive to ${fileman_server_dir}"
+            curl --fail-with-body --show-error --silent \
+              "${curl_resolve_args[@]}" \
+              --connect-timeout 20 \
+              --max-time 120 \
+              --retry 2 \
+              -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+              -F "dir=${fileman_server_dir}" \
+              -F "overwrite=1" \
+              -F "file=@server-deploy.zip;filename=server-deploy.zip" \
+              "${CPANEL_BASE_URL}/execute/Fileman/upload_files"
+          done <<< "${CPANEL_SERVER_TARGETS}"
 
       - name: Extract server archive on cPanel
         if: steps.changes.outputs.server_changed == 'true'
@@ -342,20 +365,25 @@ jobs:
           if [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then
             curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")
           fi
-          curl --fail-with-body --show-error --silent --get \
-            "${curl_resolve_args[@]}" \
-            --connect-timeout 20 \
-            --max-time 120 \
-            --retry 2 \
-            -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-            --data-urlencode "cpanel_jsonapi_user=${CPANEL_USER}" \
-            --data-urlencode "cpanel_jsonapi_apiversion=2" \
-            --data-urlencode "cpanel_jsonapi_module=Fileman" \
-            --data-urlencode "cpanel_jsonapi_func=fileop" \
-            --data-urlencode "op=extract" \
-            --data-urlencode "sourcefiles=${CPANEL_FILEMAN_SERVER_DIR}/server-deploy.zip" \
-            --data-urlencode "destfiles=${CPANEL_FILEMAN_SERVER_DIR}" \
-            "${CPANEL_BASE_URL}/json-api/cpanel"
+          while IFS= read -r target; do
+            [ -n "${target}" ] || continue
+            fileman_server_dir="${target%%::*}"
+            echo "Extracting server archive in ${fileman_server_dir}"
+            curl --fail-with-body --show-error --silent --get \
+              "${curl_resolve_args[@]}" \
+              --connect-timeout 20 \
+              --max-time 120 \
+              --retry 2 \
+              -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+              --data-urlencode "cpanel_jsonapi_user=${CPANEL_USER}" \
+              --data-urlencode "cpanel_jsonapi_apiversion=2" \
+              --data-urlencode "cpanel_jsonapi_module=Fileman" \
+              --data-urlencode "cpanel_jsonapi_func=fileop" \
+              --data-urlencode "op=extract" \
+              --data-urlencode "sourcefiles=${fileman_server_dir}/server-deploy.zip" \
+              --data-urlencode "destfiles=${fileman_server_dir}" \
+              "${CPANEL_BASE_URL}/json-api/cpanel"
+          done <<< "${CPANEL_SERVER_TARGETS}"
 
       - name: Install server dependencies on cPanel
         if: steps.changes.outputs.server_changed == 'true'
@@ -367,29 +395,35 @@ jobs:
           if [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then
             curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")
           fi
-          deps_json="$(curl --fail-with-body --show-error --silent --get \
-            "${curl_resolve_args[@]}" \
-            --connect-timeout 20 \
-            --max-time 180 \
-            --retry 2 \
-            -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-            --data-urlencode "type=npm" \
-            --data-urlencode "app_path=${CPANEL_APP_PATH_RESOLVED}" \
-            "${CPANEL_BASE_URL}/execute/PassengerApps/ensure_deps")"
-
-          echo "${deps_json}"
-          sse_url="$(printf '%s' "${deps_json}" | jq -r '.data.sse_url // empty')"
-          if [ -n "${sse_url}" ]; then
-            echo "Waiting for cPanel npm dependency task..."
-            timeout 240 curl --show-error --silent --no-buffer \
+          while IFS= read -r target; do
+            [ -n "${target}" ] || continue
+            app_path="${target#*::}"
+            echo "Installing server dependencies for ${app_path}"
+            deps_json="$(curl --fail-with-body --show-error --silent --get \
               "${curl_resolve_args[@]}" \
+              --connect-timeout 20 \
+              --max-time 180 \
+              --retry 2 \
               -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-              "${CPANEL_BASE_URL}${sse_url}" | tee ensure-deps.log || true
-            if grep -Eiq 'npm ERR!|error:|failed|traceback|exception' ensure-deps.log; then
-              echo "cPanel dependency installation reported an error." >&2
-              exit 1
+              --data-urlencode "type=npm" \
+              --data-urlencode "app_path=${app_path}" \
+              "${CPANEL_BASE_URL}/execute/PassengerApps/ensure_deps")"
+
+            echo "${deps_json}"
+            sse_url="$(printf '%s' "${deps_json}" | jq -r '.data.sse_url // empty')"
+            if [ -n "${sse_url}" ]; then
+              echo "Waiting for cPanel npm dependency task..."
+              log_file="ensure-deps-${app_path//\//-}.log"
+              timeout 240 curl --show-error --silent --no-buffer \
+                "${curl_resolve_args[@]}" \
+                -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+                "${CPANEL_BASE_URL}${sse_url}" | tee "${log_file}" || true
+              if grep -Eiq 'npm ERR!|error:|failed|traceback|exception' "${log_file}"; then
+                echo "cPanel dependency installation reported an error." >&2
+                exit 1
+              fi
             fi
-          fi
+          done <<< "${CPANEL_SERVER_TARGETS}"
 
       - name: Warm up Passenger app
         run: sleep 60
