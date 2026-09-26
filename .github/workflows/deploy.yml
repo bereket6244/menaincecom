@@ -221,20 +221,22 @@ jobs:
           if [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then
             curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")
           fi
-          curl --fail-with-body --show-error --silent --get \
+          extract_json="$(curl --fail-with-body --show-error --silent --get \
             "${curl_resolve_args[@]}" \
             --connect-timeout 20 \
             --max-time 120 \
             --retry 2 \
             -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-            --data-urlencode "cpanel_jsonapi_user=${CPANEL_USER}" \
-            --data-urlencode "cpanel_jsonapi_apiversion=2" \
-            --data-urlencode "cpanel_jsonapi_module=Fileman" \
-            --data-urlencode "cpanel_jsonapi_func=fileop" \
             --data-urlencode "op=extract" \
             --data-urlencode "sourcefiles=${CPANEL_FILEMAN_TARGET_DIR}/shop-deploy.zip" \
             --data-urlencode "destfiles=${CPANEL_FILEMAN_TARGET_DIR}" \
-            "${CPANEL_BASE_URL}/json-api/cpanel"
+            --data-urlencode "doubledecode=1" \
+            "${CPANEL_BASE_URL}/execute/Fileman/fileop")"
+          echo "${extract_json}"
+          if ! printf '%s' "${extract_json}" | jq -e '(.status == 1) or (.cpanelresult.event.result == 1) or ((.data // []) | any(.result == 1))' >/dev/null; then
+            echo "cPanel archive extraction failed." >&2
+            exit 1
+          fi
 
       - name: Resolve cPanel server directory
         if: steps.changes.outputs.server_changed == 'true'
@@ -314,6 +316,7 @@ jobs:
             home_dir="${CPANEL_TARGET_DIR%%/public_html/*}"
             add_server_target "${home_dir}/mena-shop-app-v2/server"
           fi
+          add_server_target "${CPANEL_TARGET_DIR}"
           if [ -n "${discovered_app_path}" ]; then
             add_server_target "${discovered_app_path}"
           fi
@@ -369,20 +372,22 @@ jobs:
             [ -n "${target}" ] || continue
             fileman_server_dir="${target%%::*}"
             echo "Extracting server archive in ${fileman_server_dir}"
-            curl --fail-with-body --show-error --silent --get \
+            extract_json="$(curl --fail-with-body --show-error --silent --get \
               "${curl_resolve_args[@]}" \
               --connect-timeout 20 \
               --max-time 120 \
               --retry 2 \
               -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-              --data-urlencode "cpanel_jsonapi_user=${CPANEL_USER}" \
-              --data-urlencode "cpanel_jsonapi_apiversion=2" \
-              --data-urlencode "cpanel_jsonapi_module=Fileman" \
-              --data-urlencode "cpanel_jsonapi_func=fileop" \
               --data-urlencode "op=extract" \
               --data-urlencode "sourcefiles=${fileman_server_dir}/server-deploy.zip" \
               --data-urlencode "destfiles=${fileman_server_dir}" \
-              "${CPANEL_BASE_URL}/json-api/cpanel"
+              --data-urlencode "doubledecode=1" \
+              "${CPANEL_BASE_URL}/execute/Fileman/fileop")"
+            echo "${extract_json}"
+            if ! printf '%s' "${extract_json}" | jq -e '(.status == 1) or (.cpanelresult.event.result == 1) or ((.data // []) | any(.result == 1))' >/dev/null; then
+              echo "cPanel server archive extraction failed for ${fileman_server_dir}." >&2
+              exit 1
+            fi
           done <<< "${CPANEL_SERVER_TARGETS}"
 
       - name: Install server dependencies on cPanel
