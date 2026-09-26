@@ -1,3 +1,5 @@
+RedirectMatch 403 ^/shop/(app\.js|package(-lock)?\.json|src(/|$)|tmp(/|$)|server-deploy\.zip|shop-deploy\.zip)
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /shop/
