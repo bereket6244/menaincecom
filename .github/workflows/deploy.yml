@@ -420,4 +420,4 @@ jobs:
           curl --fail --show-error --silent https://menaincet.com/shop/api/complimentary-items >/dev/null
           health_json="$(curl --fail --show-error --silent https://menaincet.com/shop/api/health)"
           echo "${health_json}"
-          echo "${health_json}" | jq -e '.version == "shop-backend-20260926-telegram-disabled"' >/dev/null
+          echo "${health_json}" | jq -e '.version == "shop-backend-20260926-telegram-status-sync"' >/dev/null

@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { telegramApi, sanitizedTelegramError } from './telegram-import/telegram-api.mjs';
-import { telegramProductIdentity } from './product-model.mjs';
+import { normalizeProductStatus, telegramProductIdentity } from './product-model.mjs';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const uploadsDir = path.join(serverRoot, 'uploads');
@@ -103,7 +103,9 @@ export function formatProductCaption(product) {
 }
 
 export function shouldCreateTelegramPost(previous, next) {
-  return false;
+  if (process.env.TELEGRAM_SYNC_ENABLED !== 'true') return false;
+  const previousStatus = previous ? normalizeProductStatus(previous.status) : 'draft';
+  return previousStatus !== 'published' && normalizeProductStatus(next?.status) === 'published';
 }
 
 export function shouldUpdateTelegramPost(previous, next) {
@@ -111,7 +113,8 @@ export function shouldUpdateTelegramPost(previous, next) {
 }
 
 export function shouldDeleteTelegramPost(product) {
-  return false;
+  if (process.env.TELEGRAM_SYNC_ENABLED !== 'true') return false;
+  return !!telegramProductIdentity(product);
 }
 
 function localUpload(photo) {

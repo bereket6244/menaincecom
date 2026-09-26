@@ -11,7 +11,7 @@ import { api } from './routes.mjs';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const app = express();
-app.set('deployVersion', 'shop-backend-20260926-telegram-disabled');
+app.set('deployVersion', 'shop-backend-20260926-telegram-status-sync');
 app.disable('x-powered-by');
 
 // Only origins listed in CORS_ORIGIN may call the API cross-origin; with none

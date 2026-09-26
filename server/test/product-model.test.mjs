@@ -25,17 +25,17 @@ test('Telegram identity is stable per channel and message', () => {
   assert.equal(telegramProductIdentity({}), null);
 });
 
-test('product admin never triggers Telegram product synchronization', () => {
+test('product admin triggers Telegram only on publication transitions', () => {
   const original = process.env.TELEGRAM_SYNC_ENABLED;
   process.env.TELEGRAM_SYNC_ENABLED = 'true';
   try {
-    assert.equal(shouldCreateTelegramPost(null, { status: 'published' }), false);
-    assert.equal(shouldCreateTelegramPost({ status: 'draft' }, { status: 'published' }), false);
+    assert.equal(shouldCreateTelegramPost(null, { status: 'published' }), true);
+    assert.equal(shouldCreateTelegramPost({ status: 'draft' }, { status: 'published' }), true);
     assert.equal(shouldCreateTelegramPost({ status: 'published' }, { status: 'published' }), false);
     assert.equal(shouldCreateTelegramPost(
       { status: 'draft' },
       { status: 'published', telegramChannelId: '-1001', telegramMessageId: 42 }
-    ), false);
+    ), true);
     assert.equal(shouldUpdateTelegramPost(
       { status: 'published', contentVersion: 2 },
       { status: 'published', contentVersion: 3, telegramChannelId: '-1001', telegramMessageId: 42 }
@@ -48,7 +48,7 @@ test('product admin never triggers Telegram product synchronization', () => {
       { status: 'published', contentVersion: 2 },
       { status: 'draft', contentVersion: 3, telegramChannelId: '-1001', telegramMessageId: 42 }
     ), false);
-    assert.equal(shouldDeleteTelegramPost({ telegramChannelId: '-1001', telegramMessageId: 42 }), false);
+    assert.equal(shouldDeleteTelegramPost({ telegramChannelId: '-1001', telegramMessageId: 42 }), true);
     assert.equal(shouldDeleteTelegramPost({ telegramChannelId: '-1001' }), false);
     process.env.TELEGRAM_SYNC_ENABLED = 'false';
     assert.equal(shouldDeleteTelegramPost({ telegramChannelId: '-1001', telegramMessageId: 42 }), false);

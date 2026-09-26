@@ -15,6 +15,12 @@ import {
   publicProduct,
   telegramProductIdentity,
 } from './product-model.mjs';
+import {
+  createTelegramProductPost,
+  deleteTelegramProductPost,
+  shouldCreateTelegramPost,
+  shouldDeleteTelegramPost,
+} from './product-telegram.mjs';
 
 export const api = Router();
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -593,6 +599,43 @@ function cleanProductInput(input, { includeDefaultLimit = false } = {}) {
   return next;
 }
 
+function telegramErrorPatch(error) {
+  return {
+    telegramSyncStatus: 'error',
+    telegramSyncError: error?.telegram || {
+      message: error?.message || 'Telegram product synchronization failed.',
+      code: error?.code || null,
+    },
+    telegramLastSyncedAt: new Date().toISOString(),
+  };
+}
+
+async function syncProductPublicationTransition(previous, next) {
+  if (shouldCreateTelegramPost(previous, next)) {
+    try {
+      const patch = await createTelegramProductPost(next);
+      return await records.update('products', next.id, { ...patch, telegramDeletedAt: null }) || { ...next, ...patch };
+    } catch (error) {
+      console.error('[telegram] product publish sync failed:', error.message);
+      const patch = telegramErrorPatch(error);
+      return await records.update('products', next.id, patch) || { ...next, ...patch };
+    }
+  }
+
+  if (normalizeProductStatus(previous?.status) === 'published' && normalizeProductStatus(next?.status) !== 'published' && shouldDeleteTelegramPost(previous)) {
+    try {
+      const patch = await deleteTelegramProductPost(previous);
+      return await records.update('products', next.id, patch) || { ...next, ...patch };
+    } catch (error) {
+      console.error('[telegram] product unpublish sync failed:', error.message);
+      const patch = telegramErrorPatch(error);
+      return await records.update('products', next.id, patch) || { ...next, ...patch };
+    }
+  }
+
+  return next;
+}
+
 function applyProductBulkPatch(product, body) {
   const patch = {};
   const set = body?.set && typeof body.set === 'object' ? body.set : {};
@@ -666,7 +709,7 @@ api.patch('/admin/products/bulk', requireAdmin, dbRoute(async (req, res) => {
       ...patch,
       contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,
     });
-    if (doc) updated.push(doc);
+    if (doc) updated.push(await syncProductPublicationTransition(existing, doc));
   }
   res.json({
     ok: true,
@@ -689,7 +732,7 @@ api.post('/admin/products', requireAdmin, dbRoute(async (req, res) => {
     ...input,
     contentVersion: Math.max(1, Number(input.contentVersion) || 1),
   });
-  res.status(201).json(product);
+  res.status(201).json(await syncProductPublicationTransition(null, product));
 }));
 
 api.put('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
@@ -708,7 +751,7 @@ api.put('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
     status: input.status,
     contentVersion: nextVersion,
   });
-  res.json(doc);
+  res.json(await syncProductPublicationTransition(existing, doc));
 }));
 
 api.delete('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
@@ -719,7 +762,7 @@ api.delete('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
     deletedAt: new Date().toISOString(),
     contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,
   });
-  res.json({ ok: true, product: doc });
+  res.json({ ok: true, product: await syncProductPublicationTransition(existing, doc) });
 }));
 
 api.post('/admin/products/:id/restore', requireAdmin, dbRoute(async (req, res) => {
@@ -730,7 +773,7 @@ api.post('/admin/products/:id/restore', requireAdmin, dbRoute(async (req, res) =
     deletedAt: null,
     contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,
   });
-  res.json(doc);
+  res.json(await syncProductPublicationTransition(existing, doc));
 }));
 api.use('/admin/complimentary-items', crud('complimentary_items'));
 api.use('/admin/categories', crud('categories'));
