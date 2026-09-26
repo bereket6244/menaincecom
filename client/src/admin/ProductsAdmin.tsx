@@ -23,6 +23,11 @@ type ProductBulkPatch = {
   suggestedAddonIds?: { mode: 'add' | 'replace'; ids: string[] };
 };
 
+type ProductSaveResponse = Product & {
+  telegramPublishAction?: 'created' | 'updated' | 'failed' | 'deleted' | null;
+  telegramPublishWarning?: { message?: string };
+};
+
 const EMPTY: Draft = {
   name: '', categoryId: '', description: '', photos: [],
   categoryIds: [],
@@ -1080,9 +1085,13 @@ export function ProductsAdmin() {
           : cleanComplimentaryItems(editing.complimentaryItems),
         universalComplimentaryItemIds: editing.isAddon ? [] : editing.universalComplimentaryItemIds || [],
       };
-      if (editing.id) await apiSend('PUT', `/admin/products/${editing.id}`, payload);
-      else await apiSend('POST', '/admin/products', payload);
+      const result = editing.id
+        ? await apiSend<ProductSaveResponse>('PUT', `/admin/products/${editing.id}`, payload)
+        : await apiSend<ProductSaveResponse>('POST', '/admin/products', payload);
       toast('success', 'Product saved.');
+      if (result.telegramPublishAction === 'failed') {
+        toast('info', result.telegramPublishWarning?.message || 'Telegram publication failed, but the product is live on the website.');
+      }
       setEditing(null);
       reload();
     } catch (err) {

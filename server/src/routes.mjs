@@ -758,13 +758,17 @@ api.post('/admin/products', requireAdmin, dbRoute(async (req, res) => {
       return res.status(201).json({ ...product, telegramPublishAction: 'created' });
     } catch (error) {
       product = await records.update('products', product.id, {
-        status: 'draft',
+        status: 'published',
         telegramSyncStatus: 'failed',
         telegramSyncError: error.telegram || { message: 'Telegram publication failed.' },
       });
-      return res.status(502).json({
-        error: 'telegram_publish_failed',
-        message: 'Product was saved as a draft because Telegram publication failed.',
+      return res.status(201).json({
+        ...product,
+        telegramPublishAction: 'failed',
+        telegramPublishWarning: {
+          error: 'telegram_publish_failed',
+          message: 'Product was published on the website, but Telegram publication failed.',
+        },
         product,
       });
     }
@@ -798,13 +802,17 @@ api.put('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
       return res.json({ ...doc, telegramPublishAction: 'created' });
     } catch (error) {
       doc = await records.update('products', req.params.id, {
-        status: 'draft',
+        status: 'published',
         telegramSyncStatus: 'failed',
         telegramSyncError: error.telegram || { message: 'Telegram publication failed.' },
       });
-      return res.status(502).json({
-        error: 'telegram_publish_failed',
-        message: 'Product was saved as a draft because Telegram publication failed.',
+      return res.json({
+        ...doc,
+        telegramPublishAction: 'failed',
+        telegramPublishWarning: {
+          error: 'telegram_publish_failed',
+          message: 'Product was published on the website, but Telegram publication failed.',
+        },
         product: doc,
       });
     }
