@@ -25,31 +25,21 @@ test('Telegram identity is stable per channel and message', () => {
   assert.equal(telegramProductIdentity({}), null);
 });
 
-test('new publication creates a Telegram post only once', () => {
+test('product admin never triggers Telegram product synchronization', () => {
   const original = process.env.TELEGRAM_SYNC_ENABLED;
   process.env.TELEGRAM_SYNC_ENABLED = 'true';
   try {
-    assert.equal(shouldCreateTelegramPost(null, { status: 'published' }), true);
-    assert.equal(shouldCreateTelegramPost({ status: 'draft' }, { status: 'published' }), true);
+    assert.equal(shouldCreateTelegramPost(null, { status: 'published' }), false);
+    assert.equal(shouldCreateTelegramPost({ status: 'draft' }, { status: 'published' }), false);
     assert.equal(shouldCreateTelegramPost({ status: 'published' }, { status: 'published' }), false);
     assert.equal(shouldCreateTelegramPost(
       { status: 'draft' },
       { status: 'published', telegramChannelId: '-1001', telegramMessageId: 42 }
     ), false);
-  } finally {
-    if (original === undefined) delete process.env.TELEGRAM_SYNC_ENABLED;
-    else process.env.TELEGRAM_SYNC_ENABLED = original;
-  }
-});
-
-test('published Telegram products update when the content version changes', () => {
-  const original = process.env.TELEGRAM_SYNC_ENABLED;
-  process.env.TELEGRAM_SYNC_ENABLED = 'true';
-  try {
     assert.equal(shouldUpdateTelegramPost(
       { status: 'published', contentVersion: 2 },
       { status: 'published', contentVersion: 3, telegramChannelId: '-1001', telegramMessageId: 42 }
-    ), true);
+    ), false);
     assert.equal(shouldUpdateTelegramPost(
       { status: 'published', contentVersion: 3 },
       { status: 'published', contentVersion: 3, telegramChannelId: '-1001', telegramMessageId: 42 }
@@ -58,17 +48,7 @@ test('published Telegram products update when the content version changes', () =
       { status: 'published', contentVersion: 2 },
       { status: 'draft', contentVersion: 3, telegramChannelId: '-1001', telegramMessageId: 42 }
     ), false);
-  } finally {
-    if (original === undefined) delete process.env.TELEGRAM_SYNC_ENABLED;
-    else process.env.TELEGRAM_SYNC_ENABLED = original;
-  }
-});
-
-test('Telegram products delete only when sync is enabled and message identity exists', () => {
-  const original = process.env.TELEGRAM_SYNC_ENABLED;
-  process.env.TELEGRAM_SYNC_ENABLED = 'true';
-  try {
-    assert.equal(shouldDeleteTelegramPost({ telegramChannelId: '-1001', telegramMessageId: 42 }), true);
+    assert.equal(shouldDeleteTelegramPost({ telegramChannelId: '-1001', telegramMessageId: 42 }), false);
     assert.equal(shouldDeleteTelegramPost({ telegramChannelId: '-1001' }), false);
     process.env.TELEGRAM_SYNC_ENABLED = 'false';
     assert.equal(shouldDeleteTelegramPost({ telegramChannelId: '-1001', telegramMessageId: 42 }), false);

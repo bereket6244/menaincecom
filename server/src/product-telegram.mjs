@@ -103,20 +103,15 @@ export function formatProductCaption(product) {
 }
 
 export function shouldCreateTelegramPost(previous, next) {
-  if (process.env.TELEGRAM_SYNC_ENABLED !== 'true') return false;
-  if (next?.status !== 'published' || telegramProductIdentity(next)) return false;
-  return !previous || previous.status !== 'published';
+  return false;
 }
 
 export function shouldUpdateTelegramPost(previous, next) {
-  if (process.env.TELEGRAM_SYNC_ENABLED !== 'true') return false;
-  if (next?.status !== 'published' || !telegramProductIdentity(next)) return false;
-  return Math.max(1, Number(previous?.contentVersion) || 1) < Math.max(1, Number(next?.contentVersion) || 1);
+  return false;
 }
 
 export function shouldDeleteTelegramPost(product) {
-  if (process.env.TELEGRAM_SYNC_ENABLED !== 'true') return false;
-  return !!telegramProductIdentity(product);
+  return false;
 }
 
 function localUpload(photo) {
