@@ -161,18 +161,14 @@ jobs:
           echo "Deploying frontend to ${CPANEL_TARGET_DIR}"
           echo "CPANEL_TARGET_DIR=${CPANEL_TARGET_DIR}" >> "$GITHUB_ENV"
 
-          auth_json="$(curl --show-error --silent \
-            --connect-timeout 20 \
-            --max-time 60 \
-            --retry 2 \
-            -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-            "${CPANEL_BASE_URL}/execute/Variables/get_user_information")"
-
-          if ! printf '%s' "${auth_json}" | jq -e '.status == 1' >/dev/null; then
-            echo "cPanel authentication failed. Regenerate CPANEL_TOKEN for the CPANEL_USER account with File Manager/UAPI access." >&2
-            printf '%s\n' "${auth_json}" | jq -r '.errors? // .messages? // .metadata? // .' >&2 || printf '%s\n' "${auth_json}" >&2
-            exit 1
-          fi
+          print_cpanel_response() {
+            local body="$1"
+            if printf '%s' "${body}" | jq -e . >/dev/null 2>&1; then
+              printf '%s\n' "${body}" | jq -r '.errors? // .messages? // .metadata? // .'
+            else
+              printf '%s\n' "${body}"
+            fi
+          }
 
           target_json="$(curl --show-error --silent --get \
             --connect-timeout 20 \
@@ -182,9 +178,9 @@ jobs:
             --data-urlencode "dir=${CPANEL_TARGET_DIR}" \
             "${CPANEL_BASE_URL}/execute/Fileman/list_files")"
 
-          if ! printf '%s' "${target_json}" | jq -e '.status == 1' >/dev/null; then
-            echo "cPanel can authenticate, but cannot access CPANEL_TARGET_DIR. Check that the directory belongs to CPANEL_USER and that the token has File Manager access." >&2
-            printf '%s\n' "${target_json}" | jq -r '.errors? // .messages? // .metadata? // .' >&2 || printf '%s\n' "${target_json}" >&2
+          if ! printf '%s' "${target_json}" | jq -e '.status == 1' >/dev/null 2>&1; then
+            echo "cPanel File Manager access failed. Regenerate CPANEL_TOKEN for the exact CPANEL_USER account with File Manager/UAPI access, and confirm CPANEL_TARGET_DIR belongs to that user." >&2
+            print_cpanel_response "${target_json}" >&2
             exit 1
           fi
 
