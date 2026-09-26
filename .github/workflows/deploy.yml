@@ -157,9 +157,16 @@ jobs:
           if [ -z "${CPANEL_TARGET_DIR:-}" ]; then
             CPANEL_TARGET_DIR="/home/${CPANEL_USER}/public_html/shop"
           fi
+          CPANEL_FILEMAN_TARGET_DIR="${CPANEL_TARGET_DIR}"
+          if [[ "${CPANEL_FILEMAN_TARGET_DIR}" == "/home/${CPANEL_USER}/"* ]]; then
+            CPANEL_FILEMAN_TARGET_DIR="${CPANEL_FILEMAN_TARGET_DIR#/home/${CPANEL_USER}/}"
+          fi
+          CPANEL_FILEMAN_TARGET_DIR="${CPANEL_FILEMAN_TARGET_DIR#/}"
 
           echo "Deploying frontend to ${CPANEL_TARGET_DIR}"
+          echo "Using File Manager directory ${CPANEL_FILEMAN_TARGET_DIR}"
           echo "CPANEL_TARGET_DIR=${CPANEL_TARGET_DIR}" >> "$GITHUB_ENV"
+          echo "CPANEL_FILEMAN_TARGET_DIR=${CPANEL_FILEMAN_TARGET_DIR}" >> "$GITHUB_ENV"
 
           print_cpanel_response() {
             local body="$1"
@@ -175,7 +182,7 @@ jobs:
             --max-time 60 \
             --retry 2 \
             -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-            --data-urlencode "dir=${CPANEL_TARGET_DIR}" \
+            --data-urlencode "dir=${CPANEL_FILEMAN_TARGET_DIR}" \
             "${CPANEL_BASE_URL}/execute/Fileman/list_files")"
 
           if ! printf '%s' "${target_json}" | jq -e '.status == 1' >/dev/null 2>&1; then
@@ -199,7 +206,7 @@ jobs:
             --max-time 120 \
             --retry 2 \
             -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-            -F "dir=${CPANEL_TARGET_DIR}" \
+            -F "dir=${CPANEL_FILEMAN_TARGET_DIR}" \
             -F "overwrite=1" \
             -F "file=@shop-deploy.zip;filename=shop-deploy.zip" \
             "${CPANEL_BASE_URL}/execute/Fileman/upload_files"
@@ -224,8 +231,8 @@ jobs:
             --data-urlencode "cpanel_jsonapi_module=Fileman" \
             --data-urlencode "cpanel_jsonapi_func=fileop" \
             --data-urlencode "op=extract" \
-            --data-urlencode "sourcefiles=${CPANEL_TARGET_DIR}/shop-deploy.zip" \
-            --data-urlencode "destfiles=${CPANEL_TARGET_DIR}" \
+            --data-urlencode "sourcefiles=${CPANEL_FILEMAN_TARGET_DIR}/shop-deploy.zip" \
+            --data-urlencode "destfiles=${CPANEL_FILEMAN_TARGET_DIR}" \
             "${CPANEL_BASE_URL}/json-api/cpanel"
 
       - name: Resolve cPanel server directory
@@ -295,7 +302,13 @@ jobs:
           fi
 
           echo "Deploying server to ${server_dir}"
+          fileman_server_dir="${server_dir}"
+          if [[ "${fileman_server_dir}" == "/home/${CPANEL_USER}/"* ]]; then
+            fileman_server_dir="${fileman_server_dir#/home/${CPANEL_USER}/}"
+          fi
+          fileman_server_dir="${fileman_server_dir#/}"
           echo "CPANEL_SERVER_DIR_RESOLVED=${server_dir}" >> "$GITHUB_ENV"
+          echo "CPANEL_FILEMAN_SERVER_DIR=${fileman_server_dir}" >> "$GITHUB_ENV"
           echo "CPANEL_APP_PATH_RESOLVED=${app_path}" >> "$GITHUB_ENV"
 
       - name: Upload server archive to cPanel
@@ -314,7 +327,7 @@ jobs:
             --max-time 120 \
             --retry 2 \
             -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-            -F "dir=${CPANEL_SERVER_DIR_RESOLVED}" \
+            -F "dir=${CPANEL_FILEMAN_SERVER_DIR}" \
             -F "overwrite=1" \
             -F "file=@server-deploy.zip;filename=server-deploy.zip" \
             "${CPANEL_BASE_URL}/execute/Fileman/upload_files"
@@ -340,8 +353,8 @@ jobs:
             --data-urlencode "cpanel_jsonapi_module=Fileman" \
             --data-urlencode "cpanel_jsonapi_func=fileop" \
             --data-urlencode "op=extract" \
-            --data-urlencode "sourcefiles=${CPANEL_SERVER_DIR_RESOLVED}/server-deploy.zip" \
-            --data-urlencode "destfiles=${CPANEL_SERVER_DIR_RESOLVED}" \
+            --data-urlencode "sourcefiles=${CPANEL_FILEMAN_SERVER_DIR}/server-deploy.zip" \
+            --data-urlencode "destfiles=${CPANEL_FILEMAN_SERVER_DIR}" \
             "${CPANEL_BASE_URL}/json-api/cpanel"
 
       - name: Install server dependencies on cPanel
