@@ -271,27 +271,26 @@ jobs:
               })
           '
 
-          app_path="$(printf '%s' "${apps_json}" | jq -r '
+          discovered_app_path="$(printf '%s' "${apps_json}" | jq -r '
             (.data // [])
             | map(select(((.base_uri // .uri // .url // "") == "/shop") or ((.name // "") | test("shop"; "i"))))
             | first
             | (.path // .app_root // .app_path // empty)
           ')"
 
-          if [ -n "${app_path}" ] && [[ "${app_path}" = /* ]]; then
-            server_dir="${app_path%/}"
-            app_path="${server_dir#/home/${CPANEL_USER}/}"
-          elif [ -n "${app_path}" ]; then
-            app_path="${app_path%/}"
-            server_dir="/home/${CPANEL_USER}/${app_path}"
-          elif [ -n "${CPANEL_SERVER_DIR:-}" ]; then
+          if [ -n "${CPANEL_SERVER_DIR:-}" ]; then
             server_dir="${CPANEL_SERVER_DIR%/}"
             app_path="${server_dir#/home/${CPANEL_USER}/}"
-            echo "Using CPANEL_SERVER_DIR fallback because /shop Passenger app was not discovered."
           elif [[ "${CPANEL_TARGET_DIR}" == */public_html/* ]]; then
             home_dir="${CPANEL_TARGET_DIR%%/public_html/*}"
             server_dir="${home_dir}/mena-shop-app-v2/server"
             app_path="${server_dir#/home/${CPANEL_USER}/}"
+          elif [ -n "${discovered_app_path}" ] && [[ "${discovered_app_path}" = /* ]]; then
+            server_dir="${discovered_app_path%/}"
+            app_path="${server_dir#/home/${CPANEL_USER}/}"
+          elif [ -n "${discovered_app_path}" ]; then
+            app_path="${discovered_app_path%/}"
+            server_dir="/home/${CPANEL_USER}/${app_path}"
           else
             echo "CPANEL_SERVER_DIR is required when the Passenger app cannot be discovered." >&2
             exit 1
@@ -400,3 +399,6 @@ jobs:
           curl --fail --show-error --silent --head https://menaincet.com/shop/
           curl --fail --show-error --silent --head https://menaincet.com/shop/catalog
           curl --fail --show-error --silent https://menaincet.com/shop/api/complimentary-items >/dev/null
+          health_json="$(curl --fail --show-error --silent https://menaincet.com/shop/api/health)"
+          echo "${health_json}"
+          echo "${health_json}" | jq -e '.version == "shop-backend-20260926-telegram-disabled"' >/dev/null
