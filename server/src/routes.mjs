@@ -610,10 +610,15 @@ function telegramErrorPatch(error) {
   };
 }
 
+async function resolveTelegramProduct(product) {
+  const universalComplimentaryItems = await records.list('complimentary_items');
+  return resolveComplimentaryProduct(product, universalComplimentaryItems);
+}
+
 async function syncProductPublicationTransition(previous, next) {
   if (shouldCreateTelegramPost(previous, next)) {
     try {
-      const patch = await createTelegramProductPost(next);
+      const patch = await createTelegramProductPost(await resolveTelegramProduct(next));
       return await records.update('products', next.id, { ...patch, telegramDeletedAt: null }) || { ...next, ...patch };
     } catch (error) {
       console.error('[telegram] product publish sync failed:', error.message);

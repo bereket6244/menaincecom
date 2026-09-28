@@ -59,6 +59,27 @@ function productDetails(product) {
   return details;
 }
 
+function formatQty(value) {
+  const qty = Number(value) || 0;
+  return qty.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
+function productComplimentaryDetails(product) {
+  const items = (Array.isArray(product.complimentaryItems) ? product.complimentaryItems : [])
+    .filter((item) => item?.enabled !== false && compactText(item?.name, 60) && Number(item?.qty) > 0)
+    .map((item) => {
+      const name = compactText(item.name, 60);
+      const qty = item.type === 'multiplier'
+        ? `${formatQty(item.qty)} per card`
+        : formatQty(Math.floor(Number(item.qty) || 0));
+      return `${name}: ${qty}`;
+    });
+  if (!items.length) return '';
+  const visible = items.slice(0, 8);
+  if (items.length > visible.length) visible.push('More complimentary options available');
+  return `Complimentary:\n${visible.join('\n')}`;
+}
+
 function productHashtags(product) {
   const tags = new Set([
     hashtag('mena inc'),
@@ -96,6 +117,8 @@ export function formatProductCaption(product) {
   sections.push(productPrice(product));
   const details = productDetails(product);
   if (details.length) sections.push(`Details:\n${details.join('\n')}`);
+  const complimentary = productComplimentaryDetails(product);
+  if (complimentary) sections.push(complimentary);
   const tags = productHashtags(product);
   if (tags.length) sections.push(tags.join(' '));
   if (product.id) sections.push(`${shopUrl}/product/${encodeURIComponent(product.id)}`);

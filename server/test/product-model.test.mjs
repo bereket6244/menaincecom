@@ -81,3 +81,24 @@ test('Telegram product caption includes price and storefront link', () => {
   assert.match(caption, /\/product\/product%201/);
   assert.ok(caption.length <= 1024);
 });
+
+test('Telegram product caption mentions complimentary items', () => {
+  const caption = formatProductCaption({
+    id: 'product-2',
+    name: 'Invitation Suite',
+    description: '',
+    pricingMode: 'exact',
+    price: 300,
+    complimentaryItems: [
+      { enabled: true, name: 'Entrance Cards', type: 'multiplier', qty: 2.5 },
+      { enabled: true, name: 'Gift Tags', type: 'fixed', qty: 12 },
+      { enabled: false, name: 'Hidden Item', type: 'fixed', qty: 4 },
+    ],
+  });
+
+  assert.match(caption, /Complimentary:/);
+  assert.match(caption, /Entrance Cards: 2.5 per card/);
+  assert.match(caption, /Gift Tags: 12/);
+  assert.doesNotMatch(caption, /Hidden Item/);
+  assert.ok(caption.length <= 1024);
+});
