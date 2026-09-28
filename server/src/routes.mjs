@@ -476,7 +476,7 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
   const deliver = channel === 'whatsapp' ? sendWhatsApp(message) : sendTelegram(message);
   deliver.catch((err) => console.error(`[${channel}] delivery error:`, err));
   pushToAdmins({
-    title: 'New order — MENA INC.',
+    title: 'New order - Mena Inc',
     body: `${order.customer.name}${order.customer.phone ? ` (${order.customer.phone})` : ''} via ${channel} — ${items.length} item(s)`,
     url: '/admin',
   }).catch((err) => console.error('[push] error:', err));

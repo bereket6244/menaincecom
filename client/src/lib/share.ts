@@ -13,7 +13,7 @@ const digitsOnly = (value: string) => (value || '').replace(/\D/g, '');
  */
 export function buildOrderMessage(order: OrderRecord, _business: BusinessSettings | null, origin?: string): string {
   const lines: string[] = [
-    'Selam! I would like to place this order with mena inc.',
+    'Selam! I would like to place this order with Mena Inc.',
     `Order ref: ${order.id.slice(0, 8).toUpperCase()}`,
     '',
   ];
@@ -73,7 +73,7 @@ function productUrl(productId: string, origin: string): string {
 
 export function buildCartOrderMessage(items: CartItem[], note: string, origin: string): string {
   const itemWord = items.length === 1 ? 'this item' : 'these items';
-  const lines = [`Hello, I'd like to order ${itemWord}.`, ''];
+  const lines = [`Hello Mena Inc, I'd like to order ${itemWord}.`, ''];
 
   items.forEach((item, idx) => {
     const prefix = items.length === 1 ? '' : `${idx + 1}) `;

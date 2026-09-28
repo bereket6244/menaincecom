@@ -12,7 +12,7 @@ if (vapidReady) {
 
 export function formatOrderMessage(order) {
   const lines = [
-    'NEW ORDER — MENA INC.',
+    'NEW ORDER - Mena Inc',
     `Ref: ${order.id.slice(0, 8).toUpperCase()}`,
     `Customer: ${order.customer.name}`,
     `Phone: ${order.customer.phone}`,

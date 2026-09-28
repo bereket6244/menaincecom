@@ -68,7 +68,7 @@ function formatEtb(value: number) {
 
 function buildPackageMessage(pkg: DigitalInvitePackage) {
   return [
-    'Selam Mena INK, I want to order a digital invitation website.',
+    'Selam Mena Inc, I want to order a digital invitation website.',
     `Package: ${pkg.name}`,
     `Price: ${formatEtb(pkg.price)}`,
     '',
