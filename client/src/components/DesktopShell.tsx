@@ -70,6 +70,17 @@ export function DesktopShell({ children }: { children: ReactNode }) {
           <div className="flex-1" />
 
           <div className="flex shrink-0 items-center gap-3">
+            <Link
+              to="/digital-invitations"
+              className="mena-press flex h-10 items-center gap-2 px-1.5 text-[13px] font-medium text-ink/80 hover:text-pink"
+            >
+              <img
+                src="/digital-invites-icon.png"
+                alt=""
+                className="h-7 w-7 object-contain"
+              />
+              <span>Digital Invites</span>
+            </Link>
             <div ref={contactRef} className="relative">
               <button
                 type="button"
@@ -179,9 +190,21 @@ export function DesktopShell({ children }: { children: ReactNode }) {
       <main className="w-full flex-1">{children}</main>
 
       <footer className="border-t border-edge bg-white py-6">
-        <div className="mx-auto flex max-w-[1560px] items-center justify-between px-10 text-[12px] text-muted 2xl:px-12">
-          <span>© {new Date().getFullYear()} Mena INK Trading PLC · Addis Ababa, Ethiopia</span>
-          <span className="font-bold uppercase tracking-[0.12em]">Invitations · Stationery · Print</span>
+        <div className="mx-auto flex max-w-[1560px] items-center justify-between gap-6 px-10 text-[12px] text-muted 2xl:px-12">
+          <a
+            href={business?.digitalInvitations?.portfolioUrl || 'https://menaincet.com'}
+            target="_blank"
+            rel="noreferrer"
+            className="mena-press hover:text-pink"
+          >
+            (c) {new Date().getFullYear()} Mena INK Trading PLC - Addis Ababa, Ethiopia
+          </a>
+          <div className="flex items-center gap-5 font-bold uppercase tracking-[0.12em]">
+            <a href="https://menaincet.com" target="_blank" rel="noreferrer" className="mena-press hover:text-pink">
+              About us
+            </a>
+            <span>Invitations - Stationery - Print</span>
+          </div>
         </div>
       </footer>
     </div>

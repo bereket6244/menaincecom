@@ -104,6 +104,35 @@ export interface Lead {
   createdAt: string;
 }
 
+export interface DigitalInviteExample {
+  id: string;
+  title: string;
+  url: string;
+  description: string;
+}
+
+export interface DigitalInvitePackage {
+  id: string;
+  name: string;
+  eyebrow: string;
+  description: string;
+  price: number;
+  compareAtPrice?: number | null;
+  badge?: string;
+  features: string[];
+  footnote: string;
+}
+
+export interface DigitalInvitationsContent {
+  enabled: boolean;
+  title: string;
+  subtitle: string;
+  intro: string;
+  portfolioUrl: string;
+  examples: DigitalInviteExample[];
+  packages: DigitalInvitePackage[];
+}
+
 export interface User {
   id: string;
   identifier: string;
@@ -123,4 +152,5 @@ export interface BusinessSettings {
   paymentAccountName: string;
   paymentAccountNumber: string;
   pickupLocation: string;
+  digitalInvitations?: DigitalInvitationsContent;
 }

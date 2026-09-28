@@ -81,6 +81,74 @@ if (mountPath === '/') {
 
 const DEFAULT_CATEGORIES = ['Wedding Invitations', 'Save-the-Dates', 'Thank-You Cards', 'Full Suites'];
 
+const DEFAULT_DIGITAL_INVITATIONS = {
+  enabled: true,
+  title: 'Digital wedding invitation websites',
+  subtitle: '',
+  intro: '',
+  portfolioUrl: 'https://menaincet.com',
+  examples: [
+    {
+      id: 'yordanos-kaleab',
+      title: 'Yordanos & Kaleab',
+      url: 'https://menaincet.com/yordanoskaleab/',
+      description: '',
+    },
+    {
+      id: 'yeabsra-christian',
+      title: 'Yeabsra & Christian',
+      url: 'https://menaincet.com/yeabsrachristian',
+      description: '',
+    },
+  ],
+    packages: [
+        {
+          id: 'basic',
+          name: 'Basic',
+          eyebrow: '',
+          description: '',
+          price: 12000,
+          compareAtPrice: null,
+          badge: '',
+          features: ['Basic Information', 'Photo Gallery (3 Photos)', '1 Location (Map Point)', 'Countdown', 'RSVP Form', '1 Language Support'],
+          footnote: '',
+        },
+        {
+          id: 'standard',
+          name: 'Standard',
+          eyebrow: '',
+          description: '',
+          price: 16000,
+          compareAtPrice: null,
+          badge: '',
+          features: ['Basic Information', 'Photo Gallery (10 Photos)', '2 Location (Map Point)', 'Countdown', 'RSVP Form', '2 Language Support', 'Timeline'],
+          footnote: '',
+        },
+        {
+          id: 'premium',
+          name: 'Premium',
+          eyebrow: '',
+          description: '',
+          price: 19000,
+          compareAtPrice: null,
+          badge: 'Featured',
+          features: ['Basic Information', 'Unlimited Photo', '3 Location (Map Point)', 'Countdown', 'RSVP Form', '2 Language Support', 'Timeline', 'Video', 'Bride & Groom Profile', 'Gift Ideas'],
+          footnote: '',
+        },
+        {
+          id: 'ultimate',
+          name: 'Ultimate',
+          eyebrow: '',
+          description: '',
+          price: 28500,
+          compareAtPrice: null,
+          badge: '',
+          features: ['Basic Information', 'Unlimited Photo', '3+ Location (Map Point)', 'Countdown', 'RSVP Form', '3+ Language Support', 'Timeline', 'Video', 'Bride & Groom Profile', 'Gift Ideas', 'QR Code', 'Live Guest Check In'],
+          footnote: '',
+        },
+      ],
+};
+
 async function seed() {
   const cats = await records.list('categories');
   if (cats.length === 0) {
@@ -102,8 +170,14 @@ async function seed() {
       paymentAccountName: '',
       paymentAccountNumber: '',
       pickupLocation: 'Reality Plaza, 1st Floor, Office No. 104\nBole, next to Yougo Church',
+      digitalInvitations: DEFAULT_DIGITAL_INVITATIONS,
     });
     console.log('[seed] business settings created');
+  } else if (!business.digitalInvitations) {
+    await records.update('content', business.id, {
+      digitalInvitations: DEFAULT_DIGITAL_INVITATIONS,
+    });
+    console.log('[seed] digital invitation settings created');
   }
 }
 

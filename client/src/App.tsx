@@ -5,6 +5,7 @@ import { Shell } from './components/Shell';
 const Catalog = lazy(() => import('./pages/Catalog').then((m) => ({ default: m.Catalog })));
 const ProductDetail = lazy(() => import('./pages/ProductDetail').then((m) => ({ default: m.ProductDetail })));
 const Gallery = lazy(() => import('./pages/Gallery').then((m) => ({ default: m.Gallery })));
+const DigitalInvitations = lazy(() => import('./pages/DigitalInvitations').then((m) => ({ default: m.DigitalInvitations })));
 const OrderSummary = lazy(() => import('./pages/OrderSummary').then((m) => ({ default: m.OrderSummary })));
 const Wishlist = lazy(() => import('./pages/Wishlist').then((m) => ({ default: m.Wishlist })));
 const Login = lazy(() => import('./pages/Login').then((m) => ({ default: m.Login })));
@@ -51,6 +52,7 @@ export default function App() {
                 <Route path="/catalog" element={<Catalog />} />
                 <Route path="/product/:id" element={<ProductDetail />} />
                 <Route path="/gallery" element={<Gallery />} />
+                <Route path="/digital-invitations" element={<DigitalInvitations />} />
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/order" element={<OrderSummary />} />
                 <Route path="/login" element={<Login />} />

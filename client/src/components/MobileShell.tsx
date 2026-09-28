@@ -12,6 +12,7 @@ import { BrandLogo } from './BrandLogo';
 
 const NAV = [
   { to: '/catalog', label: 'Wedding Cards', icon: Grid2X2 },
+  { to: '/digital-invitations', label: 'Digital Invites', iconPath: '/digital-invites-icon.png' },
   { to: '/wishlist', label: 'Liked items', icon: Heart },
 ];
 
@@ -29,7 +30,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
   const telegramUrl = telegramContactUrl(business);
   const whatsappUrl = whatsappContactUrl(business);
   const smsUrl = smsContactUrl(business);
-  const showCatalogHeader = ['/catalog', '/', '/wishlist', '/gallery', '/contact'].includes(location.pathname);
+  const showCatalogHeader = ['/catalog', '/', '/wishlist', '/gallery', '/contact', '/digital-invitations'].includes(location.pathname);
   const hasBottomCta = location.pathname.startsWith('/product/') || location.pathname === '/order';
 
   useEffect(() => {
@@ -165,7 +166,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
 
         <div className="space-y-5 overflow-y-auto px-4 py-5">
           <nav className="space-y-1">
-            {NAV.map(({ to, label, icon: Icon }) => (
+            {NAV.map(({ to, label, icon: Icon, iconPath }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -177,7 +178,18 @@ export function MobileShell({ children }: { children: ReactNode }) {
                   )
                 }
               >
-                <Icon className="h-5 w-5" />
+                {iconPath ? (
+                  <img
+                    src={iconPath}
+                    alt=""
+                    className={cx(
+                      'h-7 w-7 object-contain',
+                      to === '/digital-invitations' && 'opacity-90'
+                    )}
+                  />
+                ) : Icon ? (
+                  <Icon className="h-5 w-5" />
+                ) : null}
                 <span className="flex-1">{label}</span>
                 {to === '/wishlist' && wishlistProductIds.length > 0 && (
                   <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px]">{wishlistProductIds.length}</span>
