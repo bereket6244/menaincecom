@@ -2,7 +2,7 @@ import { ExternalLink, MessageCircle, MessageSquareText, Phone, Send } from 'luc
 import { useData } from '../lib/useData';
 import type { BusinessSettings, DigitalInvitePackage, DigitalInvitationsContent } from '../lib/types';
 import { smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
-import { cx } from '../lib/utils';
+import { assetUrl, cx } from '../lib/utils';
 
 const FALLBACK_DIGITAL_INVITATIONS: DigitalInvitationsContent = {
   enabled: true,
@@ -91,8 +91,8 @@ function initials(title: string) {
 
 function previewImage(example: { id?: string; url: string }) {
   const key = `${example.id || ''} ${example.url}`.toLowerCase();
-  if (key.includes('yordanos') || key.includes('kaleab')) return '/digital-invites/yordanos-kaleab.png';
-  if (key.includes('yeabsra') || key.includes('christian')) return '/digital-invites/yeabsra-christian.png';
+  if (key.includes('yordanos') || key.includes('kaleab')) return assetUrl('digital-invites/yordanos-kaleab.webp');
+  if (key.includes('yeabsra') || key.includes('christian')) return assetUrl('digital-invites/yeabsra-christian.webp');
   return '';
 }
 
@@ -137,6 +137,8 @@ export function DigitalInvitations() {
                       <img
                         src={preview}
                         alt={`${example.title} website preview`}
+                        loading="eager"
+                        decoding="async"
                         className="h-full w-full object-cover object-top transition duration-300 group-hover:scale-[1.02]"
                       />
                     ) : (

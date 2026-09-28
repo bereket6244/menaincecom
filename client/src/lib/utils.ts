@@ -108,8 +108,8 @@ const APP_BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 export function assetUrl(src: string | undefined): string {
   if (!src) return '';
   if (/^(https?:|data:|blob:)/i.test(src)) return src;
-  if (src.startsWith('/uploads/')) return `${APP_BASE}${src}`;
-  return src;
+  if (src.startsWith('/')) return `${APP_BASE}${src}`;
+  return `${APP_BASE}/${src.replace(/^\/+/, '')}`;
 }
 
 type CompressImageOptions = {

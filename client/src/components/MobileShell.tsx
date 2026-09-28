@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Grid2X2, Heart, Menu, MessageCircle, MessageSquareText, Search, Send, ShoppingCart, User, X } from 'lucide-react';
 import { useApp } from '../store/AppContext';
-import { cx } from '../lib/utils';
+import { assetUrl, cx } from '../lib/utils';
 import { useData } from '../lib/useData';
 import type { BusinessSettings } from '../lib/types';
 import { smsContactUrl, telegramContactUrl, whatsappContactUrl } from '../lib/share';
@@ -12,7 +12,7 @@ import { BrandLogo } from './BrandLogo';
 
 const NAV = [
   { to: '/catalog', label: 'Wedding Cards', icon: Grid2X2 },
-  { to: '/digital-invitations', label: 'Digital Invites', iconPath: '/digital-invites-icon.png' },
+  { to: '/digital-invitations', label: 'Digital Invites', iconPath: assetUrl('digital-invites-icon.webp') },
   { to: '/wishlist', label: 'Liked items', icon: Heart },
 ];
 
@@ -182,8 +182,10 @@ export function MobileShell({ children }: { children: ReactNode }) {
                   <img
                     src={iconPath}
                     alt=""
+                    loading="eager"
+                    decoding="async"
                     className={cx(
-                      'h-7 w-7 object-contain',
+                      'h-7 w-7 object-contain mix-blend-multiply',
                       to === '/digital-invitations' && 'opacity-90'
                     )}
                   />

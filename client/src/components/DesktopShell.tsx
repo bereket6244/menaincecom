@@ -4,7 +4,7 @@ import { ChevronDown, Heart, MessageCircle, MessageSquareText, Send, Search, Sho
 import type { ReactNode } from 'react';
 import { useApp } from '../store/AppContext';
 import { StatusBanners, Toasts } from './ui';
-import { cx } from '../lib/utils';
+import { assetUrl, cx } from '../lib/utils';
 import { BrandLogo } from './BrandLogo';
 import { useData } from '../lib/useData';
 import type { BusinessSettings } from '../lib/types';
@@ -75,9 +75,11 @@ export function DesktopShell({ children }: { children: ReactNode }) {
               className="mena-press flex h-10 items-center gap-2 px-1.5 text-[13px] font-medium text-ink/80 hover:text-pink"
             >
               <img
-                src="/digital-invites-icon.png"
+                src={assetUrl('digital-invites-icon.webp')}
                 alt=""
-                className="h-7 w-7 object-contain"
+                loading="eager"
+                decoding="async"
+                className="h-7 w-7 object-contain mix-blend-multiply"
               />
               <span>Digital Invites</span>
             </Link>
