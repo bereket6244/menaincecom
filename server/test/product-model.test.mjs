@@ -97,8 +97,10 @@ test('Telegram product caption mentions complimentary items', () => {
   });
 
   assert.match(caption, /Complimentary:/);
-  assert.match(caption, /Entrance Cards: 2.5 per card/);
-  assert.match(caption, /Gift Tags: 12/);
+  assert.match(caption, /Entrance Cards/);
+  assert.match(caption, /Gift Tags/);
+  assert.doesNotMatch(caption, /2.5 per card/);
+  assert.doesNotMatch(caption, /Gift Tags: 12/);
   assert.doesNotMatch(caption, /Hidden Item/);
   assert.ok(caption.length <= 1024);
 });

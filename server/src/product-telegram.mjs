@@ -59,21 +59,10 @@ function productDetails(product) {
   return details;
 }
 
-function formatQty(value) {
-  const qty = Number(value) || 0;
-  return qty.toLocaleString('en-US', { maximumFractionDigits: 2 });
-}
-
 function productComplimentaryDetails(product) {
   const items = (Array.isArray(product.complimentaryItems) ? product.complimentaryItems : [])
     .filter((item) => item?.enabled !== false && compactText(item?.name, 60) && Number(item?.qty) > 0)
-    .map((item) => {
-      const name = compactText(item.name, 60);
-      const qty = item.type === 'multiplier'
-        ? `${formatQty(item.qty)} per card`
-        : formatQty(Math.floor(Number(item.qty) || 0));
-      return `${name}: ${qty}`;
-    });
+    .map((item) => compactText(item.name, 60));
   if (!items.length) return '';
   const visible = items.slice(0, 8);
   if (items.length > visible.length) visible.push('More complimentary options available');
