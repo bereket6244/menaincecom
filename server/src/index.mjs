@@ -80,6 +80,7 @@ if (mountPath === '/') {
 }
 
 const DEFAULT_CATEGORIES = ['Wedding Invitations', 'Save-the-Dates', 'Thank-You Cards', 'Full Suites'];
+const catalogSeedPath = path.join(serverRoot, 'src', 'catalog-seed.json');
 
 const DEFAULT_DIGITAL_INVITATIONS = {
   enabled: true,
@@ -157,6 +158,31 @@ async function seed() {
     }
     console.log('[seed] default categories created');
   }
+
+  const products = await records.list('products');
+  if (products.length === 0) {
+    try {
+      const catalogSeed = JSON.parse(fs.readFileSync(catalogSeedPath, 'utf8'));
+      const seededCollections = ['categories', 'complimentary_items', 'gallery', 'content'];
+      for (const collection of seededCollections) {
+        for (const existing of await records.list(collection)) {
+          await records.remove(collection, existing.id);
+        }
+        for (const item of catalogSeed[collection] || []) {
+          const { id, createdAt, updatedAt, ...data } = item;
+          await records.insertWithId(collection, id, data);
+        }
+      }
+      for (const item of catalogSeed.products || []) {
+        const { id, createdAt, updatedAt, ...data } = item;
+        await records.insertWithId('products', id, data);
+      }
+      console.log(`[seed] catalog fixture created ${catalogSeed.products?.length || 0} products`);
+    } catch (err) {
+      if (err.code !== 'ENOENT') console.error('[seed] catalog fixture failed:', err.message);
+    }
+  }
+
   const business = await records.find('content', (c) => c.key === 'business');
   if (!business) {
     await records.insert('content', {

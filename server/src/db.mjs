@@ -226,6 +226,10 @@ export const records = {
 
   async insert(collection, data) {
     const id = crypto.randomUUID();
+    return this.insertWithId(collection, id, data);
+  },
+
+  async insertWithId(collection, id, data) {
     const localOperation = () =>
       mutateLocalStore((store) => {
         const now = new Date().toISOString();

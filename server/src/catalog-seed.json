@@ -1,0 +1,861 @@
+{
+  "categories": [
+    {
+      "id": "cat-wedding-invitations",
+      "name": "Wedding Invitations",
+      "sortOrder": 0,
+      "photo": "/uploads/demo/invitation-blush.svg",
+      "createdAt": "2026-09-17T11:31:24.937Z",
+      "updatedAt": "2026-09-29T11:31:24.923Z"
+    },
+    {
+      "id": "cat-save-the-dates",
+      "name": "Save-the-Dates",
+      "sortOrder": 1,
+      "photo": "/uploads/demo/invitation-sage.svg",
+      "createdAt": "2026-09-18T11:31:24.937Z",
+      "updatedAt": "2026-09-29T11:31:24.923Z"
+    },
+    {
+      "id": "cat-thank-you-cards",
+      "name": "Thank-You Cards",
+      "sortOrder": 2,
+      "photo": "/uploads/demo/invitation-gold.svg",
+      "createdAt": "2026-09-19T11:31:24.937Z",
+      "updatedAt": "2026-09-29T11:31:24.923Z"
+    },
+    {
+      "id": "cat-full-suites",
+      "name": "Full Suites",
+      "sortOrder": 3,
+      "photo": "/uploads/demo/invitation-navy.svg",
+      "createdAt": "2026-09-20T11:31:24.937Z",
+      "updatedAt": "2026-09-29T11:31:24.923Z"
+    },
+    {
+      "id": "cat-menus-details",
+      "name": "Menus & Details",
+      "sortOrder": 4,
+      "photo": "/uploads/demo/invitation-minimal.svg",
+      "createdAt": "2026-09-21T11:31:24.937Z",
+      "updatedAt": "2026-09-29T11:31:24.923Z"
+    },
+    {
+      "id": "cat-add-ons",
+      "name": "Add-ons",
+      "sortOrder": 5,
+      "photo": "/uploads/demo/invitation-terracotta.svg",
+      "createdAt": "2026-09-22T11:31:24.937Z",
+      "updatedAt": "2026-09-29T11:31:24.923Z"
+    }
+  ],
+  "content": [
+    {
+      "key": "business",
+      "phone": "+251 92 963 9939",
+      "email": "hello@menainc.com",
+      "address": "Reality Plaza, 1st Floor, Office No. 104, Bole (next to Yougo Church), Addis Ababa",
+      "hours": "Mon-Sat, 9:00-18:00",
+      "whatsappNumber": "251929639939",
+      "telegramHandle": "+251929639939",
+      "paymentAccountName": "Mena Inc Trading PLC",
+      "paymentAccountNumber": "1000123456789",
+      "pickupLocation": "Reality Plaza, 1st Floor, Office No. 104\nBole, next to Yougo Church",
+      "id": "65668a94-4729-4f47-a877-e905a7478a6a",
+      "createdAt": "2026-09-19T11:31:24.938Z",
+      "updatedAt": "2026-09-29T12:54:17.685Z",
+      "digitalInvitations": {
+        "enabled": true,
+        "title": "Digital wedding invitation websites",
+        "subtitle": "",
+        "intro": "",
+        "portfolioUrl": "https://menaincet.com",
+        "examples": [
+          {
+            "id": "yordanos-kaleab",
+            "title": "Yordanos & Kaleab",
+            "url": "https://menaincet.com/yordanoskaleab/",
+            "description": ""
+          },
+          {
+            "id": "yeabsra-christian",
+            "title": "Yeabsra & Christian",
+            "url": "https://menaincet.com/yeabsrachristian",
+            "description": ""
+          }
+        ],
+        "packages": [
+          {
+            "id": "basic",
+            "name": "Basic",
+            "eyebrow": "",
+            "description": "Simple and elegant",
+            "price": 9000,
+            "compareAtPrice": null,
+            "badge": "",
+            "features": [
+              "Wedding details",
+              "3 photos",
+              "1 venue + map",
+              "RSVP"
+            ],
+            "footnote": ""
+          },
+          {
+            "id": "standard",
+            "name": "Standard",
+            "eyebrow": "",
+            "description": "Best for most weddings",
+            "price": 13000,
+            "compareAtPrice": null,
+            "badge": "Most Popular",
+            "features": [
+              "Everything in Basic",
+              "10 photos",
+              "2 venues + map",
+              "2 languages + timeline"
+            ],
+            "footnote": ""
+          },
+          {
+            "id": "premium",
+            "name": "Premium",
+            "eyebrow": "",
+            "description": "More personal and complete",
+            "price": 16000,
+            "compareAtPrice": null,
+            "badge": "",
+            "features": [
+              "Everything in Standard",
+              "Unlimited photos",
+              "Video + couple profile",
+              "Gift info"
+            ],
+            "footnote": ""
+          },
+          {
+            "id": "ultimate",
+            "name": "Ultimate",
+            "eyebrow": "",
+            "description": "For full guest management",
+            "price": 18500,
+            "compareAtPrice": null,
+            "badge": "",
+            "features": [
+              "Everything in Premium",
+              "3+ languages",
+              "QR code",
+              "Live guest check-in"
+            ],
+            "footnote": ""
+          }
+        ]
+      }
+    }
+  ],
+  "complimentary_items": [
+    {
+      "id": "uci-envelope",
+      "enabled": true,
+      "name": "Envelope",
+      "type": "multiplier",
+      "qty": 1,
+      "extraPriceEach": 10,
+      "description": "Matching envelope for every card.",
+      "photo": "/uploads/demo/invitation-minimal.svg",
+      "sortOrder": 0,
+      "createdAt": "2026-09-20T11:31:24.937Z",
+      "updatedAt": "2026-09-29T11:31:24.923Z"
+    },
+    {
+      "id": "uci-entrance-card",
+      "enabled": true,
+      "name": "Entrance Card",
+      "type": "multiplier",
+      "qty": 2,
+      "extraPriceEach": 8,
+      "description": "Guest entrance cards for events.",
+      "photo": "/uploads/demo/invitation-terracotta.svg",
+      "sortOrder": 1,
+      "createdAt": "2026-09-21T11:31:24.937Z",
+      "updatedAt": "2026-09-29T11:31:24.923Z"
+    },
+    {
+      "id": "uci-thank-you-tag",
+      "enabled": true,
+      "name": "Thank You Tag",
+      "type": "fixed",
+      "qty": 25,
+      "extraPriceEach": 5,
+      "description": "Fixed free bundle for gift favors.",
+      "photo": "/uploads/demo/invitation-gold.svg",
+      "sortOrder": 2,
+      "createdAt": "2026-09-22T11:31:24.937Z",
+      "updatedAt": "2026-09-29T11:31:24.923Z"
+    }
+  ],
+  "products": [
+    {
+      "id": "prod-blush-garden-pocket",
+      "name": "Blush Garden Pocket Invitation",
+      "categoryIds": [
+        "cat-wedding-invitations"
+      ],
+      "categoryId": "cat-wedding-invitations",
+      "description": "Soft blush pocket invitation with floral accents, RSVP insert, and matching envelope styling.",
+      "photos": [
+        "/uploads/demo/invitation-blush.svg",
+        "/uploads/demo/invitation-watercolor.svg"
+      ],
+      "pricingMode": "exact",
+      "price": 145,
+      "maxOrderQty": 300,
+      "variants": [
+        {
+          "name": "Size",
+          "options": [
+            {
+              "label": "A6"
+            },
+            {
+              "label": "A5"
+            }
+          ]
+        },
+        {
+          "name": "Paper",
+          "options": [
+            {
+              "label": "Matte 300gsm"
+            },
+            {
+              "label": "Pearl 350gsm"
+            }
+          ]
+        },
+        {
+          "name": "Color",
+          "options": [
+            {
+              "label": "Blush",
+              "photo": "/uploads/demo/invitation-blush.svg"
+            },
+            {
+              "label": "Ivory",
+              "photo": "/uploads/demo/invitation-minimal.svg"
+            },
+            {
+              "label": "Rose",
+              "photo": "/uploads/demo/invitation-watercolor.svg"
+            }
+          ]
+        }
+      ],
+      "isAddon": false,
+      "suggestedAddonIds": [
+        "prod-envelope-liner",
+        "prod-wax-seal"
+      ],
+      "complimentaryItems": [
+        {
+          "id": "free-rsvp",
+          "enabled": true,
+          "name": "RSVP Insert",
+          "type": "multiplier",
+          "qty": 1,
+          "extraPriceEach": 12
+        }
+      ],
+      "universalComplimentaryItemIds": [
+        "uci-envelope"
+      ],
+      "featured": true,
+      "status": "published",
+      "contentVersion": 1,
+      "deletedAt": null,
+      "createdAt": "2026-09-21T11:31:24.938Z",
+      "updatedAt": "2026-09-29T11:36:36.623Z"
+    },
+    {
+      "id": "prod-sage-save-date",
+      "name": "Sage Save-the-Date Card",
+      "categoryIds": [
+        "cat-save-the-dates"
+      ],
+      "categoryId": "cat-save-the-dates",
+      "description": "Clean sage save-the-date card with date highlight and optional photo back.",
+      "photos": [
+        "/uploads/demo/invitation-sage.svg"
+      ],
+      "pricingMode": "starting",
+      "price": 85,
+      "maxOrderQty": null,
+      "variants": [
+        {
+          "name": "Format",
+          "options": [
+            {
+              "label": "Single card"
+            },
+            {
+              "label": "With photo back"
+            }
+          ]
+        },
+        {
+          "name": "Finish",
+          "options": [
+            {
+              "label": "Matte"
+            },
+            {
+              "label": "Soft touch"
+            }
+          ]
+        }
+      ],
+      "isAddon": false,
+      "suggestedAddonIds": [
+        "prod-envelope-liner"
+      ],
+      "complimentaryItems": [],
+      "universalComplimentaryItemIds": [
+        "uci-envelope"
+      ],
+      "featured": false,
+      "status": "published",
+      "contentVersion": 1,
+      "deletedAt": null,
+      "createdAt": "2026-09-21T15:31:24.938Z",
+      "updatedAt": "2026-09-29T11:36:36.624Z"
+    },
+    {
+      "id": "prod-navy-full-suite",
+      "name": "Navy Gold Full Suite",
+      "categoryIds": [
+        "cat-full-suites"
+      ],
+      "categoryId": "cat-full-suites",
+      "description": "Premium invitation suite with main invite, RSVP, details card, belly band, and gold-style accents.",
+      "photos": [
+        "/uploads/demo/invitation-navy.svg",
+        "/uploads/demo/gallery-suite.svg"
+      ],
+      "pricingMode": "exact",
+      "price": 290,
+      "maxOrderQty": 150,
+      "variants": [
+        {
+          "name": "Suite",
+          "options": [
+            {
+              "label": "3-piece"
+            },
+            {
+              "label": "5-piece"
+            }
+          ]
+        },
+        {
+          "name": "Accent",
+          "options": [
+            {
+              "label": "Gold"
+            },
+            {
+              "label": "Silver"
+            }
+          ]
+        },
+        {
+          "name": "Language",
+          "options": [
+            {
+              "label": "English"
+            },
+            {
+              "label": "Amharic"
+            },
+            {
+              "label": "Bilingual"
+            }
+          ]
+        }
+      ],
+      "isAddon": false,
+      "suggestedAddonIds": [
+        "prod-wax-seal",
+        "prod-menu-card"
+      ],
+      "complimentaryItems": [
+        {
+          "id": "free-details",
+          "enabled": true,
+          "name": "Details Card",
+          "type": "fixed",
+          "qty": 20,
+          "extraPriceEach": 15
+        }
+      ],
+      "universalComplimentaryItemIds": [
+        "uci-envelope",
+        "uci-entrance-card"
+      ],
+      "featured": true,
+      "status": "published",
+      "contentVersion": 1,
+      "deletedAt": null,
+      "createdAt": "2026-09-21T19:31:24.938Z",
+      "updatedAt": "2026-09-29T11:36:36.624Z"
+    },
+    {
+      "id": "prod-gold-thank-you",
+      "name": "Gold Bloom Thank-You Card",
+      "categoryIds": [
+        "cat-thank-you-cards"
+      ],
+      "categoryId": "cat-thank-you-cards",
+      "description": "Thank-you card for wedding favors and post-event appreciation.",
+      "photos": [
+        "/uploads/demo/invitation-gold.svg"
+      ],
+      "pricingMode": "exact",
+      "price": 55,
+      "maxOrderQty": 500,
+      "variants": [
+        {
+          "name": "Size",
+          "options": [
+            {
+              "label": "A7"
+            },
+            {
+              "label": "Square"
+            }
+          ]
+        },
+        {
+          "name": "Color",
+          "options": [
+            {
+              "label": "Gold",
+              "photo": "/uploads/demo/invitation-gold.svg"
+            },
+            {
+              "label": "Ivory",
+              "photo": "/uploads/demo/invitation-minimal.svg"
+            }
+          ]
+        }
+      ],
+      "isAddon": false,
+      "suggestedAddonIds": [],
+      "complimentaryItems": [],
+      "universalComplimentaryItemIds": [
+        "uci-thank-you-tag"
+      ],
+      "featured": false,
+      "status": "published",
+      "contentVersion": 1,
+      "deletedAt": null,
+      "createdAt": "2026-09-21T23:31:24.938Z",
+      "updatedAt": "2026-09-29T11:36:36.624Z"
+    },
+    {
+      "id": "prod-minimal-menu",
+      "name": "Minimal Pearl Menu Card",
+      "categoryIds": [
+        "cat-menus-details"
+      ],
+      "categoryId": "cat-menus-details",
+      "description": "Reception menu card with simple typography and pearl paper finish.",
+      "photos": [
+        "/uploads/demo/invitation-minimal.svg"
+      ],
+      "pricingMode": "starting",
+      "price": 70,
+      "maxOrderQty": null,
+      "variants": [
+        {
+          "name": "Layout",
+          "options": [
+            {
+              "label": "Dinner menu"
+            },
+            {
+              "label": "Drinks menu"
+            }
+          ]
+        },
+        {
+          "name": "Paper",
+          "options": [
+            {
+              "label": "Matte 300gsm"
+            },
+            {
+              "label": "Pearl 350gsm"
+            }
+          ]
+        }
+      ],
+      "isAddon": false,
+      "suggestedAddonIds": [
+        "prod-table-number"
+      ],
+      "complimentaryItems": [],
+      "universalComplimentaryItemIds": [],
+      "featured": false,
+      "status": "published",
+      "contentVersion": 1,
+      "deletedAt": null,
+      "createdAt": "2026-09-22T03:31:24.938Z",
+      "updatedAt": "2026-09-29T11:36:36.624Z"
+    },
+    {
+      "id": "prod-terracotta-detail-card",
+      "name": "Terracotta Detail Card",
+      "categoryIds": [
+        "cat-menus-details"
+      ],
+      "categoryId": "cat-menus-details",
+      "description": "Small details card for map, parking, accommodation, and schedule notes.",
+      "photos": [
+        "/uploads/demo/invitation-terracotta.svg"
+      ],
+      "pricingMode": "exact",
+      "price": 45,
+      "maxOrderQty": 400,
+      "variants": [
+        {
+          "name": "Corner",
+          "options": [
+            {
+              "label": "Square"
+            },
+            {
+              "label": "Rounded"
+            }
+          ]
+        },
+        {
+          "name": "Ink",
+          "options": [
+            {
+              "label": "Terracotta"
+            },
+            {
+              "label": "Charcoal"
+            }
+          ]
+        }
+      ],
+      "isAddon": false,
+      "suggestedAddonIds": [
+        "prod-map-card"
+      ],
+      "complimentaryItems": [],
+      "universalComplimentaryItemIds": [
+        "uci-envelope"
+      ],
+      "featured": false,
+      "status": "published",
+      "contentVersion": 1,
+      "deletedAt": null,
+      "createdAt": "2026-09-22T07:31:24.938Z",
+      "updatedAt": "2026-09-29T11:36:36.624Z"
+    },
+    {
+      "id": "prod-watercolor-rsvp",
+      "name": "Watercolor Dove RSVP Card",
+      "categoryIds": [
+        "cat-wedding-invitations"
+      ],
+      "categoryId": "cat-wedding-invitations",
+      "description": "RSVP card with soft dove artwork and meal-selection line.",
+      "photos": [
+        "/uploads/demo/invitation-watercolor.svg"
+      ],
+      "pricingMode": "exact",
+      "price": 60,
+      "maxOrderQty": 350,
+      "variants": [
+        {
+          "name": "Response",
+          "options": [
+            {
+              "label": "QR code"
+            },
+            {
+              "label": "Phone line"
+            },
+            {
+              "label": "Traditional mail"
+            }
+          ]
+        }
+      ],
+      "isAddon": false,
+      "suggestedAddonIds": [
+        "prod-envelope-liner"
+      ],
+      "complimentaryItems": [
+        {
+          "id": "free-qr",
+          "enabled": true,
+          "name": "QR Code Setup",
+          "type": "fixed",
+          "qty": 1,
+          "extraPriceEach": 0
+        }
+      ],
+      "universalComplimentaryItemIds": [],
+      "featured": true,
+      "status": "published",
+      "contentVersion": 1,
+      "deletedAt": null,
+      "createdAt": "2026-09-22T11:31:24.938Z",
+      "updatedAt": "2026-09-29T11:36:36.624Z"
+    },
+    {
+      "id": "prod-modern-addis-invite",
+      "name": "Modern Addis Invitation",
+      "categoryIds": [
+        "cat-wedding-invitations"
+      ],
+      "categoryId": "cat-wedding-invitations",
+      "description": "Bold modern invite with Amharic and English layout options.",
+      "photos": [
+        "/uploads/demo/invitation-modern.svg"
+      ],
+      "pricingMode": "quote",
+      "price": null,
+      "maxOrderQty": null,
+      "variants": [
+        {
+          "name": "Language",
+          "options": [
+            {
+              "label": "English"
+            },
+            {
+              "label": "Amharic"
+            },
+            {
+              "label": "Bilingual"
+            }
+          ]
+        },
+        {
+          "name": "Package",
+          "options": [
+            {
+              "label": "Card only"
+            },
+            {
+              "label": "Card + envelope"
+            }
+          ]
+        }
+      ],
+      "isAddon": false,
+      "suggestedAddonIds": [
+        "prod-wax-seal"
+      ],
+      "complimentaryItems": [],
+      "universalComplimentaryItemIds": [
+        "uci-envelope"
+      ],
+      "featured": false,
+      "status": "published",
+      "contentVersion": 1,
+      "deletedAt": null,
+      "createdAt": "2026-09-22T15:31:24.938Z",
+      "updatedAt": "2026-09-29T11:36:36.624Z"
+    },
+    {
+      "id": "prod-envelope-liner",
+      "name": "Envelope Liner Add-on",
+      "categoryIds": [
+        "cat-add-ons"
+      ],
+      "categoryId": "cat-add-ons",
+      "description": "Patterned envelope liner to match the invitation design.",
+      "photos": [
+        "/uploads/demo/gallery-studio.svg"
+      ],
+      "pricingMode": "exact",
+      "price": 25,
+      "maxOrderQty": null,
+      "variants": [
+        {
+          "name": "Pattern",
+          "options": [
+            {
+              "label": "Floral"
+            },
+            {
+              "label": "Minimal"
+            },
+            {
+              "label": "Monogram"
+            }
+          ]
+        }
+      ],
+      "isAddon": true,
+      "suggestedAddonIds": [],
+      "complimentaryItems": [],
+      "universalComplimentaryItemIds": [],
+      "featured": false,
+      "status": "published",
+      "contentVersion": 1,
+      "deletedAt": null,
+      "createdAt": "2026-09-22T19:31:24.938Z",
+      "updatedAt": "2026-09-29T11:36:36.624Z"
+    },
+    {
+      "id": "prod-wax-seal",
+      "name": "Wax Seal Add-on",
+      "categoryIds": [
+        "cat-add-ons"
+      ],
+      "categoryId": "cat-add-ons",
+      "description": "Decorative wax seal for envelopes, available in multiple colors.",
+      "photos": [
+        "/uploads/demo/invitation-gold.svg"
+      ],
+      "pricingMode": "exact",
+      "price": 18,
+      "maxOrderQty": null,
+      "variants": [
+        {
+          "name": "Color",
+          "options": [
+            {
+              "label": "Gold",
+              "photo": "/uploads/demo/invitation-gold.svg"
+            },
+            {
+              "label": "Blush",
+              "photo": "/uploads/demo/invitation-blush.svg"
+            },
+            {
+              "label": "Ivory",
+              "photo": "/uploads/demo/invitation-minimal.svg"
+            }
+          ]
+        }
+      ],
+      "isAddon": true,
+      "suggestedAddonIds": [],
+      "complimentaryItems": [],
+      "universalComplimentaryItemIds": [],
+      "featured": false,
+      "status": "published",
+      "contentVersion": 1,
+      "deletedAt": null,
+      "createdAt": "2026-09-22T23:31:24.938Z",
+      "updatedAt": "2026-09-29T11:36:36.624Z"
+    },
+    {
+      "id": "prod-table-number",
+      "name": "Table Number Card",
+      "categoryIds": [
+        "cat-add-ons"
+      ],
+      "categoryId": "cat-add-ons",
+      "description": "Matching table number card for reception tables.",
+      "photos": [
+        "/uploads/demo/invitation-minimal.svg"
+      ],
+      "pricingMode": "exact",
+      "price": 40,
+      "maxOrderQty": 100,
+      "variants": [
+        {
+          "name": "Stand",
+          "options": [
+            {
+              "label": "No stand"
+            },
+            {
+              "label": "With acrylic stand"
+            }
+          ]
+        }
+      ],
+      "isAddon": true,
+      "suggestedAddonIds": [],
+      "complimentaryItems": [],
+      "universalComplimentaryItemIds": [],
+      "featured": false,
+      "status": "published",
+      "contentVersion": 1,
+      "deletedAt": null,
+      "createdAt": "2026-09-23T03:31:24.938Z",
+      "updatedAt": "2026-09-29T11:36:36.624Z"
+    },
+    {
+      "id": "prod-draft-review-sample",
+      "name": "Draft Review Sample",
+      "categoryIds": [
+        "cat-wedding-invitations"
+      ],
+      "categoryId": "cat-wedding-invitations",
+      "description": "Admin-only draft product for testing publish and restore flows.",
+      "photos": [
+        "/uploads/demo/invitation-blush.svg"
+      ],
+      "pricingMode": "exact",
+      "price": 99,
+      "maxOrderQty": 25,
+      "variants": [],
+      "isAddon": false,
+      "suggestedAddonIds": [],
+      "complimentaryItems": [],
+      "universalComplimentaryItemIds": [],
+      "featured": false,
+      "status": "draft",
+      "needsReview": true,
+      "contentVersion": 1,
+      "deletedAt": null,
+      "createdAt": "2026-09-23T07:31:24.938Z",
+      "updatedAt": "2026-09-29T11:36:36.624Z"
+    }
+  ],
+  "gallery": [
+    {
+      "id": "gallery-studio-table",
+      "photo": "/uploads/demo/gallery-studio.svg",
+      "caption": "Studio sample table with invitation suites",
+      "sortOrder": 0,
+      "createdAt": "2026-09-24T11:31:24.938Z",
+      "updatedAt": "2026-09-29T11:31:24.923Z"
+    },
+    {
+      "id": "gallery-full-suite",
+      "photo": "/uploads/demo/gallery-suite.svg",
+      "caption": "Full wedding suite layout",
+      "sortOrder": 1,
+      "createdAt": "2026-09-25T11:31:24.938Z",
+      "updatedAt": "2026-09-29T11:31:24.923Z"
+    },
+    {
+      "id": "gallery-blush-invite",
+      "photo": "/uploads/demo/invitation-blush.svg",
+      "caption": "Blush garden invitation close-up",
+      "sortOrder": 2,
+      "createdAt": "2026-09-26T11:31:24.938Z",
+      "updatedAt": "2026-09-29T11:31:24.923Z"
+    },
+    {
+      "id": "gallery-navy-suite",
+      "photo": "/uploads/demo/invitation-navy.svg",
+      "caption": "Navy and gold suite sample",
+      "sortOrder": 3,
+      "createdAt": "2026-09-27T11:31:24.938Z",
+      "updatedAt": "2026-09-29T11:31:24.923Z"
+    }
+  ]
+}
