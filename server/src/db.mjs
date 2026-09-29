@@ -142,8 +142,20 @@ async function withDbFallback(dbOperation, localOperation) {
 async function readLocalStore() {
   if (localStoreCache) return localStoreCache;
   try {
-    localStoreCache = JSON.parse(await fs.readFile(localStorePath, 'utf8'));
+    const raw = await fs.readFile(localStorePath, 'utf8');
+    const text = raw.replace(/^\uFEFF/, '').trim();
+    localStoreCache = text ? JSON.parse(text) : {};
   } catch (err) {
+    if (err instanceof SyntaxError) {
+      const corruptPath = localStorePath.replace(
+        /\.json$/,
+        `.corrupt-${new Date().toISOString().replace(/[:.]/g, '-')}.json`
+      );
+      await fs.rename(localStorePath, corruptPath).catch(() => {});
+      console.error(`[db] local dev-data.json is invalid JSON; moved aside as ${path.basename(corruptPath)}`);
+      localStoreCache = {};
+      return localStoreCache;
+    }
     if (err.code !== 'ENOENT') throw err;
     localStoreCache = {};
   }
