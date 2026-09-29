@@ -60,6 +60,7 @@ jobs:
           rm -rf server-deploy
           mkdir -p server-deploy/tmp server-deploy/uploads
           cp server/app.js server/package.json server/package-lock.json server-deploy/
+          cp server/dev-data.json server-deploy/
           cp -R server/src server-deploy/
           touch server-deploy/uploads/.gitkeep
           date -u +"%Y-%m-%dT%H:%M:%SZ" > server-deploy/tmp/restart.txt

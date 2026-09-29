@@ -57,6 +57,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const refreshReachability = async () => {
       const health = await checkApiHealth();
       setOnline(health.error !== 'server_unreachable');
+      setDbDown(health.error === 'server_unreachable' ? false : !health.writable);
     };
     const up = () => {
       setOnline(true);
@@ -68,10 +69,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
     window.addEventListener('online', up);
     window.addEventListener('offline', down);
-    onDbStatus(setDbDown);
+    const unsubscribeDbStatus = onDbStatus(setDbDown);
     return () => {
       window.removeEventListener('online', up);
       window.removeEventListener('offline', down);
+      unsubscribeDbStatus();
     };
   }, []);
 
@@ -84,6 +86,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       const health = await checkApiHealth();
       setOnline(health.error !== 'server_unreachable');
+      setDbDown(health.error === 'server_unreachable' ? false : !health.writable);
     };
     void refreshHealth();
     const id = window.setInterval(refreshHealth, 30_000);

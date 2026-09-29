@@ -85,18 +85,37 @@ function rowToDoc(row) {
 }
 
 function isDbUnavailable(err) {
-  return err && (
-    [
-      'ECONNREFUSED',
-      'ETIMEDOUT',
-      'PROTOCOL_CONNECTION_LOST',
-      'ENOTFOUND',
-      'ER_ACCESS_DENIED_ERROR',
-      'ER_BAD_DB_ERROR',
-      'ER_CON_COUNT_ERROR',
-      'ER_DBACCESS_DENIED_ERROR',
-    ].includes(err.code)
-  );
+  if (!err) return false;
+  const unavailableCodes = new Set([
+    'ECONNREFUSED',
+    'ECONNRESET',
+    'EHOSTUNREACH',
+    'ENETUNREACH',
+    'ETIMEDOUT',
+    'ENOTFOUND',
+    'PROTOCOL_CONNECTION_LOST',
+    'PROTOCOL_SEQUENCE_TIMEOUT',
+    'ER_ACCESS_DENIED_ERROR',
+    'ER_ACCESS_DENIED_NO_PASSWORD_ERROR',
+    'ER_BAD_DB_ERROR',
+    'ER_CON_COUNT_ERROR',
+    'ER_DBACCESS_DENIED_ERROR',
+    'ER_NO_SUCH_TABLE',
+    'ER_SPECIFIC_ACCESS_DENIED_ERROR',
+    'ER_TABLEACCESS_DENIED_ERROR',
+  ]);
+  if (unavailableCodes.has(err.code)) return true;
+
+  const message = String(err.message || '').toLowerCase();
+  return [
+    'access denied',
+    'connect etimedout',
+    'connect econnrefused',
+    'connection lost',
+    'getaddrinfo enotfound',
+    'no such table',
+    'unknown database',
+  ].some((needle) => message.includes(needle));
 }
 
 async function switchToLocalStore(err) {
@@ -133,6 +152,7 @@ async function readLocalStore() {
 
 async function writeLocalStore(store) {
   localStoreCache = store;
+  await fs.mkdir(path.dirname(localStorePath), { recursive: true });
   await fs.writeFile(localStorePath, JSON.stringify(store, null, 2));
 }
 
