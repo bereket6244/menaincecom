@@ -96,7 +96,7 @@ function headers(json = true): Record<string, string> {
   return h;
 }
 
-const CACHE_PREFIX = 'mena_cache:';
+const CACHE_PREFIX = 'mena_cache:v2:';
 
 export function readCache<T>(path: string): T | null {
   try {

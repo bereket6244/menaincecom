@@ -205,7 +205,6 @@ export function DesktopShell({ children }: { children: ReactNode }) {
             <a href="https://menaincet.com" target="_blank" rel="noreferrer" className="mena-press hover:text-pink">
               About us
             </a>
-            <span>Invitations - Stationery - Print</span>
           </div>
         </div>
       </footer>

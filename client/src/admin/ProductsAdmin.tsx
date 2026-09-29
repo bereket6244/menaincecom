@@ -61,6 +61,114 @@ function cleanComplimentaryItems(items: NonNullable<Product['complimentaryItems'
     .filter((item) => item.name);
 }
 
+function colorGroupIndex(variants: VariantGroup[]) {
+  return variants.findIndex((group) => isColorGroupName(group.name));
+}
+
+function unassignMissingPhotoColors(variants: VariantGroup[], photos: string[]) {
+  const allowed = new Set(photos);
+  return variants.map((group) => (
+    isColorGroupName(group.name)
+      ? {
+          ...group,
+          options: group.options.map((option) => (
+            option.photo && !allowed.has(option.photo) ? { ...option, photo: undefined } : option
+          )),
+        }
+      : group
+  ));
+}
+
+function assignPhotoColor(variants: VariantGroup[], photo: string, label: string) {
+  const index = colorGroupIndex(variants);
+  if (index === -1) return variants;
+  return variants.map((group, groupIndex) => {
+    if (groupIndex !== index) return group;
+    return {
+      ...group,
+      options: group.options.map((option) => ({
+        ...option,
+        photo: option.label === label
+          ? photo
+          : option.photo === photo
+            ? undefined
+            : option.photo,
+      })),
+    };
+  });
+}
+
+function PhotoColorAssignments({
+  photos, variants, onChange,
+}: {
+  photos: string[];
+  variants: VariantGroup[];
+  onChange: (variants: VariantGroup[]) => void;
+}) {
+  if (!photos.length) return null;
+  const colorIndex = colorGroupIndex(variants);
+  const colorGroup = colorIndex >= 0 ? variants[colorIndex] : null;
+  const colorOptions = colorGroup?.options || [];
+
+  if (!colorGroup) {
+    return (
+      <div className="mt-2 rounded-lg border border-dashed border-edge bg-surface2 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] font-semibold text-muted">
+            Add a Color variant group to connect photos with specific colors.
+          </p>
+          <Button variant="outline" onClick={() => onChange([...variants, { name: 'Color', options: [] }])}>
+            <Plus className="h-3 w-3" /> Add Color group
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2 rounded-lg border border-edge bg-surface2 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="text-[12px] font-extrabold text-ink">Photo colors</h3>
+          <p className="text-[10px] text-muted">Optional: connect a product photo to one color swatch.</p>
+        </div>
+        {colorOptions.length === 0 && <span className="text-[10px] font-semibold text-muted">Add color options below first.</span>}
+      </div>
+      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+        {photos.map((photo, index) => {
+          const assigned = colorOptions.find((option) => option.photo === photo)?.label || '';
+          return (
+            <div key={photo} className="grid grid-cols-[56px_1fr] gap-2 rounded border border-edge bg-white p-2">
+              <img src={photo} alt="" className="h-14 w-14 rounded object-cover" />
+              <div className="min-w-0">
+                <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-muted">
+                  {index === 0 ? 'Cover photo' : `Photo ${index + 1}`}
+                </div>
+                <select
+                  value={assigned}
+                  disabled={colorOptions.length === 0}
+                  onChange={(event) => onChange(assignPhotoColor(variants, photo, event.target.value))}
+                  className="field py-1 text-[12px] disabled:opacity-50"
+                >
+                  <option value="">No color assigned</option>
+                  {colorOptions.map((option) => {
+                    const swatch = cssColor(option.label);
+                    return (
+                      <option key={option.label} value={option.label}>
+                        {swatch ? '● ' : ''}{option.label}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /**
  * Variant groups and option labels already used across the catalog. Lets a group
  * invented on one product ("Paper Weight") be reused on the next, with its options,
@@ -1268,7 +1376,19 @@ export function ProductsAdmin() {
             <div>
               <SysLabel>Photos</SysLabel>
               <div className="mt-1">
-                <PhotoUpload photos={editing.photos} onChange={(photos) => setEditing({ ...editing, photos })} />
+                <PhotoUpload
+                  photos={editing.photos}
+                  onChange={(photos) => setEditing({
+                    ...editing,
+                    photos,
+                    variants: unassignMissingPhotoColors(editing.variants, photos),
+                  })}
+                />
+                <PhotoColorAssignments
+                  photos={editing.photos}
+                  variants={editing.variants}
+                  onChange={(variants) => setEditing({ ...editing, variants })}
+                />
               </div>
             </div>
 

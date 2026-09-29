@@ -1,28 +1,15 @@
-# Mena Catalog Redesign QA
+# Digital Invite Package Cards QA
 
-Source references:
-- Image 1: current/original Mena Inc. catalog UI.
-- Image 2: cleaner catalog layout, spacing, hierarchy, and filter/card direction.
+Source visual: user-provided four-card pricing reference.
 
-Checks completed:
-- Desktop header is more compact and keeps the Mena Inc. logo, search, utility links, cart, wishlist, contact control, and Local account control.
-- Category navigation uses compact profile circles with a clear pink active state.
-- Results header keeps All Designs, design count, active filter chips, clear all, and sort control in a tighter layout.
-- Desktop filters remain functional and move into a lighter sticky sidebar with collapsible sections and independent scrolling.
-- Category filters are not duplicated in the sidebar.
-- Product cards keep existing product data, favorite action, featured badge, price, and the Add to Cart CTA.
-- Desktop header uses Message for the contact menu.
-- Mobile message actions show WhatsApp, Telegram, and SMS labels beside their icons when opened.
-- No forbidden CTAs such as View, View Design, or Customize were introduced.
-- At 1280px, the first product row is visible immediately and all Add to Cart buttons fit inside cards.
-- At 1440px, the product grid renders 4 columns.
+Prototype checked: `http://localhost:5173/digital-invitations`
 
-Automated layout observations:
-- Forbidden CTA count: 0.
-- Duplicate sidebar Category section: false.
-- Clipped first-card buttons: 0.
-- Wide desktop first-row columns: 4.
-- Desktop filter sidebar overflow: auto.
-- Mobile message labels present: WhatsApp, Telegram, SMS.
+Checks:
+- Four cards render with the same package names, descriptions, prices, and feature content as the reference.
+- Standard is highlighted with a pink border, light pink card tint, and `Most Popular` badge.
+- Basic, Standard, Premium, and Ultimate use leaf, heart, diamond, and crown icon treatments matching the reference structure.
+- Desktop layout is responsive: two columns at the current app width and four columns at wider breakpoints.
+- Mobile layout stacks cards cleanly with no text overlap.
+- Ordering remains available from each card through a compact native reveal control.
 
-Final result: passed.
+Final result: passed

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowUpDown, Check, ChevronDown, RotateCcw, SlidersHorizontal } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { Category, Product } from '../lib/types';
@@ -45,6 +45,7 @@ function productSearchText(product: Product, categories: Category[]): string {
 }
 
 export function MobileCatalog() {
+  const navigate = useNavigate();
   const { data: categories } = useData<Category[]>('/categories');
   const { data: products, loading } = useData<Product[]>('/products');
   const [params, setParams] = useSearchParams();
@@ -338,8 +339,8 @@ export function MobileCatalog() {
             <MobileProductCard
               key={product.id}
               product={product}
-              categoryName={productCategoryIds(product).map((categoryId) => categoryById.get(categoryId)).find(Boolean) || 'Wedding Cards'}
               priority={index < 4}
+              onQuickAdd={(item) => navigate(`/product/${item.id}`)}
             />
           ))}
         </div>

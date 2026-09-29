@@ -85,6 +85,15 @@ export function findVariantGroup(product: Pick<Product, 'variants'>, kind: 'colo
   return (product.variants || []).find((g) => match(g.name)) || null;
 }
 
+export function colorOptions(product: Pick<Product, 'variants'>) {
+  return (findVariantGroup(product, 'color')?.options || [])
+    .filter((option) => option.label.trim())
+    .map((option) => ({
+      ...option,
+      swatch: cssColor(option.label),
+    }));
+}
+
 const NAMED_SWATCHES: Record<string, string> = {
   blush: '#f5b5c8',
   cream: '#fff5dc',

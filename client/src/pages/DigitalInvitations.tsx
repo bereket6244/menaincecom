@@ -1,4 +1,4 @@
-import { ExternalLink, MessageCircle, MessageSquareText, Phone, Send } from 'lucide-react';
+import { Check, Crown, ExternalLink, Gem, Heart, Leaf, MessageCircle, MessageSquareText, Phone, Send } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { BusinessSettings, DigitalInvitePackage, DigitalInvitationsContent } from '../lib/types';
 import { smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
@@ -19,44 +19,44 @@ const FALLBACK_DIGITAL_INVITATIONS: DigitalInvitationsContent = {
       id: 'basic',
       name: 'Basic',
       eyebrow: '',
-      description: '',
-      price: 12000,
+      description: 'Simple and elegant',
+      price: 9000,
       compareAtPrice: null,
       badge: '',
-      features: ['Basic Information', 'Photo Gallery (3 Photos)', '1 Location (Map Point)', 'Countdown', 'RSVP Form', '1 Language Support'],
+      features: ['Wedding details', '3 photos', '1 venue + map', 'RSVP'],
       footnote: '',
     },
     {
       id: 'standard',
       name: 'Standard',
       eyebrow: '',
-      description: '',
-      price: 16000,
+      description: 'Best for most weddings',
+      price: 13000,
       compareAtPrice: null,
-      badge: '',
-      features: ['Basic Information', 'Photo Gallery (10 Photos)', '2 Location (Map Point)', 'Countdown', 'RSVP Form', '2 Language Support', 'Timeline'],
+      badge: 'Most Popular',
+      features: ['Everything in Basic', '10 photos', '2 venues + map', '2 languages + timeline'],
       footnote: '',
     },
     {
       id: 'premium',
       name: 'Premium',
       eyebrow: '',
-      description: '',
-      price: 19000,
+      description: 'More personal and complete',
+      price: 16000,
       compareAtPrice: null,
-      badge: 'Featured',
-      features: ['Basic Information', 'Unlimited Photo', '3 Location (Map Point)', 'Countdown', 'RSVP Form', '2 Language Support', 'Timeline', 'Video', 'Bride & Groom Profile', 'Gift Ideas'],
+      badge: '',
+      features: ['Everything in Standard', 'Unlimited photos', 'Video + couple profile', 'Gift info'],
       footnote: '',
     },
     {
       id: 'ultimate',
       name: 'Ultimate',
       eyebrow: '',
-      description: '',
-      price: 28500,
+      description: 'For full guest management',
+      price: 18500,
       compareAtPrice: null,
       badge: '',
-      features: ['Basic Information', 'Unlimited Photo', '3+ Location (Map Point)', 'Countdown', 'RSVP Form', '3+ Language Support', 'Timeline', 'Video', 'Bride & Groom Profile', 'Gift Ideas', 'QR Code', 'Live Guest Check In'],
+      features: ['Everything in Premium', '3+ languages', 'QR code', 'Live guest check-in'],
       footnote: '',
     },
   ],
@@ -94,6 +94,21 @@ function previewImage(example: { id?: string; url: string }) {
   if (key.includes('yordanos') || key.includes('kaleab')) return assetUrl('digital-invites/yordanos-kaleab.webp');
   if (key.includes('yeabsra') || key.includes('christian')) return assetUrl('digital-invites/yeabsra-christian.webp');
   return '';
+}
+
+function packagePresentation(pkg: DigitalInvitePackage, index: number) {
+  const key = `${pkg.id || ''} ${pkg.name || ''}`.toLowerCase();
+  if (key.includes('standard')) return { Icon: Heart, color: '#ee317b', tint: '#fff1f6', popular: true };
+  if (key.includes('premium')) return { Icon: Gem, color: '#ff7a1a', tint: '#fff3e8', popular: false };
+  if (key.includes('ultimate')) return { Icon: Crown, color: '#f58220', tint: '#fff4e8', popular: false };
+  if (key.includes('basic')) return { Icon: Leaf, color: '#319b5a', tint: '#f0fbf4', popular: false };
+  const fallback = [
+    { Icon: Leaf, color: '#319b5a', tint: '#f0fbf4', popular: false },
+    { Icon: Heart, color: '#ee317b', tint: '#fff1f6', popular: false },
+    { Icon: Gem, color: '#ff7a1a', tint: '#fff3e8', popular: false },
+    { Icon: Crown, color: '#f58220', tint: '#fff4e8', popular: false },
+  ];
+  return fallback[index % fallback.length];
 }
 
 export function DigitalInvitations() {
@@ -163,8 +178,11 @@ export function DigitalInvitations() {
 
       <section id="packages" className="mx-auto max-w-[1240px] px-5 py-12 sm:px-8 lg:px-10">
         <h2 className="mb-7 font-serif text-4xl text-ink">Package plans</h2>
-        <div className="grid gap-4 lg:grid-cols-2">
-          {packages.map((pkg) => {
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {packages.map((pkg, index) => {
+            const presentation = packagePresentation(pkg, index);
+            const highlighted = Boolean(pkg.badge) || presentation.popular;
+            const { Icon } = presentation;
             const orderMessage = buildPackageMessage(pkg);
             const orderLinks = [
               { id: 'telegram', label: 'Telegram', icon: Send, href: telegramOrderUrl(business, orderMessage), external: true, className: 'bg-[#2b93d6] text-white hover:bg-[#237dbc]' },
@@ -176,36 +194,57 @@ export function DigitalInvitations() {
               <article
                 key={pkg.id}
                 className={cx(
-                  'flex flex-col rounded-2xl border p-6 text-center shadow-[0_14px_40px_rgba(28,26,25,0.06)]',
-                  pkg.name.toLowerCase() === 'premium'
-                    ? 'border-[#ff74ad] bg-[#ff74ad] text-white'
-                    : 'border-[#4a1730]/50 bg-white text-ink'
+                  'relative flex min-h-[390px] flex-col rounded-2xl border bg-white px-5 pb-5 pt-8 text-center shadow-[0_16px_42px_rgba(28,26,25,0.07)]',
+                  highlighted ? 'border-pink bg-gradient-to-b from-[#fff5f9] to-white shadow-[0_18px_46px_rgba(238,49,123,0.16)]' : 'border-edge/80'
                 )}
               >
-                <h3 className={cx('font-serif text-3xl', pkg.name.toLowerCase() === 'premium' ? 'text-[#ffc77f]' : 'text-[#4a1730]')}>{pkg.name}</h3>
-                <div className="mt-7 flex items-baseline justify-center gap-2">
-                  <span className={cx('text-sm font-extrabold', pkg.name.toLowerCase() === 'premium' ? 'text-white' : 'text-[#ffb45f]')}>ETB</span>
-                  <span className={cx('font-serif text-5xl font-semibold', pkg.name.toLowerCase() === 'premium' ? 'text-white' : 'text-[#ffbd71]')}>
+                {highlighted && (
+                  <div className="absolute left-1/2 top-0 inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-pink px-5 py-2 text-[13px] font-extrabold text-white shadow-[0_8px_20px_rgba(238,49,123,0.28)]">
+                    <Crown className="h-4 w-4 fill-white" />
+                    {pkg.badge || 'Most Popular'}
+                  </div>
+                )}
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ background: presentation.tint }}>
+                  <Icon className="h-8 w-8" style={{ color: presentation.color }} />
+                </div>
+                <h3 className="mt-4 font-serif text-[31px] font-semibold leading-none text-[#201433]">{pkg.name}</h3>
+                {pkg.description && <p className="mt-2 min-h-[24px] text-[15px] font-semibold text-[#6e7795]">{pkg.description}</p>}
+                <div className="mx-auto mt-4 h-px w-14 bg-pink/20" />
+                <div className="mt-6 flex items-baseline justify-center gap-2">
+                  <span className={cx('text-sm font-extrabold', highlighted ? 'text-pink' : 'text-[#ff7a1a]')}>ETB</span>
+                  <span className={cx('font-serif text-[45px] font-semibold leading-none', highlighted ? 'text-pink' : 'text-[#ff7a1a]')}>
                     {Math.max(0, Number(pkg.price) || 0).toLocaleString()}
                   </span>
                 </div>
-                <ul className={cx('mx-auto mt-7 flex-1 space-y-1.5 text-base leading-7', pkg.name.toLowerCase() === 'premium' ? 'text-white' : 'text-ink/70')}>
-                  {(pkg.features || []).map((feature) => <li key={feature}>{feature}</li>)}
-                </ul>
-                <div className="mt-8 flex flex-wrap justify-center gap-2">
-                  {orderLinks.map(({ id, label, icon: Icon, href, external, className }) => (
-                    <a
-                      key={id}
-                      href={href}
-                      target={external ? '_blank' : undefined}
-                      rel={external ? 'noreferrer' : undefined}
-                      className={cx('mena-press inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-extrabold', className)}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {label}
-                    </a>
+                <ul className="mx-auto mt-7 flex-1 space-y-3 text-left text-[15px] font-semibold leading-5 text-[#6e7795]">
+                  {(pkg.features || []).map((feature) => (
+                    <li key={feature} className="flex items-start gap-3">
+                      <span className={cx('mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-white', highlighted ? 'bg-pink' : 'bg-[#39a766]')}>
+                        <Check className="h-3.5 w-3.5 stroke-[3]" />
+                      </span>
+                      <span>{feature}</span>
+                    </li>
                   ))}
-                </div>
+                </ul>
+                <details className="group mt-7">
+                  <summary className="mena-press flex h-11 w-full cursor-pointer list-none items-center justify-center rounded-full bg-pink px-5 text-[14px] font-extrabold text-white shadow-[0_10px_24px_rgba(238,49,123,0.2)] hover:bg-pink-dim [&::-webkit-details-marker]:hidden">
+                    Order {pkg.name}
+                  </summary>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    {orderLinks.map(({ id, label, icon: Icon, href, external, className }) => (
+                      <a
+                        key={id}
+                        href={href}
+                        target={external ? '_blank' : undefined}
+                        rel={external ? 'noreferrer' : undefined}
+                        className={cx('mena-press inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-[12px] font-extrabold', className)}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {label}
+                      </a>
+                    ))}
+                  </div>
+                </details>
               </article>
             );
           })}

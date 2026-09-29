@@ -2,11 +2,11 @@ import { useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useState } from 'react';
 import type { Product } from '../lib/types';
-import { cx, formatPrice } from '../lib/utils';
+import { cleanDescription, colorOptions, cx, formatPrice } from '../lib/utils';
 import { flyToLiked } from '../lib/fly';
 import { useApp } from '../store/AppContext';
 import { ProductImageFrame } from './ProductImageFrame';
-import { productLimitText } from '../lib/orderLimits';
+import { productPreviewLimitText } from '../lib/orderLimits';
 
 const TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#eeeeec', '#f6efdd', '#e9f0ec', '#e9e6ef'];
 
@@ -17,12 +17,12 @@ export function mobileProductTint(product: Pick<Product, 'id' | 'name'>): string
 
 export function MobileProductCard({
   product,
-  categoryName = 'Wedding Cards',
   priority = false,
+  onQuickAdd,
 }: {
   product: Product;
-  categoryName?: string;
   priority?: boolean;
+  onQuickAdd?: (product: Product) => void;
 }) {
   const navigate = useNavigate();
   const { wishlistProductIds, toggleWishlist } = useApp();
@@ -30,12 +30,16 @@ export function MobileProductCard({
   const open = () => navigate(`/product/${product.id}`);
   const tint = mobileProductTint(product);
   const [photoIndex, setPhotoIndex] = useState(0);
-  const selectedPhoto = product.photos[photoIndex] || product.photos[0];
+  const [pickedColorPhoto, setPickedColorPhoto] = useState<string | null>(null);
+  const selectedPhoto = pickedColorPhoto || product.photos[photoIndex] || product.photos[0];
   const hasMultiplePhotos = product.photos.length > 1;
-  const limitText = productLimitText(product);
+  const limitText = productPreviewLimitText(product);
+  const colors = colorOptions(product).slice(0, 6);
+  const isQuote = product.pricingMode === 'quote' || product.price == null;
+  const description = cleanDescription(product.description, product.name);
 
   return (
-    <div className="mena-fade-up flex min-w-0 flex-col">
+    <article className="mena-fade-up min-w-0 overflow-hidden rounded-2xl border border-edge/70 bg-white p-2 shadow-[0_10px_28px_rgba(28,26,25,0.08)]">
       <div className="relative">
         <ProductImageFrame
           src={selectedPhoto}
@@ -43,10 +47,16 @@ export function MobileProductCard({
           priority={priority}
           onOpen={open}
           showControls={hasMultiplePhotos}
-          onPrevious={() => setPhotoIndex((current) => (current - 1 + product.photos.length) % product.photos.length)}
-          onNext={() => setPhotoIndex((current) => (current + 1) % product.photos.length)}
-          preloadSrcs={product.photos}
-          className="mena-press aspect-[5/7] w-full rounded-xl text-left shadow-[0_1px_3px_rgba(28,26,25,0.08)]"
+          onPrevious={() => {
+            setPickedColorPhoto(null);
+            setPhotoIndex((current) => (current - 1 + product.photos.length) % product.photos.length);
+          }}
+          onNext={() => {
+            setPickedColorPhoto(null);
+            setPhotoIndex((current) => (current + 1) % product.photos.length);
+          }}
+          preloadSrcs={[...product.photos, ...colors.map((color) => color.photo || '').filter(Boolean)]}
+          className="mena-press aspect-[1.03/1] w-full rounded-[18px] text-left"
           placeholder={
             <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center" style={{ background: tint }}>
               <span className="font-script text-[28px] leading-none text-pink">{product.name}</span>
@@ -55,11 +65,34 @@ export function MobileProductCard({
           }
         />
 
-          {product.featured && (
-            <span className="absolute left-2 top-2 z-30 rounded-md bg-ink px-2 py-1 text-[9px] font-extrabold uppercase tracking-[0.08em] text-white">
-              Featured
-            </span>
-          )}
+        {colors.length > 0 && (
+          <div className="absolute bottom-2 left-2 right-2 z-30 flex max-w-full gap-1 overflow-hidden rounded-full bg-white/90 px-1.5 py-1.5 shadow-sm backdrop-blur">
+            {colors.map((color) => {
+              const active = color.photo && selectedPhoto === color.photo;
+              return (
+                <button
+                  key={color.label}
+                  type="button"
+                  title={color.photo ? `Show ${color.label}` : color.label}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    if (color.photo) setPickedColorPhoto(color.photo);
+                  }}
+                  className={cx(
+                    'mena-press flex h-6 w-6 shrink-0 items-center justify-center rounded-full border bg-white',
+                    active ? 'border-pink ring-2 ring-pink/25' : 'border-white'
+                  )}
+                  aria-label={color.photo ? `Show ${color.label} photo` : `${color.label} color`}
+                >
+                  <span
+                    className="h-[18px] w-[18px] rounded-full ring-1 ring-black/15"
+                    style={{ background: color.swatch || '#f4f0ec' }}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        )}
         <button
           type="button"
           onClick={(e) => {
@@ -67,18 +100,31 @@ export function MobileProductCard({
             void toggleWishlist(product.id);
           }}
           aria-label={wished ? 'Remove from liked items' : 'Save to liked items'}
-          className="mena-press absolute right-2 top-2 z-30 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-white/95 shadow-sm"
+          className="mena-press absolute right-2 top-2 z-30 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-ink/70 shadow-sm"
         >
-          <Heart className={cx('h-4 w-4', wished ? 'fill-pink text-pink' : 'text-ink/40')} />
+          <Heart className={cx('h-4 w-4', wished ? 'fill-pink text-pink' : '')} />
         </button>
       </div>
 
-      <div className="mt-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">{categoryName}</div>
-      <button type="button" onClick={open} className="mt-0.5 truncate text-left text-[15px] font-semibold text-ink">
+      <button type="button" onClick={open} className="mt-3 line-clamp-2 min-h-[37px] text-left font-serif text-[21px] font-semibold leading-[0.98] text-ink">
         {product.name}
       </button>
-      <div className="mt-1 text-[15px] font-extrabold text-[#ee0a24]">{formatPrice(product)}</div>
-      {limitText && <div className="mt-0.5 text-[11px] font-semibold text-[#ee0a24]">{limitText}</div>}
-    </div>
+      {description && (
+        <p className="mt-1.5 line-clamp-2 min-h-[34px] text-[12.5px] font-medium leading-[1.35] text-ink/58">
+          {description}
+        </p>
+      )}
+      <div className="mt-3 flex items-end justify-between gap-2">
+        <div className="text-[20px] font-extrabold leading-none text-pink">{formatPrice(product)}</div>
+        {limitText && <div className="max-w-[92px] text-right text-[10px] font-bold leading-tight text-pink/85">{limitText}</div>}
+      </div>
+      <button
+        type="button"
+        onClick={() => (onQuickAdd ? onQuickAdd(product) : open())}
+        className="mena-press mt-3 flex h-10 w-full items-center justify-center rounded-full bg-pink px-3 text-[13px] font-extrabold text-white shadow-[0_8px_18px_rgba(238,49,123,0.23)] hover:bg-pink-dim"
+      >
+        {isQuote ? 'Request Quote' : 'Add to Cart'}
+      </button>
+    </article>
   );
 }
