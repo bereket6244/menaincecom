@@ -3,7 +3,7 @@ import multer from 'multer';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { records, dbRoute, ensureWritablePersistence } from './db.mjs';
+import { records, dbRoute, ensureWritablePersistence, persistenceStatus } from './db.mjs';
 import {
   signToken, publicUser, hashPassword, verifyPassword,
   requireAuth, requireAdmin, optionalAuth,
@@ -97,8 +97,16 @@ api.get('/health', async (req, res) => {
   try {
     const persistence = await ensureWritablePersistence();
     res.json({ ok: true, db: persistence.primary === 'mysql', version, ...persistence });
-  } catch {
-    res.status(503).json({ ok: false, db: false, writable: false, error: 'db_unavailable', version });
+  } catch (err) {
+    res.status(503).json({
+      ...persistenceStatus(),
+      ok: false,
+      db: false,
+      writable: false,
+      error: 'db_unavailable',
+      reason: err?.code || err?.name || 'storage_error',
+      version,
+    });
   }
 });
 
