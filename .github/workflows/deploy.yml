@@ -119,7 +119,7 @@ jobs:
 
           echo "Resolved cPanel endpoint on port ${port}."
           if ! getent hosts "${host}" >/dev/null 2>&1; then
-            fallback_host="cpanel.menaincet.com"
+            fallback_host="menaincet.com"
             fallback_url="https://${fallback_host}:2083"
             echo "Could not resolve the cPanel host from DNS. Falling back to ${fallback_url}."
             if ! getent hosts "${fallback_host}" >/dev/null 2>&1; then
