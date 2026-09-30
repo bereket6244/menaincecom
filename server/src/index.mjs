@@ -204,6 +204,14 @@ async function seed() {
       digitalInvitations: DEFAULT_DIGITAL_INVITATIONS,
     });
     console.log('[seed] digital invitation settings created');
+  } else if (JSON.stringify(business.digitalInvitations.packages || []) !== JSON.stringify(DEFAULT_DIGITAL_INVITATIONS.packages)) {
+    await records.update('content', business.id, {
+      digitalInvitations: {
+        ...business.digitalInvitations,
+        packages: DEFAULT_DIGITAL_INVITATIONS.packages,
+      },
+    });
+    console.log('[seed] digital invitation packages updated');
   }
 }
 
