@@ -22,6 +22,12 @@ const defaultDigitalInvitations: DigitalInvitationsContent = {
     {
       id: 'yeabsra-christian',
       title: 'Yeabsra & Christian',
+      url: 'https://menaincet.com/yeabsrachristian',
+      description: '',
+    },
+    {
+      id: 'yeabsra-and-christian',
+      title: 'Yeabsra & Christian - Wedding',
       url: 'https://menaincet.com/yeabsra-and-christian/',
       description: '',
     },
