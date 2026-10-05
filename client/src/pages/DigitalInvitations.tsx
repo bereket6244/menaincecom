@@ -150,7 +150,7 @@ export function DigitalInvitations() {
           <div className="px-5 sm:px-8 lg:px-10">
             <h2 className="mb-5 font-serif text-4xl text-ink">Sample websites</h2>
           </div>
-          <div className="mena-scroll flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 sm:px-8 lg:px-10">
+          <div className="mena-scroll flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 sm:scroll-px-8 sm:px-8 lg:scroll-px-10 lg:px-10">
             {examples.map((example, idx) => {
               const preview = previewImage(example);
               return (
