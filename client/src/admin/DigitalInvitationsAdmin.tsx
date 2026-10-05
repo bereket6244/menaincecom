@@ -80,6 +80,16 @@ const defaultDigitalInvitations: DigitalInvitationsContent = {
   ],
 };
 
+function mergeDefaultExamples(examples: DigitalInviteExample[] = []) {
+  const merged = [...examples];
+  for (const fallback of defaultDigitalInvitations.examples) {
+    const index = merged.findIndex((example) => example.id === fallback.id);
+    if (index === -1) merged.push(fallback);
+    else merged[index] = { ...merged[index], ...fallback };
+  }
+  return merged;
+}
+
 export function DigitalInvitationsAdmin() {
   const { data: content, loading } = useData<BusinessSettings>('/content/business');
   const { toast, online } = useApp();
@@ -94,7 +104,7 @@ export function DigitalInvitationsAdmin() {
         digitalInvitations: {
           ...defaultDigitalInvitations,
           ...(content.digitalInvitations || {}),
-          examples: content.digitalInvitations?.examples?.length ? content.digitalInvitations.examples : defaultDigitalInvitations.examples,
+          examples: mergeDefaultExamples(content.digitalInvitations?.examples?.length ? content.digitalInvitations.examples : defaultDigitalInvitations.examples),
           packages: content.digitalInvitations?.packages?.length ? content.digitalInvitations.packages : defaultDigitalInvitations.packages,
         },
       });

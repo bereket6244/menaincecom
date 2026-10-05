@@ -1,6 +1,6 @@
 import { Check, Crown, ExternalLink, Gem, Heart, Leaf, MessageCircle, MessageSquareText, Phone, Send } from 'lucide-react';
 import { useData } from '../lib/useData';
-import type { BusinessSettings, DigitalInvitePackage, DigitalInvitationsContent } from '../lib/types';
+import type { BusinessSettings, DigitalInviteExample, DigitalInvitePackage, DigitalInvitationsContent } from '../lib/types';
 import { smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
 import { assetUrl, cx } from '../lib/utils';
 
@@ -92,9 +92,20 @@ function initials(title: string) {
 
 function previewImage(example: { id?: string; url: string }) {
   const key = `${example.id || ''} ${example.url}`.toLowerCase();
-  if (key.includes('yordanos') || key.includes('kaleab')) return assetUrl('digital-invites/yordanos-kaleab.webp');
-  if (key.includes('yeabsra') || key.includes('christian')) return assetUrl('digital-invites/yeabsra-christian.webp');
+  if (key.includes('yeabsra-and-christian')) return assetUrl('digital-invites/yeabsra-and-christian-mobile.jpg');
+  if (key.includes('yeabsrachristian') || key.includes('yeabsra-christian')) return assetUrl('digital-invites/yeabsra-christian-mobile.jpg');
+  if (key.includes('yordanos') || key.includes('kaleab')) return assetUrl('digital-invites/yordanos-kaleab-mobile.jpg');
   return '';
+}
+
+function mergeDefaultExamples(examples: DigitalInviteExample[] = []) {
+  const merged = [...examples];
+  for (const fallback of FALLBACK_DIGITAL_INVITATIONS.examples) {
+    const index = merged.findIndex((example) => example.id === fallback.id);
+    if (index === -1) merged.push(fallback);
+    else merged[index] = { ...merged[index], ...fallback };
+  }
+  return merged;
 }
 
 function packagePresentation(pkg: DigitalInvitePackage, index: number) {
@@ -116,7 +127,7 @@ export function DigitalInvitations() {
   const { data: business } = useData<BusinessSettings>('/content/business');
   const content = business?.digitalInvitations || FALLBACK_DIGITAL_INVITATIONS;
   const packages = content.packages?.length ? content.packages : FALLBACK_DIGITAL_INVITATIONS.packages;
-  const examples = content.examples?.length ? content.examples : FALLBACK_DIGITAL_INVITATIONS.examples;
+  const examples = mergeDefaultExamples(content.examples?.length ? content.examples : FALLBACK_DIGITAL_INVITATIONS.examples);
 
   if (content.enabled === false) {
     return (
@@ -135,27 +146,26 @@ export function DigitalInvitations() {
       </section>
 
       <section id="examples" className="border-y border-edge bg-white py-9">
-        <div className="mx-auto max-w-[1240px] px-5 sm:px-8 lg:px-10">
-          <h2 className="mb-5 font-serif text-4xl text-ink">Sample websites</h2>
-          <div className="grid gap-4 md:grid-cols-2">
+        <div className="mx-auto max-w-[1240px]">
+          <div className="px-5 sm:px-8 lg:px-10">
+            <h2 className="mb-5 font-serif text-4xl text-ink">Sample websites</h2>
+          </div>
+          <div className="mena-scroll flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 sm:px-8 lg:px-10">
             {examples.map((example, idx) => {
               const preview = previewImage(example);
               return (
-                <a
+                <article
                   key={example.id || example.url || idx}
-                  href={example.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="group overflow-hidden rounded-xl border border-edge bg-bg transition hover:border-pink/50 hover:bg-white"
+                  className="w-[265px] shrink-0 snap-start overflow-hidden rounded-[22px] border border-edge bg-bg shadow-[0_16px_34px_rgba(28,26,25,0.08)] sm:w-[300px]"
                 >
-                  <div className="relative aspect-[16/9] overflow-hidden bg-[#f8efe8]">
+                  <div className="relative aspect-[9/16] overflow-hidden bg-[#f8efe8]">
                     {preview ? (
                       <img
                         src={preview}
-                        alt={`${example.title} website preview`}
-                        loading="eager"
+                        alt={`${example.title} mobile website preview`}
+                        loading={idx < 2 ? 'eager' : 'lazy'}
                         decoding="async"
-                        className="h-full w-full object-cover object-top transition duration-300 group-hover:scale-[1.02]"
+                        className="h-full w-full object-cover object-top"
                       />
                     ) : (
                       <div className="flex h-full flex-col items-center justify-center px-5 text-center">
@@ -165,12 +175,17 @@ export function DigitalInvitations() {
                     )}
                   </div>
                   <div className="flex items-center justify-between gap-4 p-3">
-                    <span className="font-extrabold text-ink">{example.title}</span>
-                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-pink px-3 py-1.5 text-xs font-extrabold text-pink">
+                    <span className="min-w-0 truncate font-extrabold text-ink">{example.title}</span>
+                    <a
+                      href={example.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mena-press inline-flex shrink-0 items-center gap-1.5 rounded-full border border-pink px-3 py-1.5 text-xs font-extrabold text-pink"
+                    >
                       Open <ExternalLink className="h-3.5 w-3.5" />
-                    </span>
+                    </a>
                   </div>
-                </a>
+                </article>
               );
             })}
           </div>
