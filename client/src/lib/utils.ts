@@ -94,6 +94,19 @@ export function colorOptions(product: Pick<Product, 'variants'>) {
     }));
 }
 
+export function withDefaultVariantSelections(
+  product: Pick<Product, 'variants'>,
+  selections: Record<string, string>
+): Record<string, string> {
+  const next = { ...selections };
+  for (const group of product.variants || []) {
+    if (next[group.name]) continue;
+    const first = group.options.find((option) => option.label.trim());
+    if (first) next[group.name] = first.label;
+  }
+  return next;
+}
+
 const NAMED_SWATCHES: Record<string, string> = {
   blush: '#f5b5c8',
   cream: '#fff5dc',

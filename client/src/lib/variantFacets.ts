@@ -64,7 +64,7 @@ export function buildVariantFacets(products: Product[], filters: VariantFilters 
   for (const product of products) {
     for (const group of product.variants || []) {
       const key = facetKey(group.name);
-      if (!key) continue;
+      if (!key || isColorGroupName(group.name)) continue;
       if (!names.has(key)) {
         names.set(key, group.name.trim());
         labels.set(key, new Map());

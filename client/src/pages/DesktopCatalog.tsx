@@ -6,7 +6,7 @@ import { useData } from '../lib/useData';
 import type { Category, Product, UniversalComplimentaryItem } from '../lib/types';
 import { DesktopProductCard } from '../components/DesktopProductCard';
 import { EmptyState, Spinner } from '../components/ui';
-import { cartPriceEach, cx } from '../lib/utils';
+import { cartPriceEach, cx, withDefaultVariantSelections } from '../lib/utils';
 import { useApp } from '../store/AppContext';
 import { complimentaryForProduct, productWithResolvedComplimentary } from '../lib/complimentary';
 import { buildPriceBands, formatEtb, priceBounds } from '../lib/priceBands';
@@ -186,10 +186,6 @@ export function DesktopCatalog() {
   }, [bands, facets, max, maxPrice, min, minPrice, priceBands, variantFilters]);
 
   const quickAdd = (product: Product) => {
-    if ((product.variants || []).length > 0) {
-      navigate(`/product/${product.id}`);
-      return;
-    }
     const resolved = productWithResolvedComplimentary(product, universalComplimentaryItems || undefined);
     const result = addToCart({
       productId: product.id,
@@ -199,7 +195,7 @@ export function DesktopCatalog() {
       pricingMode: product.pricingMode,
       priceEach: cartPriceEach(product),
       maxOrderQty: product.maxOrderQty ?? null,
-      variantSelections: {},
+      variantSelections: withDefaultVariantSelections(product, {}),
       qty: 1,
       note: '',
       complimentaryItems: complimentaryForProduct(resolved, 1),

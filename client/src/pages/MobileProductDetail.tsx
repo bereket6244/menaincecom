@@ -9,7 +9,7 @@ import { QuantityPicker } from '../components/QuantityPicker';
 import { mobileProductTint } from '../components/MobileProductCard';
 import { ProductImageFrame } from '../components/ProductImageFrame';
 import { COMPLIMENTARY_EXTRA_MAX_QTY, complimentaryAllowanceText, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
-import { cartPriceEach, cleanDescription, cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
+import { cartPriceEach, cleanDescription, cx, cssColor, formatPrice, isColorGroupName, withDefaultVariantSelections } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
 import { smsContactUrl, telegramContactUrl, whatsappContactUrl } from '../lib/share';
 import { productCategoryNames } from '../lib/productCategories';
@@ -80,7 +80,7 @@ export function MobileProductDetail() {
   const [photoIdx, setPhotoIdx] = useState(0);
   const [photoPinned, setPhotoPinned] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [sheetMode, setSheetMode] = useState<SheetMode>('add');
+  const [sheetMode] = useState<SheetMode>('add');
   const [contactOpen, setContactOpen] = useState(false);
   const contactRef = useRef<HTMLDivElement>(null);
   const cartCount = cart.reduce((n, item) => n + item.qty, 0);
@@ -137,7 +137,6 @@ export function MobileProductDetail() {
     .flatMap((variant) => variant.options)
     .find((option) => Object.values(selections).includes(option.label) && option.photo)?.photo;
   const selectedPhoto = (photoPinned ? product.photos[photoIdx] : variantPhoto || product.photos[photoIdx]) || product.photos[0];
-  const missingVariant = product.variants.find((variant) => !selections[variant.name]);
   const tint = mobileProductTint(product);
   const description = cleanDescription(product.description, product.name);
   const isQuote = product.pricingMode === 'quote';
@@ -154,7 +153,10 @@ export function MobileProductDetail() {
     );
   };
 
-  const add = (mode: 'increment' | 'replace' = 'increment') => {
+  const add = (
+    mode: 'increment' | 'replace' = 'increment',
+    variantSelections = selections
+  ) => {
     const selectedComplimentaryItems = complimentaryForProduct(product, qty, complimentarySelections);
     return addToCart({
       productId: product.id,
@@ -164,39 +166,30 @@ export function MobileProductDetail() {
       pricingMode: product.pricingMode,
       priceEach: cartPriceEach(product),
       maxOrderQty: product.maxOrderQty ?? null,
-      variantSelections: selections,
+      variantSelections,
       qty: clampOrderQty(qty, product),
       note: '',
       complimentaryItems: selectedComplimentaryItems,
     }, mode);
   };
 
-  const requireOptions = () => {
-    if (!missingVariant) return false;
-    toast('error', `Please choose a ${missingVariant.name.toLowerCase()}.`);
-    return true;
-  };
-
   const addFrom = (origin: HTMLElement | null) => {
-    if (requireOptions()) return;
+    const variantSelections = withDefaultVariantSelections(product, selections);
+    setSelections(variantSelections);
     flyToCart(origin, product);
-    notifyAdded(add());
+    notifyAdded(add('increment', variantSelections));
     setSheetOpen(false);
   };
 
   const buyNow = () => {
-    if (requireOptions()) return;
-    const key = `${product.id}|${JSON.stringify(selections)}`;
-    add('replace');
+    const variantSelections = withDefaultVariantSelections(product, selections);
+    const key = `${product.id}|${JSON.stringify(variantSelections)}`;
+    setSelections(variantSelections);
+    add('replace', variantSelections);
     sessionStorage.setItem('mena_go_checkout', '1');
     sessionStorage.setItem('mena_checkout_keys', JSON.stringify([key]));
     setSheetOpen(false);
     navigate('/order?checkout=1');
-  };
-
-  const openSheet = (mode: SheetMode) => {
-    setSheetMode(mode);
-    setSheetOpen(true);
   };
 
   const runAction = (mode: SheetMode, origin: HTMLElement | null) => {
@@ -394,20 +387,14 @@ export function MobileProductDetail() {
             </div>
             <button
               type="button"
-              onClick={(event) => {
-                if (product.variants.length && missingVariant) openSheet('add');
-                else addFrom(event.currentTarget);
-              }}
+              onClick={(event) => addFrom(event.currentTarget)}
               className="btn-outline h-10 min-w-0 flex-1 px-2 text-xs"
             >
               Add to cart
             </button>
             <button
               type="button"
-              onClick={() => {
-                if (product.variants.length && missingVariant) openSheet('buy');
-                else buyNow();
-              }}
+              onClick={buyNow}
               className="btn-primary h-10 min-w-0 flex-1 px-2 text-xs"
             >
               Buy now

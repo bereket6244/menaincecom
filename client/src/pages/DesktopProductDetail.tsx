@@ -14,7 +14,7 @@ import {
   complimentarySummary,
   productWithResolvedComplimentary,
 } from '../lib/complimentary';
-import { cartPriceEach, cleanDescription, cx, cssColor, formatPrice, isColorGroupName } from '../lib/utils';
+import { cartPriceEach, cleanDescription, cx, cssColor, formatPrice, isColorGroupName, withDefaultVariantSelections } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
 import { clampOrderQty, productLimitText, productMaxOrderQty } from '../lib/orderLimits';
 
@@ -63,7 +63,6 @@ export function DesktopProductDetail() {
     .flatMap((variant) => variant.options)
     .find((option) => Object.values(selections).includes(option.label) && option.photo)?.photo;
   const selectedPhoto = (photoPinned ? product.photos[photoIdx] : variantPhoto || product.photos[photoIdx]) || product.photos[0];
-  const missingVariant = product.variants.find((variant) => !selections[variant.name]);
   const description = cleanDescription(product.description, product.name);
   const isQuote = product.pricingMode === 'quote';
   const complimentaryOptions = complimentaryForProduct(product, qty, complimentarySelections);
@@ -79,7 +78,10 @@ export function DesktopProductDetail() {
     );
   };
 
-  const add = (mode: 'increment' | 'replace' = 'increment') => {
+  const add = (
+    mode: 'increment' | 'replace' = 'increment',
+    variantSelections = selections
+  ) => {
     return addToCart({
       productId: product.id,
       name: product.name,
@@ -88,32 +90,27 @@ export function DesktopProductDetail() {
       pricingMode: product.pricingMode,
       priceEach: cartPriceEach(product),
       maxOrderQty: product.maxOrderQty ?? null,
-      variantSelections: selections,
+      variantSelections,
       qty: clampOrderQty(qty, product),
       note: '',
       complimentaryItems: complimentaryOptions,
     }, mode);
   };
 
-  const requireOptions = () => {
-    if (!missingVariant) return false;
-    setSheetOpen(true);
-    toast('error', `Please choose a ${missingVariant.name.toLowerCase()}.`);
-    return true;
-  };
-
   const handleAdd = () => {
-    if (requireOptions()) return;
-    const result = add();
+    const variantSelections = withDefaultVariantSelections(product, selections);
+    setSelections(variantSelections);
+    const result = add('increment', variantSelections);
     setSheetOpen(false);
     notifyAdded(product.name, result);
   };
 
   const handleBuy = () => {
-    if (requireOptions()) return;
+    const variantSelections = withDefaultVariantSelections(product, selections);
     // Same key addToCart derives, so checkout opens with just this item selected.
-    const key = `${product.id}|${JSON.stringify(selections)}`;
-    add('replace');
+    const key = `${product.id}|${JSON.stringify(variantSelections)}`;
+    setSelections(variantSelections);
+    add('replace', variantSelections);
     sessionStorage.setItem('mena_go_checkout', '1');
     sessionStorage.setItem('mena_checkout_keys', JSON.stringify([key]));
     navigate('/order?checkout=1');

@@ -39,7 +39,7 @@ export function MobileProductCard({
   const description = cleanDescription(product.description, product.name);
 
   return (
-    <article className="mena-fade-up min-w-0 overflow-hidden rounded-2xl border border-edge/70 bg-white p-2 shadow-[0_10px_28px_rgba(28,26,25,0.08)]">
+    <article className="mena-fade-up min-w-0 overflow-hidden rounded-2xl border border-edge/70 bg-white p-1.5 shadow-[0_10px_28px_rgba(28,26,25,0.08)]">
       <div className="relative">
         <ProductImageFrame
           src={selectedPhoto}
@@ -56,7 +56,7 @@ export function MobileProductCard({
             setPhotoIndex((current) => (current + 1) % product.photos.length);
           }}
           preloadSrcs={[...product.photos, ...colors.map((color) => color.photo || '').filter(Boolean)]}
-          className="mena-press aspect-[1.03/1] w-full rounded-[18px] text-left"
+          className="mena-press aspect-[1/1.18] w-full rounded-[16px] text-left"
           placeholder={
             <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center" style={{ background: tint }}>
               <span className="font-script text-[28px] leading-none text-pink">{product.name}</span>
@@ -106,22 +106,22 @@ export function MobileProductCard({
         </button>
       </div>
 
-      <button type="button" onClick={open} className="mt-3 line-clamp-2 min-h-[37px] text-left font-serif text-[21px] font-semibold leading-[0.98] text-ink">
+      <button type="button" onClick={open} className="mt-2 line-clamp-2 min-h-[30px] text-left font-serif text-[17px] font-semibold leading-[0.96] text-ink">
         {product.name}
       </button>
       {description && (
-        <p className="mt-1.5 line-clamp-2 min-h-[34px] text-[12.5px] font-medium leading-[1.35] text-ink/58">
+        <p className="mt-1 line-clamp-2 min-h-[28px] text-[10.5px] font-medium leading-[1.3] text-ink/58">
           {description}
         </p>
       )}
-      <div className="mt-3 flex items-end justify-between gap-2">
-        <div className="text-[20px] font-extrabold leading-none text-pink">{formatPrice(product)}</div>
-        {limitText && <div className="max-w-[92px] text-right text-[10px] font-bold leading-tight text-pink/85">{limitText}</div>}
+      <div className="mt-2 flex items-end justify-between gap-2">
+        <div className="text-[17px] font-extrabold leading-none text-pink">{formatPrice(product)}</div>
+        {limitText && <div className="max-w-[76px] text-right text-[9px] font-bold leading-tight text-pink/85">{limitText}</div>}
       </div>
       <button
         type="button"
         onClick={() => (onQuickAdd ? onQuickAdd(product) : open())}
-        className="mena-press mt-3 flex h-10 w-full items-center justify-center rounded-full bg-pink px-3 text-[13px] font-extrabold text-white shadow-[0_8px_18px_rgba(238,49,123,0.23)] hover:bg-pink-dim"
+        className="mena-press mt-2 flex h-8 w-full items-center justify-center rounded-full bg-pink px-2 text-[11px] font-extrabold text-white shadow-[0_8px_18px_rgba(238,49,123,0.23)] hover:bg-pink-dim"
       >
         {isQuote ? 'Request Quote' : 'Add to Cart'}
       </button>
