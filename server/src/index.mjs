@@ -98,7 +98,7 @@ const DEFAULT_DIGITAL_INVITATIONS = {
     {
       id: 'yeabsra-christian',
       title: 'Yeabsra & Christian',
-      url: 'https://menaincet.com/yeabsrachristian',
+      url: 'https://menaincet.com/yeabsra-and-christian/',
       description: '',
     },
   ],
@@ -149,6 +149,19 @@ const DEFAULT_DIGITAL_INVITATIONS = {
         },
       ],
 };
+
+function mergeDefaultDigitalInvitationExamples(existing = []) {
+  const merged = Array.isArray(existing) ? [...existing] : [];
+  for (const defaultExample of DEFAULT_DIGITAL_INVITATIONS.examples) {
+    const index = merged.findIndex((example) => example.id === defaultExample.id);
+    if (index === -1) {
+      merged.push(defaultExample);
+    } else {
+      merged[index] = { ...merged[index], ...defaultExample };
+    }
+  }
+  return merged;
+}
 
 async function seed() {
   const cats = await records.list('categories');
@@ -204,14 +217,20 @@ async function seed() {
       digitalInvitations: DEFAULT_DIGITAL_INVITATIONS,
     });
     console.log('[seed] digital invitation settings created');
-  } else if (JSON.stringify(business.digitalInvitations.packages || []) !== JSON.stringify(DEFAULT_DIGITAL_INVITATIONS.packages)) {
-    await records.update('content', business.id, {
-      digitalInvitations: {
-        ...business.digitalInvitations,
-        packages: DEFAULT_DIGITAL_INVITATIONS.packages,
-      },
-    });
-    console.log('[seed] digital invitation packages updated');
+  } else {
+    const examples = mergeDefaultDigitalInvitationExamples(business.digitalInvitations.examples);
+    const shouldUpdateExamples = JSON.stringify(business.digitalInvitations.examples || []) !== JSON.stringify(examples);
+    const shouldUpdatePackages = JSON.stringify(business.digitalInvitations.packages || []) !== JSON.stringify(DEFAULT_DIGITAL_INVITATIONS.packages);
+    if (shouldUpdateExamples || shouldUpdatePackages) {
+      await records.update('content', business.id, {
+        digitalInvitations: {
+          ...business.digitalInvitations,
+          examples,
+          packages: shouldUpdatePackages ? DEFAULT_DIGITAL_INVITATIONS.packages : business.digitalInvitations.packages,
+        },
+      });
+      console.log('[seed] digital invitation settings updated');
+    }
   }
 }
 

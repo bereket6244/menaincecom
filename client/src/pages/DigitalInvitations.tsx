@@ -12,7 +12,7 @@ const FALLBACK_DIGITAL_INVITATIONS: DigitalInvitationsContent = {
   portfolioUrl: 'https://menaincet.com',
   examples: [
     { id: 'yordanos-kaleab', title: 'Yordanos & Kaleab', url: 'https://menaincet.com/yordanoskaleab/', description: '' },
-    { id: 'yeabsra-christian', title: 'Yeabsra & Christian', url: 'https://menaincet.com/yeabsrachristian', description: '' },
+    { id: 'yeabsra-christian', title: 'Yeabsra & Christian', url: 'https://menaincet.com/yeabsra-and-christian/', description: '' },
   ],
   packages: [
     {
