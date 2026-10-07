@@ -7,6 +7,7 @@ import { useApp } from '../store/AppContext';
 import { EmptyState, Spinner } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { ProductImageFrame } from '../components/ProductImageFrame';
+import { ProtectedImage } from '../components/ProtectedImage';
 import {
   COMPLIMENTARY_EXTRA_MAX_QTY,
   complimentaryAllowanceText,
@@ -198,7 +199,7 @@ export function DesktopProductDetail() {
                   }}
                   className={cx('mena-press h-20 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-surface2', index === photoIdx ? 'border-pink' : 'border-edge opacity-75')}
                 >
-                  <img src={photo} alt="" loading="lazy" decoding="async" className="h-full w-full object-contain" />
+                  <ProtectedImage src={photo} alt="" loading="lazy" decoding="async" className="h-full w-full object-contain" />
                 </button>
               ))}
             </div>
@@ -289,7 +290,7 @@ export function DesktopProductDetail() {
           >
             <div className="sticky top-0 z-10 flex items-start gap-3 border-b border-edge bg-white p-5">
               <div className="h-20 w-16 shrink-0 overflow-hidden rounded-lg bg-surface2">
-                {selectedPhoto && <img src={selectedPhoto} alt="" className="h-full w-full object-contain" />}
+                {selectedPhoto && <ProtectedImage src={selectedPhoto} alt="" className="h-full w-full object-contain" />}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="font-serif text-2xl font-semibold leading-tight">{product.name}</div>

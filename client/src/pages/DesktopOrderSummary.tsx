@@ -9,6 +9,7 @@ import { smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
 import { placeOrder } from '../lib/placeOrder';
 import { EmptyState, IconButton } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
+import { ProtectedImage } from '../components/ProtectedImage';
 import { complimentaryExtraTotal, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
 import { cartPriceEach, cx, formatCartTotal, formatLineTotal, formatPrice } from '../lib/utils';
 import { productLimitText, productMaxOrderQty } from '../lib/orderLimits';
@@ -244,7 +245,7 @@ export function DesktopOrderSummary() {
               {selectedItems.map((item) => (
                 <div key={item.key} className="flex gap-4 py-4">
                   <Link to={`/product/${item.productId}`} className="h-20 w-16 shrink-0 overflow-hidden rounded-lg border border-edge bg-surface2">
-                    {item.photo && <img src={item.photo} alt="" className="h-full w-full object-cover" />}
+                    {item.photo && <ProtectedImage src={item.photo} alt="" className="h-full w-full object-cover" />}
                   </Link>
                   <div className="min-w-0 flex-1">
                     <div className="font-extrabold">{item.name}</div>
@@ -380,7 +381,7 @@ export function DesktopOrderSummary() {
                       {checked && <Check className="h-3 w-3 text-white" />}
                     </button>
                     <Link to={`/product/${item.productId}`} className="h-28 w-20 shrink-0 overflow-hidden rounded-lg border border-edge bg-surface2">
-                      {item.photo && <img src={item.photo} alt="" className="h-full w-full object-cover" />}
+                      {item.photo && <ProtectedImage src={item.photo} alt="" className="h-full w-full object-cover" />}
                     </Link>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-4">

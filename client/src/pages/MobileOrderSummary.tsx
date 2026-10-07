@@ -9,6 +9,7 @@ import { smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
 import { placeOrder } from '../lib/placeOrder';
 import { EmptyState } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
+import { ProtectedImage } from '../components/ProtectedImage';
 import { mobileProductTint } from '../components/MobileProductCard';
 import { complimentaryExtraTotal, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
 import { cartPriceEach, formatCartTotal, formatLineTotal, formatPrice } from '../lib/utils';
@@ -264,7 +265,7 @@ export function MobileOrderSummary() {
               {selectedItems.map((item) => (
                 <div key={item.key} className="flex gap-3 py-3 first:pt-0 last:pb-0">
                   <div className="h-16 w-14 shrink-0 overflow-hidden rounded-lg border border-edge bg-surface2">
-                    {item.photo ? <img src={item.photo} alt="" className="h-full w-full object-cover" /> : <div className="h-full w-full" style={{ background: mobileProductTint({ id: item.productId, name: item.name }) }} />}
+                    {item.photo ? <ProtectedImage src={item.photo} alt="" className="h-full w-full object-cover" /> : <div className="h-full w-full" style={{ background: mobileProductTint({ id: item.productId, name: item.name }) }} />}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-extrabold">{item.name}</div>
@@ -398,7 +399,7 @@ export function MobileOrderSummary() {
                 {checked && <Check className="h-3.5 w-3.5 text-white" />}
               </button>
               <Link to={`/product/${item.productId}`} className="h-24 w-[70px] shrink-0 overflow-hidden rounded-lg border border-edge bg-surface2">
-                {item.photo ? <img src={item.photo} alt="" className="h-full w-full object-cover" /> : <div className="h-full w-full" style={{ background: mobileProductTint({ id: item.productId, name: item.name }) }} />}
+                {item.photo ? <ProtectedImage src={item.photo} alt="" className="h-full w-full object-cover" /> : <div className="h-full w-full" style={{ background: mobileProductTint({ id: item.productId, name: item.name }) }} />}
               </Link>
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
@@ -456,7 +457,7 @@ export function MobileOrderSummary() {
             {suggestions.map((product) => (
               <div key={product.id} className="w-32 shrink-0 rounded-2xl border border-edge bg-surface p-2.5">
                 <Link to={`/product/${product.id}`} className="block aspect-square overflow-hidden rounded-xl bg-surface2" style={{ background: product.photos[0] ? undefined : mobileProductTint(product) }}>
-                  {product.photos[0] ? <img src={product.photos[0]} alt={product.name} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center px-2 text-center font-script text-2xl text-pink">{product.name}</div>}
+                  {product.photos[0] ? <ProtectedImage src={product.photos[0]} alt={product.name} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center px-2 text-center font-script text-2xl text-pink">{product.name}</div>}
                 </Link>
                 <div className="mt-2 truncate text-sm font-extrabold">{product.name}</div>
                 <div className="text-[12px] font-bold text-[#ee0a24]">{formatPrice(product)}</div>

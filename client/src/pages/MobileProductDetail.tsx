@@ -8,6 +8,7 @@ import { EmptyState, Spinner } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { mobileProductTint } from '../components/MobileProductCard';
 import { ProductImageFrame } from '../components/ProductImageFrame';
+import { ProtectedImage } from '../components/ProtectedImage';
 import { COMPLIMENTARY_EXTRA_MAX_QTY, complimentaryAllowanceText, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
 import { cartPriceEach, cleanDescription, cx, cssColor, formatPrice, isColorGroupName, withDefaultVariantSelections } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
@@ -417,7 +418,7 @@ export function MobileProductDetail() {
         <div className="sticky top-0 z-10 flex items-start gap-3 border-b border-edge bg-surface px-4 py-4">
           <div className="h-16 w-14 shrink-0 overflow-hidden rounded-lg border border-edge bg-surface2" style={{ background: selectedPhoto ? undefined : tint }}>
             {selectedPhoto ? (
-              <img src={selectedPhoto} alt="" loading="eager" decoding="async" className="h-full w-full object-contain" />
+              <ProtectedImage src={selectedPhoto} alt="" loading="eager" decoding="async" className="h-full w-full object-contain" />
             ) : (
               <div className="flex h-full items-center justify-center font-script text-xl text-pink">M</div>
             )}

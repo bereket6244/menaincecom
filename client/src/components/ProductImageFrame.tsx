@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ReactNode, TouchEvent } from 'react';
 import { cx } from '../lib/utils';
+import { ProtectedImage } from './ProtectedImage';
 
 export function ProductImageFrame({
   src,
@@ -63,7 +64,7 @@ export function ProductImageFrame({
 
   const image = src ? (
     <>
-      <img
+      <ProtectedImage
         src={src}
         alt=""
         loading={priority ? 'eager' : 'lazy'}
@@ -71,7 +72,7 @@ export function ProductImageFrame({
         aria-hidden="true"
         className="absolute inset-0 h-full w-full scale-110 object-cover opacity-45 blur-xl"
       />
-      <img
+      <ProtectedImage
         src={src}
         alt={alt}
         loading={priority ? 'eager' : 'lazy'}
@@ -86,6 +87,7 @@ export function ProductImageFrame({
   return (
     <div
       className={cx('relative isolate overflow-hidden bg-surface2 touch-pan-y select-none', className)}
+      onContextMenu={(event) => event.preventDefault()}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >

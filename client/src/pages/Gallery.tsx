@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { GalleryItem } from '../lib/types';
 import { EmptyState, Spinner } from '../components/ui';
+import { ProtectedImage } from '../components/ProtectedImage';
 
 export function Gallery() {
   const { data: items, loading } = useData<GalleryItem[]>('/gallery');
@@ -23,7 +24,7 @@ export function Gallery() {
         <div className="columns-2 gap-2 sm:columns-3 lg:columns-4 [&>*]:mb-2">
           {items.map((g) => (
             <button key={g.id} onClick={() => setOpen(g)} className="block w-full overflow-hidden rounded-md border border-edge">
-              <img src={g.photo} alt={g.caption} loading="lazy" className="w-full" />
+              <ProtectedImage src={g.photo} alt={g.caption} loading="lazy" className="w-full" />
               {g.caption && <div className="bg-surface p-2 text-left text-[11px] text-muted">{g.caption}</div>}
             </button>
           ))}
@@ -39,7 +40,7 @@ export function Gallery() {
             <X className="h-6 w-6" />
           </button>
           <div className="max-h-full max-w-3xl">
-            <img src={open.photo} alt={open.caption} className="max-h-[85vh] w-auto rounded" />
+            <ProtectedImage src={open.photo} alt={open.caption} className="max-h-[85vh] w-auto rounded" />
             {open.caption && <p className="mt-2 text-center text-xs text-white/70">{open.caption}</p>}
           </div>
         </div>
