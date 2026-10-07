@@ -70,6 +70,22 @@ export function MobileShell({ children }: { children: ReactNode }) {
               </button>
               <div className="flex-1" />
               <Link
+                to="/digital-invitations"
+                aria-label="Digital invites"
+                className={cx(
+                  'mena-press flex h-10 w-10 items-center justify-center rounded-xl hover:bg-surface2',
+                  location.pathname === '/digital-invitations' ? 'bg-pink/10' : 'text-ink'
+                )}
+              >
+                <img
+                  src={assetUrl('digital-invites-icon.webp')}
+                  alt=""
+                  loading="eager"
+                  decoding="async"
+                  className="h-7 w-7 object-contain mix-blend-multiply"
+                />
+              </Link>
+              <Link
                 id="mena-liked-icon"
                 to="/wishlist"
                 aria-label={`Liked items, ${likedCount} saved`}
