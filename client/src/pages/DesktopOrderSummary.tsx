@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Check, CheckCircle2, ChevronLeft, MessageCircle, MessageSquareText, PlusCircle, Send, Trash2 } from 'lucide-react';
+import { Check, CheckCircle2, ChevronLeft, Loader2, MessageCircle, MessageSquareText, PlusCircle, Send, Trash2 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { useData } from '../lib/useData';
 import { OFFLINE_MESSAGE } from '../lib/api';
@@ -37,6 +37,9 @@ export function DesktopOrderSummary() {
   const [channel, setChannel] = useState<Channel>('telegram');
   const [sending, setSending] = useState<Channel | null>(null);
   const [sent, setSent] = useState<{ channel: Channel; chatUrl: string; keys: string[] } | null>(null);
+  const [checkoutPending, setCheckoutPending] = useState(false);
+  const [removing, setRemoving] = useState<Set<string>>(() => new Set());
+  const [addingSuggestion, setAddingSuggestion] = useState<Set<string>>(() => new Set());
   const prevKeys = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -139,8 +142,24 @@ export function DesktopOrderSummary() {
       toast('error', 'Select at least one item to check out.');
       return;
     }
-    setStep('checkout');
-    window.scrollTo({ top: 0 });
+    setCheckoutPending(true);
+    window.setTimeout(() => {
+      setStep('checkout');
+      setCheckoutPending(false);
+      window.scrollTo({ top: 0 });
+    }, 180);
+  };
+
+  const removeCartLine = (key: string) => {
+    setRemoving((current) => new Set(current).add(key));
+    window.setTimeout(() => {
+      removeFromCart(key);
+      setRemoving((current) => {
+        const next = new Set(current);
+        next.delete(key);
+        return next;
+      });
+    }, 180);
   };
 
   const submitOrder = async (orderChannel: Channel = channel) => {
@@ -286,19 +305,21 @@ export function DesktopOrderSummary() {
             <div className="grid grid-cols-3 gap-3">
               {CHANNELS.map(({ id, label, icon: Icon, accent, tint }) => {
                 const active = channel === id;
+                const isSendingThis = sending === id;
                 return (
                   <button
                     key={id}
                     type="button"
                     onClick={() => void submitOrder(id)}
                     disabled={!online || sending !== null}
+                    aria-busy={isSendingThis}
                     className="mena-press flex flex-col items-center gap-2 rounded-2xl border p-4 text-center disabled:cursor-not-allowed disabled:opacity-60"
                     style={{ borderColor: active ? accent : '#ece7e2', background: active ? tint : '#fff' }}
                   >
                     <span className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: active ? accent : '#f4f0ec', color: active ? '#fff' : '#8a8580' }}>
-                      <Icon className={cx('h-5 w-5', active && 'mena-pop')} />
+                      {isSendingThis ? <Loader2 className="h-5 w-5 animate-spin" /> : <Icon className={cx('h-5 w-5', active && 'mena-pop')} />}
                     </span>
-                    <span className="text-sm font-extrabold" style={{ color: active ? accent : '#1c1a19' }}>{label}</span>
+                    <span className="text-sm font-extrabold" style={{ color: active ? accent : '#1c1a19' }}>{isSendingThis ? 'Opening...' : label}</span>
                   </button>
                 );
               })}
@@ -333,8 +354,10 @@ export function DesktopOrderSummary() {
               type="button"
               onClick={() => void submitOrder()}
               disabled={!online || sending !== null}
+              aria-busy={sending !== null}
               className="btn-primary btn-order-gradient h-16 px-12 text-[15px]"
             >
+              {sending && <Loader2 className="h-4 w-4 animate-spin" />}
               {sending ? 'Opening...' : 'Place order'}
             </button>
           </div>
@@ -418,7 +441,13 @@ export function DesktopOrderSummary() {
                             })
                           }
                         />
-                        <IconButton icon={<Trash2 className="h-4 w-4" />} title="Remove" danger onClick={() => removeFromCart(item.key)} />
+                        <IconButton
+                          icon={removing.has(item.key) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                          title={removing.has(item.key) ? 'Removing' : 'Remove'}
+                          danger
+                          disabled={removing.has(item.key)}
+                          onClick={() => removeCartLine(item.key)}
+                        />
                       </div>
                     </div>
                   </div>
@@ -438,27 +467,39 @@ export function DesktopOrderSummary() {
                     <button
                       type="button"
                       onClick={() => {
+                        if (addingSuggestion.has(addon.id)) return;
+                        setAddingSuggestion((current) => new Set(current).add(addon.id));
                         if ((addon.variants || []).length > 0) {
-                          navigate(`/product/${addon.id}`);
+                          window.setTimeout(() => navigate(`/product/${addon.id}`), 140);
                           return;
                         }
-                        addToCart({
-                          productId: addon.id,
-                          name: addon.name,
-                          photo: addon.photos[0] || '',
-                          isAddon: addon.isAddon,
-                          pricingMode: addon.pricingMode,
-                          priceEach: cartPriceEach(addon),
-                          maxOrderQty: addon.maxOrderQty ?? null,
-                          variantSelections: {},
-                          qty: 1,
-                          note: '',
-                        });
-                        toast('success', `${addon.name} added to your cart.`);
+                        window.setTimeout(() => {
+                          addToCart({
+                            productId: addon.id,
+                            name: addon.name,
+                            photo: addon.photos[0] || '',
+                            isAddon: addon.isAddon,
+                            pricingMode: addon.pricingMode,
+                            priceEach: cartPriceEach(addon),
+                            maxOrderQty: addon.maxOrderQty ?? null,
+                            variantSelections: {},
+                            qty: 1,
+                            note: '',
+                          });
+                          toast('success', `${addon.name} added to your cart.`);
+                          setAddingSuggestion((current) => {
+                            const next = new Set(current);
+                            next.delete(addon.id);
+                            return next;
+                          });
+                        }, 180);
                       }}
-                      className="mena-press mt-2 inline-flex items-center gap-1 text-[12px] font-bold text-pink hover:underline"
+                      disabled={addingSuggestion.has(addon.id)}
+                      aria-busy={addingSuggestion.has(addon.id)}
+                      className="mena-press mt-2 inline-flex items-center gap-1 text-[12px] font-bold text-pink hover:underline disabled:cursor-wait disabled:opacity-70"
                     >
-                      <PlusCircle className="h-3.5 w-3.5" /> Add
+                      {addingSuggestion.has(addon.id) ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PlusCircle className="h-3.5 w-3.5" />}
+                      {addingSuggestion.has(addon.id) ? 'Adding...' : 'Add'}
                     </button>
                   </div>
                 ))}
@@ -483,8 +524,9 @@ export function DesktopOrderSummary() {
               <span className="font-extrabold text-[#ee0a24]">{totalText}</span>
             </div>
           </div>
-          <button type="button" onClick={goCheckout} disabled={selectedItems.length === 0} className="btn-primary h-12 w-full">
-            Checkout ({selectedItems.length})
+          <button type="button" onClick={goCheckout} disabled={selectedItems.length === 0 || checkoutPending} aria-busy={checkoutPending} className="btn-primary h-12 w-full">
+            {checkoutPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            {checkoutPending ? 'Opening checkout...' : `Checkout (${selectedItems.length})`}
           </button>
           <p className="mt-3 text-center text-[12px] text-muted">No online payment · confirm by chat</p>
         </aside>

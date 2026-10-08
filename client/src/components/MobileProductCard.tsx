@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Heart } from 'lucide-react';
+import { Check, Heart, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import type { Product } from '../lib/types';
 import { cleanDescription, colorOptions, cx, formatPrice } from '../lib/utils';
@@ -31,6 +31,8 @@ export function MobileProductCard({
   const tint = mobileProductTint(product);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [pickedColorPhoto, setPickedColorPhoto] = useState<string | null>(null);
+  const [wishlistBusy, setWishlistBusy] = useState(false);
+  const [quickState, setQuickState] = useState<'idle' | 'opening' | 'added'>('idle');
   const selectedPhoto = pickedColorPhoto || product.photos[photoIndex] || product.photos[0];
   const hasMultiplePhotos = product.photos.length > 1;
   const limitText = productPreviewLimitText(product);
@@ -95,14 +97,22 @@ export function MobileProductCard({
         )}
         <button
           type="button"
-          onClick={(e) => {
+          onClick={async (e) => {
+            if (wishlistBusy) return;
             if (!wished) flyToLiked(e.currentTarget);
-            void toggleWishlist(product.id);
+            setWishlistBusy(true);
+            try {
+              await toggleWishlist(product.id);
+            } finally {
+              setWishlistBusy(false);
+            }
           }}
+          disabled={wishlistBusy}
+          aria-busy={wishlistBusy}
           aria-label={wished ? 'Remove from liked items' : 'Save to liked items'}
-          className="mena-press absolute right-2 top-2 z-30 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-ink/70 shadow-sm"
+          className="mena-press absolute right-2 top-2 z-30 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-ink/70 shadow-sm disabled:cursor-wait disabled:opacity-70"
         >
-          <Heart className={cx('h-4 w-4', wished ? 'fill-pink text-pink' : '')} />
+          {wishlistBusy ? <Loader2 className="h-4 w-4 animate-spin text-pink" /> : <Heart className={cx('h-4 w-4', wished ? 'fill-pink text-pink' : '')} />}
         </button>
       </div>
 
@@ -124,10 +134,23 @@ export function MobileProductCard({
           </div>
           <button
             type="button"
-            onClick={() => (onQuickAdd ? onQuickAdd(product) : open())}
-            className="mena-press mt-2 flex h-8 w-full items-center justify-center rounded-full bg-pink px-2 text-[11px] font-extrabold text-white shadow-[0_8px_18px_rgba(238,49,123,0.23)] hover:bg-pink-dim"
+            onClick={() => {
+              if (quickState !== 'idle') return;
+              setQuickState('opening');
+              window.setTimeout(() => {
+                if (onQuickAdd) onQuickAdd(product);
+                else open();
+                setQuickState('added');
+                window.setTimeout(() => setQuickState('idle'), 700);
+              }, 140);
+            }}
+            disabled={quickState !== 'idle'}
+            aria-busy={quickState === 'opening'}
+            className="mena-press mt-2 flex h-8 w-full items-center justify-center gap-1.5 rounded-full bg-pink px-2 text-[11px] font-extrabold text-white shadow-[0_8px_18px_rgba(238,49,123,0.23)] hover:bg-pink-dim disabled:cursor-wait disabled:opacity-80"
           >
-            {isQuote ? 'Request Quote' : 'Add to Cart'}
+            {quickState === 'opening' && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            {quickState === 'added' && <Check className="h-3.5 w-3.5" />}
+            {quickState === 'opening' ? 'Opening...' : quickState === 'added' ? 'Added' : isQuote ? 'Request Quote' : 'Add to Cart'}
           </button>
         </div>
       </div>

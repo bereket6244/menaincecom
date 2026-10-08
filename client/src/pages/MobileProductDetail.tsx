@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, MessageCircle, MessageSquareText, Send, ShoppingBag, X } from 'lucide-react';
+import { Check, ChevronLeft, Loader2, MessageCircle, MessageSquareText, Send, ShoppingBag, X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { BusinessSettings, Category, Product, UniversalComplimentaryItem } from '../lib/types';
 import { useApp } from '../store/AppContext';
@@ -83,6 +83,7 @@ export function MobileProductDetail() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetMode] = useState<SheetMode>('add');
   const [contactOpen, setContactOpen] = useState(false);
+  const [actionState, setActionState] = useState<'idle' | 'adding' | 'added' | 'buying'>('idle');
   const contactRef = useRef<HTMLDivElement>(null);
   const cartCount = cart.reduce((n, item) => n + item.qty, 0);
   const contactChannels = [
@@ -175,14 +176,20 @@ export function MobileProductDetail() {
   };
 
   const addFrom = (origin: HTMLElement | null) => {
+    if (actionState !== 'idle') return;
+    setActionState('adding');
     const variantSelections = withDefaultVariantSelections(product, selections);
     setSelections(variantSelections);
     flyToCart(origin, product);
     notifyAdded(add('increment', variantSelections));
     setSheetOpen(false);
+    window.setTimeout(() => setActionState('added'), 180);
+    window.setTimeout(() => setActionState('idle'), 850);
   };
 
   const buyNow = () => {
+    if (actionState !== 'idle') return;
+    setActionState('buying');
     const variantSelections = withDefaultVariantSelections(product, selections);
     const key = `${product.id}|${JSON.stringify(variantSelections)}`;
     setSelections(variantSelections);
@@ -190,7 +197,7 @@ export function MobileProductDetail() {
     sessionStorage.setItem('mena_go_checkout', '1');
     sessionStorage.setItem('mena_checkout_keys', JSON.stringify([key]));
     setSheetOpen(false);
-    navigate('/order?checkout=1');
+    window.setTimeout(() => navigate('/order?checkout=1'), 180);
   };
 
   const runAction = (mode: SheetMode, origin: HTMLElement | null) => {
@@ -389,16 +396,23 @@ export function MobileProductDetail() {
             <button
               type="button"
               onClick={(event) => addFrom(event.currentTarget)}
+              disabled={actionState !== 'idle'}
+              aria-busy={actionState === 'adding'}
               className="btn-outline h-10 min-w-0 flex-1 px-2 text-xs"
             >
-              Add to cart
+              {actionState === 'adding' && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {actionState === 'added' && <Check className="h-3.5 w-3.5" />}
+              {actionState === 'adding' ? 'Adding...' : actionState === 'added' ? 'Added' : 'Add to cart'}
             </button>
             <button
               type="button"
               onClick={buyNow}
+              disabled={actionState !== 'idle'}
+              aria-busy={actionState === 'buying'}
               className="btn-primary h-10 min-w-0 flex-1 px-2 text-xs"
             >
-              Buy now
+              {actionState === 'buying' && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {actionState === 'buying' ? 'Opening...' : 'Buy now'}
             </button>
           </div>
         </div>
@@ -482,11 +496,14 @@ export function MobileProductDetail() {
         </div>
 
         <div className="sticky bottom-0 flex gap-3 border-t border-edge bg-surface px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
-          <button type="button" onClick={(event) => runAction('add', event.currentTarget)} className="btn-outline h-11 flex-1 text-sm">
-            Add to cart
+          <button type="button" onClick={(event) => runAction('add', event.currentTarget)} disabled={actionState !== 'idle'} aria-busy={actionState === 'adding'} className="btn-outline h-11 flex-1 text-sm">
+            {actionState === 'adding' && <Loader2 className="h-4 w-4 animate-spin" />}
+            {actionState === 'added' && <Check className="h-4 w-4" />}
+            {actionState === 'adding' ? 'Adding...' : actionState === 'added' ? 'Added' : 'Add to cart'}
           </button>
-          <button type="button" onClick={() => runAction(sheetMode === 'buy' ? 'buy' : 'buy', null)} className="btn-primary h-11 flex-1 text-sm">
-            Buy now
+          <button type="button" onClick={() => runAction(sheetMode === 'buy' ? 'buy' : 'buy', null)} disabled={actionState !== 'idle'} aria-busy={actionState === 'buying'} className="btn-primary h-11 flex-1 text-sm">
+            {actionState === 'buying' && <Loader2 className="h-4 w-4 animate-spin" />}
+            {actionState === 'buying' ? 'Opening...' : 'Buy now'}
           </button>
         </div>
       </section>

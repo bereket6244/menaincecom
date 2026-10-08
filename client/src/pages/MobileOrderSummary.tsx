@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Check, CheckCircle2, ChevronLeft, MessageCircle, MessageSquareText, PlusCircle, Send, ShoppingBag, Trash2 } from 'lucide-react';
+import { Check, CheckCircle2, ChevronLeft, Loader2, MessageCircle, MessageSquareText, PlusCircle, Send, ShoppingBag, Trash2 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { useData } from '../lib/useData';
 import { OFFLINE_MESSAGE } from '../lib/api';
@@ -37,6 +37,9 @@ export function MobileOrderSummary() {
   const [channel, setChannel] = useState<Channel>('telegram');
   const [sending, setSending] = useState<Channel | null>(null);
   const [sent, setSent] = useState<{ channel: Channel; chatUrl: string; keys: string[] } | null>(null);
+  const [checkoutPending, setCheckoutPending] = useState(false);
+  const [removing, setRemoving] = useState<Set<string>>(() => new Set());
+  const [addingSuggestion, setAddingSuggestion] = useState<Set<string>>(() => new Set());
   const prevKeys = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -153,8 +156,24 @@ export function MobileOrderSummary() {
       toast('error', 'Select at least one item.');
       return;
     }
-    setStep('checkout');
-    window.scrollTo({ top: 0 });
+    setCheckoutPending(true);
+    window.setTimeout(() => {
+      setStep('checkout');
+      setCheckoutPending(false);
+      window.scrollTo({ top: 0 });
+    }, 180);
+  };
+
+  const removeCartLine = (key: string) => {
+    setRemoving((current) => new Set(current).add(key));
+    window.setTimeout(() => {
+      removeFromCart(key);
+      setRemoving((current) => {
+        const next = new Set(current);
+        next.delete(key);
+        return next;
+      });
+    }, 180);
   };
 
   const submitOrder = async (orderChannel: Channel = channel) => {
@@ -318,19 +337,21 @@ export function MobileOrderSummary() {
             <div className="grid grid-cols-3 gap-2.5">
               {CHANNELS.map(({ id, label, icon: Icon, accent, tint }) => {
                 const active = channel === id;
+                const isSendingThis = sending === id;
                 return (
                   <button
                     key={id}
                     type="button"
                     onClick={() => void submitOrder(id)}
                     disabled={!online || sending !== null}
+                    aria-busy={isSendingThis}
                     className="mena-press flex min-w-0 flex-col items-center gap-2.5 rounded-2xl border-[1.5px] px-2 py-4 disabled:cursor-not-allowed disabled:opacity-60"
                     style={{ borderColor: active ? accent : '#ece7e2', background: active ? tint : '#fff' }}
                   >
                     <span className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: active ? accent : '#f4f0ec', color: active ? '#fff' : '#a8a29d' }}>
-                      <Icon className="h-5.5 w-5.5" />
+                      {isSendingThis ? <Loader2 className="h-5.5 w-5.5 animate-spin" /> : <Icon className="h-5.5 w-5.5" />}
                     </span>
-                    <span className="text-sm font-extrabold" style={{ color: active ? accent : '#1c1a19' }}>{label}</span>
+                    <span className="text-sm font-extrabold" style={{ color: active ? accent : '#1c1a19' }}>{isSendingThis ? 'Opening...' : label}</span>
                   </button>
                 );
               })}
@@ -350,7 +371,7 @@ export function MobileOrderSummary() {
           </section>
         </div>
 
-        <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[430px] border-t border-edge bg-white/95 px-3.5 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-8px_24px_rgba(28,26,25,0.07)] backdrop-blur">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-edge bg-white/95 px-3.5 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-8px_24px_rgba(28,26,25,0.07)] backdrop-blur">
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-3">
               <div className="min-w-0">
@@ -362,7 +383,8 @@ export function MobileOrderSummary() {
               <div className="truncate text-lg font-extrabold text-[#ee0a24]">{formatCartTotal(selectedTotal, { hasQuote: hasQuoteItems, hasStarting: hasStartingItems })}</div>
               </div>
             </div>
-            <button type="button" onClick={() => void submitOrder()} disabled={!online || sending !== null} className="btn-primary btn-order-gradient h-12 w-full px-5">
+            <button type="button" onClick={() => void submitOrder()} disabled={!online || sending !== null} aria-busy={sending !== null} className="btn-primary btn-order-gradient h-12 w-full px-5">
+              {sending && <Loader2 className="h-4 w-4 animate-spin" />}
               {sending ? 'Opening...' : 'Place order'}
             </button>
           </div>
@@ -440,8 +462,15 @@ export function MobileOrderSummary() {
                       })
                     }
                   />
-                  <button type="button" onClick={() => removeFromCart(item.key)} className="mena-press flex h-8 w-8 items-center justify-center rounded-full text-muted hover:bg-surface2 hover:text-pink" aria-label="Remove">
-                    <Trash2 className="h-4 w-4" />
+                  <button
+                    type="button"
+                    onClick={() => removeCartLine(item.key)}
+                    disabled={removing.has(item.key)}
+                    aria-busy={removing.has(item.key)}
+                    className="mena-press flex h-8 w-8 items-center justify-center rounded-full text-muted hover:bg-surface2 hover:text-pink disabled:cursor-wait disabled:opacity-60"
+                    aria-label={removing.has(item.key) ? 'Removing' : 'Remove'}
+                  >
+                    {removing.has(item.key) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
@@ -464,28 +493,39 @@ export function MobileOrderSummary() {
                 <button
                   type="button"
                   onClick={() => {
+                    if (addingSuggestion.has(product.id)) return;
+                    setAddingSuggestion((current) => new Set(current).add(product.id));
                     if (product.variants.length) {
-                      navigate(`/product/${product.id}`);
+                      window.setTimeout(() => navigate(`/product/${product.id}`), 140);
                       return;
                     }
-                    addToCart({
-                      productId: product.id,
-                      name: product.name,
-                      photo: product.photos[0] || '',
-                      isAddon: product.isAddon,
-                      pricingMode: product.pricingMode,
-                      priceEach: cartPriceEach(product),
-                      maxOrderQty: product.maxOrderQty ?? null,
-                      variantSelections: {},
-                      qty: 1,
-                      note: '',
-                    });
-                    toast('success', `${product.name} added to cart.`);
+                    window.setTimeout(() => {
+                      addToCart({
+                        productId: product.id,
+                        name: product.name,
+                        photo: product.photos[0] || '',
+                        isAddon: product.isAddon,
+                        pricingMode: product.pricingMode,
+                        priceEach: cartPriceEach(product),
+                        maxOrderQty: product.maxOrderQty ?? null,
+                        variantSelections: {},
+                        qty: 1,
+                        note: '',
+                      });
+                      toast('success', `${product.name} added to cart.`);
+                      setAddingSuggestion((current) => {
+                        const next = new Set(current);
+                        next.delete(product.id);
+                        return next;
+                      });
+                    }, 180);
                   }}
+                  disabled={addingSuggestion.has(product.id)}
+                  aria-busy={addingSuggestion.has(product.id)}
                   className="btn-primary mt-2 h-9 w-full px-3 py-0 text-[12px]"
                 >
-                  <PlusCircle className="h-3.5 w-3.5" />
-                  Add
+                  {addingSuggestion.has(product.id) ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PlusCircle className="h-3.5 w-3.5" />}
+                  {addingSuggestion.has(product.id) ? 'Adding...' : 'Add'}
                 </button>
               </div>
             ))}
@@ -493,7 +533,7 @@ export function MobileOrderSummary() {
         </section>
       )}
 
-      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[430px] border-t border-edge bg-white/95 px-3.5 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-8px_24px_rgba(28,26,25,0.07)] backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-edge bg-white/95 px-3.5 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-8px_24px_rgba(28,26,25,0.07)] backdrop-blur">
         <div className="space-y-2">
           <div className="grid grid-cols-[auto_1fr_1fr] items-center gap-3">
             <button type="button" onClick={toggleAll} className="mena-press flex shrink-0 items-center gap-2 text-sm font-extrabold text-ink">
@@ -511,8 +551,9 @@ export function MobileOrderSummary() {
               <div className="truncate text-lg font-extrabold text-[#ee0a24]">{formatCartTotal(selectedTotal, { hasQuote: hasQuoteItems, hasStarting: hasStartingItems })}</div>
             </div>
           </div>
-          <button type="button" onClick={goCheckout} disabled={!selectedItems.length} className="btn-primary h-12 w-full px-5">
-            Checkout ({selectedItems.length})
+          <button type="button" onClick={goCheckout} disabled={!selectedItems.length || checkoutPending} aria-busy={checkoutPending} className="btn-primary h-12 w-full px-5">
+            {checkoutPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            {checkoutPending ? 'Opening checkout...' : `Checkout (${selectedItems.length})`}
           </button>
         </div>
       </div>

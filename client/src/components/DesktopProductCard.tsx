@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart } from 'lucide-react';
+import { Check, Heart, Loader2 } from 'lucide-react';
 import type { Product } from '../lib/types';
 import { useApp } from '../store/AppContext';
 import { cleanDescription, colorOptions, cx, formatPrice } from '../lib/utils';
@@ -28,6 +28,8 @@ export function DesktopProductCard({
   const isQuote = product.pricingMode === 'quote' || product.price == null;
   const [photoIndex, setPhotoIndex] = useState(0);
   const [pickedColorPhoto, setPickedColorPhoto] = useState<string | null>(null);
+  const [wishlistBusy, setWishlistBusy] = useState(false);
+  const [quickState, setQuickState] = useState<'idle' | 'adding' | 'added'>('idle');
   const selectedPhoto = pickedColorPhoto || product.photos[photoIndex] || product.photos[0];
   const hasMultiplePhotos = product.photos.length > 1;
   const limitText = productPreviewLimitText(product);
@@ -99,15 +101,23 @@ export function DesktopProductCard({
 
         <button
           type="button"
-          onClick={(e) => {
+          onClick={async (e) => {
             e.stopPropagation();
+            if (wishlistBusy) return;
             if (!wished) flyToLiked(e.currentTarget);
-            void toggleWishlist(product.id);
+            setWishlistBusy(true);
+            try {
+              await toggleWishlist(product.id);
+            } finally {
+              setWishlistBusy(false);
+            }
           }}
+          disabled={wishlistBusy}
+          aria-busy={wishlistBusy}
           aria-label={wished ? 'Remove from wishlist' : 'Save to wishlist'}
-          className="mena-press absolute right-5 top-5 z-30 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-ink/70 shadow-[0_5px_16px_rgba(28,26,25,0.14)] backdrop-blur hover:text-pink"
+          className="mena-press absolute right-5 top-5 z-30 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-ink/70 shadow-[0_5px_16px_rgba(28,26,25,0.14)] backdrop-blur hover:text-pink disabled:cursor-wait disabled:opacity-70"
         >
-          <Heart className={cx('h-4 w-4', wished ? 'fill-pink text-pink' : '')} />
+          {wishlistBusy ? <Loader2 className="h-4 w-4 animate-spin text-pink" /> : <Heart className={cx('h-4 w-4', wished ? 'fill-pink text-pink' : '')} />}
         </button>
       </div>
 
@@ -131,10 +141,22 @@ export function DesktopProductCard({
         <div className="mt-4">
           <button
             type="button"
-            onClick={() => onQuickAdd(product)}
-            className="mena-press flex h-11 w-full items-center justify-center rounded-full bg-pink px-3 text-[13px] font-extrabold text-white shadow-[0_10px_22px_rgba(238,49,123,0.25)] hover:bg-pink-dim"
+            onClick={() => {
+              if (quickState !== 'idle') return;
+              setQuickState('adding');
+              window.setTimeout(() => {
+                onQuickAdd(product);
+                setQuickState('added');
+                window.setTimeout(() => setQuickState('idle'), 750);
+              }, 140);
+            }}
+            disabled={quickState !== 'idle'}
+            aria-busy={quickState === 'adding'}
+            className="mena-press flex h-11 w-full items-center justify-center gap-2 rounded-full bg-pink px-3 text-[13px] font-extrabold text-white shadow-[0_10px_22px_rgba(238,49,123,0.25)] hover:bg-pink-dim disabled:cursor-wait disabled:opacity-80"
           >
-            {isQuote ? 'Request Quote' : 'Add to Cart'}
+            {quickState === 'adding' && <Loader2 className="h-4 w-4 animate-spin" />}
+            {quickState === 'added' && <Check className="h-4 w-4" />}
+            {quickState === 'adding' ? 'Adding...' : quickState === 'added' ? 'Added' : isQuote ? 'Request Quote' : 'Add to Cart'}
           </button>
         </div>
       </div>

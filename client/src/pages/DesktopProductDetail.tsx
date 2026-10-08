@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Check, ChevronLeft, Clock, ShoppingBag, X } from 'lucide-react';
+import { Check, ChevronLeft, Clock, Loader2, ShoppingBag, X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { Product, UniversalComplimentaryItem } from '../lib/types';
 import { useApp } from '../store/AppContext';
@@ -41,6 +41,7 @@ export function DesktopProductDetail() {
   const [complimentarySelections, setComplimentarySelections] = useState<Record<string, number>>({});
   const [qty, setQty] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [actionState, setActionState] = useState<'idle' | 'adding' | 'added' | 'buying'>('idle');
 
   useEffect(() => {
     if (product) setQty((current) => clampOrderQty(current, product));
@@ -99,14 +100,20 @@ export function DesktopProductDetail() {
   };
 
   const handleAdd = () => {
+    if (actionState !== 'idle') return;
+    setActionState('adding');
     const variantSelections = withDefaultVariantSelections(product, selections);
     setSelections(variantSelections);
     const result = add('increment', variantSelections);
     setSheetOpen(false);
     notifyAdded(product.name, result);
+    window.setTimeout(() => setActionState('added'), 180);
+    window.setTimeout(() => setActionState('idle'), 850);
   };
 
   const handleBuy = () => {
+    if (actionState !== 'idle') return;
+    setActionState('buying');
     const variantSelections = withDefaultVariantSelections(product, selections);
     // Same key addToCart derives, so checkout opens with just this item selected.
     const key = `${product.id}|${JSON.stringify(variantSelections)}`;
@@ -114,7 +121,7 @@ export function DesktopProductDetail() {
     add('replace', variantSelections);
     sessionStorage.setItem('mena_go_checkout', '1');
     sessionStorage.setItem('mena_checkout_keys', JSON.stringify([key]));
-    navigate('/order?checkout=1');
+    window.setTimeout(() => navigate('/order?checkout=1'), 180);
   };
 
   const variantPickers = (
@@ -265,12 +272,13 @@ export function DesktopProductDetail() {
           )}
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <button type="button" onClick={handleAdd} className={ADD_TO_CART_BUTTON}>
-              <ShoppingBag className="h-4 w-4" />
-              Add to cart
+            <button type="button" onClick={handleAdd} disabled={actionState !== 'idle'} aria-busy={actionState === 'adding'} className={ADD_TO_CART_BUTTON}>
+              {actionState === 'adding' ? <Loader2 className="h-4 w-4 animate-spin" /> : actionState === 'added' ? <Check className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}
+              {actionState === 'adding' ? 'Adding...' : actionState === 'added' ? 'Added' : 'Add to cart'}
             </button>
-            <button type="button" onClick={handleBuy} className={BUY_NOW_BUTTON}>
-              Buy now
+            <button type="button" onClick={handleBuy} disabled={actionState !== 'idle'} aria-busy={actionState === 'buying'} className={BUY_NOW_BUTTON}>
+              {actionState === 'buying' && <Loader2 className="h-4 w-4 animate-spin" />}
+              {actionState === 'buying' ? 'Opening...' : 'Buy now'}
             </button>
           </div>
           {!online && <p className="mt-3 text-[12px] font-semibold text-amber-700">You are offline - sending an order requires a connection.</p>}
@@ -310,8 +318,15 @@ export function DesktopProductDetail() {
               </div>
             </div>
             <div className="sticky bottom-0 flex gap-3 border-t border-edge bg-white p-4">
-              <button type="button" onClick={handleAdd} className="btn-outline h-11 flex-1 text-sm">Add to cart</button>
-              <button type="button" onClick={handleBuy} className="btn-primary h-11 flex-1 text-sm">Buy now</button>
+              <button type="button" onClick={handleAdd} disabled={actionState !== 'idle'} aria-busy={actionState === 'adding'} className="btn-outline h-11 flex-1 text-sm">
+                {actionState === 'adding' && <Loader2 className="h-4 w-4 animate-spin" />}
+                {actionState === 'added' && <Check className="h-4 w-4" />}
+                {actionState === 'adding' ? 'Adding...' : actionState === 'added' ? 'Added' : 'Add to cart'}
+              </button>
+              <button type="button" onClick={handleBuy} disabled={actionState !== 'idle'} aria-busy={actionState === 'buying'} className="btn-primary h-11 flex-1 text-sm">
+                {actionState === 'buying' && <Loader2 className="h-4 w-4 animate-spin" />}
+                {actionState === 'buying' ? 'Opening...' : 'Buy now'}
+              </button>
             </div>
           </div>
         </div>
