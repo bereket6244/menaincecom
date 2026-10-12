@@ -25,7 +25,7 @@ test('Telegram identity is stable per channel and message', () => {
   assert.equal(telegramProductIdentity({}), null);
 });
 
-test('product admin triggers Telegram only on publication transitions', () => {
+test('product admin syncs publication transitions and edits to linked published products', () => {
   const original = process.env.TELEGRAM_SYNC_ENABLED;
   process.env.TELEGRAM_SYNC_ENABLED = 'true';
   try {
@@ -39,7 +39,7 @@ test('product admin triggers Telegram only on publication transitions', () => {
     assert.equal(shouldUpdateTelegramPost(
       { status: 'published', contentVersion: 2 },
       { status: 'published', contentVersion: 3, telegramChannelId: '-1001', telegramMessageId: 42 }
-    ), false);
+    ), true);
     assert.equal(shouldUpdateTelegramPost(
       { status: 'published', contentVersion: 3 },
       { status: 'published', contentVersion: 3, telegramChannelId: '-1001', telegramMessageId: 42 }
@@ -50,7 +50,16 @@ test('product admin triggers Telegram only on publication transitions', () => {
     ), false);
     assert.equal(shouldDeleteTelegramPost({ telegramChannelId: '-1001', telegramMessageId: 42 }), true);
     assert.equal(shouldDeleteTelegramPost({ telegramChannelId: '-1001' }), false);
+    const linked = { status: 'published', contentVersion: 3, telegramChannelId: '-1001', telegramMessageId: 42 };
+    const previous = { status: 'published', contentVersion: 2 };
+    assert.equal(shouldUpdateTelegramPost(previous, { ...linked, deletedAt: '2026-10-12' }), false);
+    assert.equal(shouldUpdateTelegramPost(previous, { ...linked, telegramDeletedAt: '2026-10-12' }), false);
+    assert.equal(shouldUpdateTelegramPost(previous, { ...linked, telegramMessageId: null }), false);
+    assert.equal(shouldUpdateTelegramPost(null, linked), false);
+    assert.equal(shouldUpdateTelegramPost({ ...previous, status: 'draft' }, linked), false);
+    assert.equal(shouldUpdateTelegramPost(linked, { ...linked, telegramSyncStatus: 'error' }), true);
     process.env.TELEGRAM_SYNC_ENABLED = 'false';
+    assert.equal(shouldUpdateTelegramPost(previous, linked), false);
     assert.equal(shouldDeleteTelegramPost({ telegramChannelId: '-1001', telegramMessageId: 42 }), false);
   } finally {
     if (original === undefined) delete process.env.TELEGRAM_SYNC_ENABLED;

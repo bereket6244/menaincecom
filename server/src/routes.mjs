@@ -20,6 +20,8 @@ import {
   deleteTelegramProductPost,
   shouldCreateTelegramPost,
   shouldDeleteTelegramPost,
+  shouldUpdateTelegramPost,
+  updateTelegramProductPost,
 } from './product-telegram.mjs';
 
 export const api = Router();
@@ -624,6 +626,17 @@ async function resolveTelegramProduct(product) {
 }
 
 async function syncProductPublicationTransition(previous, next) {
+  if (shouldUpdateTelegramPost(previous, next)) {
+    try {
+      const patch = await updateTelegramProductPost(await resolveTelegramProduct(next));
+      return await records.update('products', next.id, patch) || { ...next, ...patch };
+    } catch (error) {
+      const patch = telegramErrorPatch(error);
+      console.error('[telegram] product edit sync failed:', patch.telegramSyncError.message);
+      return await records.update('products', next.id, patch) || { ...next, ...patch };
+    }
+  }
+
   if (shouldCreateTelegramPost(previous, next)) {
     try {
       const patch = await createTelegramProductPost(await resolveTelegramProduct(next));

@@ -121,7 +121,12 @@ export function shouldCreateTelegramPost(previous, next) {
 }
 
 export function shouldUpdateTelegramPost(previous, next) {
-  return false;
+  if (process.env.TELEGRAM_SYNC_ENABLED !== 'true') return false;
+  if (!previous || !next || next.deletedAt || next.telegramDeletedAt) return false;
+  if (normalizeProductStatus(previous.status) !== 'published' || normalizeProductStatus(next.status) !== 'published') return false;
+  if (!telegramProductIdentity(next)) return false;
+  return Number(next.contentVersion) > Number(previous.contentVersion || 1)
+    || next.telegramSyncStatus === 'error';
 }
 
 export function shouldDeleteTelegramPost(product) {
