@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { googleAuthRouter } from './google-auth.mjs';
+import { emailSignupRouter } from './email-verification.mjs';
 import multer from 'multer';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -116,32 +117,7 @@ api.get('/health', async (req, res) => {
 /* ----------------------------------- auth ---------------------------------- */
 
 api.use('/auth/google', googleAuthRouter(loginLimiter));
-
-api.post('/auth/signup', signupLimiter, dbRoute(async (req, res) => {
-  const { identifier, password, name } = req.body || {};
-  if (!identifier || !password || !name) {
-    return res.status(400).json({ error: 'bad_request', message: 'Name, email/phone and password are required.' });
-  }
-  const norm = String(identifier).trim().toLowerCase();
-  const cleanName = String(name).trim();
-  const cleanPassword = String(password);
-  if (norm.length < 3 || norm.length > 190 || cleanName.length > 100) {
-    return res.status(400).json({ error: 'bad_request', message: 'Please enter a valid name and email/phone.' });
-  }
-  if (cleanPassword.length < 8 || cleanPassword.length > 128) {
-    return res.status(400).json({ error: 'bad_request', message: 'Password must be 8–128 characters.' });
-  }
-  if (await records.find('users', (u) => u.identifier === norm)) {
-    return res.status(409).json({ error: 'exists', message: 'An account with this email/phone already exists.' });
-  }
-  const user = await records.insert('users', {
-    identifier: norm,
-    name: cleanName,
-    role: 'customer',
-    passwordHash: await hashPassword(cleanPassword),
-  });
-  res.json({ token: signToken(user), user: publicUser(user) });
-}));
+api.use('/auth/signup', emailSignupRouter(signupLimiter));
 
 api.post('/auth/login', loginLimiter, dbRoute(async (req, res) => {
   const { identifier, password } = req.body || {};

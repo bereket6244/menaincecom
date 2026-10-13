@@ -133,8 +133,12 @@ in the admin panel.
   selections.
 - **Category photos**: admins can upload category profile photos, and customers see them in the
   storefront category experience.
-- **Accounts**: customers can sign up with email or phone plus password. Guest checkout captures name,
-  phone, and optional email.
+- **Accounts**: customers can sign up with a verified email and password or use Google sign-in.
+  Existing phone-based accounts can still log in. Guest checkout captures name, phone, and optional email.
+- **Email verification**: password-based customer signup requires a six-digit email code before the
+  account is created. Codes expire after 10 minutes, resend requests have a one-minute cooldown, and
+  five incorrect attempts invalidate the code. Configure the `SMTP_*` and
+  `EMAIL_VERIFICATION_SECRET` variables shown in `server/.env.example`.
 
 ## Data Model
 

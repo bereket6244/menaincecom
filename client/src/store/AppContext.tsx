@@ -19,7 +19,8 @@ interface AppState {
   user: User | null;
   login: (identifier: string, password: string) => Promise<void>;
   googleLogin: (credential: string) => Promise<void>;
-  signup: (name: string, identifier: string, password: string) => Promise<void>;
+  signup: (name: string, identifier: string, password: string) => Promise<{ email: string }>;
+  verifySignup: (identifier: string, code: string) => Promise<void>;
   logout: () => void;
   cart: CartItem[];
   wishlistProductIds: string[];
@@ -149,7 +150,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signup = useCallback(async (name: string, identifier: string, password: string) => {
-    const r = await apiSend<{ token: string; user: User }>('POST', '/auth/signup', { name, identifier, password });
+    return apiSend<{ verificationRequired: true; email: string }>('POST', '/auth/signup', { name, identifier, password });
+  }, []);
+
+  const verifySignup = useCallback(async (identifier: string, code: string) => {
+    const r = await apiSend<{ token: string; user: User }>('POST', '/auth/signup/verify', { identifier, code });
     setToken(r.token);
     setUser(r.user);
   }, []);
@@ -232,13 +237,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AppState>(
     () => ({
-      online, dbDown, user, login, signup, googleLogin, logout,
+      online, dbDown, user, login, signup, verifySignup, googleLogin, logout,
       cart, wishlistProductIds, toggleWishlist, removeFromWishlist,
       addToCart, updateCartItem, removeFromCart, clearCart,
       toasts, toast, dismissToast,
     }),
     [
-      online, dbDown, user, login, signup, googleLogin, logout, cart, wishlistProductIds,
+      online, dbDown, user, login, signup, verifySignup, googleLogin, logout, cart, wishlistProductIds,
       toggleWishlist, removeFromWishlist, addToCart, updateCartItem, removeFromCart,
       clearCart, toasts, toast, dismissToast,
     ]

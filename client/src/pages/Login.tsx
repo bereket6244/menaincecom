@@ -7,22 +7,33 @@ import { cx } from '../lib/utils';
 import { GoogleSignIn } from '../components/GoogleSignIn';
 
 export function Login() {
-  const { login, signup, toast } = useApp();
+  const { login, signup, verifySignup, toast } = useApp();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [mode, setMode] = useState<'login' | 'signup'>(params.get('mode') === 'signup' ? 'signup' : 'login');
   const [name, setName] = useState('');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     try {
-      if (mode === 'signup') await signup(name, identifier, password);
-      else await login(identifier, password);
-      toast('success', mode === 'signup' ? 'Account created — you are logged in.' : 'Welcome back.');
+      if (verificationEmail) {
+        await verifySignup(verificationEmail, code);
+        toast('success', 'Email verified — your account is ready.');
+      } else if (mode === 'signup') {
+        const result = await signup(name, identifier, password);
+        setVerificationEmail(result.email);
+        toast('success', `We sent a verification code to ${result.email}.`);
+        return;
+      } else {
+        await login(identifier, password);
+        toast('success', 'Welcome back.');
+      }
       navigate('/');
     } catch (err) {
       toast('error', (err as Error).message);
@@ -38,7 +49,7 @@ export function Login() {
           {(['login', 'signup'] as const).map((m) => (
             <button
               key={m}
-              onClick={() => setMode(m)}
+              onClick={() => { setMode(m); setVerificationEmail(''); setCode(''); }}
               className={cx(
                 'rounded py-1.5 text-xs font-semibold transition-colors',
                 mode === m ? 'bg-pink text-white' : 'text-muted hover:text-ink'
@@ -49,29 +60,70 @@ export function Login() {
           ))}
         </div>
 
-        <form onSubmit={submit} className="space-y-3">
-          {mode === 'signup' && (
-            <div>
-              <SysLabel>Full name</SysLabel>
-              <input value={name} onChange={(e) => setName(e.target.value)} required className="field mt-1" />
+        {verificationEmail ? (
+          <form onSubmit={submit} className="space-y-3">
+            <div className="text-center">
+              <div className="text-sm font-semibold text-ink">Check your email</div>
+              <p className="mt-1 text-xs text-muted">Enter the six-digit code sent to {verificationEmail}.</p>
             </div>
-          )}
-          <div>
-            <SysLabel>Email or phone number</SysLabel>
-            <input value={identifier} onChange={(e) => setIdentifier(e.target.value)} required className="field mt-1" placeholder="you@example.com or 09…" />
-          </div>
-          <div>
-            <SysLabel>Password</SysLabel>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="field mt-1" />
-          </div>
-          <Button type="submit" busy={busy} className="h-10 w-full py-2.5">
-            {mode === 'signup' ? <UserPlus className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
-            {mode === 'signup' ? 'Create account' : 'Log in'}
-          </Button>
-        </form>
-        <GoogleSignIn onSuccess={() => { toast('success', 'Welcome! You are signed in.'); navigate('/account'); }} />
+            <div>
+              <SysLabel>Verification code</SysLabel>
+              <input
+                value={code}
+                onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                required
+                autoFocus
+                autoComplete="one-time-code"
+                inputMode="numeric"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                className="field mt-1 text-center text-xl tracking-[0.35em]"
+                placeholder="000000"
+              />
+            </div>
+            <Button type="submit" busy={busy} disabled={code.length !== 6} className="h-10 w-full py-2.5">
+              Verify and create account
+            </Button>
+            <button
+              type="button"
+              className="w-full text-center text-xs text-pink underline"
+              onClick={() => { setVerificationEmail(''); setCode(''); }}
+            >
+              Change email or resend code
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={submit} className="space-y-3">
+            {mode === 'signup' && (
+              <div>
+                <SysLabel>Full name</SysLabel>
+                <input value={name} onChange={(e) => setName(e.target.value)} required className="field mt-1" />
+              </div>
+            )}
+            <div>
+              <SysLabel>{mode === 'signup' ? 'Email address' : 'Email or phone number'}</SysLabel>
+              <input
+                type={mode === 'signup' ? 'email' : 'text'}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                required
+                className="field mt-1"
+                placeholder={mode === 'signup' ? 'you@example.com' : 'you@example.com or 09…'}
+              />
+            </div>
+            <div>
+              <SysLabel>Password</SysLabel>
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} className="field mt-1" />
+            </div>
+            <Button type="submit" busy={busy} className="h-10 w-full py-2.5">
+              {mode === 'signup' ? <UserPlus className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
+              {mode === 'signup' ? 'Send verification code' : 'Log in'}
+            </Button>
+          </form>
+        )}
+        {!verificationEmail && <GoogleSignIn onSuccess={() => { toast('success', 'Welcome! You are signed in.'); navigate('/account'); }} />}
         <p className="mt-3 text-center text-[10px] text-muted">
-          No verification codes needed — your account works immediately. You can also order as a guest.
+          {mode === 'signup' ? 'We verify your email before creating your account.' : 'You can also order as a guest.'}
         </p>
       </div>
     </div>
