@@ -3,7 +3,7 @@ import { useApp } from '../store/AppContext';
 
 type GoogleIdentity = {
   initialize: (options: { client_id: string; nonce: string; callback: (response: { credential: string }) => void; auto_select: boolean }) => void;
-  renderButton: (element: HTMLElement, options: { theme: string; size: string; width: number; text: string }) => void;
+  renderButton: (element: HTMLElement, options: { theme: string; size: string; width: number; text: string; shape: string }) => void;
 };
 declare global { interface Window { google?: { accounts: { id: GoogleIdentity } } } }
 
@@ -34,6 +34,7 @@ export function GoogleSignIn({ onSuccess }: { onSuccess: () => void }) {
 
   useEffect(() => {
     let cancelled = false;
+    let resizeObserver: ResizeObserver | undefined;
     setStatus('loading');
     const initialize = async () => {
       await loadGoogle();
@@ -55,14 +56,24 @@ export function GoogleSignIn({ onSuccess }: { onSuccess: () => void }) {
           });
         },
       });
-      container.current.replaceChildren();
-      window.google.accounts.id.renderButton(container.current, {
-        theme: 'outline', size: 'large', width: Math.min(container.current.clientWidth || 300, 400), text: 'continue_with',
-      });
+      let renderedWidth = 0;
+      const renderButton = () => {
+        if (cancelled || !container.current || !window.google) return;
+        const width = Math.min(container.current.clientWidth || 300, 400);
+        if (width === renderedWidth) return;
+        renderedWidth = width;
+        container.current.replaceChildren();
+        window.google.accounts.id.renderButton(container.current, {
+          theme: 'outline', size: 'large', width, text: 'continue_with', shape: 'pill',
+        });
+      };
+      renderButton();
+      resizeObserver = new ResizeObserver(renderButton);
+      resizeObserver.observe(container.current);
       setStatus('ready');
     };
     void initialize().catch(() => { if (!cancelled) setStatus('error'); });
-    return () => { cancelled = true; };
+    return () => { cancelled = true; resizeObserver?.disconnect(); };
   }, [attempt, googleLogin, toast]);
 
   return <div className="my-4">

@@ -49,8 +49,6 @@ export function Login() {
           ))}
         </div>
 
-        <GoogleSignIn onSuccess={() => { toast('success', 'Welcome! You are signed in.'); navigate('/account'); }} />
-        <p className="mb-4 text-center text-xs text-muted">or continue with email or phone</p>
         <form onSubmit={submit} className="space-y-3">
           {mode === 'signup' && (
             <div>
@@ -66,11 +64,12 @@ export function Login() {
             <SysLabel>Password</SysLabel>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="field mt-1" />
           </div>
-          <Button type="submit" busy={busy} className="w-full py-2.5">
+          <Button type="submit" busy={busy} className="h-10 w-full py-2.5">
             {mode === 'signup' ? <UserPlus className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
             {mode === 'signup' ? 'Create account' : 'Log in'}
           </Button>
         </form>
+        <GoogleSignIn onSuccess={() => { toast('success', 'Welcome! You are signed in.'); navigate('/account'); }} />
         <p className="mt-3 text-center text-[10px] text-muted">
           No verification codes needed — your account works immediately. You can also order as a guest.
         </p>
