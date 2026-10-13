@@ -1,0 +1,83 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import { generateKeyPairSync } from 'node:crypto';
+import { googleAuthRouter, googleVerifier, googleClientId, resolveGoogleUser } from '../src/google-auth.mjs';
+import { records } from '../src/db.mjs';
+
+test('Google verification rejects wrong audience, issuer, expired and forged tokens', async (t) => {
+  const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+  t.mock.method(googleVerifier, 'getFederatedSignonCertsAsync', async () => ({ certs: { test: publicKey.export({ type: 'spki', format: 'pem' }) } }));
+  const now = Math.floor(Date.now() / 1000);
+  const claims = { sub: 'test', aud: googleClientId, iss: 'https://accounts.google.com', iat: now, exp: now + 3600 };
+  const sign = (data, key = privateKey) => jwt.sign(data, key, { algorithm: 'RS256', keyid: 'test' });
+  const verify = (idToken) => googleVerifier.verifyIdToken({ idToken, audience: googleClientId });
+  assert.equal((await verify(sign(claims))).getPayload().sub, 'test');
+  await assert.rejects(verify(sign({ ...claims, aud: 'another-client' })));
+  await assert.rejects(verify(sign({ ...claims, iss: 'https://attacker.example' })));
+  await assert.rejects(verify(sign({ ...claims, iat: now - 7200, exp: now - 3600 })));
+  const attacker = generateKeyPairSync('rsa', { modulusLength: 2048 });
+  await assert.rejects(verify(sign(claims, attacker.privateKey)));
+});
+
+test('Google customer creation, stable identity and safe linking', async (t) => {
+  const users = [];
+  t.mock.method(records, 'find', async (_collection, predicate) => users.find(predicate));
+  t.mock.method(records, 'insert', async (_collection, data) => { const user = { id: String(users.length + 1), ...data }; users.push(user); return user; });
+  t.mock.method(records, 'update', async (_collection, id, patch) => Object.assign(users.find((user) => user.id === id), patch));
+  const identity = { sub: 'google-1', email: 'customer@gmail.com', email_verified: true, name: 'Customer' };
+  const created = await resolveGoogleUser(identity);
+  assert.equal(created.role, 'customer');
+  assert.equal(created.passwordHash, undefined);
+  assert.equal((await resolveGoogleUser({ ...identity, email: 'changed@gmail.com' })).id, created.id);
+  assert.equal(users.length, 1);
+  await assert.rejects(resolveGoogleUser({ ...identity, email_verified: false }), { status: 401 });
+  users.push({ id: 'password-user', identifier: 'existing@gmail.com', role: 'customer', passwordHash: 'existing-hash' });
+  const existingIdentity = { ...identity, sub: 'google-2', email: 'existing@gmail.com' };
+  await assert.rejects(resolveGoogleUser(existingIdentity), { status: 409 });
+  const linked = await resolveGoogleUser(existingIdentity, 'password-user');
+  assert.equal(linked.googleSubject, 'google-2');
+  assert.equal(linked.passwordHash, 'existing-hash');
+  await assert.rejects(resolveGoogleUser(identity, 'password-user'), { status: 403 });
+  await assert.rejects(resolveGoogleUser({ ...identity, sub: 'different', email: 'other@gmail.com' }, 'password-user'), { status: 409 });
+  users.push({ id: 'admin', identifier: 'admin@gmail.com', role: 'admin' });
+  await assert.rejects(resolveGoogleUser({ ...identity, sub: 'admin-google', email: 'admin@gmail.com' }, 'admin'), { status: 409 });
+});
+
+test('Google endpoint verifies audience, browser nonce and rejects replay before creating sessions', async (t) => {
+  const app = express();
+  app.use(express.json());
+  app.use('/api/auth/google', googleAuthRouter((_req, _res, next) => next()));
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise((resolve) => server.once('listening', resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const base = `http://127.0.0.1:${server.address().port}/api/auth/google`;
+  const configResponse = await fetch(`${base}/config`);
+  const config = await configResponse.json();
+  assert.equal(config.clientId, googleClientId);
+  assert.equal(configResponse.headers.get('cache-control'), 'no-store');
+  const cookie = configResponse.headers.get('set-cookie').split(';')[0];
+  assert.match(configResponse.headers.get('set-cookie'), /HttpOnly/);
+  const post = (credential, browserCookie = cookie) => fetch(base, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: browserCookie }, body: JSON.stringify({ credential }) });
+  assert.equal((await post('invalid', '')).status, 401);
+  assert.equal((await post('invalid')).status, 401);
+  assert.equal((await post({})).status, 400);
+  let nonce = 'wrong';
+  t.mock.method(googleVerifier, 'verifyIdToken', async (options) => {
+    assert.equal(options.audience, googleClientId);
+    return { getPayload: () => ({ sub: 'verified-id', email: 'verified@gmail.com', email_verified: true, nonce }) };
+  });
+  assert.equal((await post('verified')).status, 401);
+  nonce = config.nonce;
+  t.mock.method(records, 'find', async () => undefined);
+  let creates = 0;
+  t.mock.method(records, 'insert', async (_collection, data) => { creates++; return { id: 'new-user', ...data }; });
+  const responses = await Promise.all([post('verified'), post('verified')]);
+  assert.deepEqual(responses.map((response) => response.status).sort(), [200, 401]);
+  assert.equal(creates, 1);
+  const session = await responses.find((response) => response.status === 200).json();
+  assert.equal(jwt.decode(session.token).role, 'customer');
+  assert.equal(session.user.identifier, 'verified@gmail.com');
+  assert.equal((await post('verified')).status, 401);
+});

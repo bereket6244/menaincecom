@@ -49,6 +49,20 @@ content on first boot. If MySQL is unavailable or `USE_LOCAL_STORE=true`, the ap
 
 ## Environment
 
+### Google customer login
+
+The shop uses Google Identity Services with the public Mena Storefront web client ID.
+`GOOGLE_CLIENT_ID` can override it on the server; no client secret is used. The browser
+loads the client ID and a short-lived, browser-bound nonce from `/api/auth/google/config`.
+The server verifies Google's signature, issuer, audience, expiry and nonce before issuing
+the normal shop session. New Google accounts are customers only. Existing password users
+must log in first and connect a Google account with the same email on `/account`.
+
+Google Console must allow `https://menaincet.com` as a JavaScript origin. For local
+testing also allow `http://localhost` and `http://localhost:5173`. No redirect URI is
+needed for the JavaScript callback flow. Guestlink is not integrated by this change;
+sharing its sessions requires integration with that app's authentication code.
+
 Important backend variables:
 
 ```text

@@ -4,6 +4,7 @@ import { LogIn, UserPlus } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { Button, SysLabel } from '../components/ui';
 import { cx } from '../lib/utils';
+import { GoogleSignIn } from '../components/GoogleSignIn';
 
 export function Login() {
   const { login, signup, toast } = useApp();
@@ -48,6 +49,8 @@ export function Login() {
           ))}
         </div>
 
+        <GoogleSignIn onSuccess={() => { toast('success', 'Welcome! You are signed in.'); navigate('/account'); }} />
+        <p className="mb-4 text-center text-xs text-muted">or continue with email or phone</p>
         <form onSubmit={submit} className="space-y-3">
           {mode === 'signup' && (
             <div>
@@ -86,6 +89,10 @@ export function Account() {
         <SysLabel>Signed in as</SysLabel>
         <div className="mt-1 text-sm font-bold">{user.name}</div>
         <div className="text-xs text-muted">{user.identifier}</div>
+        {user.role === 'customer' && <>
+          <p className="mt-4 text-xs text-muted">Connect Google using the same email to sign in more easily next time.</p>
+          <GoogleSignIn onSuccess={() => toast('success', 'Google is connected to your account.')} />
+        </>}
         <Button variant="outline" className="mt-4 w-full" onClick={() => navigate('/wishlist')}>
           View liked items
         </Button>

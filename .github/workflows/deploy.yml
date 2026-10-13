@@ -49,6 +49,12 @@ jobs:
           npm ci
           npm run build
 
+      - name: Test server
+        working-directory: server
+        run: |
+          npm ci
+          npm test
+
       - name: Package shop files
         run: |
           cd client/dist
@@ -365,7 +371,7 @@ jobs:
                 remote_dir="${remote_dir}/${dir_name}"
               fi
               upload_file "${file}" "${remote_dir}" "$(basename "${rel}")"
-            done < <(find server-deploy -type f -print0)
+            done < <(find server-deploy -type f ! -path '*/tmp/restart.txt' -print0)
           done <<< "${CPANEL_SERVER_TARGETS}"
 
       - name: Extract server archive on cPanel
@@ -413,6 +419,25 @@ jobs:
             fi
           done <<< "${CPANEL_SERVER_TARGETS}"
 
+      - name: Restart Passenger after installing dependencies
+        if: steps.changes.outputs.server_changed == 'true'
+        env:
+          CPANEL_USER: ${{ secrets.CPANEL_USER }}
+          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          while IFS= read -r target; do
+            [ -n "${target}" ] || continue
+            remote_dir="${target%%::*}/tmp"
+            response="$(curl --fail-with-body --show-error --silent \
+              --connect-timeout 20 --max-time 120 \
+              -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+              -F "dir=${remote_dir}" -F "overwrite=1" \
+              -F "file=@server-deploy/tmp/restart.txt;filename=restart.txt" \
+              "${CPANEL_BASE_URL}/execute/Fileman/upload_files")"
+            printf '%s' "${response}" | jq -e '.status == 1' >/dev/null
+          done <<< "${CPANEL_SERVER_TARGETS}"
+
       - name: Warm up Passenger app
         run: sleep 60
 
@@ -420,6 +445,7 @@ jobs:
         run: |
           curl --fail --show-error --silent --head https://menaincet.com/shop/
           curl --fail --show-error --silent --head https://menaincet.com/shop/catalog
+          curl --fail --show-error --silent https://menaincet.com/shop/api/auth/google/config | jq -e '.clientId | endswith(".apps.googleusercontent.com")' >/dev/null
           curl --fail --show-error --silent https://menaincet.com/shop/api/complimentary-items >/dev/null
           health_json="$(curl --fail --show-error --silent https://menaincet.com/shop/api/health)"
           echo "${health_json}"

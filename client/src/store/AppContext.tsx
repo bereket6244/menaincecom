@@ -18,6 +18,7 @@ interface AppState {
   dbDown: boolean;
   user: User | null;
   login: (identifier: string, password: string) => Promise<void>;
+  googleLogin: (credential: string) => Promise<void>;
   signup: (name: string, identifier: string, password: string) => Promise<void>;
   logout: () => void;
   cart: CartItem[];
@@ -153,6 +154,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUser(r.user);
   }, []);
 
+  const googleLogin = useCallback(async (credential: string) => {
+    const r = await apiSend<{ token: string; user: User }>('POST', '/auth/google', { credential });
+    setToken(r.token);
+    setUser(r.user);
+  }, []);
+
   // Cart and likes are per-person, not per-device: leaving them behind would
   // show the next visitor the previous customer's items — and the login sync
   // below would push those likes onto whichever account signs in next.
@@ -225,13 +232,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AppState>(
     () => ({
-      online, dbDown, user, login, signup, logout,
+      online, dbDown, user, login, signup, googleLogin, logout,
       cart, wishlistProductIds, toggleWishlist, removeFromWishlist,
       addToCart, updateCartItem, removeFromCart, clearCart,
       toasts, toast, dismissToast,
     }),
     [
-      online, dbDown, user, login, signup, logout, cart, wishlistProductIds,
+      online, dbDown, user, login, signup, googleLogin, logout, cart, wishlistProductIds,
       toggleWishlist, removeFromWishlist, addToCart, updateCartItem, removeFromCart,
       clearCart, toasts, toast, dismissToast,
     ]

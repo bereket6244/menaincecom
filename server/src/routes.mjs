@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { googleAuthRouter } from './google-auth.mjs';
 import multer from 'multer';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -113,6 +114,8 @@ api.get('/health', async (req, res) => {
 });
 
 /* ----------------------------------- auth ---------------------------------- */
+
+api.use('/auth/google', googleAuthRouter(loginLimiter));
 
 api.post('/auth/signup', signupLimiter, dbRoute(async (req, res) => {
   const { identifier, password, name } = req.body || {};
