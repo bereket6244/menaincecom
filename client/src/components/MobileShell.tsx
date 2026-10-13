@@ -9,6 +9,7 @@ import type { BusinessSettings } from '../lib/types';
 import { smsContactUrl, telegramContactUrl, whatsappContactUrl } from '../lib/share';
 import { StatusBanners, Toasts } from './ui';
 import { BrandLogo } from './BrandLogo';
+import { currentReturnTarget, loginRoute } from '../lib/authReturn';
 
 const NAV = [
   { to: '/catalog', label: 'Wedding Cards', icon: Grid2X2 },
@@ -32,6 +33,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
   const smsUrl = smsContactUrl(business);
   const showCatalogHeader = ['/catalog', '/', '/wishlist', '/gallery', '/contact', '/digital-invitations'].includes(location.pathname);
   const hasBottomCta = location.pathname.startsWith('/product/') || location.pathname === '/order';
+  const accountRoute = user ? '/account' : loginRoute(currentReturnTarget(location));
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -215,7 +217,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
               </NavLink>
             ))}
             <NavLink
-              to={user ? '/account' : '/login'}
+              to={accountRoute}
               onClick={() => setDrawerOpen(false)}
               className={({ isActive }) =>
                 cx(

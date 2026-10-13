@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { Send } from 'lucide-react';
 import { useApp } from '../store/AppContext';
+import { rememberAuthReturn } from '../lib/authReturn';
 
-export function TelegramSignIn() {
+export function TelegramSignIn({ returnTo }: { returnTo?: string }) {
   const { telegramStart, toast } = useApp();
   const [busy, setBusy] = useState(false);
 
   const start = async () => {
     setBusy(true);
     try {
+      rememberAuthReturn(returnTo || window.location.href);
       const { authorizationUrl } = await telegramStart();
       window.location.assign(authorizationUrl);
     } catch (error) {

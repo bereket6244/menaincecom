@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
+import { returnAfterAuth } from '../lib/authReturn';
 
 export function TelegramCallback() {
   const { telegramLogin, toast } = useApp();
@@ -21,7 +22,7 @@ export function TelegramCallback() {
     }
     void telegramLogin(code, state).then(() => {
       toast('success', 'Welcome! You are signed in with Telegram.');
-      navigate('/account', { replace: true });
+      returnAfterAuth();
     }).catch((error: Error) => {
       setMessage(error.message);
     });

@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { LogIn, UserPlus } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { Button, SysLabel } from '../components/ui';
 import { cx } from '../lib/utils';
 import { GoogleSignIn } from '../components/GoogleSignIn';
 import { TelegramSignIn } from '../components/TelegramSignIn';
+import { currentReturnTarget, loginRoute, requestedAuthReturn, returnAfterAuth } from '../lib/authReturn';
 
 export function Login() {
   const { login, signup, verifySignup, toast } = useApp();
-  const navigate = useNavigate();
   const [params] = useSearchParams();
+  const returnTo = requestedAuthReturn(params.get('returnTo'));
   const [mode, setMode] = useState<'login' | 'signup'>(params.get('mode') === 'signup' ? 'signup' : 'login');
   const [name, setName] = useState('');
   const [identifier, setIdentifier] = useState('');
@@ -37,7 +38,7 @@ export function Login() {
         await login(identifier, password);
         toast('success', 'Welcome back.');
       }
-      navigate('/');
+      returnAfterAuth(returnTo);
     } catch (err) {
       toast('error', (err as Error).message);
     } finally {
@@ -147,8 +148,8 @@ export function Login() {
           </form>
         )}
         {!verificationEmail && <>
-          <GoogleSignIn onSuccess={() => { toast('success', 'Welcome! You are signed in.'); navigate('/account'); }} />
-          <TelegramSignIn />
+          <GoogleSignIn onSuccess={() => { toast('success', 'Welcome! You are signed in.'); returnAfterAuth(returnTo); }} />
+          <TelegramSignIn returnTo={returnTo} />
         </>}
         <p className="mt-3 text-center text-[10px] text-muted">
           {mode === 'signup' ? 'We verify your email before creating your account.' : 'You can also order as a guest.'}
@@ -161,7 +162,8 @@ export function Login() {
 export function Account() {
   const { user, logout, toast } = useApp();
   const navigate = useNavigate();
-  if (!user) return <Navigate to="/login" replace />;
+  const location = useLocation();
+  if (!user) return <Navigate to={loginRoute(currentReturnTarget(location))} replace />;
   return (
     <div className="mx-auto max-w-sm space-y-3 py-6">
       <div className="rounded-lg border border-edge bg-surface p-5">

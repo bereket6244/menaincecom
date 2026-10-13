@@ -9,6 +9,7 @@ import { BrandLogo } from './BrandLogo';
 import { useData } from '../lib/useData';
 import type { BusinessSettings } from '../lib/types';
 import { smsContactUrl, telegramContactUrl, whatsappContactUrl } from '../lib/share';
+import { currentReturnTarget, loginRoute } from '../lib/authReturn';
 
 export function DesktopShell({ children }: { children: ReactNode }) {
   const { cart, user, wishlistProductIds } = useApp();
@@ -19,6 +20,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
   const [contactOpen, setContactOpen] = useState(false);
   const contactRef = useRef<HTMLDivElement>(null);
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
+  const accountRoute = user ? '/account' : loginRoute(currentReturnTarget(location));
   const contactChannels = [
     { id: 'telegram', label: 'Telegram', icon: Send, accent: '#2b93d6', href: telegramContactUrl(business), external: true },
     { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, accent: '#25a34f', href: whatsappContactUrl(business), external: true },
@@ -149,7 +151,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
               )}
             </Link>
             <Link
-              to={user ? '/account' : '/login'}
+              to={accountRoute}
               className="mena-press inline-flex items-center gap-2 rounded-full bg-pink px-5 py-2.5 text-[13px] font-extrabold text-white hover:bg-pink-dim"
             >
               <User className="h-4 w-4" />
