@@ -154,7 +154,20 @@ async function parseError(res: Response): Promise<ApiError> {
  * Cached GET: returns fresh data when reachable (and refreshes the cache);
  * falls back to the last cached copy when offline or the server is down.
  */
-export async function apiGet<T>(path: string): Promise<T> {
+const pendingReads = new Map<string, Promise<unknown>>();
+
+export function apiGet<T>(path: string): Promise<T> {
+  // Shell and page often request the same content together. Share that work,
+  // scoped to the current login so private responses cannot cross sessions.
+  const key = `${token() || ''}:${path}`;
+  const pending = pendingReads.get(key);
+  if (pending) return pending as Promise<T>;
+  const request = fetchData<T>(path).finally(() => pendingReads.delete(key));
+  pendingReads.set(key, request);
+  return request;
+}
+
+async function fetchData<T>(path: string): Promise<T> {
   if (!navigator.onLine) {
     const cached = readCache<T>(path);
     if (cached !== null) return cached;

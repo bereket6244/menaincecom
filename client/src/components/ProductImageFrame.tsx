@@ -1,8 +1,41 @@
-import { useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import type { ReactNode, TouchEvent } from 'react';
 import { cx } from '../lib/utils';
 import { ProtectedImage } from './ProtectedImage';
+import { responsiveImage } from '../lib/images';
+
+// A keyed photo owns its load state: late events from a previous slide cannot
+// clear the new slide's indicator, including when a shopper taps quickly.
+function FramePhoto({ src, alt, priority, sizes, className, onReady }: {
+  src: string; alt: string; priority: boolean; sizes: string; className?: string; onReady: () => void;
+}) {
+  const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [attempt, setAttempt] = useState(0);
+  const ref = useRef<HTMLImageElement>(null);
+  useEffect(() => {
+    if (ref.current?.complete && ref.current.naturalWidth) {
+      setState('ready');
+      onReady();
+    }
+  }, [src, attempt]);
+  return <>
+    {state === 'ready' && <ProtectedImage src={src} sizes={sizes} alt="" aria-hidden="true" decoding="async"
+      className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover opacity-45 blur-xl" />}
+    <ProtectedImage key={attempt} ref={ref} src={src} sizes={sizes} alt={alt}
+      loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : 'auto'} decoding="async"
+      onLoad={() => { setState('ready'); onReady(); }} onError={() => setState('error')}
+      className={cx('relative z-[1] h-full w-full object-contain', state !== 'ready' && 'opacity-0', className)} />
+    {state === 'loading' && <span role="status" className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-surface2 text-[10px] font-semibold text-muted">
+      <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin text-pink" /> Loading photo…
+    </span>}
+    {state === 'error' && <span className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-surface2 text-xs text-muted">
+      <span role="status">Photo couldn’t load</span>
+      <button type="button" className="rounded-full border border-pink px-3 py-2 font-bold text-pink"
+        onClick={(event) => { event.stopPropagation(); setState('loading'); setAttempt((n) => n + 1); }}>Retry photo</button>
+    </span>}
+  </>;
+}
 
 export function ProductImageFrame({
   src,
@@ -31,16 +64,29 @@ export function ProductImageFrame({
 }) {
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const ignoreClickRef = useRef(false);
+  const [engaged, setEngaged] = useState(false);
+  const [loadedSrc, setLoadedSrc] = useState('');
+  const sizes = onOpen ? '(min-width: 1024px) 320px, 50vw' : '(min-width: 1024px) 640px, 100vw';
+  const currentIndex = preloadSrcs.indexOf(src || '');
+  const nextSrc = preloadSrcs[(currentIndex + 1) % preloadSrcs.length];
+  const previousSrc = preloadSrcs[(currentIndex - 1 + preloadSrcs.length) % preloadSrcs.length];
 
   useEffect(() => {
-    for (const url of preloadSrcs) {
-      if (!url) continue;
+    if (!engaged || loadedSrc !== src) return;
+    // Warm only adjacent slides for the card being used, never the whole shop.
+    for (const url of new Set([nextSrc, previousSrc])) {
+      if (!url || url === src) continue;
       const image = new Image();
-      image.src = url;
+      image.fetchPriority = 'low';
+      const responsive = responsiveImage(url, sizes);
+      if (responsive.sizes) image.sizes = responsive.sizes;
+      if (responsive.srcSet) image.srcset = responsive.srcSet;
+      image.src = responsive.src!;
     }
-  }, [preloadSrcs]);
+  }, [engaged, loadedSrc, src, nextSrc, previousSrc, sizes]);
 
   const handleTouchStart = (event: TouchEvent) => {
+    setEngaged(true);
     if (!showControls) return;
     const touch = event.touches[0];
     touchStartRef.current = { x: touch.clientX, y: touch.clientY };
@@ -63,23 +109,8 @@ export function ProductImageFrame({
   };
 
   const image = src ? (
-    <>
-      <ProtectedImage
-        src={src}
-        alt=""
-        loading={priority ? 'eager' : 'lazy'}
-        decoding="async"
-        aria-hidden="true"
-        className="absolute inset-0 h-full w-full scale-110 object-cover opacity-45 blur-xl"
-      />
-      <ProtectedImage
-        src={src}
-        alt={alt}
-        loading={priority ? 'eager' : 'lazy'}
-        decoding="async"
-        className={cx('relative z-[1] h-full w-full object-contain', imageClassName)}
-      />
-    </>
+    <FramePhoto key={src} src={src} alt={alt} priority={priority || engaged} sizes={sizes}
+      className={imageClassName} onReady={() => setLoadedSrc(src)} />
   ) : (
     placeholder
   );
@@ -88,12 +119,16 @@ export function ProductImageFrame({
     <div
       className={cx('relative isolate overflow-hidden bg-surface2 touch-pan-y select-none', className)}
       onContextMenu={(event) => event.preventDefault()}
+      onPointerEnter={() => setEngaged(true)}
+      onFocusCapture={() => setEngaged(true)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {onOpen ? (
+      {image}
+      {onOpen && (
         <button
           type="button"
+          aria-label={`View ${alt}`}
           onClick={(event) => {
             if (ignoreClickRef.current) {
               event.preventDefault();
@@ -102,12 +137,8 @@ export function ProductImageFrame({
             }
             onOpen();
           }}
-          className="relative z-0 block h-full w-full cursor-pointer"
-        >
-          {image}
-        </button>
-      ) : (
-        image
+          className="absolute inset-0 z-[5] block h-full w-full cursor-pointer focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-pink"
+        />
       )}
 
       {showControls && (

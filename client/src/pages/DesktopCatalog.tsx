@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { useData } from '../lib/useData';
 import type { Category, Product, UniversalComplimentaryItem } from '../lib/types';
 import { DesktopProductCard } from '../components/DesktopProductCard';
+import { ProtectedImage } from '../components/ProtectedImage';
 import { EmptyState, Spinner } from '../components/ui';
 import { cartPriceEach, cx, withDefaultVariantSelections } from '../lib/utils';
 import { useApp } from '../store/AppContext';
@@ -289,7 +290,7 @@ export function DesktopCatalog() {
                     style={{ background: category.photo ? undefined : CIRCLE_TINTS[index % CIRCLE_TINTS.length] }}
                   >
                     {category.photo ? (
-                      <img src={category.photo} alt="" loading={index < 5 ? 'eager' : 'lazy'} decoding="async" className="h-full w-full object-cover" />
+                      <ProtectedImage src={category.photo} sizes="96px" alt="" loading={index < 5 ? 'eager' : 'lazy'} decoding="async" className="h-full w-full object-cover" />
                     ) : (
                       <span className="font-serif text-[24px] italic text-ink/45">{category.name.slice(0, 1)}</span>
                     )}

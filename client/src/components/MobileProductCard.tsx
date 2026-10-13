@@ -57,7 +57,7 @@ export function MobileProductCard({
             setPickedColorPhoto(null);
             setPhotoIndex((current) => (current + 1) % product.photos.length);
           }}
-          preloadSrcs={[...product.photos, ...colors.map((color) => color.photo || '').filter(Boolean)]}
+          preloadSrcs={product.photos}
           className="mena-press aspect-[1/1.18] w-full rounded-[16px] text-left"
           placeholder={
             <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center" style={{ background: tint }}>

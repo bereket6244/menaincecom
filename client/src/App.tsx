@@ -1,11 +1,12 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, Routes, Route } from 'react-router-dom';
 import { Shell } from './components/Shell';
+import { Loader2 } from 'lucide-react';
+import { Catalog } from './pages/Catalog';
+import { ProductDetail } from './pages/ProductDetail';
+import { DigitalInvitations } from './pages/DigitalInvitations';
 
-const Catalog = lazy(() => import('./pages/Catalog').then((m) => ({ default: m.Catalog })));
-const ProductDetail = lazy(() => import('./pages/ProductDetail').then((m) => ({ default: m.ProductDetail })));
 const Gallery = lazy(() => import('./pages/Gallery').then((m) => ({ default: m.Gallery })));
-const DigitalInvitations = lazy(() => import('./pages/DigitalInvitations').then((m) => ({ default: m.DigitalInvitations })));
 const OrderSummary = lazy(() => import('./pages/OrderSummary').then((m) => ({ default: m.OrderSummary })));
 const Wishlist = lazy(() => import('./pages/Wishlist').then((m) => ({ default: m.Wishlist })));
 const Login = lazy(() => import('./pages/Login').then((m) => ({ default: m.Login })));
@@ -25,8 +26,9 @@ const AdminsAdmin = lazy(() => import('./admin/AdminsAdmin').then((m) => ({ defa
 
 function RouteFallback() {
   return (
-    <div className="flex min-h-[40vh] items-center justify-center text-sm font-semibold text-muted">
-      Loading...
+    <div role="status" className="flex min-h-[40vh] items-center justify-center gap-3 text-sm font-semibold text-muted">
+      <Loader2 aria-hidden="true" className="h-6 w-6 animate-spin text-pink" />
+      Loading page…
     </div>
   );
 }
@@ -50,20 +52,22 @@ export default function App() {
           path="*"
           element={
             <Shell>
-              <Routes>
-                <Route path="/" element={<Navigate to="/catalog" replace />} />
-                <Route path="/catalog" element={<Catalog />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
-                <Route path="/gallery" element={<Gallery />} />
-                <Route path="/digital-invitations" element={<DigitalInvitations />} />
-                <Route path="/wishlist" element={<Wishlist />} />
-                <Route path="/order" element={<OrderSummary />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/auth/telegram/callback" element={<TelegramCallback />} />
-                <Route path="/account" element={<Account />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="*" element={<Navigate to="/catalog" replace />} />
-              </Routes>
+              <Suspense fallback={<RouteFallback />}>
+                <Routes>
+                  <Route path="/" element={<Navigate to="/catalog" replace />} />
+                  <Route path="/catalog" element={<Catalog />} />
+                  <Route path="/product/:id" element={<ProductDetail />} />
+                  <Route path="/gallery" element={<Gallery />} />
+                  <Route path="/digital-invitations" element={<DigitalInvitations />} />
+                  <Route path="/wishlist" element={<Wishlist />} />
+                  <Route path="/order" element={<OrderSummary />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/auth/telegram/callback" element={<TelegramCallback />} />
+                  <Route path="/account" element={<Account />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="*" element={<Navigate to="/catalog" replace />} />
+                </Routes>
+              </Suspense>
             </Shell>
           }
         />

@@ -4,6 +4,7 @@ import { ArrowUpDown, Check, ChevronDown, RotateCcw, SlidersHorizontal } from 'l
 import { useData } from '../lib/useData';
 import type { Category, Product } from '../lib/types';
 import { MobileProductCard } from '../components/MobileProductCard';
+import { ProtectedImage } from '../components/ProtectedImage';
 import { EmptyState, Spinner } from '../components/ui';
 import { cx } from '../lib/utils';
 import { buildPriceBands, formatEtb, priceBounds } from '../lib/priceBands';
@@ -156,7 +157,7 @@ export function MobileCatalog() {
                 style={{ background: chip.photo ? undefined : CIRCLE_TINTS[index % CIRCLE_TINTS.length] }}
               >
                 {chip.photo ? (
-                  <img src={chip.photo} alt={chip.name} loading={index < 4 ? 'eager' : 'lazy'} decoding="async" className="h-full w-full object-cover" />
+                  <ProtectedImage src={chip.photo} sizes="80px" alt={chip.name} loading={index < 4 ? 'eager' : 'lazy'} decoding="async" className="h-full w-full object-cover" />
                 ) : (
                   chip.name === 'All' ? 'A' : chip.name.slice(0, 1)
                 )}

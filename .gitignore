@@ -1,4 +1,6 @@
 node_modules/
+.npm-cache/
+server/.image-cache/
 dist/
 .env
 server/dev-data.json

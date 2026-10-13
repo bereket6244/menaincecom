@@ -98,6 +98,22 @@ in the admin panel.
 
 ## Behavior Notes
 
+### Storefront image delivery
+
+Uploaded JPEG, PNG, WebP, and AVIF photos are served through `/api/image` in
+320/640/960/1280px WebP variants. The browser selects a size for the displayed
+card or photo. The server preserves originals and caches generated variants in
+`server/.image-cache` (the app process needs write access there); browsers cache
+variants for 30 days. Image conversion is limited to two concurrent jobs.
+If conversion is unavailable, photos fall back to the original upload.
+External images and GIFs retain their original URLs.
+
+Product cards load the current photo first and only warm adjacent photos when
+the shopper interacts. Photo changes show a loading indicator and a retry button
+on failure. Catalog, product details, and digital invitations ship with the main
+storefront bundle to avoid an extra page-code download after tapping a link.
+Deploy the server dependency update alongside the client to enable resizing.
+
 - **Desktop storefront**: the desktop catalog, product detail, cart, checkout, and order-ready screens
   use the Boutique desktop redesign from `design_handoff_mena_mobile_storefront desktop`. Desktop has
   a white header, blush search band, circular category rail, sticky filter sidebar, independent product

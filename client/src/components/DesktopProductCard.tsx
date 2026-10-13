@@ -57,7 +57,7 @@ export function DesktopProductCard({
             setPickedColorPhoto(null);
             setPhotoIndex((current) => (current + 1) % product.photos.length);
           }}
-          preloadSrcs={[...product.photos, ...colors.map((color) => color.photo || '').filter(Boolean)]}
+          preloadSrcs={product.photos}
           className="aspect-[1.08/1] rounded-[18px]"
           imageClassName="transition-transform duration-500 group-hover:scale-[1.025]"
           placeholder={

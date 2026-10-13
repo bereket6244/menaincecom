@@ -65,6 +65,9 @@ body {
 }
 .mena-press { transition: transform 0.12s ease, background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease; }
 .mena-press:active { transform: scale(0.97); }
+:where(button, a, summary, [role="button"]) { touch-action: manipulation; }
+:where(button, a, summary, [role="button"]):active { filter: brightness(0.9); }
+:where(button, [role="button"]):not(:disabled) { cursor: pointer; }
 .btn-primary {
   @apply inline-flex items-center justify-center gap-2 rounded-full bg-pink px-5 py-3 text-sm font-extrabold text-white transition-colors active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-45;
 }

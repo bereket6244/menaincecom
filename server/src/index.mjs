@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { ensureSchema, records } from './db.mjs';
 import { ensureAdminSeed } from './auth.mjs';
 import { api } from './routes.mjs';
+import { imageVariants } from './image-variants.mjs';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const app = express();
@@ -39,6 +40,12 @@ app.use('/uploads', express.static(uploadsDir, { maxAge: '30d', immutable: true 
 if (mountPath !== '/') {
   app.use(`${mountPath}/uploads`, express.static(uploadsDir, { maxAge: '30d', immutable: true }));
 }
+
+const variantHandler = imageVariants(uploadsDir, path.join(serverRoot, '.image-cache'));
+const mediaApi = express.Router();
+mediaApi.get('/image', variantHandler);
+app.use('/api', mediaApi);
+if (mountPath !== '/') app.use(`${mountPath}/api`, mediaApi);
 
 app.use('/api', api);
 if (mountPath !== '/') app.use(`${mountPath}/api`, api);

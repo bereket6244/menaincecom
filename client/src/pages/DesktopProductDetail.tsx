@@ -206,7 +206,7 @@ export function DesktopProductDetail() {
                   }}
                   className={cx('mena-press h-20 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-surface2', index === photoIdx ? 'border-pink' : 'border-edge opacity-75')}
                 >
-                  <ProtectedImage src={photo} alt="" loading="lazy" decoding="async" className="h-full w-full object-contain" />
+                  <ProtectedImage src={photo} sizes="80px" alt="" loading="lazy" decoding="async" className="h-full w-full object-contain" />
                 </button>
               ))}
             </div>
