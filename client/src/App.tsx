@@ -10,6 +10,7 @@ const OrderSummary = lazy(() => import('./pages/OrderSummary').then((m) => ({ de
 const Wishlist = lazy(() => import('./pages/Wishlist').then((m) => ({ default: m.Wishlist })));
 const Login = lazy(() => import('./pages/Login').then((m) => ({ default: m.Login })));
 const Account = lazy(() => import('./pages/Login').then((m) => ({ default: m.Account })));
+const TelegramCallback = lazy(() => import('./pages/TelegramCallback').then((m) => ({ default: m.TelegramCallback })));
 const Contact = lazy(() => import('./pages/Contact').then((m) => ({ default: m.Contact })));
 const AdminShell = lazy(() => import('./admin/AdminShell').then((m) => ({ default: m.AdminShell })));
 const OrdersAdmin = lazy(() => import('./admin/OrdersAdmin').then((m) => ({ default: m.OrdersAdmin })));
@@ -58,6 +59,7 @@ export default function App() {
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/order" element={<OrderSummary />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/auth/telegram/callback" element={<TelegramCallback />} />
                 <Route path="/account" element={<Account />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="*" element={<Navigate to="/catalog" replace />} />

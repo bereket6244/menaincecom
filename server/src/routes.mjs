@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { googleAuthRouter } from './google-auth.mjs';
+import { telegramAuthRouter } from './telegram-auth.mjs';
 import { emailSignupRouter } from './email-verification.mjs';
 import multer from 'multer';
 import path from 'node:path';
@@ -117,6 +118,7 @@ api.get('/health', async (req, res) => {
 /* ----------------------------------- auth ---------------------------------- */
 
 api.use('/auth/google', googleAuthRouter(loginLimiter));
+api.use('/auth/telegram', telegramAuthRouter(loginLimiter));
 api.use('/auth/signup', emailSignupRouter(signupLimiter));
 
 api.post('/auth/login', loginLimiter, dbRoute(async (req, res) => {

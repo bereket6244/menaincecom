@@ -138,6 +138,10 @@ export interface User {
   identifier: string;
   name: string;
   role: 'customer' | 'admin';
+  telegramUsername?: string;
+  telegramPhone?: string;
+  telegramPhotoUrl?: string;
+  telegramBotAccess?: boolean;
 }
 
 export interface BusinessSettings {

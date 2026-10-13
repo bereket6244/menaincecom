@@ -19,6 +19,8 @@ interface AppState {
   user: User | null;
   login: (identifier: string, password: string) => Promise<void>;
   googleLogin: (credential: string) => Promise<void>;
+  telegramStart: () => Promise<{ authorizationUrl: string }>;
+  telegramLogin: (code: string, state: string) => Promise<void>;
   signup: (name: string, identifier: string, password: string, confirmPassword: string) => Promise<{ email: string }>;
   verifySignup: (identifier: string, code: string) => Promise<void>;
   logout: () => void;
@@ -167,6 +169,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUser(r.user);
   }, []);
 
+  const telegramStart = useCallback(async () => {
+    return apiSend<{ authorizationUrl: string }>('POST', '/auth/telegram/config');
+  }, []);
+
+  const telegramLogin = useCallback(async (code: string, state: string) => {
+    const r = await apiSend<{ token: string; user: User }>('POST', '/auth/telegram', { code, state });
+    setToken(r.token);
+    setUser(r.user);
+  }, []);
+
   // Cart and likes are per-person, not per-device: leaving them behind would
   // show the next visitor the previous customer's items — and the login sync
   // below would push those likes onto whichever account signs in next.
@@ -239,13 +251,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AppState>(
     () => ({
-      online, dbDown, user, login, signup, verifySignup, googleLogin, logout,
+      online, dbDown, user, login, signup, verifySignup, googleLogin, telegramStart, telegramLogin, logout,
       cart, wishlistProductIds, toggleWishlist, removeFromWishlist,
       addToCart, updateCartItem, removeFromCart, clearCart,
       toasts, toast, dismissToast,
     }),
     [
-      online, dbDown, user, login, signup, verifySignup, googleLogin, logout, cart, wishlistProductIds,
+      online, dbDown, user, login, signup, verifySignup, googleLogin, telegramStart, telegramLogin, logout, cart, wishlistProductIds,
       toggleWishlist, removeFromWishlist, addToCart, updateCartItem, removeFromCart,
       clearCart, toasts, toast, dismissToast,
     ]

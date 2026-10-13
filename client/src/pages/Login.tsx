@@ -5,6 +5,7 @@ import { useApp } from '../store/AppContext';
 import { Button, SysLabel } from '../components/ui';
 import { cx } from '../lib/utils';
 import { GoogleSignIn } from '../components/GoogleSignIn';
+import { TelegramSignIn } from '../components/TelegramSignIn';
 
 export function Login() {
   const { login, signup, verifySignup, toast } = useApp();
@@ -145,7 +146,10 @@ export function Login() {
             </Button>
           </form>
         )}
-        {!verificationEmail && <GoogleSignIn onSuccess={() => { toast('success', 'Welcome! You are signed in.'); navigate('/account'); }} />}
+        {!verificationEmail && <>
+          <GoogleSignIn onSuccess={() => { toast('success', 'Welcome! You are signed in.'); navigate('/account'); }} />
+          <TelegramSignIn />
+        </>}
         <p className="mt-3 text-center text-[10px] text-muted">
           {mode === 'signup' ? 'We verify your email before creating your account.' : 'You can also order as a guest.'}
         </p>
@@ -167,6 +171,8 @@ export function Account() {
         {user.role === 'customer' && <>
           <p className="mt-4 text-xs text-muted">Connect Google using the same email to sign in more easily next time.</p>
           <GoogleSignIn onSuccess={() => toast('success', 'Google is connected to your account.')} />
+          <p className="mt-4 text-xs text-muted">Connect Telegram to use your Telegram profile and verified phone number.</p>
+          <TelegramSignIn />
         </>}
         <Button variant="outline" className="mt-4 w-full" onClick={() => navigate('/wishlist')}>
           View liked items
