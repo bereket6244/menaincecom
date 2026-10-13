@@ -42,7 +42,7 @@ test('email signup sends a code and creates an account only after verification',
     body: JSON.stringify(body),
   });
 
-  const request = await post('', { name: '<Mena Customer>', identifier: 'CUSTOMER@example.com', password: 'safe-password' });
+  const request = await post('', { name: '<Mena Customer>', identifier: 'CUSTOMER@example.com', password: 'safe-password', confirmPassword: 'safe-password' });
   assert.equal(request.status, 200);
   assert.deepEqual(await request.json(), { verificationRequired: true, email: 'customer@example.com', expiresIn: 600 });
   assert.equal(collections.users.length, 0);
@@ -88,8 +88,10 @@ test('email signup validates email, throttles resends, and rejects expired codes
   t.after(() => new Promise((resolve) => server.close(resolve)));
   const base = `http://127.0.0.1:${server.address().port}/signup`;
   const post = (path, body) => fetch(`${base}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  assert.equal((await post('', { name: 'Customer', identifier: 'not-an-email', password: 'safe-password' })).status, 400);
-  const body = { name: 'Customer', identifier: 'customer@example.com', password: 'safe-password' };
+  assert.equal((await post('', { name: 'Customer', identifier: 'not-an-email', password: 'safe-password', confirmPassword: 'safe-password' })).status, 400);
+  assert.equal((await post('', { name: 'Customer', identifier: 'customer@example.com', password: 'safe-password', confirmPassword: 'different-password' })).status, 400);
+  assert.equal(pending.length, 0);
+  const body = { name: 'Customer', identifier: 'customer@example.com', password: 'safe-password', confirmPassword: 'safe-password' };
   assert.equal((await post('', body)).status, 200);
   const throttled = await post('', body);
   assert.equal(throttled.status, 429);

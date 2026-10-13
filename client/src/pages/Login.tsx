@@ -14,6 +14,7 @@ export function Login() {
   const [name, setName] = useState('');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [verificationEmail, setVerificationEmail] = useState('');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
@@ -26,7 +27,8 @@ export function Login() {
         await verifySignup(verificationEmail, code);
         toast('success', 'Email verified — your account is ready.');
       } else if (mode === 'signup') {
-        const result = await signup(name, identifier, password);
+        if (password !== confirmPassword) throw new Error('Passwords do not match.');
+        const result = await signup(name, identifier, password, confirmPassword);
         setVerificationEmail(result.email);
         toast('success', `We sent a verification code to ${result.email}.`);
         return;
@@ -49,7 +51,7 @@ export function Login() {
           {(['login', 'signup'] as const).map((m) => (
             <button
               key={m}
-              onClick={() => { setMode(m); setVerificationEmail(''); setCode(''); }}
+              onClick={() => { setMode(m); setConfirmPassword(''); setVerificationEmail(''); setCode(''); }}
               className={cx(
                 'rounded py-1.5 text-xs font-semibold transition-colors',
                 mode === m ? 'bg-pink text-white' : 'text-muted hover:text-ink'
@@ -113,8 +115,30 @@ export function Login() {
             </div>
             <div>
               <SysLabel>Password</SysLabel>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} className="field mt-1" />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                className="field mt-1"
+              />
             </div>
+            {mode === 'signup' && (
+              <div>
+                <SysLabel>Confirm password</SysLabel>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                  className="field mt-1"
+                />
+              </div>
+            )}
             <Button type="submit" busy={busy} className="h-10 w-full py-2.5">
               {mode === 'signup' ? <UserPlus className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
               {mode === 'signup' ? 'Send verification code' : 'Log in'}

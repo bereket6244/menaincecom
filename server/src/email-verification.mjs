@@ -34,11 +34,15 @@ function cleanSignup(body) {
   const email = String(body?.identifier || '').trim().toLowerCase();
   const name = String(body?.name || '').trim();
   const password = String(body?.password || '');
+  const confirmPassword = String(body?.confirmPassword || '');
   if (!EMAIL_RE.test(email) || email.length > 190 || !name || name.length > 100) {
     throw Object.assign(new Error('Enter a valid name and email address.'), { status: 400 });
   }
   if (password.length < 8 || password.length > 128) {
     throw Object.assign(new Error('Password must be 8–128 characters.'), { status: 400 });
+  }
+  if (password !== confirmPassword) {
+    throw Object.assign(new Error('Passwords do not match.'), { status: 400 });
   }
   return { email, name, password };
 }

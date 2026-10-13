@@ -19,7 +19,7 @@ interface AppState {
   user: User | null;
   login: (identifier: string, password: string) => Promise<void>;
   googleLogin: (credential: string) => Promise<void>;
-  signup: (name: string, identifier: string, password: string) => Promise<{ email: string }>;
+  signup: (name: string, identifier: string, password: string, confirmPassword: string) => Promise<{ email: string }>;
   verifySignup: (identifier: string, code: string) => Promise<void>;
   logout: () => void;
   cart: CartItem[];
@@ -149,8 +149,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUser(r.user);
   }, []);
 
-  const signup = useCallback(async (name: string, identifier: string, password: string) => {
-    return apiSend<{ verificationRequired: true; email: string }>('POST', '/auth/signup', { name, identifier, password });
+  const signup = useCallback(async (name: string, identifier: string, password: string, confirmPassword: string) => {
+    return apiSend<{ verificationRequired: true; email: string }>('POST', '/auth/signup', {
+      name, identifier, password, confirmPassword,
+    });
   }, []);
 
   const verifySignup = useCallback(async (identifier: string, code: string) => {
