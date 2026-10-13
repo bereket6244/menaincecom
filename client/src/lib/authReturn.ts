@@ -8,7 +8,11 @@ export function safeAuthReturn(candidate?: string | null): string | null {
     const url = new URL(candidate, window.location.origin);
     if (url.origin !== window.location.origin) return null;
     const target = `${url.pathname}${url.search}${url.hash}`;
-    if (url.pathname === `${appBase}/login` || url.pathname === `${appBase}/auth/telegram/callback`) return null;
+    if (
+      url.pathname === `${appBase}/login`
+      || url.pathname === `${appBase}/account`
+      || url.pathname === `${appBase}/auth/telegram/callback`
+    ) return null;
     return target;
   } catch {
     return null;

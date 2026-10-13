@@ -170,13 +170,10 @@ export function Account() {
         <SysLabel>Signed in as</SysLabel>
         <div className="mt-1 text-sm font-bold">{user.name}</div>
         <div className="text-xs text-muted">{user.identifier}</div>
-        {user.role === 'customer' && <>
-          <p className="mt-4 text-xs text-muted">Connect Google using the same email to sign in more easily next time.</p>
-          <GoogleSignIn onSuccess={() => toast('success', 'Google is connected to your account.')} />
-          <p className="mt-4 text-xs text-muted">Connect Telegram to use your Telegram profile and verified phone number.</p>
-          <TelegramSignIn />
-        </>}
-        <Button variant="outline" className="mt-4 w-full" onClick={() => navigate('/wishlist')}>
+        <Button className="mt-4 w-full" onClick={() => navigate('/catalog')}>
+          Back to shop
+        </Button>
+        <Button variant="outline" className="mt-2 w-full" onClick={() => navigate('/wishlist')}>
           View liked items
         </Button>
         <Button
