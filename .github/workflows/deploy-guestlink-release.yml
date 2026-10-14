@@ -1,0 +1,33 @@
+name: Publish tested GuestLink account release
+on:
+  push:
+    branches: [codex/guestlink-account-release]
+    paths: ['.guestlink-release/**', '.github/workflows/deploy-guestlink-release.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: guestlink-account-release
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verify and unpack tested GuestLink build
+        run: |
+          echo '8091ee789efacf68011b130a81301c2819e32ecb4679c8d9fe518ccf7db6b8b2  .guestlink-release/guestlink.tgz' | sha256sum --check
+          mkdir guestlink-package
+          tar -xzf .guestlink-release/guestlink.tgz -C guestlink-package
+          test ! -f guestlink-package/api/config.php
+      - name: Publish only public_html/guestlink through cPanel UAPI
+        env:
+          CPANEL_URL: ${{ secrets.CPANEL_URL }}
+          CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
+          CPANEL_PORT: ${{ secrets.CPANEL_PORT }}
+          CPANEL_USER: ${{ secrets.CPANEL_USER }}
+          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
+        run: node .guestlink-release/publish.mjs
