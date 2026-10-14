@@ -1,4 +1,4 @@
-// GuestLink source: bereket6244/Entrance-cards-control@425561521241bf727352f29f5c7b1a6b03b32435.
+// GuestLink source: bereket6244/Entrance-cards-control@083d67391ce61da3b29e41b6430655ff100258c2.
 // Its deployment workflow passed build, TypeScript, PHP, and MySQL isolation tests.
 // Publish only GuestLink; preserve its config.php and all shop files.
 import {readFile, readdir} from 'node:fs/promises';
