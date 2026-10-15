@@ -75,8 +75,10 @@ if (!response.ok || !result.ok || result.admin_count !== 1 || result.username !=
   throw new Error(`Admin rotation verification failed (${response.status}).`);
 }
 
-const gone = await fetch(endpoint, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}'});
-if (gone.status !== 404) throw new Error('One-time maintenance endpoint did not delete itself.');
+const listing = await cpanel(`list_files?dir=${encodeURIComponent('public_html/guestlink/api')}`);
+if (listing.data?.some((file) => file.file === filename)) {
+  throw new Error('One-time maintenance endpoint did not delete itself.');
+}
 
 const login = await fetch('https://menaincet.com/guestlink/api/auth/login', {
   method: 'POST',
