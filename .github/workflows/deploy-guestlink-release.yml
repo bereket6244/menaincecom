@@ -31,13 +31,3 @@ jobs:
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
         run: node .guestlink-release/publish.mjs
-      - name: Set the sole GuestLink super admin
-        env:
-          CPANEL_URL: ${{ secrets.CPANEL_URL }}
-          CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
-          CPANEL_PORT: ${{ secrets.CPANEL_PORT }}
-          CPANEL_USER: ${{ secrets.CPANEL_USER }}
-          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
-          GUESTLINK_ADMIN_USERNAME: ${{ secrets.GUESTLINK_ADMIN_USERNAME }}
-          GUESTLINK_ADMIN_PASSWORD: ${{ secrets.GUESTLINK_ADMIN_PASSWORD }}
-        run: node .guestlink-release/rotate-admin.mjs
