@@ -9,6 +9,7 @@ import type { BusinessSettings } from '../lib/types';
 import { smsContactUrl, telegramContactUrl, whatsappContactUrl } from '../lib/share';
 import { StatusBanners, Toasts } from './ui';
 import { BrandLogo } from './BrandLogo';
+import { AdStrip } from './AdStrip';
 import { currentReturnTarget, loginRoute } from '../lib/authReturn';
 
 const NAV = [
@@ -148,6 +149,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
                 </form>
               </div>
             )}
+            <AdStrip ad={business?.storefrontAd} />
           </header>
         )}
 

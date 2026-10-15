@@ -371,7 +371,7 @@ export function DesktopCatalog() {
         </div>
 
         <div className="grid grid-cols-[234px_minmax(0,1fr)] gap-7">
-          <aside className="mena-d-scroll sticky top-[145px] max-h-[calc(100vh-165px)] self-start overflow-y-auto rounded-xl border border-edge bg-white p-4 shadow-[0_1px_5px_rgba(28,26,25,0.045)]">
+          <aside className="mena-d-scroll sticky top-[calc(145px+var(--storefront-ad-height,0px))] max-h-[calc(100vh-165px-var(--storefront-ad-height,0px))] self-start overflow-y-auto rounded-xl border border-edge bg-white p-4 shadow-[0_1px_5px_rgba(28,26,25,0.045)]">
             <div className="mb-1 flex items-center justify-between pb-2">
               <span className="text-[17px] font-extrabold">Filters</span>
               <button type="button" onClick={clearAll} className="mena-press text-[13px] font-bold text-pink hover:underline">

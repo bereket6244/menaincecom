@@ -1,6 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Dancing+Script:wght@600;700&display=swap');
 @import "tailwindcss";
 
+/* Keep catalog filters below the complete sticky header when an ad is shown. */
+.desktop-boutique:has(header [aria-label="Mena promotion"]) {
+  --storefront-ad-height: 64px;
+}
+
 @theme {
   --color-bg: #faf8f6;
   --color-surface: #ffffff;

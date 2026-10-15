@@ -122,8 +122,7 @@ export function DigitalInvitationsAdmin() {
   const save = async () => {
     setBusy(true);
     try {
-      const { id, ...payload } = draft;
-      await apiSend('PUT', '/admin/content/business', payload);
+      await apiSend('PUT', '/admin/content/business', { digitalInvitations: draft.digitalInvitations });
       toast('success', 'Digital invitation settings saved.');
     } catch (err) {
       toast('error', (err as Error).message);

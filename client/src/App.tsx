@@ -20,6 +20,7 @@ const ComplimentaryItemsAdmin = lazy(() => import('./admin/ComplimentaryItemsAdm
 const CategoriesAdmin = lazy(() => import('./admin/CategoriesAdmin').then((m) => ({ default: m.CategoriesAdmin })));
 const GalleryAdmin = lazy(() => import('./admin/GalleryAdmin').then((m) => ({ default: m.GalleryAdmin })));
 const BusinessAdmin = lazy(() => import('./admin/BusinessAdmin').then((m) => ({ default: m.BusinessAdmin })));
+const StorefrontAdAdmin = lazy(() => import('./admin/StorefrontAdAdmin').then((m) => ({ default: m.StorefrontAdAdmin })));
 const DigitalInvitationsAdmin = lazy(() => import('./admin/DigitalInvitationsAdmin').then((m) => ({ default: m.DigitalInvitationsAdmin })));
 const LeadsAdmin = lazy(() => import('./admin/LeadsAdmin').then((m) => ({ default: m.LeadsAdmin })));
 const AdminsAdmin = lazy(() => import('./admin/AdminsAdmin').then((m) => ({ default: m.AdminsAdmin })));
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="gallery" element={<GalleryAdmin />} />
           <Route path="digital-invitations" element={<DigitalInvitationsAdmin />} />
           <Route path="business" element={<BusinessAdmin />} />
+          <Route path="storefront-ad" element={<StorefrontAdAdmin />} />
           <Route path="leads" element={<LeadsAdmin />} />
           <Route path="admins" element={<AdminsAdmin />} />
         </Route>

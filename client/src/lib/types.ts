@@ -144,6 +144,15 @@ export interface User {
   telegramBotAccess?: boolean;
 }
 
+export interface StorefrontAd {
+  enabled: boolean;
+  label?: string;
+  title: string;
+  description: string;
+  buttonText: string;
+  href: string;
+}
+
 export interface BusinessSettings {
   id?: string;
   key: 'business';
@@ -157,4 +166,5 @@ export interface BusinessSettings {
   paymentAccountNumber: string;
   pickupLocation: string;
   digitalInvitations?: DigitalInvitationsContent;
+  storefrontAd?: StorefrontAd;
 }

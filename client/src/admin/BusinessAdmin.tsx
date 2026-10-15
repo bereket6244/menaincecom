@@ -5,6 +5,7 @@ import { apiSend } from '../lib/api';
 import type { BusinessSettings } from '../lib/types';
 import { Button, Spinner, SysLabel } from '../components/ui';
 import { useApp } from '../store/AppContext';
+import { Link } from 'react-router-dom';
 
 export function BusinessAdmin() {
   const { data: content, loading } = useData<BusinessSettings>('/content/business');
@@ -27,7 +28,7 @@ export function BusinessAdmin() {
   const save = async () => {
     setBusy(true);
     try {
-      const { id, ...payload } = draft;
+      const { id, storefrontAd, digitalInvitations, ...payload } = draft;
       await apiSend('PUT', '/admin/content/business', payload);
       toast('success', 'Business settings saved.');
     } catch (err) {
@@ -71,6 +72,8 @@ export function BusinessAdmin() {
           <Save className="h-3.5 w-3.5" /> Save
         </Button>
       </div>
+
+      <p className="text-xs text-muted">Manage promotions in <Link to="/admin/storefront-ad" className="font-semibold text-pink">Storefront Ad</Link>.</p>
 
       <div className="space-y-3 rounded-lg border border-edge bg-surface p-4">
         <SysLabel>Contact page</SysLabel>

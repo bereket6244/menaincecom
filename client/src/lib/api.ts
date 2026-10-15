@@ -125,6 +125,7 @@ function removeCache(paths: string[]) {
 
 function mutationCacheKeys(method: string, path: string) {
   const keys = [path];
+  if (path === '/admin/content/business') keys.push('/content/business');
   const productMatch = path.match(/^\/admin\/products(?:\/([^/]+))?/);
   if (productMatch) {
     keys.push('/admin/products', '/products');

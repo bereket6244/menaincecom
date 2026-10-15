@@ -98,6 +98,27 @@ in the admin panel.
 
 ## Behavior Notes
 
+### Editing the storefront ad
+
+Open **Admin → Storefront Ad** (`/admin/storefront-ad`). This controls the strip below
+the storefront navigation on mobile and desktop.
+
+1. Enter an optional small label (30 characters), headline (80), optional supporting text (120), button text (20),
+   and destination (500). Use a shop path such as `/digital-invitations` or a full HTTPS URL.
+   Leave the small label blank to omit it. The ad uses no decorative icon.
+2. Check the mobile and desktop previews. Supporting text appears on wide desktop screens.
+3. Click **Publish ad**, then use **View storefront** to check the result.
+4. To remove the strip, turn off **Show ad on the storefront** and click **Save hidden ad**.
+   The text is retained for reuse. **Discard changes** restores the last loaded or saved ad.
+
+Edits remain in the current browser form until saved; there is no separate persisted draft or schedule.
+The standard content contract is `storefrontAd: { enabled, label, title, description, buttonText, href }`
+inside business content. Admin editors send only their own fields to the authenticated
+`PUT /api/admin/content/business` endpoint. The server validates ad text limits and links,
+and the frontend invalidates its business-content cache after saving. Both storefront layouts
+and the previews use the same `AdStrip` component. Refresh an already-open storefront tab
+to see newly published content.
+
 ### Storefront image delivery
 
 Uploaded JPEG, PNG, WebP, and AVIF photos are served through `/api/image` in

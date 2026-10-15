@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { normalizeStorefrontAd } from './storefront-ad.mjs';
 import { googleAuthRouter } from './google-auth.mjs';
 import { telegramAuthRouter } from './telegram-auth.mjs';
 import { emailSignupRouter } from './email-verification.mjs';
@@ -827,6 +828,10 @@ api.get('/admin/leads', requireAdmin, dbRoute(async (_req, res) => {
 }));
 
 api.put('/admin/content/business', requireAdmin, dbRoute(async (req, res) => {
+  if (Object.hasOwn(req.body, 'storefrontAd')) {
+    try { req.body.storefrontAd = normalizeStorefrontAd(req.body.storefrontAd); }
+    catch (error) { return res.status(400).json({ error: 'invalid_ad', message: error.message }); }
+  }
   const existing = await records.find('content', (c) => c.key === 'business');
   const doc = existing
     ? await records.update('content', existing.id, { ...req.body, key: 'business' })

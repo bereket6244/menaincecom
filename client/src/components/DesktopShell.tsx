@@ -6,6 +6,7 @@ import { useApp } from '../store/AppContext';
 import { StatusBanners, Toasts } from './ui';
 import { assetUrl, cx } from '../lib/utils';
 import { BrandLogo } from './BrandLogo';
+import { AdStrip } from './AdStrip';
 import { useData } from '../lib/useData';
 import type { BusinessSettings } from '../lib/types';
 import { smsContactUrl, telegramContactUrl, whatsappContactUrl } from '../lib/share';
@@ -189,6 +190,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
             )}
           </form>
         </div>
+        <AdStrip ad={business?.storefrontAd} />
       </header>
 
       <main className="w-full flex-1">{children}</main>

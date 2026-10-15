@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet, Link } from 'react-router-dom';
 import {
-  Inbox, Package, FolderTree, Images, Users, ShieldCheck, Bell, ExternalLink, LogOut, Building2, Gift, Globe,
+  Inbox, Package, FolderTree, Images, Users, ShieldCheck, Bell, ExternalLink, LogOut, Building2, Gift, Globe, Megaphone,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { apiGet, apiSend } from '../lib/api';
@@ -17,6 +17,7 @@ const TABS = [
   { to: '/admin/gallery', label: 'Gallery', icon: Images },
   { to: '/admin/digital-invitations', label: 'Digital Invites', icon: Globe },
   { to: '/admin/business', label: 'Business', icon: Building2 },
+  { to: '/admin/storefront-ad', label: 'Storefront Ad', icon: Megaphone },
   { to: '/admin/leads', label: 'Leads', icon: Users },
   { to: '/admin/admins', label: 'Admins', icon: ShieldCheck },
 ];
@@ -153,14 +154,14 @@ export function AdminShell() {
       </main>
 
       {/* Mobile bottom navigation */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-9 border-t border-edge bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 flex overflow-x-auto border-t border-edge bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
         {TABS.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
             end={end}
             className={({ isActive }) =>
-              cx('flex flex-col items-center gap-0.5 py-2 text-[9px] font-medium', isActive ? 'text-pink' : 'text-muted')
+              cx('flex min-w-16 shrink-0 flex-col items-center gap-0.5 px-2 py-2 text-[9px] font-medium', isActive ? 'text-pink' : 'text-muted')
             }
           >
             <Icon className="h-4 w-4" />
