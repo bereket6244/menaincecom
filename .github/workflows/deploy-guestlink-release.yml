@@ -19,7 +19,7 @@ jobs:
           node-version: 20
       - name: Verify and unpack tested GuestLink build
         run: |
-          echo 'b5b000b42aa966c7c6a0f0ec3f3536fdad8f2e9565d9b8a569f2177aefd069dc  .guestlink-release/guestlink.tgz' | sha256sum --check
+          echo '383f1bf5b1f309f6e917810843210fab0ed8fbe800f9813f3b3ff9a5b92400cd  .guestlink-release/guestlink.tgz' | sha256sum --check
           mkdir guestlink-package
           tar -xzf .guestlink-release/guestlink.tgz -C guestlink-package
           test ! -f guestlink-package/api/config.php
