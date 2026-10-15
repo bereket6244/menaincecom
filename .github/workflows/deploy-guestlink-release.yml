@@ -19,7 +19,7 @@ jobs:
           node-version: 20
       - name: Verify and unpack tested GuestLink build
         run: |
-          echo '388436fd8e35f641cdcb21f0b410e2ad3ec597dcae610e48524891179c2e2abe  .guestlink-release/guestlink.tgz' | sha256sum --check
+          echo 'a158e111fb5259b67635cd53016423727b77679ce7cae1e6e482aaa08a812d0c  .guestlink-release/guestlink.tgz' | sha256sum --check
           mkdir guestlink-package
           tar -xzf .guestlink-release/guestlink.tgz -C guestlink-package
           test ! -f guestlink-package/api/config.php
@@ -31,3 +31,13 @@ jobs:
           CPANEL_USER: ${{ secrets.CPANEL_USER }}
           CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
         run: node .guestlink-release/publish.mjs
+      - name: Set the sole GuestLink super admin
+        env:
+          CPANEL_URL: ${{ secrets.CPANEL_URL }}
+          CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
+          CPANEL_PORT: ${{ secrets.CPANEL_PORT }}
+          CPANEL_USER: ${{ secrets.CPANEL_USER }}
+          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
+          GUESTLINK_ADMIN_USERNAME: ${{ secrets.GUESTLINK_ADMIN_USERNAME }}
+          GUESTLINK_ADMIN_PASSWORD: ${{ secrets.GUESTLINK_ADMIN_PASSWORD }}
+        run: node .guestlink-release/rotate-admin.mjs
