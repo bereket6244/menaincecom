@@ -9,7 +9,7 @@ import { BrandLogo } from './BrandLogo';
 import { AdStrip } from './AdStrip';
 import { useData } from '../lib/useData';
 import type { BusinessSettings } from '../lib/types';
-import { smsContactUrl, telegramContactUrl, whatsappContactUrl } from '../lib/share';
+import { buildProductInquiryMessage, smsContactUrl, telegramContactUrl, whatsappContactUrl } from '../lib/share';
 import { currentReturnTarget, loginRoute } from '../lib/authReturn';
 
 export function DesktopShell({ children }: { children: ReactNode }) {
@@ -22,10 +22,13 @@ export function DesktopShell({ children }: { children: ReactNode }) {
   const contactRef = useRef<HTMLDivElement>(null);
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
   const accountRoute = user ? '/account' : loginRoute(currentReturnTarget(location));
+  const productInquiry = location.pathname.startsWith('/product/')
+    ? buildProductInquiryMessage(null, `${window.location.origin}${window.location.pathname}`)
+    : undefined;
   const contactChannels = [
-    { id: 'telegram', label: 'Telegram', icon: Send, accent: '#2b93d6', href: telegramContactUrl(business), external: true },
-    { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, accent: '#25a34f', href: whatsappContactUrl(business), external: true },
-    { id: 'sms', label: 'SMS', icon: MessageSquareText, accent: '#ee317b', href: smsContactUrl(business), external: false },
+    { id: 'telegram', label: 'Telegram', icon: Send, accent: '#2b93d6', href: telegramContactUrl(business, productInquiry), external: true },
+    { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, accent: '#25a34f', href: whatsappContactUrl(business, productInquiry), external: true },
+    { id: 'sms', label: 'SMS', icon: MessageSquareText, accent: '#ee317b', href: smsContactUrl(business, productInquiry), external: false },
   ];
 
   useEffect(() => {

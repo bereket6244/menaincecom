@@ -6,6 +6,27 @@ const TELEGRAM_ORDER_URL = 'https://t.me/+251929639939';
 
 const digitsOnly = (value: string) => (value || '').replace(/\D/g, '');
 
+/** Keeps product context attached when a customer starts a direct chat. */
+export function buildProductInquiryMessage(productName: string | null, productPageUrl: string): string {
+  return [
+    'Hello Mena Inc, I am interested in this product.',
+    productName ? `Product: ${productName}` : '',
+    `Product link: ${productPageUrl}`,
+  ].filter(Boolean).join('\n');
+}
+
+function addMessageToUrl(url: string, parameter: 'text' | 'body', message?: string): string {
+  if (!message) return url;
+  try {
+    const target = new URL(url);
+    target.searchParams.set(parameter, message);
+    return target.toString();
+  } catch {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}${parameter}=${encodeURIComponent(message)}`;
+  }
+}
+
 /**
  * Human-readable order summary the customer forwards to the studio on
  * WhatsApp/Telegram. Built from the server-sanitized order so amounts always
@@ -113,14 +134,17 @@ export function telegramOrderUrl(_business: BusinessSettings | null, text: strin
   return `${TELEGRAM_ORDER_URL}?text=${encodeURIComponent(text)}`;
 }
 
-export function telegramContactUrl(business: BusinessSettings | null): string {
+export function telegramContactUrl(business: BusinessSettings | null, message?: string): string {
   const handle = (business?.telegramHandle || '').trim();
-  if (!handle) return TELEGRAM_ORDER_URL;
-  if (/^https?:\/\//i.test(handle)) return handle;
-  if (handle.startsWith('@')) return `https://t.me/${handle.slice(1)}`;
-  const phone = digitsOnly(handle);
-  if (phone) return `https://t.me/+${phone}`;
-  return `https://t.me/${handle.replace(/^\/+/, '')}`;
+  let url: string;
+  if (!handle) url = TELEGRAM_ORDER_URL;
+  else if (/^https?:\/\//i.test(handle)) url = handle;
+  else if (handle.startsWith('@')) url = `https://t.me/${handle.slice(1)}`;
+  else {
+    const phone = digitsOnly(handle);
+    url = phone ? `https://t.me/+${phone}` : `https://t.me/${handle.replace(/^\/+/, '')}`;
+  }
+  return addMessageToUrl(url, 'text', message);
 }
 
 export function smsOrderUrl(business: BusinessSettings | null, text: string): string {
@@ -129,12 +153,14 @@ export function smsOrderUrl(business: BusinessSettings | null, text: string): st
 }
 
 /** Chat links without a prefilled order — used by the "message us" buttons. */
-export function whatsappContactUrl(business: BusinessSettings | null): string {
-  return `https://wa.me/${digitsOnly(business?.whatsappNumber || '') || FALLBACK_WHATSAPP}`;
+export function whatsappContactUrl(business: BusinessSettings | null, message?: string): string {
+  const url = `https://wa.me/${digitsOnly(business?.whatsappNumber || '') || FALLBACK_WHATSAPP}`;
+  return addMessageToUrl(url, 'text', message);
 }
 
-export function smsContactUrl(business: BusinessSettings | null): string {
-  return `sms:+${digitsOnly(business?.phone || '') || FALLBACK_WHATSAPP}`;
+export function smsContactUrl(business: BusinessSettings | null, message?: string): string {
+  const url = `sms:+${digitsOnly(business?.phone || '') || FALLBACK_WHATSAPP}`;
+  return addMessageToUrl(url, 'body', message);
 }
 
 export function isValidPhone(value: string): boolean {

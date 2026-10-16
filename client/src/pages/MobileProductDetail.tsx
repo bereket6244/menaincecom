@@ -12,7 +12,7 @@ import { ProtectedImage } from '../components/ProtectedImage';
 import { COMPLIMENTARY_EXTRA_MAX_QTY, complimentaryAllowanceText, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
 import { cartPriceEach, cleanDescription, cx, cssColor, formatPrice, isColorGroupName, withDefaultVariantSelections } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
-import { smsContactUrl, telegramContactUrl, whatsappContactUrl } from '../lib/share';
+import { buildProductInquiryMessage, smsContactUrl, telegramContactUrl, whatsappContactUrl } from '../lib/share';
 import { productCategoryNames } from '../lib/productCategories';
 import { clampOrderQty, productLimitText, productMaxOrderQty } from '../lib/orderLimits';
 
@@ -86,11 +86,6 @@ export function MobileProductDetail() {
   const [actionState, setActionState] = useState<'idle' | 'adding' | 'added' | 'buying'>('idle');
   const contactRef = useRef<HTMLDivElement>(null);
   const cartCount = cart.reduce((n, item) => n + item.qty, 0);
-  const contactChannels = [
-    { id: 'telegram', label: 'Telegram', icon: Send, accent: '#2b93d6', href: telegramContactUrl(business), external: true },
-    { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, accent: '#25a34f', href: whatsappContactUrl(business), external: true },
-    { id: 'sms', label: 'SMS', icon: MessageSquareText, accent: '#ee317b', href: smsContactUrl(business), external: false },
-  ];
   const complimentaryOptions = useMemo(
     () => (product ? complimentaryForProduct(product, qty) : []),
     [product, qty]
@@ -147,6 +142,13 @@ export function MobileProductDetail() {
   const maxOrderQty = productMaxOrderQty(product);
   const limitText = productLimitText(product);
   const setLimitedQty = (nextQty: number) => setQty(clampOrderQty(nextQty, product));
+  const productPageUrl = `${window.location.origin}${window.location.pathname}`;
+  const inquiryMessage = buildProductInquiryMessage(product.name, productPageUrl);
+  const contactChannels = [
+    { id: 'telegram', label: 'Telegram', icon: Send, accent: '#2b93d6', href: telegramContactUrl(business, inquiryMessage), external: true },
+    { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, accent: '#25a34f', href: whatsappContactUrl(business, inquiryMessage), external: true },
+    { id: 'sms', label: 'SMS', icon: MessageSquareText, accent: '#ee317b', href: smsContactUrl(business, inquiryMessage), external: false },
+  ];
 
   const notifyAdded = (result: AddToCartResult) => {
     toast(
