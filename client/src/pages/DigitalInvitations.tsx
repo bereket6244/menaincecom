@@ -14,6 +14,7 @@ const FALLBACK_DIGITAL_INVITATIONS: DigitalInvitationsContent = {
     { id: 'yordanos-kaleab', title: 'Yordanos & Kaleab', url: 'https://menaincet.com/yordanoskaleab/', description: '' },
     { id: 'yeabsra-christian', title: 'Yeabsra & Christian', url: 'https://menaincet.com/yeabsrachristian', description: '' },
     { id: 'yeabsra-and-christian', title: 'Yeabsra & Christian - Wedding', url: 'https://menaincet.com/yeabsra-and-christian/', description: '' },
+    { id: 'amanuel-selam', title: 'Amanuel & Selam', url: 'https://menaincet.com/amanuelselamawit/', description: '' },
   ],
   packages: [
     {

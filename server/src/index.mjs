@@ -114,6 +114,12 @@ const DEFAULT_DIGITAL_INVITATIONS = {
       url: 'https://menaincet.com/yeabsra-and-christian/',
       description: '',
     },
+    {
+      id: 'amanuel-selam',
+      title: 'Amanuel & Selam',
+      url: 'https://menaincet.com/amanuelselamawit/',
+      description: '',
+    },
   ],
     packages: [
         {
