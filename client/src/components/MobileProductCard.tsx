@@ -39,6 +39,7 @@ export function MobileProductCard({
   const activePhotoIndex = selectedPhotoIndex >= 0 ? selectedPhotoIndex : photoIndex;
   const limitText = productPreviewLimitText(product);
   const colors = colorOptions(product).slice(0, 6);
+  const showColors = colors.length > 1;
   const isQuote = product.pricingMode === 'quote' || product.price == null;
   const description = cleanDescription(product.description, product.name);
 
@@ -72,7 +73,7 @@ export function MobileProductCard({
           }
         />
 
-        {colors.length > 0 && (
+        {showColors && (
           <div className={cx(
             'absolute left-2 right-2 z-30 flex max-w-full gap-1 overflow-hidden rounded-full bg-white/90 px-1.5 py-1.5 shadow-sm backdrop-blur',
             hasMultiplePhotos ? 'bottom-8' : 'bottom-2'

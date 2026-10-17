@@ -35,7 +35,7 @@ export function DesktopProductCard({
   const limitText = productPreviewLimitText(product);
   const description = cleanDescription(product.description, product.name);
   const colors = colorOptions(product).slice(0, 8);
-  const showColors = colors.length > 0;
+  const showColors = colors.length > 1;
 
   return (
     <article
