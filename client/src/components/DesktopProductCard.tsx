@@ -49,6 +49,7 @@ export function DesktopProductCard({
           priority={priority}
           onOpen={() => onOpen(product)}
           showControls={hasMultiplePhotos}
+          arrowStyle="card-desktop"
           onPrevious={() => {
             setPickedColorPhoto(null);
             setPhotoIndex((current) => (current - 1 + product.photos.length) % product.photos.length);

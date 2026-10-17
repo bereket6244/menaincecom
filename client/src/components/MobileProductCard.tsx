@@ -35,6 +35,8 @@ export function MobileProductCard({
   const [quickState, setQuickState] = useState<'idle' | 'opening' | 'added'>('idle');
   const selectedPhoto = pickedColorPhoto || product.photos[photoIndex] || product.photos[0];
   const hasMultiplePhotos = product.photos.length > 1;
+  const selectedPhotoIndex = product.photos.indexOf(selectedPhoto || '');
+  const activePhotoIndex = selectedPhotoIndex >= 0 ? selectedPhotoIndex : photoIndex;
   const limitText = productPreviewLimitText(product);
   const colors = colorOptions(product).slice(0, 6);
   const isQuote = product.pricingMode === 'quote' || product.price == null;
@@ -49,6 +51,9 @@ export function MobileProductCard({
           priority={priority}
           onOpen={open}
           showControls={hasMultiplePhotos}
+          showArrows={false}
+          showDots={hasMultiplePhotos}
+          activeIndex={activePhotoIndex}
           onPrevious={() => {
             setPickedColorPhoto(null);
             setPhotoIndex((current) => (current - 1 + product.photos.length) % product.photos.length);
@@ -68,7 +73,10 @@ export function MobileProductCard({
         />
 
         {colors.length > 0 && (
-          <div className="absolute bottom-2 left-2 right-2 z-30 flex max-w-full gap-1 overflow-hidden rounded-full bg-white/90 px-1.5 py-1.5 shadow-sm backdrop-blur">
+          <div className={cx(
+            'absolute left-2 right-2 z-30 flex max-w-full gap-1 overflow-hidden rounded-full bg-white/90 px-1.5 py-1.5 shadow-sm backdrop-blur',
+            hasMultiplePhotos ? 'bottom-8' : 'bottom-2'
+          )}>
             {colors.map((color) => {
               const active = color.photo && selectedPhoto === color.photo;
               return (

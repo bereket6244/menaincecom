@@ -46,6 +46,10 @@ export function ProductImageFrame({
   placeholder,
   onOpen,
   showControls = false,
+  showArrows = true,
+  showDots = false,
+  activeIndex = 0,
+  arrowStyle = 'default',
   onPrevious,
   onNext,
   preloadSrcs = [],
@@ -58,6 +62,10 @@ export function ProductImageFrame({
   placeholder: ReactNode;
   onOpen?: () => void;
   showControls?: boolean;
+  showArrows?: boolean;
+  showDots?: boolean;
+  activeIndex?: number;
+  arrowStyle?: 'default' | 'card-desktop';
   onPrevious?: () => void;
   onNext?: () => void;
   preloadSrcs?: string[];
@@ -108,6 +116,10 @@ export function ProductImageFrame({
     }, 350);
   };
 
+  const handleTouchCancel = () => {
+    touchStartRef.current = null;
+  };
+
   const image = src ? (
     <FramePhoto key={src} src={src} alt={alt} priority={priority || engaged} sizes={sizes}
       className={imageClassName} onReady={() => setLoadedSrc(src)} />
@@ -117,12 +129,13 @@ export function ProductImageFrame({
 
   return (
     <div
-      className={cx('relative isolate overflow-hidden bg-surface2 touch-pan-y select-none', className)}
+      className={cx('group/image relative isolate overflow-hidden bg-surface2 touch-pan-y select-none', className)}
       onContextMenu={(event) => event.preventDefault()}
       onPointerEnter={() => setEngaged(true)}
       onFocusCapture={() => setEngaged(true)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchCancel}
     >
       {image}
       {onOpen && (
@@ -141,7 +154,7 @@ export function ProductImageFrame({
         />
       )}
 
-      {showControls && (
+      {showControls && showArrows && (
         <>
           <button
             type="button"
@@ -150,9 +163,14 @@ export function ProductImageFrame({
               onPrevious?.();
             }}
             aria-label="Previous photo"
-            className="mena-press absolute left-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/92 text-ink shadow-[0_2px_10px_rgba(28,26,25,0.16)] hover:text-pink"
+            className={cx(
+              'mena-press absolute top-1/2 z-20 flex -translate-y-1/2 items-center justify-center rounded-full bg-white/92 text-ink shadow-[0_2px_10px_rgba(28,26,25,0.16)] hover:text-pink',
+              arrowStyle === 'card-desktop'
+                ? 'left-1.5 h-[30px] w-[30px] opacity-0 transition-opacity group-hover/image:opacity-100 group-focus-within/image:opacity-100'
+                : 'left-2 h-9 w-9'
+            )}
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className={arrowStyle === 'card-desktop' ? 'h-[18px] w-[18px]' : 'h-5 w-5'} />
           </button>
           <button
             type="button"
@@ -161,11 +179,35 @@ export function ProductImageFrame({
               onNext?.();
             }}
             aria-label="Next photo"
-            className="mena-press absolute right-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/92 text-ink shadow-[0_2px_10px_rgba(28,26,25,0.16)] hover:text-pink"
+            className={cx(
+              'mena-press absolute top-1/2 z-20 flex -translate-y-1/2 items-center justify-center rounded-full bg-white/92 text-ink shadow-[0_2px_10px_rgba(28,26,25,0.16)] hover:text-pink',
+              arrowStyle === 'card-desktop'
+                ? 'right-1.5 h-[30px] w-[30px] opacity-0 transition-opacity group-hover/image:opacity-100 group-focus-within/image:opacity-100'
+                : 'right-2 h-9 w-9'
+            )}
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className={arrowStyle === 'card-desktop' ? 'h-[18px] w-[18px]' : 'h-5 w-5'} />
           </button>
         </>
+      )}
+
+      {showControls && showDots && preloadSrcs.length > 1 && (
+        <div
+          className="pointer-events-none absolute bottom-2.5 left-1/2 z-20 flex max-w-[calc(100%-2rem)] -translate-x-1/2 items-center justify-center gap-1 rounded-full bg-white/75 px-1.5 py-1 shadow-sm backdrop-blur-sm"
+          role="status"
+          aria-label={`Photo ${activeIndex + 1} of ${preloadSrcs.length}`}
+        >
+          {preloadSrcs.map((photo, index) => (
+            <span
+              key={`${photo}-${index}`}
+              aria-hidden="true"
+              className={cx(
+                'h-1.5 w-1.5 shrink-0 rounded-full transition-colors',
+                index === activeIndex ? 'bg-pink' : 'bg-ink/25'
+              )}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
