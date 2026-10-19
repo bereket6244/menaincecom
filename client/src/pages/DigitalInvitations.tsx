@@ -15,6 +15,7 @@ const FALLBACK_DIGITAL_INVITATIONS: DigitalInvitationsContent = {
     { id: 'yeabsra-christian', title: 'Yeabsra & Christian', url: 'https://menaincet.com/yeabsrachristian', description: '' },
     { id: 'yeabsra-and-christian', title: 'Yeabsra & Christian - Wedding', url: 'https://menaincet.com/yeabsra-and-christian/', description: '' },
     { id: 'amanuel-selam', title: 'Amanuel & Selam', url: 'https://menaincet.com/amanuelselamawit/', description: '' },
+    { id: 'chris-yeabsra', title: 'Chris & Yeabsra', url: 'https://chris-yeabsra.menaincet.com/', description: '' },
   ],
   packages: [
     {
@@ -93,6 +94,8 @@ function initials(title: string) {
 
 function previewImage(example: { id?: string; url: string }) {
   const key = `${example.id || ''} ${example.url}`.toLowerCase();
+  if (key.includes('chris-yeabsra')) return assetUrl('digital-invites/chris-yeabsra-mobile.jpg');
+  if (key.includes('amanuel-selam') || key.includes('amanuelselamawit')) return assetUrl('digital-invites/amanuel-selam-mobile.jpg');
   if (key.includes('yeabsra-and-christian')) return assetUrl('digital-invites/yeabsra-and-christian-mobile.jpg');
   if (key.includes('yeabsrachristian') || key.includes('yeabsra-christian')) return assetUrl('digital-invites/yeabsra-christian-mobile.jpg');
   if (key.includes('yordanos') || key.includes('kaleab')) return assetUrl('digital-invites/yordanos-kaleab-mobile.jpg');
@@ -155,11 +158,15 @@ export function DigitalInvitations() {
             {examples.map((example, idx) => {
               const preview = previewImage(example);
               return (
-                <article
+                <a
                   key={example.id || example.url || idx}
-                  className="w-[265px] shrink-0 snap-start overflow-hidden rounded-[22px] border border-edge bg-bg shadow-[0_16px_34px_rgba(28,26,25,0.08)] sm:w-[300px]"
+                  href={example.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`Open ${example.title} invitation website`}
+                  className="mena-press w-[265px] shrink-0 snap-start overflow-hidden rounded-[22px] border border-edge bg-bg shadow-[0_16px_34px_rgba(28,26,25,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink focus-visible:ring-offset-2 sm:w-[300px]"
                 >
-                  <div className="relative aspect-[9/16] overflow-hidden bg-[#f8efe8]">
+                  <div className="relative block aspect-[9/16] overflow-hidden bg-[#f8efe8]">
                     {preview ? (
                       <img
                         src={preview}
@@ -177,16 +184,13 @@ export function DigitalInvitations() {
                   </div>
                   <div className="flex items-center justify-between gap-4 p-3">
                     <span className="min-w-0 truncate font-extrabold text-ink">{example.title}</span>
-                    <a
-                      href={example.url}
-                      target="_blank"
-                      rel="noreferrer"
+                    <span
                       className="mena-press inline-flex shrink-0 items-center gap-1.5 rounded-full border border-pink px-3 py-1.5 text-xs font-extrabold text-pink"
                     >
                       Open <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
+                    </span>
                   </div>
-                </article>
+                </a>
               );
             })}
           </div>

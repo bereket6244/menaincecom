@@ -14,7 +14,7 @@ import { currentReturnTarget, loginRoute } from '../lib/authReturn';
 
 const NAV = [
   { to: '/catalog', label: 'Wedding Cards', icon: Grid2X2 },
-  { to: '/digital-invitations', label: 'Digital Invites', iconPath: assetUrl('digital-invites-icon.webp') },
+  { to: '/digital-invitations', label: 'Digital Invites', iconPath: assetUrl('digital-invites-logo.svg') },
   { to: '/wishlist', label: 'Liked items', icon: Heart },
 ];
 
@@ -81,7 +81,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
                 )}
               >
                 <img
-                  src={assetUrl('digital-invites-icon.webp')}
+                  src={assetUrl('digital-invites-logo.svg')}
                   alt=""
                   loading="eager"
                   decoding="async"

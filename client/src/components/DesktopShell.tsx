@@ -81,7 +81,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
               className="mena-press flex h-10 items-center gap-2 px-1.5 text-[13px] font-medium text-ink/80 hover:text-pink"
             >
               <img
-                src={assetUrl('digital-invites-icon.webp')}
+                src={assetUrl('digital-invites-logo.svg')}
                 alt=""
                 loading="eager"
                 decoding="async"

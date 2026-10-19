@@ -120,6 +120,12 @@ const DEFAULT_DIGITAL_INVITATIONS = {
       url: 'https://menaincet.com/amanuelselamawit/',
       description: '',
     },
+    {
+      id: 'chris-yeabsra',
+      title: 'Chris & Yeabsra',
+      url: 'https://chris-yeabsra.menaincet.com/',
+      description: '',
+    },
   ],
     packages: [
         {
