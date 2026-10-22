@@ -8,7 +8,8 @@ import type { Column } from './DataTable';
 import { Modal, IconButton, SysLabel } from '../components/ui';
 import { useApp } from '../store/AppContext';
 import { complimentarySummary } from '../lib/complimentary';
-import { cx, formatDate } from '../lib/utils';
+import { cartLineTotal, cx, formatDate } from '../lib/utils';
+import { formatEtbAmount } from '../lib/tieredPricing';
 
 const STATUS_STYLES: Record<OrderRecord['status'], string> = {
   new: 'bg-pink/15 text-pink',
@@ -134,7 +135,7 @@ export function OrdersAdmin() {
                       ))}
                       {i.note && <div className="text-[10px] italic text-muted">“{i.note}”</div>}
                     </div>
-                    <div className="text-xs text-green">{i.priceEach != null ? `${(i.priceEach * i.qty).toLocaleString()} ETB` : 'Quote'}</div>
+                    <div className="text-xs text-green">{cartLineTotal(i) != null ? `${formatEtbAmount(cartLineTotal(i)!)} ETB` : 'Quote'}</div>
                   </div>
                 ))}
               </div>

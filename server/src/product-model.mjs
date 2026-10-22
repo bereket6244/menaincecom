@@ -1,5 +1,5 @@
 const PUBLIC_PRODUCT_FIELDS = new Set([
-  'id', 'name', 'categoryId', 'categoryIds', 'description', 'photos', 'pricingMode', 'price', 'variants',
+  'id', 'name', 'categoryId', 'categoryIds', 'description', 'photos', 'pricingMode', 'price', 'priceTiers', 'variants',
   'isAddon', 'suggestedAddonIds', 'complimentaryItems', 'universalComplimentaryItemIds',
   'featured', 'maxOrderQty', 'createdAt', 'updatedAt',
 ]);

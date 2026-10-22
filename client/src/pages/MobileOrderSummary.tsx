@@ -12,7 +12,7 @@ import { QuantityPicker } from '../components/QuantityPicker';
 import { ProtectedImage } from '../components/ProtectedImage';
 import { mobileProductTint } from '../components/MobileProductCard';
 import { complimentaryExtraTotal, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
-import { cartPriceEach, formatCartTotal, formatLineTotal, formatPrice } from '../lib/utils';
+import { cartLineTotal, cartPriceEach, formatCartTotal, formatLineTotal, formatPrice } from '../lib/utils';
 import { productLimitText, productMaxOrderQty } from '../lib/orderLimits';
 
 type Channel = 'whatsapp' | 'telegram' | 'sms';
@@ -85,10 +85,18 @@ export function MobileOrderSummary() {
       const product = productById.get(item.productId);
       if (!product) continue;
       const maxOrderQty = productMaxOrderQty(product);
-      if (item.qty > maxOrderQty || item.maxOrderQty !== (product.maxOrderQty ?? null)) {
+      const qty = Math.min(item.qty, maxOrderQty);
+      const priceEach = cartPriceEach(product, qty);
+      const pricingChanged = item.pricingMode !== product.pricingMode
+        || item.priceEach !== priceEach
+        || JSON.stringify(item.priceTiers || []) !== JSON.stringify(product.priceTiers || []);
+      if (item.qty !== qty || item.maxOrderQty !== (product.maxOrderQty ?? null) || pricingChanged) {
         updateCartItem(item.key, {
-          qty: Math.min(item.qty, maxOrderQty),
+          qty,
           maxOrderQty: product.maxOrderQty ?? null,
+          pricingMode: product.pricingMode,
+          priceEach,
+          priceTiers: product.priceTiers,
         });
       }
     }
@@ -104,7 +112,7 @@ export function MobileOrderSummary() {
       return sum + complimentaryExtraTotal(product ? complimentaryForProduct(product, item.qty, selections) : item.complimentaryItems);
     }, 0);
     if (!priced.length && extras === 0) return null;
-    return priced.reduce((sum, item) => sum + (item.priceEach || 0) * item.qty, extras);
+    return priced.reduce((sum, item) => sum + (cartLineTotal(item) || 0), extras);
   }, [products, selectedItems, universalComplimentaryItems]);
   const hasQuoteItems = selectedItems.some((item) => item.priceEach == null);
   const hasStartingItems = selectedItems.some((item) => item.pricingMode === 'starting');
@@ -506,7 +514,8 @@ export function MobileOrderSummary() {
                         photo: product.photos[0] || '',
                         isAddon: product.isAddon,
                         pricingMode: product.pricingMode,
-                        priceEach: cartPriceEach(product),
+                        priceEach: cartPriceEach(product, 1),
+                        priceTiers: product.priceTiers,
                         maxOrderQty: product.maxOrderQty ?? null,
                         variantSelections: {},
                         qty: 1,

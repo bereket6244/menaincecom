@@ -1,5 +1,6 @@
 import webpush from 'web-push';
 import { records } from './db.mjs';
+import { tieredLineTotal } from './tiered-pricing.mjs';
 
 const vapidReady = Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);
 if (vapidReady) {
@@ -24,7 +25,8 @@ export function formatOrderMessage(order) {
       .map(([k, v]) => `${k}: ${v}`)
       .join(', ');
     const from = item.pricingMode === 'starting' ? 'from ' : '';
-    lines.push(`• ${item.qty} × ${item.name}${item.isAddon ? ' (add-on)' : ''}${variants ? ` [${variants}]` : ''}${item.priceEach != null ? ` — ${from}${item.priceEach * item.qty} ETB` : ' — quote'}`);
+    const lineTotal = item.pricingMode === 'tiered' ? tieredLineTotal(item.priceTiers, item.qty) : item.priceEach == null ? null : item.priceEach * item.qty;
+    lines.push(`• ${item.qty} × ${item.name}${item.isAddon ? ' (add-on)' : ''}${variants ? ` [${variants}]` : ''}${lineTotal != null ? ` — ${from}${lineTotal.toLocaleString('en-US')} ETB` : ' — quote'}`);
     const freebies = (item.complimentaryItems || [])
       .filter((freeItem) => freeItem?.qty > 0 && freeItem?.name)
       .map((freeItem) => `${Number(freeItem.qty).toLocaleString()} ${freeItem.name}`)

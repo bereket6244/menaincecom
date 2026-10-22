@@ -154,7 +154,7 @@ Deploy the server dependency update alongside the client to enable resizing.
   `/shop/uploads/...` in production so images display when the app is mounted under `/shop`.
 - **Admin creation**: only an authenticated current admin can create another admin. New admin passwords
   must be at least 14 characters and include uppercase, lowercase, a number, and a symbol.
-- **Pricing modes**: products can have exact price, starting price, or quote-only pricing.
+- **Pricing modes**: products can have an exact price, starting price, progressive quantity tiers, or quote-only pricing. Progressive tiers charge each quantity range at its own rate and show customers the blended average unit price for their selected quantity.
 - **Telegram product sync**: when enabled, publishing a product creates a channel post, and later
   published product edits update the existing Telegram message caption/text with current price,
   details, variant options, hashtags, and the storefront link.

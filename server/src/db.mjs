@@ -309,6 +309,9 @@ export function dbRoute(handler) {
         console.error('[db] unavailable:', err.code);
         return res.status(503).json({ error: 'db_unavailable', message: 'Database connection failed.' });
       }
+      if (Number.isInteger(err?.status) && err.status >= 400 && err.status < 500) {
+        return res.status(err.status).json({ error: 'bad_request', message: err.message || 'Invalid request.' });
+      }
       console.error('[api] error:', err);
       res.status(500).json({ error: 'server_error', message: 'Unexpected server error.' });
     }

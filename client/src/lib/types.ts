@@ -1,4 +1,10 @@
-export type PricingMode = 'exact' | 'starting' | 'quote';
+export type PricingMode = 'exact' | 'starting' | 'tiered' | 'quote';
+
+export interface PriceTier {
+  /** First unit that receives this rate. The first tier must start at 1. */
+  minQty: number;
+  priceEach: number;
+}
 
 export interface VariantGroup {
   name: string; // e.g. "Material", "Finish", "Color"
@@ -40,6 +46,7 @@ export interface Product {
   photos: string[];
   pricingMode: PricingMode;
   price: number | null; // ETB; used by 'exact' and 'starting'
+  priceTiers?: PriceTier[]; // progressive quantity ranges when pricingMode is 'tiered'
   maxOrderQty?: number | null; // blank means unlimited
   variants: VariantGroup[];
   isAddon: boolean; // complimentary/add-on item (entrance cards, schedule cards…)
@@ -74,6 +81,7 @@ export interface CartItem {
   isAddon: boolean;
   pricingMode: PricingMode;
   priceEach: number | null;
+  priceTiers?: PriceTier[];
   maxOrderQty?: number | null;
   variantSelections: Record<string, string>;
   qty: number;

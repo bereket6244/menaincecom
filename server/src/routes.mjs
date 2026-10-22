@@ -27,6 +27,7 @@ import {
   shouldUpdateTelegramPost,
   updateTelegramProductPost,
 } from './product-telegram.mjs';
+import { normalizePriceTiers, tieredAveragePrice, tieredLineTotal } from './tiered-pricing.mjs';
 
 export const api = Router();
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -411,6 +412,9 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
           .filter((item) => item && typeof item.name === 'string')
           .map((item) => [String(item.name).trim().slice(0, 100), Number(item.qty)])
       );
+      const priceEach = product.pricingMode === 'tiered'
+        ? tieredAveragePrice(product.priceTiers, qty)
+        : product.pricingMode !== 'quote' && product.price != null ? Number(product.price) : null;
       return {
         ...base,
         productId: product.id,
@@ -420,7 +424,8 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
         pricingMode: product.pricingMode,
         // 'starting' prices are estimates the studio confirms — they still
         // count towards the total. Only 'quote' items have no price.
-        priceEach: product.pricingMode !== 'quote' && product.price != null ? Number(product.price) : null,
+        priceEach,
+        priceTiers: product.pricingMode === 'tiered' ? normalizePriceTiers(product.priceTiers) : [],
         complimentaryItems: complimentaryForProduct(product, qty, complimentarySelections),
       };
     })
@@ -436,7 +441,7 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
     0
   );
   const estimatedTotal = priced.length || extraTotal > 0
-    ? priced.reduce((sum, i) => sum + i.priceEach * i.qty, extraTotal)
+    ? priced.reduce((sum, i) => sum + (i.pricingMode === 'tiered' ? tieredLineTotal(i.priceTiers, i.qty) : i.priceEach * i.qty), extraTotal)
     : null;
 
   const orderCustomer = {
@@ -585,6 +590,24 @@ function cleanMaxOrderQty(value) {
 
 function cleanProductInput(input, { includeDefaultLimit = false } = {}) {
   const next = { ...input };
+  if (Object.prototype.hasOwnProperty.call(next, 'pricingMode')) {
+    next.pricingMode = ['exact', 'starting', 'tiered', 'quote'].includes(next.pricingMode) ? next.pricingMode : 'exact';
+  }
+  if (Object.prototype.hasOwnProperty.call(next, 'priceTiers') || next.pricingMode === 'tiered') {
+    next.priceTiers = normalizePriceTiers(next.priceTiers);
+    if (next.pricingMode === 'tiered') {
+      if (next.priceTiers.length < 2 || next.priceTiers[0]?.minQty !== 1) {
+        const error = new Error('Tiered pricing needs at least two ranges, starting at quantity 1.');
+        error.status = 400;
+        throw error;
+      }
+      next.price = next.priceTiers[0].priceEach;
+    }
+  }
+  if (next.pricingMode === 'quote') {
+    next.price = null;
+    next.priceTiers = [];
+  }
   if (includeDefaultLimit || Object.prototype.hasOwnProperty.call(next, 'maxOrderQty')) {
     next.maxOrderQty = cleanMaxOrderQty(next.maxOrderQty);
   }
@@ -665,9 +688,13 @@ function applyProductBulkPatch(product, body) {
     }
   }
   if (set.pricingMode !== undefined || set.price !== undefined) {
+    // Tier schedules are edited per product; bulk pricing intentionally only supports one-rate modes.
     const pricingMode = ['exact', 'starting', 'quote'].includes(set.pricingMode) ? set.pricingMode : product.pricingMode;
-    patch.pricingMode = pricingMode;
-    patch.price = pricingMode === 'quote' ? null : Math.max(0, Number(set.price) || 0);
+    if (pricingMode !== 'tiered') {
+      patch.pricingMode = pricingMode;
+      patch.price = pricingMode === 'quote' ? null : Math.max(0, Number(set.price) || 0);
+      patch.priceTiers = [];
+    }
   }
   if (set.maxOrderQty !== undefined) patch.maxOrderQty = cleanMaxOrderQty(set.maxOrderQty);
 

@@ -11,7 +11,7 @@ import { EmptyState, IconButton } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { ProtectedImage } from '../components/ProtectedImage';
 import { complimentaryExtraTotal, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
-import { cartPriceEach, cx, formatCartTotal, formatLineTotal, formatPrice } from '../lib/utils';
+import { cartLineTotal, cartPriceEach, cx, formatCartTotal, formatLineTotal, formatPrice } from '../lib/utils';
 import { productLimitText, productMaxOrderQty } from '../lib/orderLimits';
 
 type Channel = 'telegram' | 'whatsapp' | 'sms';
@@ -83,10 +83,18 @@ export function DesktopOrderSummary() {
       const product = productById.get(item.productId);
       if (!product) continue;
       const maxOrderQty = productMaxOrderQty(product);
-      if (item.qty > maxOrderQty || item.maxOrderQty !== (product.maxOrderQty ?? null)) {
+      const qty = Math.min(item.qty, maxOrderQty);
+      const priceEach = cartPriceEach(product, qty);
+      const pricingChanged = item.pricingMode !== product.pricingMode
+        || item.priceEach !== priceEach
+        || JSON.stringify(item.priceTiers || []) !== JSON.stringify(product.priceTiers || []);
+      if (item.qty !== qty || item.maxOrderQty !== (product.maxOrderQty ?? null) || pricingChanged) {
         updateCartItem(item.key, {
-          qty: Math.min(item.qty, maxOrderQty),
+          qty,
           maxOrderQty: product.maxOrderQty ?? null,
+          pricingMode: product.pricingMode,
+          priceEach,
+          priceTiers: product.priceTiers,
         });
       }
     }
@@ -105,7 +113,7 @@ export function DesktopOrderSummary() {
     const priced = selectedItems.filter((item) => item.priceEach != null);
     const extras = selectedItems.reduce((sum, item) => sum + complimentaryExtraTotal(freebiesFor(item)), 0);
     if (!priced.length && extras === 0) return null;
-    return priced.reduce((sum, item) => sum + (item.priceEach || 0) * item.qty, extras);
+    return priced.reduce((sum, item) => sum + (cartLineTotal(item) || 0), extras);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedItems, productById]);
 
@@ -480,7 +488,8 @@ export function DesktopOrderSummary() {
                             photo: addon.photos[0] || '',
                             isAddon: addon.isAddon,
                             pricingMode: addon.pricingMode,
-                            priceEach: cartPriceEach(addon),
+                            priceEach: cartPriceEach(addon, 1),
+                            priceTiers: addon.priceTiers,
                             maxOrderQty: addon.maxOrderQty ?? null,
                             variantSelections: {},
                             qty: 1,

@@ -1,7 +1,14 @@
 import type { CartItem, Product } from './types';
+import { formatEtbAmount, tieredAveragePrice, tieredLineTotal } from './tieredPricing';
 
-export function formatPrice(product: Pick<Product, 'pricingMode' | 'price'>): string {
-  if (product.pricingMode === 'quote' || product.price == null) return 'Request a quote';
+export function formatPrice(product: Pick<Product, 'pricingMode' | 'price' | 'priceTiers'>, quantity?: number): string {
+  if (product.pricingMode === 'quote') return 'Request a quote';
+  if (product.pricingMode === 'tiered') {
+    const average = tieredAveragePrice(product.priceTiers, quantity || 1);
+    if (average == null) return 'Request a quote';
+    return `${quantity ? 'Avg. ' : ''}${formatEtbAmount(average)} ETB`;
+  }
+  if (product.price == null) return 'Request a quote';
   const amount = `${product.price.toLocaleString()} ETB`;
   return product.pricingMode === 'starting' ? `From ${amount}` : amount;
 }
@@ -11,14 +18,21 @@ export function formatPrice(product: Pick<Product, 'pricingMode' | 'price'>): st
  * a 'starting' price is an estimate the studio confirms, not a quote-only item,
  * so it has to reach the cart total instead of silently becoming "Quote".
  */
-export function cartPriceEach(product: Pick<Product, 'pricingMode' | 'price'>): number | null {
+export function cartPriceEach(product: Pick<Product, 'pricingMode' | 'price' | 'priceTiers'>, quantity = 1): number | null {
+  if (product.pricingMode === 'tiered') return tieredAveragePrice(product.priceTiers, quantity);
   return product.pricingMode !== 'quote' && product.price != null ? product.price : null;
 }
 
+export function cartLineTotal(item: Pick<CartItem, 'pricingMode' | 'priceEach' | 'priceTiers' | 'qty'>): number | null {
+  if (item.pricingMode === 'tiered') return tieredLineTotal(item.priceTiers, item.qty);
+  return item.priceEach == null ? null : item.priceEach * item.qty;
+}
+
 /** Line total for a cart item, prefixed with "From" for starting prices. */
-export function formatLineTotal(item: Pick<CartItem, 'pricingMode' | 'priceEach' | 'qty'>): string {
-  if (item.priceEach == null) return 'Quote';
-  const amount = `${(item.priceEach * item.qty).toLocaleString()} ETB`;
+export function formatLineTotal(item: Pick<CartItem, 'pricingMode' | 'priceEach' | 'priceTiers' | 'qty'>): string {
+  const total = cartLineTotal(item);
+  if (total == null) return 'Quote';
+  const amount = `${formatEtbAmount(total)} ETB`;
   return item.pricingMode === 'starting' ? `From ${amount}` : amount;
 }
 

@@ -90,7 +90,8 @@ export function DesktopProductDetail() {
       photo: selectedPhoto || product.photos[0] || '',
       isAddon: product.isAddon,
       pricingMode: product.pricingMode,
-      priceEach: cartPriceEach(product),
+      priceEach: cartPriceEach(product, qty),
+      priceTiers: product.priceTiers,
       maxOrderQty: product.maxOrderQty ?? null,
       variantSelections,
       qty: clampOrderQty(qty, product),
@@ -217,8 +218,8 @@ export function DesktopProductDetail() {
           <div className="text-[12px] font-bold uppercase tracking-[0.1em] text-muted">{product.isAddon ? 'Add-on item' : 'Design'}</div>
           <h1 className="mt-1.5 font-serif text-[42px] font-semibold leading-[1.05]">{product.name}</h1>
           <div className="mt-3 text-[30px] font-extrabold text-[#ee0a24]">
-            {formatPrice(product)}
-            {!isQuote && <span className="ml-2 text-sm font-medium text-muted">each</span>}
+            {formatPrice(product, qty)}
+            {!isQuote && <span className="ml-2 text-sm font-medium text-muted">{product.pricingMode === 'tiered' ? 'average each' : 'each'}</span>}
           </div>
           {limitText && <div className="mt-2 text-sm font-extrabold text-[#ee0a24]">{limitText}</div>}
           {description && <p className="mt-5 whitespace-pre-line text-[15px] leading-[1.55] text-ink/70">{description}</p>}
@@ -228,6 +229,15 @@ export function DesktopProductDetail() {
           <div className="mt-7">
             <div className="mb-2.5 text-[12.5px] font-bold uppercase tracking-[0.08em] text-muted">Quantity</div>
             <QuantityPicker value={qty} onChange={setLimitedQty} max={maxOrderQty} presets={[100, 250, 500, 1000]} />
+            {product.pricingMode === 'tiered' && (product.priceTiers || []).length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(product.priceTiers || []).map((tier, index, tiers) => (
+                  <span key={tier.minQty} className="rounded-full border border-edge bg-surface2 px-3 py-1.5 text-[11px] font-semibold text-muted">
+                    {tiers[index + 1] ? `${tier.minQty.toLocaleString()}–${(tiers[index + 1].minQty - 1).toLocaleString()}` : `${tier.minQty.toLocaleString()}+`}: {tier.priceEach.toLocaleString()} ETB
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           {complimentaryOptions.length > 0 && (

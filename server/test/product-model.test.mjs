@@ -113,3 +113,23 @@ test('Telegram product caption mentions complimentary items', () => {
   assert.doesNotMatch(caption, /Hidden Item/);
   assert.ok(caption.length <= 1024);
 });
+
+test('Telegram product caption explains progressive quantity ranges', () => {
+  const caption = formatProductCaption({
+    id: 'tiered-product',
+    name: 'Tiered Card',
+    description: '',
+    pricingMode: 'tiered',
+    price: 10,
+    priceTiers: [
+      { minQty: 1, priceEach: 10 },
+      { minQty: 11, priceEach: 9 },
+      { minQty: 21, priceEach: 8 },
+    ],
+  });
+
+  assert.match(caption, /Progressive pricing:/);
+  assert.match(caption, /1-10: 10 ETB each/);
+  assert.match(caption, /11-20: 9 ETB each/);
+  assert.match(caption, /21\+: 8 ETB each/);
+});

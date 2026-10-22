@@ -19,6 +19,16 @@ function channelUsername() {
 
 function productPrice(product) {
   if (product.pricingMode === 'quote' || product.price == null) return 'Price: Request a quote';
+  if (product.pricingMode === 'tiered') {
+    const tiers = (Array.isArray(product.priceTiers) ? product.priceTiers : []).slice().sort((a, b) => a.minQty - b.minQty);
+    if (!tiers.length) return 'Price: Request a quote';
+    const ranges = tiers.map((tier, index) => {
+      const next = tiers[index + 1];
+      const range = next ? `${tier.minQty}-${next.minQty - 1}` : `${tier.minQty}+`;
+      return `${range}: ${Number(tier.priceEach).toLocaleString('en-US')} ETB each`;
+    });
+    return `Progressive pricing:\n${ranges.join('\n')}`;
+  }
   const amount = `${Number(product.price).toLocaleString('en-US')} ETB`;
   return product.pricingMode === 'starting' ? `Price: From ${amount}` : `Price: ${amount}`;
 }

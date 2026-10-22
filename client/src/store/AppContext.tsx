@@ -4,6 +4,7 @@ import type { CartItem, User } from '../lib/types';
 import { apiGet, apiSend, checkApiHealth, onDbStatus, setToken } from '../lib/api';
 import { readLocalWishlist, writeLocalWishlist } from '../lib/wishlist';
 import { clampOrderQty } from '../lib/orderLimits';
+import { tieredAveragePrice } from '../lib/tieredPricing';
 
 export interface Toast {
   id: number;
@@ -201,9 +202,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
           existing.note && item.note && existing.note !== item.note
             ? `${existing.note} | ${item.note}`
             : existing.note || item.note;
-        return c.map((x) => (x.key === key ? { ...x, qty, note, complimentaryItems: item.complimentaryItems } : x));
+        const merged = { ...existing, ...item, qty, note, complimentaryItems: item.complimentaryItems };
+        if (merged.pricingMode === 'tiered') merged.priceEach = tieredAveragePrice(merged.priceTiers, qty);
+        return c.map((x) => (x.key === key ? merged : x));
       }
-      return [...c, { ...item, qty: clampOrderQty(item.qty, item), key }];
+      const qty = clampOrderQty(item.qty, item);
+      const priceEach = item.pricingMode === 'tiered' ? tieredAveragePrice(item.priceTiers, qty) : item.priceEach;
+      return [...c, { ...item, qty, priceEach, key }];
     });
     return result;
   }, []);
@@ -212,7 +217,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCart((c) => c.map((x) => {
       if (x.key !== key) return x;
       const next = { ...x, ...patch };
-      return { ...next, qty: clampOrderQty(next.qty, next) };
+      const qty = clampOrderQty(next.qty, next);
+      const priceEach = next.pricingMode === 'tiered' ? tieredAveragePrice(next.priceTiers, qty) : next.priceEach;
+      return { ...next, qty, priceEach };
     }));
   }, []);
 

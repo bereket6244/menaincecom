@@ -1,5 +1,7 @@
 import type { BusinessSettings, CartItem, OrderRecord } from './types';
 import { complimentarySummary } from './complimentary';
+import { cartLineTotal } from './utils';
+import { formatEtbAmount } from './tieredPricing';
 
 const FALLBACK_WHATSAPP = '251929639939';
 const TELEGRAM_ORDER_URL = 'https://t.me/+251929639939';
@@ -44,9 +46,12 @@ export function buildOrderMessage(order: OrderRecord, _business: BusinessSetting
       .map(([k, v]) => `${k}: ${v}`)
       .join(', ');
     const from = item.pricingMode === 'starting' ? 'from ' : '';
+    const lineTotal = cartLineTotal(item);
     const price =
-      item.priceEach != null
-        ? `${from}${item.priceEach.toLocaleString()} ETB each = ${from}${(item.priceEach * item.qty).toLocaleString()} ETB`
+      lineTotal != null
+        ? item.pricingMode === 'tiered'
+          ? `${formatEtbAmount(lineTotal)} ETB (progressive quantity pricing)`
+          : `${from}${formatEtbAmount(item.priceEach!)} ETB each = ${from}${formatEtbAmount(lineTotal)} ETB`
         : 'price on request';
     lines.push(`• ${item.qty} × ${item.name}${variants ? ` (${variants})` : ''} — ${price}`);
     if (origin) lines.push(`  ${productUrl(item.productId, origin)}`);
