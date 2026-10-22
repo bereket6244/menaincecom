@@ -20,6 +20,11 @@ export function DesktopShell({ children }: { children: ReactNode }) {
   const [q, setQ] = useState('');
   const [contactOpen, setContactOpen] = useState(false);
   const contactRef = useRef<HTMLDivElement>(null);
+  const inviteHeaderRef = useRef<HTMLAnchorElement>(null);
+  const inviteFloatRef = useRef<HTMLDivElement>(null);
+  const [inviteDismissed, setInviteDismissed] = useState(() => sessionStorage.getItem('mena-invite-float-dismissed') === '1');
+  const [inviteFlying, setInviteFlying] = useState(false);
+  const [inviteLanded, setInviteLanded] = useState(false);
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
   const accountRoute = user ? '/account' : loginRoute(currentReturnTarget(location));
   const productInquiry = location.pathname.startsWith('/product/')
@@ -62,6 +67,39 @@ export function DesktopShell({ children }: { children: ReactNode }) {
     navigate(`/catalog${next.toString() ? `?${next.toString()}` : ''}`, { replace: live });
   };
 
+  const dismissInvite = () => {
+    if (inviteFlying) return;
+    const source = inviteFloatRef.current;
+    const target = inviteHeaderRef.current;
+    const finish = () => {
+      sessionStorage.setItem('mena-invite-float-dismissed', '1');
+      setInviteDismissed(true);
+      setInviteFlying(false);
+      setInviteLanded(true);
+      window.setTimeout(() => setInviteLanded(false), 900);
+    };
+
+    if (!source || !target || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      finish();
+      return;
+    }
+
+    const from = source.getBoundingClientRect();
+    const to = target.getBoundingClientRect();
+    const dx = to.left + to.width / 2 - (from.left + from.width / 2);
+    const dy = to.top + to.height / 2 - (from.top + from.height / 2);
+    const scale = Math.min(to.width / from.width, to.height / from.height);
+    setInviteFlying(true);
+    const animation = source.animate(
+      [
+        { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+        { transform: `translate(${dx}px, ${dy}px) scale(${scale})`, opacity: 0 },
+      ],
+      { duration: 760, easing: 'cubic-bezier(0.45, 0, 0.2, 1)', fill: 'forwards' },
+    );
+    animation.onfinish = finish;
+  };
+
   return (
     <div className="flex min-h-dvh flex-col bg-bg text-ink desktop-boutique">
       <StatusBanners />
@@ -77,8 +115,9 @@ export function DesktopShell({ children }: { children: ReactNode }) {
 
           <div className="flex shrink-0 items-center gap-3">
             <Link
+              ref={inviteHeaderRef}
               to="/digital-invitations"
-              className="mena-press flex h-10 items-center gap-2 px-1.5 text-[13px] font-medium text-ink/80 hover:text-pink"
+              className={cx('mena-press flex h-10 items-center gap-2 px-1.5 text-[13px] font-medium text-ink/80 hover:text-pink', inviteLanded && 'invite-header-landed')}
             >
               <img
                 src={assetUrl('digital-invites-logo.svg')}
@@ -197,6 +236,18 @@ export function DesktopShell({ children }: { children: ReactNode }) {
       </header>
 
       <main className="w-full flex-1">{children}</main>
+
+      {!inviteDismissed && location.pathname !== '/digital-invitations' && (
+        <div ref={inviteFloatRef} className={cx('invite-float', inviteFlying && 'invite-float-flying')}>
+          <button type="button" className="invite-float-close" onClick={dismissInvite} aria-label="Dismiss Digital Invites button">
+            <X aria-hidden="true" className="h-3.5 w-3.5" />
+          </button>
+          <Link to="/digital-invitations" className="invite-float-link">
+            <span className="invite-float-icon"><img src={assetUrl('digital-invites-logo.svg')} alt="" /></span>
+            <span className="invite-float-copy"><span className="invite-float-eyebrow">Make it memorable</span><span className="invite-float-title">Digital Invites</span></span>
+          </Link>
+        </div>
+      )}
 
       <footer className="border-t border-edge bg-white py-6">
         <div className="mx-auto flex max-w-[1560px] items-center justify-between gap-6 px-10 text-[12px] text-muted 2xl:px-12">
