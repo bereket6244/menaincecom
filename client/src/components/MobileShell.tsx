@@ -11,6 +11,7 @@ import { StatusBanners, Toasts } from './ui';
 import { BrandLogo } from './BrandLogo';
 import { AdStrip } from './AdStrip';
 import { currentReturnTarget, loginRoute } from '../lib/authReturn';
+import { useInviteDismissal } from '../lib/useInviteDismissal';
 
 const NAV = [
   { to: '/catalog', label: 'Wedding Cards', icon: Grid2X2 },
@@ -28,7 +29,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
   const fabRef = useRef<HTMLDivElement>(null);
   const inviteHeaderRef = useRef<HTMLAnchorElement>(null);
   const inviteFloatRef = useRef<HTMLDivElement>(null);
-  const [inviteDismissed, setInviteDismissed] = useState(() => sessionStorage.getItem('mena-mobile-invite-dismissed') === '1');
+  const { inviteDismissed, dismissInviteForFourHours } = useInviteDismissal();
   const [inviteFlying, setInviteFlying] = useState(false);
   const [inviteLanded, setInviteLanded] = useState(false);
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
@@ -60,11 +61,11 @@ export function MobileShell({ children }: { children: ReactNode }) {
 
   const dismissInvite = () => {
     if (inviteFlying) return;
+    const dismissedAt = Date.now();
     const source = inviteFloatRef.current;
     const target = inviteHeaderRef.current;
     const finish = () => {
-      sessionStorage.setItem('mena-mobile-invite-dismissed', '1');
-      setInviteDismissed(true);
+      dismissInviteForFourHours(dismissedAt);
       setInviteFlying(false);
       setInviteLanded(true);
       window.setTimeout(() => setInviteLanded(false), 900);

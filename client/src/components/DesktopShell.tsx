@@ -11,6 +11,7 @@ import { useData } from '../lib/useData';
 import type { BusinessSettings } from '../lib/types';
 import { buildProductInquiryMessage, smsContactUrl, telegramContactUrl, whatsappContactUrl } from '../lib/share';
 import { currentReturnTarget, loginRoute } from '../lib/authReturn';
+import { useInviteDismissal } from '../lib/useInviteDismissal';
 
 export function DesktopShell({ children }: { children: ReactNode }) {
   const { cart, user, wishlistProductIds } = useApp();
@@ -24,7 +25,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
   const profileRef = useRef<HTMLDivElement>(null);
   const inviteHeaderRef = useRef<HTMLAnchorElement>(null);
   const inviteFloatRef = useRef<HTMLDivElement>(null);
-  const [inviteDismissed, setInviteDismissed] = useState(() => sessionStorage.getItem('mena-invite-float-dismissed') === '1');
+  const { inviteDismissed, dismissInviteForFourHours } = useInviteDismissal();
   const [inviteFlying, setInviteFlying] = useState(false);
   const [inviteLanded, setInviteLanded] = useState(false);
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
@@ -89,11 +90,11 @@ export function DesktopShell({ children }: { children: ReactNode }) {
 
   const dismissInvite = () => {
     if (inviteFlying) return;
+    const dismissedAt = Date.now();
     const source = inviteFloatRef.current;
     const target = inviteHeaderRef.current;
     const finish = () => {
-      sessionStorage.setItem('mena-invite-float-dismissed', '1');
-      setInviteDismissed(true);
+      dismissInviteForFourHours(dismissedAt);
       setInviteFlying(false);
       setInviteLanded(true);
       window.setTimeout(() => setInviteLanded(false), 900);
