@@ -1,18 +1,19 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowUpDown, Check, ChevronDown, RotateCcw, SlidersHorizontal } from 'lucide-react';
+import { ArrowUpDown, Check, ChevronDown, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { Category, Product } from '../lib/types';
 import { MobileProductCard } from '../components/MobileProductCard';
 import { ProtectedImage } from '../components/ProtectedImage';
 import { EmptyState, Spinner } from '../components/ui';
 import { cx } from '../lib/utils';
-import { buildPriceBands, formatEtb, priceBounds } from '../lib/priceBands';
+import { formatEtb, priceBounds } from '../lib/priceBands';
 import {
-  buildVariantFacets, countVariantFilters, matchesVariantFilters, type VariantFilters,
+  buildVariantFacets, countVariantFilters, matchesVariantFilters, toggleVariantOption, type VariantFilters,
 } from '../lib/variantFacets';
 import { VariantFacetFilters } from '../components/VariantFacetFilters';
 import { FilterOverlay } from '../components/FilterOverlay';
+import { PriceRangeFilter } from '../components/PriceRangeFilter';
 import { useResultAnimation } from '../lib/useResultAnimation';
 import { productCategoryIds, productCategoryNames } from '../lib/productCategories';
 
@@ -50,7 +51,6 @@ export function MobileCatalog() {
   const { data: categories } = useData<Category[]>('/categories');
   const { data: products, loading } = useData<Product[]>('/products');
   const [params, setParams] = useSearchParams();
-  const [bands, setBands] = useState<string[]>([]);
   const [min, setMin] = useState('');
   const [max, setMax] = useState('');
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
@@ -73,19 +73,14 @@ export function MobileCatalog() {
     () => new Map((categories || []).map((category) => [category.id, category.name])),
     [categories]
   );
-  const priceBands = useMemo(() => buildPriceBands(products || []), [products]);
   const bounds = useMemo(() => priceBounds(products || []), [products]);
-  const minPrice = bounds.min != null ? formatEtb(bounds.min) : 'Min';
-  const maxPrice = bounds.max != null ? formatEtb(bounds.max) : 'Max';
   const sidebarCategories = showMoreCats ? (categories || []) : (categories || []).slice(0, 5);
-  const activeFilterCount = bands.length + categoryFilters.length + countVariantFilters(variantFilters)
-    + (min ? 1 : 0) + (max ? 1 : 0);
+  const activeFilterCount = categoryFilters.length + countVariantFilters(variantFilters) + (min || max ? 1 : 0);
   const gridRef = useResultAnimation<HTMLDivElement>(
-    JSON.stringify([activeCategory, categoryFilters, bands, min, max, variantFilters, sort, query])
+    JSON.stringify([activeCategory, categoryFilters, min, max, variantFilters, sort, query])
   );
 
   const clearAll = () => {
-    setBands([]);
     setMin('');
     setMax('');
     setCategoryFilters([]);
@@ -105,16 +100,15 @@ export function MobileCatalog() {
     }
     // A price filter is about price: quote-only items have none, so they are
     // filtered out rather than shown regardless of the range.
-    if (bands.length) {
-      const active = priceBands.filter((band) => bands.includes(band.id));
-      list = list.filter((product) => product.price != null && active.some((band) => band.test(product.price as number)));
-    }
     const mn = parseFloat(min);
     const mx = parseFloat(max);
-    if (!Number.isNaN(mn)) list = list.filter((product) => product.price != null && (product.price as number) >= mn);
-    if (!Number.isNaN(mx)) list = list.filter((product) => product.price != null && (product.price as number) <= mx);
+    if (!Number.isNaN(mn) || !Number.isNaN(mx)) {
+      const lower = Number.isNaN(mn) ? bounds.min ?? 0 : Math.max(bounds.min ?? 0, mn);
+      const upper = Number.isNaN(mx) ? bounds.max ?? Infinity : Math.min(bounds.max ?? Infinity, mx);
+      list = list.filter((product) => product.price != null && (product.price as number) >= Math.min(lower, upper) && (product.price as number) <= Math.max(lower, upper));
+    }
     return list;
-  }, [activeCategory, categoryFilters, bands, categories, max, min, priceBands, products, query]);
+  }, [activeCategory, categoryFilters, bounds, categories, max, min, products, query]);
 
   const facets = useMemo(() => buildVariantFacets(scoped, variantFilters), [scoped, variantFilters]);
 
@@ -151,7 +145,7 @@ export function MobileCatalog() {
             >
               <span
                 className={cx(
-                  'flex h-16 w-16 items-center justify-center overflow-hidden rounded-full font-serif text-[26px] italic text-ink/50',
+                  'flex h-16 w-16 items-center justify-center overflow-hidden rounded-full text-[25px] font-semibold text-ink/50',
                   active && 'ring-2 ring-pink ring-offset-[5px] ring-offset-bg'
                 )}
                 style={{ background: chip.photo ? undefined : CIRCLE_TINTS[index % CIRCLE_TINTS.length] }}
@@ -171,7 +165,7 @@ export function MobileCatalog() {
       </div>
 
       <div className="flex items-baseline justify-between px-4 pb-2 pt-2">
-        <h1 className="m-0 font-serif text-[30px] font-semibold tracking-[0.01em]">
+        <h1 className="m-0 text-[30px] font-semibold tracking-[-0.02em]">
           {activeCategory ? categoryById.get(activeCategory) || 'Wedding Cards' : 'All designs'}
         </h1>
         <span className="text-[12.5px] text-muted">{visible.length} designs</span>
@@ -215,19 +209,13 @@ export function MobileCatalog() {
           fullScreen
           open={filterOpen}
           onClose={() => setFilterOpen(false)}
-          headerAction={
-            <button type="button" onClick={clearAll} className="mena-press text-[13px] font-bold text-pink hover:underline">
-              Clear all
-            </button>
-          }
           footer={
             <div className="grid grid-cols-2 gap-2">
               <button type="button" onClick={clearAll} className="btn-outline h-11 px-3">
-                <RotateCcw className="h-4 w-4" />
-                Reset
+                <RotateCcw className="h-4 w-4" /> Clear all
               </button>
               <button type="button" onClick={() => setFilterOpen(false)} className="btn-primary h-11 px-3">
-                Show {visible.length} design{visible.length === 1 ? '' : 's'}
+                Apply filters ({visible.length})
               </button>
             </div>
           }
@@ -235,29 +223,7 @@ export function MobileCatalog() {
             <div className="space-y-4">
               <section className="border-b border-edge pb-4">
                 <h2 className="mb-3 text-sm font-extrabold">Price Range</h2>
-                {priceBands.length ? (
-                  <div className="space-y-2.5">
-                    {priceBands.map((band) => {
-                      const checked = bands.includes(band.id);
-                      return (
-                        <label key={band.id} className="mena-press flex cursor-pointer items-center gap-2.5 text-[13.5px] text-ink/80">
-                          <input type="checkbox" checked={checked} onChange={() => setBands((current) => checked ? current.filter((id) => id !== band.id) : [...current, band.id])} className="sr-only" />
-                          <span className={cx('flex h-5 w-5 items-center justify-center rounded-[5px] border', checked ? 'border-pink bg-pink' : 'border-[#d8cfc8] bg-white')}>
-                            {checked && <Check className="h-3 w-3 text-white" />}
-                          </span>
-                          {band.label}
-                        </label>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted">No exact prices yet.</p>
-                )}
-                <div className="mt-4 flex items-center gap-2">
-                  <input value={min} onChange={(e) => setMin(e.target.value)} inputMode="numeric" placeholder={minPrice} className="min-w-0 flex-1 rounded-lg border border-edge bg-white px-2.5 py-2 text-[13px] outline-none focus:border-pink" />
-                  <span className="font-bold text-muted">-</span>
-                  <input value={max} onChange={(e) => setMax(e.target.value)} inputMode="numeric" placeholder={maxPrice} className="min-w-0 flex-1 rounded-lg border border-edge bg-white px-2.5 py-2 text-[13px] outline-none focus:border-pink" />
-                </div>
+                <PriceRangeFilter bounds={bounds} min={min} max={max} onMinChange={setMin} onMaxChange={setMax} />
               </section>
 
               <section>
@@ -327,6 +293,16 @@ export function MobileCatalog() {
           </div>
         )}
       </div>
+
+      {(activeCategory || activeFilterCount > 0) && (
+        <div className="flex gap-2 overflow-x-auto px-4 py-2">
+          {activeCategory && <button type="button" onClick={() => setCategory('')} className="flex shrink-0 items-center gap-1 rounded-full border border-edge bg-white px-3 py-1.5 text-xs font-medium">{categoryById.get(activeCategory) || 'Category'} <X className="h-3 w-3" /></button>}
+          {categoryFilters.map((id) => <button key={id} type="button" onClick={() => setCategoryFilters((current) => current.filter((value) => value !== id))} className="flex shrink-0 items-center gap-1 rounded-full border border-edge bg-white px-3 py-1.5 text-xs font-medium">{categoryById.get(id) || 'Category'} <X className="h-3 w-3" /></button>)}
+          {(min || max) && <button type="button" onClick={() => { setMin(''); setMax(''); }} className="flex shrink-0 items-center gap-1 rounded-full border border-edge bg-white px-3 py-1.5 text-xs font-medium">{formatEtb(Number(min) || bounds.min || 0)}–{formatEtb(Number(max) || bounds.max || 0)} <X className="h-3 w-3" /></button>}
+          {Object.entries(variantFilters).flatMap(([key, values]) => values.map((value) => <button key={`${key}:${value}`} type="button" onClick={() => setVariantFilters((current) => toggleVariantOption(current, key, value))} className="flex shrink-0 items-center gap-1 rounded-full border border-edge bg-white px-3 py-1.5 text-xs font-medium">{facets.find((facet) => facet.key === key)?.options.find((option) => option.value === value)?.label || value} <X className="h-3 w-3" /></button>))}
+          <button type="button" onClick={clearAll} className="shrink-0 px-2 text-xs font-semibold text-pink">Clear all</button>
+        </div>
+      )}
 
       {loading && !products ? (
         <div className="flex justify-center py-16"><Spinner /></div>

@@ -190,7 +190,7 @@ export function DesktopProductDetail() {
             className="aspect-[5/6] rounded-[20px] shadow-[0_1px_3px_rgba(28,26,25,0.08)]"
             placeholder={
               <div className="flex h-full flex-col items-center justify-center bg-[#f3e7ea] p-8 text-center">
-                <span className="font-script text-[68px] leading-none text-pink">{product.name}</span>
+                <span className="font-sans text-[68px] leading-none text-pink">{product.name}</span>
                 <span className="mt-5 text-[11px] tracking-[0.24em] text-ink/50">mena inc · Addis Ababa</span>
               </div>
             }
@@ -216,7 +216,7 @@ export function DesktopProductDetail() {
 
         <div className="mena-fade-up">
           <div className="text-[12px] font-bold uppercase tracking-[0.1em] text-muted">{product.isAddon ? 'Add-on item' : 'Design'}</div>
-          <h1 className="mt-1.5 font-serif text-[42px] font-semibold leading-[1.05]">{product.name}</h1>
+          <h1 className="mt-1.5 font-sans text-[42px] font-semibold leading-[1.05]">{product.name}</h1>
           <div className="mt-3 text-[30px] font-extrabold text-[#ee0a24]">
             {formatPrice(product, qty)}
             {!isQuote && <span className="ml-2 text-sm font-medium text-muted">{product.pricingMode === 'tiered' ? 'average each' : 'each'}</span>}
@@ -311,7 +311,7 @@ export function DesktopProductDetail() {
                 {selectedPhoto && <ProtectedImage src={selectedPhoto} alt="" className="h-full w-full object-contain" />}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="font-serif text-2xl font-semibold leading-tight">{product.name}</div>
+                <div className="font-sans text-2xl font-semibold leading-tight">{product.name}</div>
                 <div className="mt-1 text-sm font-semibold text-muted">
                   {Object.keys(selections).length ? Object.entries(selections).map(([k, v]) => `${k}: ${v}`).join(', ') : 'Choose your options'}
                 </div>

@@ -44,7 +44,7 @@ export function MobileProductCard({
   const description = cleanDescription(product.description, product.name);
 
   return (
-    <article className="mena-fade-up flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-edge/70 bg-white p-1.5 shadow-[0_10px_28px_rgba(28,26,25,0.08)]">
+    <article className="mena-fade-up flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-edge/60 bg-white p-1.5 shadow-[0_4px_18px_rgba(28,26,25,0.05)]">
       <div className="relative">
         <ProductImageFrame
           src={selectedPhoto}
@@ -67,7 +67,7 @@ export function MobileProductCard({
           className="mena-press aspect-[1/1.18] w-full rounded-[16px] text-left"
           placeholder={
             <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center" style={{ background: tint }}>
-              <span className="font-script text-[28px] leading-none text-pink">{product.name}</span>
+              <span className="font-sans text-[20px] font-semibold leading-tight text-pink">{product.name}</span>
               <span className="mt-2.5 text-[8px] tracking-[0.24em] text-ink/50">mena inc</span>
             </div>
           }
@@ -126,17 +126,17 @@ export function MobileProductCard({
       </div>
 
       <div className="flex flex-1 flex-col px-0.5 pb-0.5">
-        <button type="button" onClick={open} className="mt-2 line-clamp-2 min-h-[34px] text-left font-serif text-[17px] font-semibold leading-none text-ink">
+        <button type="button" onClick={open} className="mt-2 line-clamp-2 min-h-[42px] text-left font-sans text-[16px] font-semibold leading-[1.3] text-ink">
           {product.name}
         </button>
-        <p className="mt-1 line-clamp-2 min-h-[28px] text-[10.5px] font-medium leading-[1.3] text-ink/58">
+        <p className="mt-1 line-clamp-2 min-h-[36px] text-[12px] font-normal leading-[1.45] text-ink/65">
           {description || '\u00a0'}
         </p>
         <div className="mt-auto pt-2">
           <div className="flex min-h-[26px] items-end justify-between gap-2">
-            <div className="text-[17px] font-extrabold leading-none text-pink">{formatPrice(product)}</div>
+            <div className="text-[19px] font-bold leading-none text-pink">{formatPrice(product)}</div>
             {limitText ? (
-              <div className="max-w-[76px] text-right text-[9px] font-bold leading-tight text-pink/85">{limitText}</div>
+              <div className="max-w-[76px] text-right text-[10px] font-medium leading-tight text-muted">{limitText}</div>
             ) : (
               <div className="h-0 max-w-[76px]" aria-hidden="true" />
             )}
@@ -155,7 +155,7 @@ export function MobileProductCard({
             }}
             disabled={quickState !== 'idle'}
             aria-busy={quickState === 'opening'}
-            className="mena-press mt-2 flex h-8 w-full items-center justify-center gap-1.5 rounded-full bg-pink px-2 text-[11px] font-extrabold text-white shadow-[0_8px_18px_rgba(238,49,123,0.23)] hover:bg-pink-dim disabled:cursor-wait disabled:opacity-80"
+            className="mena-press mt-2 flex h-9 w-full items-center justify-center gap-1.5 rounded-full bg-pink px-2 text-[12px] font-semibold text-white hover:bg-pink-dim disabled:cursor-wait disabled:opacity-80"
           >
             {quickState === 'opening' && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             {quickState === 'added' && <Check className="h-3.5 w-3.5" />}

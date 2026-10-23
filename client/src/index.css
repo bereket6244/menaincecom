@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Dancing+Script:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 /* Keep catalog filters below the complete sticky header when an ad is shown. */
@@ -16,9 +16,7 @@
   --color-green: #5a9e2e;
   --color-ink: #1c1a19;
   --color-muted: #8a8580;
-  --font-sans: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-serif: Georgia, "Times New Roman", serif;
-  --font-script: "Segoe Script", "Brush Script MT", cursive;
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 html {
@@ -32,16 +30,6 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-}
-
-.mobile-boutique {
-  --font-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
-  --font-script: "Dancing Script", "Segoe Script", "Brush Script MT", cursive;
-}
-
-.desktop-boutique {
-  --font-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
-  --font-script: "Dancing Script", "Segoe Script", "Brush Script MT", cursive;
 }
 
 @property --invite-ring-angle {
@@ -115,6 +103,26 @@ body {
 .invite-float-flying { pointer-events: none; }
 .invite-float-flying .invite-float-close { opacity: 0; }
 .invite-header-landed { animation: inviteHeaderGlow .9s ease-out; }
+.price-range-thumb { appearance: none; height: 28px; background: transparent; pointer-events: none; }
+.price-range-thumb::-webkit-slider-thumb { appearance: none; width: 20px; height: 20px; border: 3px solid var(--color-pink); border-radius: 50%; background: white; box-shadow: 0 2px 6px rgba(28,26,25,.14); pointer-events: auto; cursor: grab; }
+.price-range-thumb::-moz-range-thumb { width: 14px; height: 14px; border: 3px solid var(--color-pink); border-radius: 50%; background: white; box-shadow: 0 2px 6px rgba(28,26,25,.14); pointer-events: auto; cursor: grab; }
+.price-range-thumb::-webkit-slider-runnable-track { background: transparent; }
+.price-range-thumb::-moz-range-track { background: transparent; }
+.invite-float-mobile {
+  right: auto;
+  left: 24px;
+  bottom: 21px;
+  z-index: 50;
+  width: 194px;
+  height: 62px;
+  border-radius: 20px;
+  box-shadow: 0 12px 28px rgba(71, 22, 44, .18);
+}
+.invite-float-mobile .invite-float-link { gap: 9px; padding: 0 10px; border-radius: 17px; }
+.invite-float-mobile .invite-float-icon { width: 36px; height: 36px; border-radius: 11px; }
+.invite-float-mobile .invite-float-icon img { width: 29px; height: 29px; }
+.invite-float-mobile .invite-float-eyebrow { font-size: 8px; }
+.invite-float-mobile .invite-float-title { font-size: 14px; }
 @media (prefers-reduced-motion: reduce) {
   .invite-float, .invite-header-landed { animation: none; }
 }

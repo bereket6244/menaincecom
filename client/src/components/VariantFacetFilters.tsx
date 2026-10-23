@@ -1,4 +1,5 @@
-import { Check } from 'lucide-react';
+import { useState } from 'react';
+import { Check, ChevronDown } from 'lucide-react';
 import { cx } from '../lib/utils';
 import { toggleVariantOption, type Facet, type VariantFilters } from '../lib/variantFacets';
 
@@ -18,14 +19,18 @@ export function VariantFacetFilters({
   /** Height of the colour swatches and chips — mobile wants a larger tap target. */
   size?: 'h-8' | 'h-9';
 }) {
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   return (
     <>
-      {facets.map((facet) => {
+      {facets.map((facet, index) => {
         const selected = filters[facet.key] || [];
+        const open = expanded[facet.key] ?? (index === 0 || selected.length > 0);
         return (
           <section key={facet.key} className={sectionClassName}>
-            <h2 className="mb-3 text-sm font-extrabold capitalize">{facet.name}</h2>
-            <div className={cx(facet.isColor ? 'flex flex-wrap gap-2' : 'space-y-2.5')}>
+            <button type="button" aria-expanded={open} onClick={() => setExpanded((current) => ({ ...current, [facet.key]: !open }))} className="flex w-full items-center justify-between pb-3 text-left text-sm font-semibold capitalize text-ink">
+              {facet.name}<ChevronDown className={cx('h-4 w-4 text-muted transition-transform', open && 'rotate-180')} />
+            </button>
+            {open && <div className={cx(facet.isColor ? 'flex flex-wrap gap-2' : 'space-y-2.5')}>
               {facet.options.map((option) => {
                 const checked = selected.includes(option.value);
                 const toggle = () => onChange(toggleVariantOption(filters, facet.key, option.value));
@@ -77,7 +82,7 @@ export function VariantFacetFilters({
                   </label>
                 );
               })}
-            </div>
+            </div>}
           </section>
         );
       })}

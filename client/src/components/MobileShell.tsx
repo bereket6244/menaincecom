@@ -15,7 +15,6 @@ import { currentReturnTarget, loginRoute } from '../lib/authReturn';
 const NAV = [
   { to: '/catalog', label: 'Wedding Cards', icon: Grid2X2 },
   { to: '/digital-invitations', label: 'Digital Invites', iconPath: assetUrl('digital-invites-logo.svg') },
-  { to: '/wishlist', label: 'Liked items', icon: Heart },
 ];
 
 export function MobileShell({ children }: { children: ReactNode }) {
@@ -27,6 +26,11 @@ export function MobileShell({ children }: { children: ReactNode }) {
   const [search, setSearch] = useState('');
   const [fabOpen, setFabOpen] = useState(false);
   const fabRef = useRef<HTMLDivElement>(null);
+  const inviteHeaderRef = useRef<HTMLAnchorElement>(null);
+  const inviteFloatRef = useRef<HTMLDivElement>(null);
+  const [inviteDismissed, setInviteDismissed] = useState(() => sessionStorage.getItem('mena-mobile-invite-dismissed') === '1');
+  const [inviteFlying, setInviteFlying] = useState(false);
+  const [inviteLanded, setInviteLanded] = useState(false);
   const cartCount = cart.reduce((n, i) => n + i.qty, 0);
   const likedCount = wishlistProductIds.length;
   const telegramUrl = telegramContactUrl(business);
@@ -54,6 +58,39 @@ export function MobileShell({ children }: { children: ReactNode }) {
     navigate(`/catalog${q ? `?q=${encodeURIComponent(q)}` : ''}`);
   };
 
+  const dismissInvite = () => {
+    if (inviteFlying) return;
+    const source = inviteFloatRef.current;
+    const target = inviteHeaderRef.current;
+    const finish = () => {
+      sessionStorage.setItem('mena-mobile-invite-dismissed', '1');
+      setInviteDismissed(true);
+      setInviteFlying(false);
+      setInviteLanded(true);
+      window.setTimeout(() => setInviteLanded(false), 900);
+    };
+
+    if (!source || !target || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      finish();
+      return;
+    }
+
+    const from = source.getBoundingClientRect();
+    const to = target.getBoundingClientRect();
+    const dx = to.left + to.width / 2 - (from.left + from.width / 2);
+    const dy = to.top + to.height / 2 - (from.top + from.height / 2);
+    const scale = Math.min(to.width / from.width, to.height / from.height);
+    setInviteFlying(true);
+    const animation = source.animate(
+      [
+        { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+        { transform: `translate(${dx}px, ${dy}px) scale(${scale})`, opacity: 0 },
+      ],
+      { duration: 700, easing: 'cubic-bezier(0.45, 0, 0.2, 1)', fill: 'forwards' },
+    );
+    animation.onfinish = finish;
+  };
+
   return (
     <div className="mobile-boutique min-h-dvh bg-bg text-ink">
       <StatusBanners />
@@ -64,6 +101,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
           <header className="sticky top-0 z-30 border-b border-edge bg-surface">
             <div className="flex h-16 items-center gap-0.5 px-3">
               <button
+                id="mena-liked-icon"
                 type="button"
                 onClick={() => setDrawerOpen(true)}
                 aria-label="Menu"
@@ -73,11 +111,13 @@ export function MobileShell({ children }: { children: ReactNode }) {
               </button>
               <div className="flex-1" />
               <Link
+                ref={inviteHeaderRef}
                 to="/digital-invitations"
                 aria-label="Digital invites"
                 className={cx(
                   'mena-press flex h-10 w-10 items-center justify-center rounded-xl hover:bg-surface2',
-                  location.pathname === '/digital-invitations' ? 'bg-pink/10' : 'text-ink'
+                  location.pathname === '/digital-invitations' ? 'bg-pink/10' : 'text-ink',
+                  inviteLanded && 'invite-header-landed'
                 )}
               >
                 <img
@@ -87,19 +127,6 @@ export function MobileShell({ children }: { children: ReactNode }) {
                   decoding="async"
                   className="h-7 w-7 object-contain mix-blend-multiply"
                 />
-              </Link>
-              <Link
-                id="mena-liked-icon"
-                to="/wishlist"
-                aria-label={`Liked items, ${likedCount} saved`}
-                className="mena-press relative flex h-10 w-10 items-center justify-center rounded-xl text-ink hover:bg-surface2"
-              >
-                <Heart className={cx('h-5.5 w-5.5', likedCount > 0 && 'fill-pink text-pink')} />
-                {likedCount > 0 && (
-                  <span className="mena-pop absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-pink px-1 text-[10px] font-extrabold text-white">
-                    {likedCount > 99 ? '99+' : likedCount}
-                  </span>
-                )}
               </Link>
               <Link
                 id="mena-cart-icon"
@@ -213,9 +240,6 @@ export function MobileShell({ children }: { children: ReactNode }) {
                   <Icon className="h-5 w-5" />
                 ) : null}
                 <span className="flex-1">{label}</span>
-                {to === '/wishlist' && wishlistProductIds.length > 0 && (
-                  <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px]">{wishlistProductIds.length}</span>
-                )}
               </NavLink>
             ))}
             <NavLink
@@ -231,6 +255,20 @@ export function MobileShell({ children }: { children: ReactNode }) {
               <User className="h-5 w-5" />
               {user ? user.name.split(' ')[0] : 'Log in'}
             </NavLink>
+            <NavLink
+              to="/wishlist"
+              onClick={() => setDrawerOpen(false)}
+              className={({ isActive }) =>
+                cx(
+                  'mena-press flex items-center gap-3 rounded-xl px-3 py-3.5 text-[15px] font-extrabold',
+                  isActive ? 'bg-pink text-white' : 'text-ink hover:bg-surface2'
+                )
+              }
+            >
+              <Heart className="h-5 w-5" />
+              <span className="flex-1">Wishlist</span>
+              {likedCount > 0 && <span className="rounded-full bg-white px-2 py-0.5 text-[11px] text-pink shadow-sm">{likedCount}</span>}
+            </NavLink>
           </nav>
         </div>
 
@@ -240,6 +278,18 @@ export function MobileShell({ children }: { children: ReactNode }) {
           <div>Bole, Addis Ababa</div>
         </div>
       </aside>
+
+      {!hasBottomCta && showCatalogHeader && location.pathname !== '/digital-invitations' && !inviteDismissed && !drawerOpen && !fabOpen && (
+        <div ref={inviteFloatRef} className={cx('invite-float invite-float-mobile', inviteFlying && 'invite-float-flying')}>
+          <button type="button" className="invite-float-close" onClick={dismissInvite} aria-label="Dismiss Digital Invites button">
+            <X aria-hidden="true" className="h-3.5 w-3.5" />
+          </button>
+          <Link to="/digital-invitations" className="invite-float-link">
+            <span className="invite-float-icon"><img src={assetUrl('digital-invites-logo.svg')} alt="" /></span>
+            <span className="invite-float-copy"><span className="invite-float-eyebrow">Make it memorable</span><span className="invite-float-title">Digital Invites</span></span>
+          </Link>
+        </div>
+      )}
 
       {!hasBottomCta && (
         <div ref={fabRef} className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">

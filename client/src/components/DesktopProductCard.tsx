@@ -39,7 +39,7 @@ export function DesktopProductCard({
 
   return (
     <article
-      className="mena-fade-up group overflow-hidden rounded-2xl border border-edge/70 bg-white shadow-[0_12px_32px_rgba(28,26,25,0.08)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(28,26,25,0.13)]"
+      className="mena-fade-up group flex h-full flex-col overflow-hidden rounded-2xl border border-edge/60 bg-white shadow-[0_4px_18px_rgba(28,26,25,0.045)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(28,26,25,0.09)]"
       style={{ animationDelay: `${Math.min(index, 8) * 28}ms` }}
     >
       <div className="relative p-2.5 pb-0">
@@ -63,7 +63,7 @@ export function DesktopProductCard({
           imageClassName="transition-transform duration-500 group-hover:scale-[1.025]"
           placeholder={
             <div className="flex h-full flex-col items-center justify-center p-5 text-center" style={{ background: tint }}>
-              <span className="font-script text-[34px] leading-none text-pink">{product.name}</span>
+              <span className="font-sans text-[22px] font-semibold leading-tight text-pink">{product.name}</span>
               <span className="mt-3 text-[9px] tracking-[0.24em] text-ink/40">mena inc</span>
             </div>
           }
@@ -122,22 +122,22 @@ export function DesktopProductCard({
         </button>
       </div>
 
-      <div className="p-4 pt-3.5">
+      <div className="flex flex-1 flex-col px-4 pb-4 pt-4">
         <button
           type="button"
           onClick={() => onOpen(product)}
-          className="mena-press block min-h-[42px] text-left font-serif text-[22px] font-semibold leading-[1.06] text-ink hover:text-pink"
+          className="mena-press line-clamp-2 min-h-[44px] text-left font-sans text-[18px] font-semibold leading-[1.3] text-ink hover:text-pink"
         >
           {product.name}
         </button>
         {description && (
-          <p className="mt-2 line-clamp-2 min-h-[38px] text-[14px] font-medium leading-[1.4] text-ink/58">
+          <p className="mt-2 line-clamp-2 min-h-[38px] text-[13px] font-normal leading-[1.45] text-ink/65">
             {description}
           </p>
         )}
-        <div className="mt-4 grid grid-cols-[1fr_auto] items-end gap-2">
-          <span className="text-[24px] font-extrabold leading-none text-pink">{formatPrice(product)}</span>
-          {limitText && <span className="max-w-[104px] text-right text-[10.5px] font-bold leading-tight text-pink/85">{limitText}</span>}
+        <div className="mt-auto grid grid-cols-[1fr_auto] items-end gap-2 pt-4">
+          <span className="text-[22px] font-bold leading-none text-pink">{formatPrice(product)}</span>
+          {limitText && <span className="max-w-[104px] text-right text-[11px] font-medium leading-tight text-muted">{limitText}</span>}
         </div>
         <div className="mt-4">
           <button
@@ -153,7 +153,7 @@ export function DesktopProductCard({
             }}
             disabled={quickState !== 'idle'}
             aria-busy={quickState === 'adding'}
-            className="mena-press flex h-11 w-full items-center justify-center gap-2 rounded-full bg-pink px-3 text-[13px] font-extrabold text-white shadow-[0_10px_22px_rgba(238,49,123,0.25)] hover:bg-pink-dim disabled:cursor-wait disabled:opacity-80"
+            className="mena-press flex h-11 w-full items-center justify-center gap-2 rounded-full bg-pink px-3 text-[13px] font-semibold text-white hover:bg-pink-dim disabled:cursor-wait disabled:opacity-80"
           >
             {quickState === 'adding' && <Loader2 className="h-4 w-4 animate-spin" />}
             {quickState === 'added' && <Check className="h-4 w-4" />}

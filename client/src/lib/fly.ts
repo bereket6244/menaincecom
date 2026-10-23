@@ -1,7 +1,6 @@
 /**
- * Animate a small heart from a tapped like-button up to the "Liked" nav target,
- * so the shopper sees where saved designs collect. Targets the mobile header
- * icon first, then the desktop nav link — whichever is mounted.
+ * Animate a small heart toward the navigation control that contains Wishlist:
+ * the mobile side-panel trigger or the desktop profile button.
  */
 export function flyToLiked(origin: HTMLElement | null): void {
   if (!origin) return;

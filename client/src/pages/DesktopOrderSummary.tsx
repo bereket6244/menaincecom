@@ -222,7 +222,7 @@ export function DesktopOrderSummary() {
         <div className="mena-check mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green text-white">
           <CheckCircle2 className="h-9 w-9" />
         </div>
-        <h1 className="mt-5 font-serif text-[42px] font-semibold">Order ready</h1>
+        <h1 className="mt-5 font-sans text-[42px] font-semibold">Order ready</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted">
           {channelDef.label} should have opened with your order summary. Press send there to forward it to the studio.
         </p>
@@ -248,7 +248,7 @@ export function DesktopOrderSummary() {
         <button onClick={() => navigate(-1)} className="mena-press inline-flex items-center gap-1.5 text-[13.5px] font-bold text-muted hover:text-ink">
           <ChevronLeft className="h-4 w-4" /> Back
         </button>
-        <h1 className="mt-4 font-serif text-[44px] font-semibold">Your cart</h1>
+        <h1 className="mt-4 font-sans text-[44px] font-semibold">Your cart</h1>
         <EmptyState>
           Your cart is empty.
           <Link to="/catalog" className="mt-1 font-bold text-pink hover:underline">Browse the catalog</Link>
@@ -263,7 +263,7 @@ export function DesktopOrderSummary() {
         <button onClick={() => setStep('cart')} className="mena-press inline-flex items-center gap-1.5 text-[13.5px] font-bold text-muted hover:text-ink">
           <ChevronLeft className="h-4 w-4" /> Back to cart
         </button>
-        <h1 className="mt-3 font-serif text-[42px] font-semibold">Checkout</h1>
+        <h1 className="mt-3 font-sans text-[42px] font-semibold">Checkout</h1>
 
         <div className="mt-7 space-y-6">
           <section className="rounded-2xl border border-edge bg-white p-5 shadow-[0_1px_3px_rgba(28,26,25,0.05)]">
@@ -381,7 +381,7 @@ export function DesktopOrderSummary() {
       </button>
       <div className="mt-3 flex items-end justify-between">
         <div>
-          <h1 className="font-serif text-[44px] font-semibold">Your cart</h1>
+          <h1 className="font-sans text-[44px] font-semibold">Your cart</h1>
           <p className="mt-1 text-sm text-muted">Pick the items to order, then check out. No signup, no online payment.</p>
         </div>
         <button type="button" onClick={toggleAll} className="mena-press flex items-center gap-2 text-sm font-extrabold text-ink">
@@ -466,7 +466,7 @@ export function DesktopOrderSummary() {
 
           {suggestions.length > 0 && (
             <section>
-              <h2 className="mb-3 font-serif text-2xl font-semibold">Complete the suite</h2>
+              <h2 className="mb-3 font-sans text-2xl font-semibold">Complete the suite</h2>
               <div className="grid grid-cols-4 gap-3">
                 {suggestions.map((addon) => (
                   <div key={addon.id} className="rounded-xl border border-edge bg-white p-3">

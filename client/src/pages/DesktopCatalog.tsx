@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowUpDown, Check, ChevronDown, RotateCcw, X } from 'lucide-react';
+import { ArrowUpDown, Check, ChevronDown, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useData } from '../lib/useData';
 import type { Category, Product, UniversalComplimentaryItem } from '../lib/types';
@@ -10,7 +10,8 @@ import { EmptyState, Spinner } from '../components/ui';
 import { cartPriceEach, cx, withDefaultVariantSelections } from '../lib/utils';
 import { useApp } from '../store/AppContext';
 import { complimentaryForProduct, productWithResolvedComplimentary } from '../lib/complimentary';
-import { buildPriceBands, formatEtb, priceBounds } from '../lib/priceBands';
+import { formatEtb, priceBounds } from '../lib/priceBands';
+import { PriceRangeFilter } from '../components/PriceRangeFilter';
 import {
   buildVariantFacets, matchesVariantFilters, toggleVariantOption, type Facet, type VariantFilters,
 } from '../lib/variantFacets';
@@ -54,11 +55,12 @@ function FilterSection({
   children: ReactNode;
 }) {
   return (
-    <section className="border-t border-edge first:border-t-0">
+    <section className="border-t border-edge/60 first:border-t-0">
       <button
         type="button"
         onClick={onToggle}
-        className="mena-press flex w-full items-center justify-between py-4 text-left text-[14px] font-extrabold text-ink"
+        aria-expanded={open}
+        className="mena-press flex w-full items-center justify-between py-4 text-left text-[14px] font-semibold text-ink"
       >
         {title}
         <ChevronDown className={cx('h-4 w-4 text-ink/60 transition-transform', open && 'rotate-180')} />
@@ -79,25 +81,18 @@ export function DesktopCatalog() {
   const query = params.get('q') || '';
   const activeCategory = params.get('category') || '';
   const [sort, setSort] = useState('featured');
-  const [bands, setBands] = useState<string[]>([]);
   const [min, setMin] = useState('');
   const [max, setMax] = useState('');
   const [variantFilters, setVariantFilters] = useState<VariantFilters>({});
   const [sortOpen, setSortOpen] = useState(false);
   const [openFilters, setOpenFilters] = useState<Record<string, boolean>>({
     price: true,
-    color: true,
-    event: true,
-    style: true,
   });
 
-  const priceBands = useMemo(() => buildPriceBands(products || []), [products]);
   const bounds = useMemo(() => priceBounds(products || []), [products]);
   const catById = useMemo(() => new Map((categories || []).map((cat) => [cat.id, cat])), [categories]);
-  const minPrice = bounds.min != null ? formatEtb(bounds.min) : 'Min';
-  const maxPrice = bounds.max != null ? formatEtb(bounds.max) : 'Max';
   const gridRef = useResultAnimation<HTMLDivElement>(
-    JSON.stringify([activeCategory, bands, min, max, variantFilters, sort, query])
+    JSON.stringify([activeCategory, min, max, variantFilters, sort, query])
   );
 
   const setCategory = (id: string) => {
@@ -108,7 +103,6 @@ export function DesktopCatalog() {
   };
 
   const clearAll = () => {
-    setBands([]);
     setMin('');
     setMax('');
     setVariantFilters({});
@@ -116,7 +110,7 @@ export function DesktopCatalog() {
   };
 
   const toggleFilterSection = (key: string) => {
-    setOpenFilters((current) => ({ ...current, [key]: current[key] === false }));
+    setOpenFilters((current) => ({ ...current, [key]: !(current[key] ?? (key === facets[0]?.key)) }));
   };
 
   const scoped = useMemo(() => {
@@ -126,16 +120,15 @@ export function DesktopCatalog() {
       const search = query.trim().toLowerCase();
       list = list.filter((p) => productSearchText(p, categories || []).includes(search));
     }
-    if (bands.length) {
-      const active = priceBands.filter((b) => bands.includes(b.id));
-      list = list.filter((p) => p.price != null && active.some((b) => b.test(p.price as number)));
-    }
     const mn = parseFloat(min);
     const mx = parseFloat(max);
-    if (!Number.isNaN(mn)) list = list.filter((p) => p.price != null && (p.price as number) >= mn);
-    if (!Number.isNaN(mx)) list = list.filter((p) => p.price != null && (p.price as number) <= mx);
+    if (!Number.isNaN(mn) || !Number.isNaN(mx)) {
+      const lower = Number.isNaN(mn) ? bounds.min ?? 0 : Math.max(bounds.min ?? 0, mn);
+      const upper = Number.isNaN(mx) ? bounds.max ?? Infinity : Math.min(bounds.max ?? Infinity, mx);
+      list = list.filter((p) => p.price != null && (p.price as number) >= Math.min(lower, upper) && (p.price as number) <= Math.max(lower, upper));
+    }
     return list;
-  }, [products, activeCategory, query, bands, min, max, categories, priceBands]);
+  }, [products, activeCategory, query, min, max, categories, bounds]);
 
   const facets = useMemo(() => buildVariantFacets(scoped, variantFilters), [scoped, variantFilters]);
 
@@ -153,19 +146,11 @@ export function DesktopCatalog() {
 
   const activeFilterChips = useMemo<FilterChip[]>(() => {
     const next: FilterChip[] = [];
-    for (const bandId of bands) {
-      const band = priceBands.find((item) => item.id === bandId);
-      if (!band) continue;
-      next.push({
-        id: `price:${bandId}`,
-        label: band.label,
-        onRemove: () => setBands((current) => current.filter((id) => id !== bandId)),
-      });
-    }
+    if (activeCategory) next.push({ id: `category:${activeCategory}`, label: catById.get(activeCategory)?.name || 'Category', onRemove: () => setCategory('') });
     if (min.trim() || max.trim()) {
       next.push({
         id: 'price:range',
-        label: `${min.trim() || minPrice} - ${max.trim() || maxPrice}`,
+        label: `${formatEtb(Number(min) || bounds.min || 0)} - ${formatEtb(Number(max) || bounds.max || 0)}`,
         onRemove: () => {
           setMin('');
           setMax('');
@@ -184,7 +169,7 @@ export function DesktopCatalog() {
       }
     }
     return next;
-  }, [bands, facets, max, maxPrice, min, minPrice, priceBands, variantFilters]);
+  }, [activeCategory, bounds, catById, facets, max, min, params, variantFilters]);
 
   const quickAdd = (product: Product) => {
     const resolved = productWithResolvedComplimentary(product, universalComplimentaryItems || undefined);
@@ -211,7 +196,7 @@ export function DesktopCatalog() {
       <FilterSection
         key={facet.key}
         title={facet.name}
-        open={openFilters[facet.key] !== false}
+        open={openFilters[facet.key] ?? (facet.key === facets[0]?.key)}
         onToggle={() => toggleFilterSection(facet.key)}
       >
         <div className={cx(facet.isColor ? 'flex flex-wrap gap-2.5' : 'space-y-2.5')}>
@@ -293,7 +278,7 @@ export function DesktopCatalog() {
                     {category.photo ? (
                       <ProtectedImage src={category.photo} sizes="96px" alt="" loading={index < 5 ? 'eager' : 'lazy'} decoding="async" className="h-full w-full object-cover" />
                     ) : (
-                      <span className="font-serif text-[24px] italic text-ink/45">{category.name.slice(0, 1)}</span>
+                      <span className="text-[23px] font-semibold text-ink/45">{category.name.slice(0, 1)}</span>
                     )}
                   </span>
                 </span>
@@ -310,7 +295,7 @@ export function DesktopCatalog() {
         <div className="mb-5 flex items-start justify-between gap-6">
           <div className="min-w-0">
             <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
-              <h1 className="font-serif text-[36px] font-semibold leading-none tracking-[0.01em]">{pageTitle}</h1>
+              <h1 className="text-[32px] font-semibold leading-tight tracking-[-0.02em]">{pageTitle}</h1>
               <p className="text-sm text-muted">{visible.length} designs available</p>
             </div>
 
@@ -372,42 +357,20 @@ export function DesktopCatalog() {
         </div>
 
         <div className="grid grid-cols-[234px_minmax(0,1fr)] gap-7">
-          <aside className="mena-d-scroll sticky top-[calc(145px+var(--storefront-ad-height,0px))] max-h-[calc(100vh-165px-var(--storefront-ad-height,0px))] self-start overflow-y-auto rounded-xl border border-edge bg-white p-4 shadow-[0_1px_5px_rgba(28,26,25,0.045)]">
+          <aside className="self-start rounded-xl border border-edge/70 bg-white p-4">
             <div className="mb-1 flex items-center justify-between pb-2">
-              <span className="text-[17px] font-extrabold">Filters</span>
+              <span className="text-[16px] font-semibold">Filters</span>
               <button type="button" onClick={clearAll} className="mena-press text-[13px] font-bold text-pink hover:underline">
-                Reset
+                Reset filters
               </button>
             </div>
 
             <FilterSection title="Price (ETB)" open={openFilters.price !== false} onToggle={() => toggleFilterSection('price')}>
-              <div className="space-y-2.5">
-                {priceBands.length ? priceBands.map((band) => {
-                  const checked = bands.includes(band.id);
-                  return (
-                    <label key={band.id} className="mena-press flex cursor-pointer items-center gap-2.5 text-[13.5px] text-ink/75">
-                      <input type="checkbox" checked={checked} onChange={() => setBands((current) => checked ? current.filter((id) => id !== band.id) : [...current, band.id])} className="sr-only" />
-                      <span className={cx('flex h-5 w-5 items-center justify-center rounded-[5px] border', checked ? 'border-pink bg-pink' : 'border-[#d8cfc8] bg-white')}>
-                        {checked && <Check className="h-3 w-3 text-white" />}
-                      </span>
-                      {band.label}
-                    </label>
-                  );
-                }) : <p className="text-sm text-muted">No exact prices yet.</p>}
-              </div>
-              <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                <input value={min} onChange={(e) => setMin(e.target.value)} inputMode="numeric" placeholder={minPrice} className="min-w-0 rounded-lg border border-edge bg-white px-2.5 py-2 text-[13px] outline-none focus:border-pink" />
-                <span className="font-bold text-muted">-</span>
-                <input value={max} onChange={(e) => setMax(e.target.value)} inputMode="numeric" placeholder={maxPrice} className="min-w-0 rounded-lg border border-edge bg-white px-2.5 py-2 text-[13px] outline-none focus:border-pink" />
-              </div>
+              <PriceRangeFilter bounds={bounds} min={min} max={max} onMinChange={setMin} onMaxChange={setMax} />
             </FilterSection>
 
             {facets.map(renderFacet)}
 
-            <button type="button" onClick={clearAll} className="btn-outline mt-4 h-10 w-full py-0 text-[13px]">
-              <RotateCcw className="h-4 w-4" />
-              Reset
-            </button>
           </aside>
 
           <div>

@@ -136,7 +136,7 @@ export function DigitalInvitations() {
   if (content.enabled === false) {
     return (
       <section className="mx-auto flex min-h-[60vh] max-w-3xl flex-col items-center justify-center px-5 text-center">
-        <h1 className="font-serif text-4xl text-ink">Digital invitations are coming soon</h1>
+        <h1 className="font-sans text-4xl text-ink">Digital invitations are coming soon</h1>
       </section>
     );
   }
@@ -144,7 +144,7 @@ export function DigitalInvitations() {
   return (
     <div className="bg-bg">
       <section className="mx-auto max-w-[1240px] px-5 py-10 sm:px-8 lg:px-10 lg:py-14">
-        <h1 className="max-w-3xl font-serif text-[44px] leading-[0.98] text-ink sm:text-[64px]">
+        <h1 className="max-w-3xl font-sans text-[44px] leading-[0.98] text-ink sm:text-[64px]">
           {content.title || FALLBACK_DIGITAL_INVITATIONS.title}
         </h1>
       </section>
@@ -152,9 +152,9 @@ export function DigitalInvitations() {
       <section id="examples" className="border-y border-edge bg-white py-9">
         <div className="mx-auto max-w-[1240px]">
           <div className="px-5 sm:px-8 lg:px-10">
-            <h2 className="mb-5 font-serif text-4xl text-ink">Sample websites</h2>
+            <h2 className="mb-5 font-sans text-4xl text-ink">Sample websites</h2>
           </div>
-          <div className="mena-scroll flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 sm:scroll-px-8 sm:px-8 lg:scroll-px-10 lg:px-10">
+          <div className="mena-scroll flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 sm:scroll-px-8 sm:px-8 lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0 lg:px-10 xl:grid-cols-5">
             {examples.map((example, idx) => {
               const preview = previewImage(example);
               return (
@@ -164,7 +164,7 @@ export function DigitalInvitations() {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={`Open ${example.title} invitation website`}
-                  className="mena-press w-[265px] shrink-0 snap-start overflow-hidden rounded-[22px] border border-edge bg-bg shadow-[0_16px_34px_rgba(28,26,25,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink focus-visible:ring-offset-2 sm:w-[300px]"
+                  className="mena-press w-[265px] shrink-0 snap-start overflow-hidden rounded-[22px] border border-edge bg-bg shadow-[0_16px_34px_rgba(28,26,25,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink focus-visible:ring-offset-2 sm:w-[300px] lg:w-auto lg:min-w-0"
                 >
                   <div className="relative block aspect-[9/16] overflow-hidden bg-[#f8efe8]">
                     {preview ? (
@@ -177,8 +177,8 @@ export function DigitalInvitations() {
                       />
                     ) : (
                       <div className="flex h-full flex-col items-center justify-center px-5 text-center">
-                        <div className="font-serif text-5xl text-pink">{initials(example.title)}</div>
-                        <div className="mt-2 font-serif text-2xl text-ink">{example.title}</div>
+                        <div className="font-sans text-5xl text-pink">{initials(example.title)}</div>
+                        <div className="mt-2 font-sans text-2xl text-ink">{example.title}</div>
                       </div>
                     )}
                   </div>
@@ -198,7 +198,7 @@ export function DigitalInvitations() {
       </section>
 
       <section id="packages" className="mx-auto max-w-[1240px] px-5 py-12 sm:px-8 lg:px-10">
-        <h2 className="mb-7 font-serif text-4xl text-ink">Package plans</h2>
+        <h2 className="mb-7 font-sans text-4xl text-ink">Package plans</h2>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {packages.map((pkg, index) => {
             const presentation = packagePresentation(pkg, index);
@@ -228,12 +228,12 @@ export function DigitalInvitations() {
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ background: presentation.tint }}>
                   <Icon className="h-8 w-8" style={{ color: presentation.color }} />
                 </div>
-                <h3 className="mt-4 font-serif text-[31px] font-semibold leading-none text-[#201433]">{pkg.name}</h3>
+                <h3 className="mt-4 font-sans text-[31px] font-semibold leading-none text-[#201433]">{pkg.name}</h3>
                 {pkg.description && <p className="mt-2 min-h-[24px] text-[15px] font-semibold text-[#6e7795]">{pkg.description}</p>}
                 <div className="mx-auto mt-4 h-px w-14 bg-pink/20" />
                 <div className="mt-6 flex items-baseline justify-center gap-2">
                   <span className={cx('text-sm font-extrabold', highlighted ? 'text-pink' : 'text-[#ff7a1a]')}>ETB</span>
-                  <span className={cx('font-serif text-[45px] font-semibold leading-none', highlighted ? 'text-pink' : 'text-[#ff7a1a]')}>
+                  <span className={cx('font-sans text-[45px] font-semibold leading-none', highlighted ? 'text-pink' : 'text-[#ff7a1a]')}>
                     {Math.max(0, Number(pkg.price) || 0).toLocaleString()}
                   </span>
                 </div>

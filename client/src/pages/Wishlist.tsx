@@ -18,7 +18,7 @@ export function Wishlist() {
         <button type="button" onClick={() => navigate(-1)} className="mena-press flex h-10 w-10 items-center justify-center rounded-xl text-ink hover:bg-surface2" aria-label="Back">
           <ChevronLeft className="h-5.5 w-5.5" />
         </button>
-        <div className="flex-1 font-serif text-[22px] font-semibold">Liked items</div>
+        <div className="flex-1 font-sans text-[22px] font-semibold">Liked items</div>
         <div className="pr-1 text-[12.5px] text-muted">{liked.length} items</div>
       </header>
 

@@ -235,7 +235,7 @@ export function MobileOrderSummary() {
         <div className="mena-check flex h-16 w-16 items-center justify-center rounded-full bg-green text-white">
           <CheckCircle2 className="h-9 w-9" />
         </div>
-        <h1 className="mt-5 font-serif text-4xl font-semibold">Order ready</h1>
+        <h1 className="mt-5 font-sans text-4xl font-semibold">Order ready</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted">
           {label} should have opened with your order summary. Press send there to forward it to the studio.
         </p>
@@ -261,7 +261,7 @@ export function MobileOrderSummary() {
           <button type="button" onClick={() => navigate(-1)} className="mena-press flex h-10 w-10 items-center justify-center rounded-xl text-ink hover:bg-surface2" aria-label="Back">
             <ChevronLeft className="h-5.5 w-5.5" />
           </button>
-          <div className="flex-1 font-serif text-[22px] font-semibold">Your cart</div>
+          <div className="flex-1 font-sans text-[22px] font-semibold">Your cart</div>
         </header>
         <div className="px-4 py-14">
           <EmptyState>
@@ -281,7 +281,7 @@ export function MobileOrderSummary() {
           <button type="button" onClick={() => setStep('cart')} className="mena-press flex h-10 w-10 items-center justify-center rounded-xl text-ink hover:bg-surface2" aria-label="Back">
             <ChevronLeft className="h-5.5 w-5.5" />
           </button>
-          <div className="flex-1 font-serif text-[22px] font-semibold">Checkout</div>
+          <div className="flex-1 font-sans text-[22px] font-semibold">Checkout</div>
           <div className="pr-1 text-[12.5px] text-muted">{selectedItems.length} items</div>
         </header>
 
@@ -407,7 +407,7 @@ export function MobileOrderSummary() {
         <button type="button" onClick={() => navigate(-1)} className="mena-press flex h-10 w-10 items-center justify-center rounded-xl text-ink hover:bg-surface2" aria-label="Back">
           <ChevronLeft className="h-5.5 w-5.5" />
         </button>
-        <div className="flex-1 font-serif text-[22px] font-semibold">Your cart</div>
+        <div className="flex-1 font-sans text-[22px] font-semibold">Your cart</div>
         <div className="pr-1 text-[12.5px] text-muted">{cartQty.toLocaleString()} items</div>
       </header>
 
@@ -489,12 +489,12 @@ export function MobileOrderSummary() {
 
       {suggestions.length > 0 && (
         <section className="px-4 pt-5">
-          <h2 className="font-serif text-2xl font-semibold">Complete the suite</h2>
+          <h2 className="font-sans text-2xl font-semibold">Complete the suite</h2>
           <div className="mena-scroll mt-3 flex gap-3 overflow-x-auto pb-1">
             {suggestions.map((product) => (
               <div key={product.id} className="w-32 shrink-0 rounded-2xl border border-edge bg-surface p-2.5">
                 <Link to={`/product/${product.id}`} className="block aspect-square overflow-hidden rounded-xl bg-surface2" style={{ background: product.photos[0] ? undefined : mobileProductTint(product) }}>
-                  {product.photos[0] ? <ProtectedImage src={product.photos[0]} alt={product.name} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center px-2 text-center font-script text-2xl text-pink">{product.name}</div>}
+                  {product.photos[0] ? <ProtectedImage src={product.photos[0]} alt={product.name} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center px-2 text-center font-sans text-2xl text-pink">{product.name}</div>}
                 </Link>
                 <div className="mt-2 truncate text-sm font-extrabold">{product.name}</div>
                 <div className="text-[12px] font-bold text-[#ee0a24]">{formatPrice(product)}</div>

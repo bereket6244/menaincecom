@@ -38,7 +38,7 @@ function flyToCart(origin: HTMLElement | null, product: Product) {
     justifyContent: 'center',
     background: product.photos[0] ? '#ee317b' : mobileProductTint(product),
     color: product.photos[0] ? '#fff' : '#ee317b',
-    fontFamily: 'var(--font-serif)',
+    fontFamily: 'var(--font-sans)',
     fontWeight: '700',
     boxShadow: '0 8px 22px rgba(238,49,123,.28)',
     pointerEvents: 'none',
@@ -283,7 +283,7 @@ export function MobileProductDetail() {
           className="aspect-[5/7] max-h-[420px] w-full"
           placeholder={
             <div className="flex h-full flex-col items-center justify-center p-8 text-center" style={{ background: tint }}>
-              <span className="font-script text-[52px] leading-none text-pink">{product.name}</span>
+              <span className="font-sans text-[52px] leading-none text-pink">{product.name}</span>
               <span className="mt-4 text-[10px] tracking-[0.24em] text-ink/50">mena inc · Addis Ababa</span>
             </div>
           }
@@ -291,7 +291,7 @@ export function MobileProductDetail() {
 
         <section className="px-[18px] pb-2 pt-[18px]">
           <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">{product.isAddon ? 'Add-on item' : categoryName}</div>
-          <h1 className="mt-1 font-serif text-[30px] font-semibold leading-[1.15]">{product.name}</h1>
+          <h1 className="mt-1 font-sans text-[30px] font-semibold leading-[1.15]">{product.name}</h1>
           <div className="mt-2 text-[26px] font-extrabold text-[#ee0a24]">
             {formatPrice(product, qty)}
             {!isQuote && <span className="ml-1 text-[13px] font-medium text-muted">{product.pricingMode === 'tiered' ? 'average each' : 'each'}</span>}
@@ -446,7 +446,7 @@ export function MobileProductDetail() {
             {selectedPhoto ? (
               <ProtectedImage src={selectedPhoto} alt="" loading="eager" decoding="async" className="h-full w-full object-contain" />
             ) : (
-              <div className="flex h-full items-center justify-center font-script text-xl text-pink">M</div>
+              <div className="flex h-full items-center justify-center font-sans text-xl text-pink">M</div>
             )}
           </div>
           <div className="min-w-0 flex-1">

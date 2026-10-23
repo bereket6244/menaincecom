@@ -19,7 +19,9 @@ export function DesktopShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [q, setQ] = useState('');
   const [contactOpen, setContactOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const contactRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
   const inviteHeaderRef = useRef<HTMLAnchorElement>(null);
   const inviteFloatRef = useRef<HTMLDivElement>(null);
   const [inviteDismissed, setInviteDismissed] = useState(() => sessionStorage.getItem('mena-invite-float-dismissed') === '1');
@@ -56,6 +58,24 @@ export function DesktopShell({ children }: { children: ReactNode }) {
       document.removeEventListener('keydown', closeOnEscape);
     };
   }, [contactOpen]);
+
+  useEffect(() => {
+    if (!profileOpen) return;
+    const closeOnOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) setProfileOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setProfileOpen(false);
+    };
+    document.addEventListener('mousedown', closeOnOutside);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutside);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [profileOpen]);
+
+  useEffect(() => { setProfileOpen(false); }, [location.pathname]);
 
   const applySearch = (value: string, live = false) => {
     setQ(value);
@@ -131,7 +151,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
             <div ref={contactRef} className="relative">
               <button
                 type="button"
-                onClick={() => setContactOpen((open) => !open)}
+                onClick={() => { setProfileOpen(false); setContactOpen((open) => !open); }}
                 aria-label="Message Mena"
                 aria-haspopup="menu"
                 aria-expanded={contactOpen}
@@ -166,20 +186,6 @@ export function DesktopShell({ children }: { children: ReactNode }) {
               )}
             </div>
             <Link
-              id="desktop-liked-target"
-              to="/wishlist"
-              aria-label={`Liked items, ${wishlistProductIds.length} saved`}
-              className="mena-press relative flex h-10 items-center gap-2 px-1.5 text-[13px] font-medium text-ink/80 hover:text-pink"
-            >
-              <Heart className={cx('h-[19px] w-[19px]', wishlistProductIds.length > 0 && 'fill-pink text-pink')} />
-              <span>Wishlist</span>
-              {wishlistProductIds.length > 0 && (
-                <span className="mena-pop absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-pink px-1 text-[10px] font-extrabold text-white">
-                  {wishlistProductIds.length > 99 ? '99+' : wishlistProductIds.length}
-                </span>
-              )}
-            </Link>
-            <Link
               id="desktop-cart-target"
               to="/order"
               aria-label={`Cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
@@ -193,14 +199,37 @@ export function DesktopShell({ children }: { children: ReactNode }) {
                 </span>
               )}
             </Link>
-            <Link
-              to={accountRoute}
-              className="mena-press inline-flex items-center gap-2 rounded-full bg-pink px-5 py-2.5 text-[13px] font-extrabold text-white hover:bg-pink-dim"
-            >
-              <User className="h-4 w-4" />
-              {user ? user.name.split(' ')[0] : 'Local'}
-              <ChevronDown className="h-3.5 w-3.5" />
-            </Link>
+            <div ref={profileRef} className="relative">
+              <button
+                id="desktop-liked-target"
+                type="button"
+                onClick={() => { setContactOpen(false); setProfileOpen((open) => !open); }}
+                aria-label={`${user ? user.name.split(' ')[0] : 'Profile'}, ${wishlistProductIds.length} saved items`}
+                aria-haspopup="menu"
+                aria-expanded={profileOpen}
+                className="mena-press relative inline-flex items-center gap-2 rounded-full bg-pink px-5 py-2.5 text-[13px] font-extrabold text-white hover:bg-pink-dim"
+              >
+                <User className="h-4 w-4" />
+                {user ? user.name.split(' ')[0] : 'Local'}
+                <ChevronDown className={cx('h-3.5 w-3.5 transition-transform', profileOpen && 'rotate-180')} />
+                {wishlistProductIds.length > 0 && (
+                  <span className="absolute -right-1.5 -top-1.5 flex h-[19px] min-w-[19px] items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-pink shadow-sm">
+                    {wishlistProductIds.length > 99 ? '99+' : wishlistProductIds.length}
+                  </span>
+                )}
+              </button>
+              {profileOpen && (
+                <div role="menu" className="absolute right-0 top-12 z-50 w-52 overflow-hidden rounded-2xl border border-edge bg-white py-1.5 shadow-[0_16px_40px_rgba(28,26,25,0.18)]">
+                  <Link to={accountRoute} role="menuitem" onClick={() => setProfileOpen(false)} className="mena-press flex items-center gap-3 px-4 py-3 text-sm font-semibold text-ink hover:bg-surface2">
+                    <User className="h-4 w-4" /> {user ? 'My account' : 'Log in'}
+                  </Link>
+                  <Link to="/wishlist" role="menuitem" onClick={() => setProfileOpen(false)} className="mena-press flex items-center gap-3 px-4 py-3 text-sm font-semibold text-ink hover:bg-surface2">
+                    <Heart className="h-4 w-4 text-pink" /> Wishlist
+                    {wishlistProductIds.length > 0 && <span className="ml-auto text-xs font-bold text-pink">{wishlistProductIds.length}</span>}
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
