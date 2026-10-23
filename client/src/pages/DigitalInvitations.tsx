@@ -1,4 +1,5 @@
-import { Check, Crown, ExternalLink, Gem, Heart, Leaf, MessageCircle, MessageSquareText, Phone, Send } from 'lucide-react';
+import { useRef } from 'react';
+import { Check, ChevronLeft, ChevronRight, Crown, ExternalLink, Gem, Heart, Leaf, MessageCircle, MessageSquareText, Phone, Send } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { BusinessSettings, DigitalInviteExample, DigitalInvitePackage, DigitalInvitationsContent } from '../lib/types';
 import { smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
@@ -128,10 +129,19 @@ function packagePresentation(pkg: DigitalInvitePackage, index: number) {
 }
 
 export function DigitalInvitations() {
+  const examplesRef = useRef<HTMLDivElement>(null);
   const { data: business } = useData<BusinessSettings>('/content/business');
   const content = business?.digitalInvitations || FALLBACK_DIGITAL_INVITATIONS;
   const packages = content.packages?.length ? content.packages : FALLBACK_DIGITAL_INVITATIONS.packages;
   const examples = mergeDefaultExamples(content.examples?.length ? content.examples : FALLBACK_DIGITAL_INVITATIONS.examples);
+
+  const scrollExamples = (direction: -1 | 1) => {
+    const rail = examplesRef.current;
+    const card = rail?.firstElementChild;
+    if (!rail || !card) return;
+    const gap = parseFloat(getComputedStyle(rail).columnGap) || 0;
+    rail.scrollBy({ left: direction * (card.getBoundingClientRect().width + gap), behavior: 'smooth' });
+  };
 
   if (content.enabled === false) {
     return (
@@ -150,11 +160,19 @@ export function DigitalInvitations() {
       </section>
 
       <section id="examples" className="border-y border-edge bg-white py-9">
-        <div className="mx-auto max-w-[1240px]">
-          <div className="px-5 sm:px-8 lg:px-10">
-            <h2 className="mb-5 font-sans text-4xl text-ink">Sample websites</h2>
+        <div className="mx-auto max-w-[1240px] lg:px-10">
+          <div className="mb-5 flex items-center justify-between px-5 sm:px-8 lg:px-0">
+            <h2 className="font-sans text-4xl text-ink">Sample websites</h2>
+            <div className="hidden items-center gap-2 lg:flex">
+              <button type="button" onClick={() => scrollExamples(-1)} aria-label="Previous sample websites" className="mena-press flex h-10 w-10 items-center justify-center rounded-full border border-edge bg-white text-ink hover:border-pink hover:text-pink">
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button type="button" onClick={() => scrollExamples(1)} aria-label="Next sample websites" className="mena-press flex h-10 w-10 items-center justify-center rounded-full border border-edge bg-white text-ink hover:border-pink hover:text-pink">
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
           </div>
-          <div className="mena-scroll flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 sm:scroll-px-8 sm:px-8 lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0 lg:px-10 xl:grid-cols-5">
+          <div ref={examplesRef} className="mena-scroll flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 sm:scroll-px-8 sm:px-8 lg:scroll-px-0 lg:px-0">
             {examples.map((example, idx) => {
               const preview = previewImage(example);
               return (
@@ -164,7 +182,7 @@ export function DigitalInvitations() {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={`Open ${example.title} invitation website`}
-                  className="mena-press w-[265px] shrink-0 snap-start overflow-hidden rounded-[22px] border border-edge bg-bg shadow-[0_16px_34px_rgba(28,26,25,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink focus-visible:ring-offset-2 sm:w-[300px] lg:w-auto lg:min-w-0"
+                  className="mena-press w-[265px] shrink-0 snap-start overflow-hidden rounded-[22px] border border-edge bg-bg shadow-[0_16px_34px_rgba(28,26,25,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink focus-visible:ring-offset-2 sm:w-[300px] lg:w-[calc((100%-2rem)/3)] xl:w-[calc((100%-3rem)/4)]"
                 >
                   <div className="relative block aspect-[9/16] overflow-hidden bg-[#f8efe8]">
                     {preview ? (
