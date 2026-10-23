@@ -45,7 +45,7 @@ body {
 .invite-float {
   position: fixed;
   right: clamp(30px, 8vw, 112px);
-  bottom: clamp(76px, 12vh, 132px);
+  bottom: 28px;
   z-index: 60;
   width: 224px;
   height: 72px;
