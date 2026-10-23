@@ -170,7 +170,7 @@ export function DigitalInvitations() {
 
   return (
     <div className="bg-bg">
-      <section className="mx-auto max-w-[1240px] px-5 py-10 sm:px-8 lg:px-10 lg:py-14">
+      <section className="mx-auto max-w-[1240px] px-5 py-4 sm:px-8 lg:px-10 lg:py-5">
         <h1 className="font-allura text-[64px] leading-[1.1] text-ink sm:text-[88px]">Digital Invitation</h1>
       </section>
 
