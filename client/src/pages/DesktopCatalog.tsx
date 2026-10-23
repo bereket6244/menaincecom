@@ -295,7 +295,7 @@ export function DesktopCatalog() {
         <div className="mb-5 flex items-start justify-between gap-6">
           <div className="min-w-0">
             <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
-              <h1 className="font-allura text-[48px] leading-[1.1]">{pageTitle}</h1>
+              <h1 className="font-dancing text-[48px] leading-[1.1]">{pageTitle}</h1>
               <p className="text-sm text-muted">{visible.length} designs available</p>
             </div>
 

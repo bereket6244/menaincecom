@@ -165,7 +165,7 @@ export function MobileCatalog() {
       </div>
 
       <div className="flex items-baseline justify-between px-4 pb-2 pt-2">
-        <h1 className="m-0 font-allura text-[42px] leading-[1.1]">
+        <h1 className="m-0 font-dancing text-[42px] leading-[1.1]">
           {activeCategory ? categoryById.get(activeCategory) || 'Wedding Cards' : 'All designs'}
         </h1>
         <span className="text-[12.5px] text-muted">{visible.length} designs</span>

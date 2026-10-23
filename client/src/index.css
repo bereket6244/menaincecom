@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Allura&family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 /* Keep catalog filters below the complete sticky header when an ad is shown. */
@@ -17,7 +17,7 @@
   --color-ink: #1c1a19;
   --color-muted: #8a8580;
   --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-allura: "Allura", "Brush Script MT", cursive;
+  --font-dancing: "Dancing Script", "Brush Script MT", cursive;
 }
 
 html {
