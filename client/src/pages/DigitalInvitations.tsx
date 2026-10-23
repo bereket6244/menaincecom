@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronLeft, ChevronRight, Crown, ExternalLink, Gem, Heart, Leaf, MessageCircle, MessageSquareText, Phone, Send } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { BusinessSettings, DigitalInviteExample, DigitalInvitePackage, DigitalInvitationsContent } from '../lib/types';
@@ -130,10 +130,27 @@ function packagePresentation(pkg: DigitalInvitePackage, index: number) {
 
 export function DigitalInvitations() {
   const examplesRef = useRef<HTMLDivElement>(null);
+  const [scrollEdges, setScrollEdges] = useState({ start: true, end: false });
   const { data: business } = useData<BusinessSettings>('/content/business');
   const content = business?.digitalInvitations || FALLBACK_DIGITAL_INVITATIONS;
   const packages = content.packages?.length ? content.packages : FALLBACK_DIGITAL_INVITATIONS.packages;
   const examples = mergeDefaultExamples(content.examples?.length ? content.examples : FALLBACK_DIGITAL_INVITATIONS.examples);
+
+  useEffect(() => {
+    const rail = examplesRef.current;
+    if (!rail) return;
+    const update = () => setScrollEdges({
+      start: rail.scrollLeft <= 1,
+      end: rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 1,
+    });
+    update();
+    rail.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      rail.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, [content.enabled, examples.length]);
 
   const scrollExamples = (direction: -1 | 1) => {
     const rail = examplesRef.current;
@@ -154,26 +171,15 @@ export function DigitalInvitations() {
   return (
     <div className="bg-bg">
       <section className="mx-auto max-w-[1240px] px-5 py-10 sm:px-8 lg:px-10 lg:py-14">
-        <h1 className="max-w-3xl font-sans text-[44px] leading-[0.98] text-ink sm:text-[64px]">
-          {content.title || FALLBACK_DIGITAL_INVITATIONS.title}
-        </h1>
+        <h1 className="font-allura text-[64px] leading-[1.1] text-ink sm:text-[88px]">Digital Invitation</h1>
       </section>
 
       <section id="examples" className="border-y border-edge bg-white py-9">
         <div className="mx-auto max-w-[1240px] lg:px-10">
-          <div className="mb-5 flex items-center justify-between px-5 sm:px-8 lg:px-0">
-            <h2 className="font-sans text-4xl text-ink">Sample websites</h2>
-            <div className="hidden items-center gap-2 lg:flex">
-              <button type="button" onClick={() => scrollExamples(-1)} aria-label="Previous sample websites" className="mena-press flex h-10 w-10 items-center justify-center rounded-full border border-edge bg-white text-ink hover:border-pink hover:text-pink">
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <button type="button" onClick={() => scrollExamples(1)} aria-label="Next sample websites" className="mena-press flex h-10 w-10 items-center justify-center rounded-full border border-edge bg-white text-ink hover:border-pink hover:text-pink">
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-          <div ref={examplesRef} className="mena-scroll flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 sm:scroll-px-8 sm:px-8 lg:scroll-px-0 lg:px-0">
-            {examples.map((example, idx) => {
+          <h2 className="sr-only">Invitation examples</h2>
+          <div className="relative">
+            <div ref={examplesRef} className="mena-scroll flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 sm:scroll-px-8 sm:px-8 lg:scroll-px-0 lg:px-0">
+              {examples.map((example, idx) => {
               const preview = previewImage(example);
               return (
                 <a
@@ -210,7 +216,18 @@ export function DigitalInvitations() {
                   </div>
                 </a>
               );
-            })}
+              })}
+            </div>
+            {!scrollEdges.start && (
+              <button type="button" onClick={() => scrollExamples(-1)} aria-label="Scroll invitations left" className="absolute inset-y-0 left-0 z-10 hidden w-14 items-center justify-center rounded-l-[22px] bg-black/55 text-white opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 lg:flex">
+                <ChevronLeft className="h-9 w-9" />
+              </button>
+            )}
+            {!scrollEdges.end && (
+              <button type="button" onClick={() => scrollExamples(1)} aria-label="Scroll invitations right" className="absolute inset-y-0 right-0 z-10 hidden w-14 items-center justify-center rounded-r-[22px] bg-black/55 text-white opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 lg:flex">
+                <ChevronRight className="h-9 w-9" />
+              </button>
+            )}
           </div>
         </div>
       </section>
