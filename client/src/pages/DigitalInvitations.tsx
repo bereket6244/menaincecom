@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import { Check, ChevronLeft, ChevronRight, Crown, ExternalLink, Gem, Heart, Leaf, MessageCircle, MessageSquareText, Phone, Send } from 'lucide-react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Check, ChevronLeft, ChevronRight, Crown, Gem, Heart, Leaf, MessageCircle, MessageSquareText, Phone, Send } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { BusinessSettings, DigitalInviteExample, DigitalInvitePackage, DigitalInvitationsContent } from '../lib/types';
-import { smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
+import { smsContactUrl, smsOrderUrl, telegramContactUrl, telegramOrderUrl, whatsappContactUrl, whatsappOrderUrl } from '../lib/share';
 import { assetUrl, cx } from '../lib/utils';
 
 const FALLBACK_DIGITAL_INVITATIONS: DigitalInvitationsContent = {
@@ -12,57 +13,113 @@ const FALLBACK_DIGITAL_INVITATIONS: DigitalInvitationsContent = {
   intro: '',
   portfolioUrl: 'https://menaincet.com',
   examples: [
-    { id: 'yordanos-kaleab', title: 'Yordanos & Kaleab', url: 'https://menaincet.com/yordanoskaleab/', description: '' },
+    { id: 'kalyordi', title: 'Kalyordi', url: 'https://menaincet.com/kalyordi/', description: '' },
     { id: 'yeabsra-christian', title: 'Yeabsra & Christian', url: 'https://menaincet.com/yeabsrachristian', description: '' },
     { id: 'yeabsra-and-christian', title: 'Yeabsra & Christian - Wedding', url: 'https://menaincet.com/yeabsra-and-christian/', description: '' },
-    { id: 'amanuel-selam', title: 'Amanuel & Selam', url: 'https://menaincet.com/amanuelselamawit/', description: '' },
     { id: 'chris-yeabsra', title: 'Chris & Yeabsra', url: 'https://chris-yeabsra.menaincet.com/', description: '' },
   ],
   packages: [
     {
-      id: 'basic',
-      name: 'Basic',
-      eyebrow: '',
-      description: 'Simple and elegant',
-      price: 9000,
-      compareAtPrice: null,
-      badge: '',
-      features: ['Wedding details', '3 photos', '1 venue + map', 'RSVP'],
-      footnote: '',
+      "id": "simple",
+      "name": "Simple",
+      "eyebrow": "",
+      "description": "",
+      "price": 4990,
+      "compareAtPrice": null,
+      "badge": "",
+      "features": [
+        "Countdown",
+        "Add to calendar",
+        "1 Google Maps location link",
+        "1 language",
+        "Wedding day itinerary",
+        "3 photos",
+        "Custom couple monogram logo"
+      ],
+      "footnote": ""
     },
     {
-      id: 'standard',
-      name: 'Standard',
-      eyebrow: '',
-      description: 'Best for most weddings',
-      price: 13000,
-      compareAtPrice: null,
-      badge: 'Most Popular',
-      features: ['Everything in Basic', '10 photos', '2 venues + map', '2 languages + timeline'],
-      footnote: '',
+      "id": "classic",
+      "name": "Classic",
+      "eyebrow": "",
+      "description": "",
+      "price": 9990,
+      "compareAtPrice": null,
+      "badge": "",
+      "features": [
+        "Countdown",
+        "Add to calendar",
+        "2 Google Maps location links",
+        "2 languages",
+        "Wedding day itinerary",
+        "10 photos",
+        "Custom couple monogram logo",
+        "Guest messages",
+        "Guest photo upload and live slideshow",
+        "Downloadable thank-you card",
+        "RSVP",
+        "Background music",
+        "Bulk guest sending"
+      ],
+      "footnote": ""
     },
     {
-      id: 'premium',
-      name: 'Premium',
-      eyebrow: '',
-      description: 'More personal and complete',
-      price: 16000,
-      compareAtPrice: null,
-      badge: '',
-      features: ['Everything in Standard', 'Unlimited photos', 'Video + couple profile', 'Gift info'],
-      footnote: '',
+      "id": "luxury",
+      "name": "Luxury",
+      "eyebrow": "",
+      "description": "",
+      "price": 14990,
+      "compareAtPrice": null,
+      "badge": "",
+      "features": [
+        "Countdown",
+        "Add to calendar",
+        "2 Google Maps location links",
+        "2+ languages",
+        "Wedding day itinerary",
+        "20 photos",
+        "Custom couple monogram logo",
+        "Guest messages with video and photo options",
+        "Guest photo upload and live slideshow",
+        "Downloadable thank-you card",
+        "RSVP",
+        "Background music",
+        "Bulk guest sending",
+        "1 video",
+        "Bride and groom profiles"
+      ],
+      "footnote": ""
     },
     {
-      id: 'ultimate',
-      name: 'Ultimate',
-      eyebrow: '',
-      description: 'For full guest management',
-      price: 18500,
-      compareAtPrice: null,
-      badge: '',
-      features: ['Everything in Premium', '3+ languages', 'QR code', 'Live guest check-in'],
-      footnote: '',
-    },
+      "id": "luxury-plus",
+      "name": "Luxury plus",
+      "eyebrow": "",
+      "description": "",
+      "price": 19990,
+      "compareAtPrice": null,
+      "badge": "",
+      "features": [
+        "Countdown",
+        "Add to calendar",
+        "2+ Google Maps location links",
+        "2+ languages",
+        "Wedding day itinerary",
+        "Unlimited photos",
+        "Custom couple monogram logo",
+        "Guest messages",
+        "Guest photo upload and live slideshow",
+        "Downloadable thank-you card",
+        "RSVP",
+        "Background music",
+        "Bulk guest sending",
+        "Unlimited videos",
+        "Bride and groom profiles",
+        "Personalized invitations with QR code for every guest",
+        "QR code guest check-in and live attendance reports (optional)",
+        "Seating arrangement"
+      ],
+      "footnote": ""
+    }
   ],
 };
 
@@ -95,30 +152,31 @@ function initials(title: string) {
 
 function previewImage(example: { id?: string; url: string }) {
   const key = `${example.id || ''} ${example.url}`.toLowerCase();
+  if (key.includes('kalyordi')) return assetUrl('digital-invites/kalyordi-mobile.png');
   if (key.includes('chris-yeabsra')) return assetUrl('digital-invites/chris-yeabsra-mobile.jpg');
-  if (key.includes('amanuel-selam') || key.includes('amanuelselamawit')) return assetUrl('digital-invites/amanuel-selam-mobile.jpg');
   if (key.includes('yeabsra-and-christian')) return assetUrl('digital-invites/yeabsra-and-christian-mobile.jpg');
   if (key.includes('yeabsrachristian') || key.includes('yeabsra-christian')) return assetUrl('digital-invites/yeabsra-christian-mobile.jpg');
-  if (key.includes('yordanos') || key.includes('kaleab')) return assetUrl('digital-invites/yordanos-kaleab-mobile.jpg');
   return '';
 }
 
-function mergeDefaultExamples(examples: DigitalInviteExample[] = []) {
-  const merged = [...examples];
-  for (const fallback of FALLBACK_DIGITAL_INVITATIONS.examples) {
-    const index = merged.findIndex((example) => example.id === fallback.id);
-    if (index === -1) merged.push(fallback);
-    else merged[index] = { ...merged[index], ...fallback };
-  }
-  return merged;
+function showcaseExamples(examples: DigitalInviteExample[] = []) {
+  const normalizeUrl = (url: string) => url.replace(/\/+$/, '').toLowerCase();
+  const allowedUrls = FALLBACK_DIGITAL_INVITATIONS.examples.map((example) => normalizeUrl(example.url));
+  const seen = new Set<string>();
+  return examples.filter((example) => {
+    const url = normalizeUrl(example.url || '');
+    if (!allowedUrls.includes(url) || seen.has(url)) return false;
+    seen.add(url);
+    return true;
+  }).sort((a, b) => allowedUrls.indexOf(normalizeUrl(a.url)) - allowedUrls.indexOf(normalizeUrl(b.url)));
 }
 
 function packagePresentation(pkg: DigitalInvitePackage, index: number) {
   const key = `${pkg.id || ''} ${pkg.name || ''}`.toLowerCase();
-  if (key.includes('standard')) return { Icon: Heart, color: '#ee317b', tint: '#fff1f6', popular: true };
-  if (key.includes('premium')) return { Icon: Gem, color: '#ff7a1a', tint: '#fff3e8', popular: false };
-  if (key.includes('ultimate')) return { Icon: Crown, color: '#f58220', tint: '#fff4e8', popular: false };
-  if (key.includes('basic')) return { Icon: Leaf, color: '#319b5a', tint: '#f0fbf4', popular: false };
+  if (key.includes('classic')) return { Icon: Heart, color: '#ee317b', tint: '#fff1f6', popular: false };
+  if (key.includes('luxury-plus')) return { Icon: Crown, color: '#f58220', tint: '#fff4e8', popular: false };
+  if (key.includes('luxury')) return { Icon: Gem, color: '#ff7a1a', tint: '#fff3e8', popular: false };
+  if (key.includes('simple')) return { Icon: Leaf, color: '#319b5a', tint: '#f0fbf4', popular: false };
   const fallback = [
     { Icon: Leaf, color: '#319b5a', tint: '#f0fbf4', popular: false },
     { Icon: Heart, color: '#ee317b', tint: '#fff1f6', popular: false },
@@ -129,36 +187,77 @@ function packagePresentation(pkg: DigitalInvitePackage, index: number) {
 }
 
 export function DigitalInvitations() {
-  const examplesRef = useRef<HTMLDivElement>(null);
-  const [scrollEdges, setScrollEdges] = useState({ start: true, end: false });
+  const touchStartX = useRef<number | null>(null);
+  const orderButtonRef = useRef<HTMLButtonElement | null>(null);
+  const orderMenuRef = useRef<HTMLDivElement | null>(null);
+  const [activeExample, setActiveExample] = useState(0);
+  const [orderExample, setOrderExample] = useState<DigitalInviteExample | null>(null);
+  const [orderMenuPosition, setOrderMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const { data: business } = useData<BusinessSettings>('/content/business');
   const content = business?.digitalInvitations || FALLBACK_DIGITAL_INVITATIONS;
   const packages = content.packages?.length ? content.packages : FALLBACK_DIGITAL_INVITATIONS.packages;
-  const examples = mergeDefaultExamples(content.examples?.length ? content.examples : FALLBACK_DIGITAL_INVITATIONS.examples);
+  const examples = showcaseExamples(content.examples ?? FALLBACK_DIGITAL_INVITATIONS.examples);
+
+  const showExample = (direction: -1 | 1) => {
+    setOrderExample(null);
+    setActiveExample((current) => (current + direction + examples.length) % examples.length);
+  };
+
+  useLayoutEffect(() => {
+    if (!orderExample) return;
+    const positionMenu = () => {
+      const trigger = orderButtonRef.current;
+      const menu = orderMenuRef.current;
+      if (!trigger || !menu) return;
+      const triggerRect = trigger.getBoundingClientRect();
+      const menuRect = menu.getBoundingClientRect();
+      const gap = 8;
+      const below = triggerRect.bottom + gap + menuRect.height <= window.innerHeight - 12
+        || triggerRect.top - gap - menuRect.height < 12;
+      setOrderMenuPosition({
+        top: below ? triggerRect.bottom + gap : triggerRect.top - menuRect.height - gap,
+        left: Math.max(12, Math.min(triggerRect.right - menuRect.width, window.innerWidth - menuRect.width - 12)),
+      });
+    };
+    positionMenu();
+    window.addEventListener('scroll', positionMenu, true);
+    window.addEventListener('resize', positionMenu);
+    return () => {
+      window.removeEventListener('scroll', positionMenu, true);
+      window.removeEventListener('resize', positionMenu);
+    };
+  }, [orderExample]);
 
   useEffect(() => {
-    const rail = examplesRef.current;
-    if (!rail) return;
-    const update = () => setScrollEdges({
-      start: rail.scrollLeft <= 1,
-      end: rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 1,
-    });
-    update();
-    rail.addEventListener('scroll', update, { passive: true });
-    window.addEventListener('resize', update);
-    return () => {
-      rail.removeEventListener('scroll', update);
-      window.removeEventListener('resize', update);
+    if (!orderExample) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOrderExample(null);
     };
-  }, [content.enabled, examples.length]);
+    const closeOnOutside = (event: PointerEvent) => {
+      if (!orderMenuRef.current?.contains(event.target as Node) && !orderButtonRef.current?.contains(event.target as Node)) {
+        setOrderExample(null);
+      }
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    document.addEventListener('pointerdown', closeOnOutside);
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape);
+      document.removeEventListener('pointerdown', closeOnOutside);
+    };
+  }, [orderExample]);
 
-  const scrollExamples = (direction: -1 | 1) => {
-    const rail = examplesRef.current;
-    const card = rail?.firstElementChild;
-    if (!rail || !card) return;
-    const gap = parseFloat(getComputedStyle(rail).columnGap) || 0;
-    rail.scrollBy({ left: direction * (card.getBoundingClientRect().width + gap), behavior: 'smooth' });
-  };
+  const orderMessage = orderExample ? [
+    'Selam Mena Inc, I want to order a digital invitation website.',
+    `Example: ${orderExample.title}`,
+    `Link: ${orderExample.url}`,
+    '',
+    'Please contact me with the next steps.',
+  ].join('\n') : '';
+  const orderChannels = [
+    { id: 'telegram', label: 'Telegram', icon: Send, href: telegramContactUrl(business, orderMessage), className: 'bg-[#2b93d6] hover:bg-[#2380c0]', external: true },
+    { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, href: whatsappContactUrl(business, orderMessage), className: 'bg-[#25a34f] hover:bg-[#1e8a3d]', external: true },
+    { id: 'sms', label: 'SMS', icon: MessageSquareText, href: smsContactUrl(business, orderMessage), className: 'bg-[#ee317b] hover:bg-[#d41f66]', external: false },
+  ];
 
   if (content.enabled === false) {
     return (
@@ -171,26 +270,50 @@ export function DigitalInvitations() {
   return (
     <div className="bg-bg">
       <section className="mx-auto max-w-[1240px] px-5 py-4 sm:px-8 lg:px-10 lg:py-5">
-        <h1 className="font-dancing text-[64px] leading-[1.1] text-ink sm:text-[88px]">Digital Invitation</h1>
+        <h1 className="font-dancing text-[clamp(42px,12vw,64px)] leading-[1.1] text-ink sm:text-[88px]">Digital Invitation</h1>
       </section>
 
       <section id="examples" className="border-y border-edge bg-white py-9">
         <div className="mx-auto max-w-[1240px] lg:px-10">
           <h2 className="sr-only">Invitation examples</h2>
-          <div className="relative">
-            <div ref={examplesRef} className="mena-scroll flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 sm:scroll-px-8 sm:px-8 lg:scroll-px-0 lg:px-0">
+          <div
+            className="relative mx-auto h-[min(137vw,580px)] max-w-[900px] overflow-hidden [perspective:1100px] sm:h-[640px]"
+            aria-label="Digital invitation examples carousel"
+            onTouchStart={(event) => { touchStartX.current = event.touches[0]?.clientX ?? null; }}
+            onTouchEnd={(event) => {
+              if (touchStartX.current === null) return;
+              const distance = event.changedTouches[0]?.clientX - touchStartX.current;
+              touchStartX.current = null;
+              if (Math.abs(distance) > 40) showExample(distance < 0 ? 1 : -1);
+            }}
+          >
               {examples.map((example, idx) => {
               const preview = previewImage(example);
+              let offset = (idx - activeExample + examples.length) % examples.length;
+              if (offset > examples.length / 2) offset -= examples.length;
+              const distance = Math.abs(offset);
               return (
-                <a
+                <article
                   key={example.id || example.url || idx}
-                  href={example.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={`Open ${example.title} invitation website`}
-                  className="mena-press w-[265px] shrink-0 snap-start overflow-hidden rounded-[22px] border border-edge bg-bg shadow-[0_16px_34px_rgba(28,26,25,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink focus-visible:ring-offset-2 sm:w-[300px] lg:w-[calc((100%-2rem)/3)] xl:w-[calc((100%-3rem)/4)]"
+                  aria-current={distance === 0 ? 'true' : undefined}
+                  onClick={() => { if (distance !== 0) setActiveExample(idx); }}
+                  className="absolute left-1/2 top-4 w-[min(62vw,300px)] overflow-hidden rounded-[22px] border border-edge bg-bg shadow-[0_16px_34px_rgba(28,26,25,0.16)] motion-safe:transition-[transform,opacity] motion-safe:duration-700 motion-safe:ease-[cubic-bezier(.22,.7,.2,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink focus-visible:ring-offset-2"
+                  style={{
+                    transform: `translateX(${-50 + offset * 76}%) rotateY(${offset === 0 ? 0 : offset < 0 ? 22 : -22}deg) scale(${distance === 0 ? 1 : 0.88})`,
+                    zIndex: examples.length - distance,
+                    opacity: distance > 1 ? 0 : 1,
+                    pointerEvents: distance > 1 ? 'none' : 'auto',
+                  }}
                 >
-                  <div className="relative block aspect-[9/16] overflow-hidden bg-[#f8efe8]">
+                  <a
+                    href={example.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`View ${example.title} invitation website`}
+                    tabIndex={distance === 0 ? 0 : -1}
+                    onClick={(event) => { if (distance !== 0) event.preventDefault(); }}
+                    className="relative block aspect-[9/16] overflow-hidden bg-[#f8efe8]"
+                  >
                     {preview ? (
                       <img
                         src={preview}
@@ -205,32 +328,61 @@ export function DigitalInvitations() {
                         <div className="mt-2 font-sans text-2xl text-ink">{example.title}</div>
                       </div>
                     )}
-                  </div>
+                  </a>
                   <div className="flex items-center justify-between gap-4 p-3">
-                    <span className="min-w-0 truncate font-extrabold text-ink">{example.title}</span>
-                    <span
+                    <a href={example.url} target="_blank" rel="noreferrer" tabIndex={distance === 0 ? 0 : -1} onClick={(event) => { if (distance !== 0) event.preventDefault(); }} className="min-w-0 truncate font-extrabold text-ink hover:text-pink" aria-label={`View ${example.title} invitation website`}>{example.title}</a>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        orderButtonRef.current = event.currentTarget;
+                        setOrderMenuPosition(null);
+                        setOrderExample((current) => current?.url === example.url ? null : example);
+                      }}
+                      tabIndex={distance === 0 ? 0 : -1}
+                      aria-haspopup="menu"
+                      aria-expanded={orderExample?.url === example.url}
                       className="mena-press inline-flex shrink-0 items-center gap-1.5 rounded-full border border-pink px-3 py-1.5 text-xs font-extrabold text-pink"
                     >
-                      Open <ExternalLink className="h-3.5 w-3.5" />
-                    </span>
+                      Order <Send className="h-3.5 w-3.5" />
+                    </button>
                   </div>
-                </a>
+                </article>
               );
               })}
-            </div>
-            {!scrollEdges.start && (
-              <button type="button" onClick={() => scrollExamples(-1)} aria-label="Scroll invitations left" className="absolute inset-y-0 left-0 z-10 hidden w-14 items-center justify-center rounded-l-[22px] bg-black/55 text-white opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 lg:flex">
+            {examples.length > 1 && <>
+              <button type="button" onClick={() => showExample(-1)} aria-label="Previous invitation" className="absolute left-2 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/65 text-white shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink sm:left-5">
                 <ChevronLeft className="h-9 w-9" />
               </button>
-            )}
-            {!scrollEdges.end && (
-              <button type="button" onClick={() => scrollExamples(1)} aria-label="Scroll invitations right" className="absolute inset-y-0 right-0 z-10 hidden w-14 items-center justify-center rounded-r-[22px] bg-black/55 text-white opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 lg:flex">
+              <button type="button" onClick={() => showExample(1)} aria-label="Next invitation" className="absolute right-2 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/65 text-white shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink sm:right-5">
                 <ChevronRight className="h-9 w-9" />
               </button>
-            )}
+            </>}
+          </div>
+          <div className="mt-1 flex items-center justify-center gap-2" aria-label="Choose invitation example">
+            {examples.map((example, index) => (
+              <button key={example.id || example.url || index} type="button" onClick={() => { setOrderExample(null); setActiveExample(index); }} aria-label={`Show ${example.title}`} aria-current={activeExample === index ? 'true' : undefined} className={cx('h-2.5 rounded-full transition-all', activeExample === index ? 'w-7 bg-pink' : 'w-2.5 bg-ink/25')} />
+            ))}
           </div>
         </div>
       </section>
+
+      {orderExample && createPortal(
+        <div
+          ref={orderMenuRef}
+          role="menu"
+          aria-label={`Order ${orderExample.title} through`}
+          className="modal-panel fixed z-[90] flex w-44 flex-col items-end gap-2"
+          style={{ top: orderMenuPosition?.top ?? 0, left: orderMenuPosition?.left ?? 0, visibility: orderMenuPosition ? 'visible' : 'hidden' }}
+        >
+          {orderChannels.map(({ id, label, icon: Icon, href, className, external }) => (
+            <a key={id} href={href} role="menuitem" target={external ? '_blank' : undefined} rel={external ? 'noreferrer' : undefined} onClick={() => setOrderExample(null)} className={cx('mena-press flex h-12 w-full items-center gap-3 rounded-full px-4 text-sm font-extrabold text-white shadow-lg', className)}>
+              <Icon className="h-5 w-5" />{label}
+            </a>
+          ))}
+        </div>,
+        document.body,
+      )}
 
       <section id="packages" className="mx-auto max-w-[1240px] px-5 py-12 sm:px-8 lg:px-10">
         <h2 className="mb-7 font-sans text-4xl text-ink">Package plans</h2>

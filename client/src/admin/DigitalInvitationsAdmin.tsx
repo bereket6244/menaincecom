@@ -14,12 +14,6 @@ const defaultDigitalInvitations: DigitalInvitationsContent = {
   portfolioUrl: 'https://menaincet.com',
   examples: [
     {
-      id: 'yordanos-kaleab',
-      title: 'Yordanos & Kaleab',
-      url: 'https://menaincet.com/yordanoskaleab/',
-      description: '',
-    },
-    {
       id: 'yeabsra-christian',
       title: 'Yeabsra & Christian',
       url: 'https://menaincet.com/yeabsrachristian',
@@ -32,62 +26,128 @@ const defaultDigitalInvitations: DigitalInvitationsContent = {
       description: '',
     },
     {
-      id: 'amanuel-selam',
-      title: 'Amanuel & Selam',
-      url: 'https://menaincet.com/amanuelselamawit/',
+      id: 'kalyordi',
+      title: 'Kalyordi',
+      url: 'https://menaincet.com/kalyordi/',
+      description: '',
+    },
+    {
+      id: 'chris-yeabsra',
+      title: 'Chris & Yeabsra',
+      url: 'https://chris-yeabsra.menaincet.com/',
       description: '',
     },
   ],
   packages: [
     {
-      id: 'basic',
-      name: 'Basic',
-      eyebrow: '',
-      description: 'Simple and elegant',
-      price: 9000,
-      compareAtPrice: null,
-      badge: '',
-      features: ['Wedding details', '3 photos', '1 venue + map', 'RSVP'],
-      footnote: '',
+      "id": "simple",
+      "name": "Simple",
+      "eyebrow": "",
+      "description": "",
+      "price": 4990,
+      "compareAtPrice": null,
+      "badge": "",
+      "features": [
+        "Countdown",
+        "Add to calendar",
+        "1 Google Maps location link",
+        "1 language",
+        "Wedding day itinerary",
+        "3 photos",
+        "Custom couple monogram logo"
+      ],
+      "footnote": ""
     },
     {
-      id: 'standard',
-      name: 'Standard',
-      eyebrow: '',
-      description: 'Best for most weddings',
-      price: 13000,
-      compareAtPrice: null,
-      badge: 'Most Popular',
-      features: ['Everything in Basic', '10 photos', '2 venues + map', '2 languages + timeline'],
-      footnote: '',
+      "id": "classic",
+      "name": "Classic",
+      "eyebrow": "",
+      "description": "",
+      "price": 9990,
+      "compareAtPrice": null,
+      "badge": "",
+      "features": [
+        "Countdown",
+        "Add to calendar",
+        "2 Google Maps location links",
+        "2 languages",
+        "Wedding day itinerary",
+        "10 photos",
+        "Custom couple monogram logo",
+        "Guest messages",
+        "Guest photo upload and live slideshow",
+        "Downloadable thank-you card",
+        "RSVP",
+        "Background music",
+        "Bulk guest sending"
+      ],
+      "footnote": ""
     },
     {
-      id: 'premium',
-      name: 'Premium',
-      eyebrow: '',
-      description: 'More personal and complete',
-      price: 16000,
-      compareAtPrice: null,
-      badge: '',
-      features: ['Everything in Standard', 'Unlimited photos', 'Video + couple profile', 'Gift info'],
-      footnote: '',
+      "id": "luxury",
+      "name": "Luxury",
+      "eyebrow": "",
+      "description": "",
+      "price": 14990,
+      "compareAtPrice": null,
+      "badge": "",
+      "features": [
+        "Countdown",
+        "Add to calendar",
+        "2 Google Maps location links",
+        "2+ languages",
+        "Wedding day itinerary",
+        "20 photos",
+        "Custom couple monogram logo",
+        "Guest messages with video and photo options",
+        "Guest photo upload and live slideshow",
+        "Downloadable thank-you card",
+        "RSVP",
+        "Background music",
+        "Bulk guest sending",
+        "1 video",
+        "Bride and groom profiles"
+      ],
+      "footnote": ""
     },
     {
-      id: 'ultimate',
-      name: 'Ultimate',
-      eyebrow: '',
-      description: 'For full guest management',
-      price: 18500,
-      compareAtPrice: null,
-      badge: '',
-      features: ['Everything in Premium', '3+ languages', 'QR code', 'Live guest check-in'],
-      footnote: '',
-    },
+      "id": "luxury-plus",
+      "name": "Luxury plus",
+      "eyebrow": "",
+      "description": "",
+      "price": 19990,
+      "compareAtPrice": null,
+      "badge": "",
+      "features": [
+        "Countdown",
+        "Add to calendar",
+        "2+ Google Maps location links",
+        "2+ languages",
+        "Wedding day itinerary",
+        "Unlimited photos",
+        "Custom couple monogram logo",
+        "Guest messages",
+        "Guest photo upload and live slideshow",
+        "Downloadable thank-you card",
+        "RSVP",
+        "Background music",
+        "Bulk guest sending",
+        "Unlimited videos",
+        "Bride and groom profiles",
+        "Personalized invitations with QR code for every guest",
+        "QR code guest check-in and live attendance reports (optional)",
+        "Seating arrangement"
+      ],
+      "footnote": ""
+    }
   ],
 };
 
 function mergeDefaultExamples(examples: DigitalInviteExample[] = []) {
-  const merged = [...examples];
+  const merged = examples.filter((example) =>
+    !['yordanos-kaleab', 'amanuel-selam'].includes(example.id)
+    && !/\/(?:yordanoskaleab|amanuelselamawit)\/?(?:[?#]|$)/i.test(example.url || '')
+  );
   for (const fallback of defaultDigitalInvitations.examples) {
     const index = merged.findIndex((example) => example.id === fallback.id);
     if (index === -1) merged.push(fallback);
