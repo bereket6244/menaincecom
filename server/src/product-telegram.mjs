@@ -82,7 +82,7 @@ function productComplimentaryDetails(product) {
 function productHashtags(product) {
   const tags = new Set([
     hashtag('mena inc'),
-    hashtag(product.isAddon ? 'add on' : 'product'),
+    ...(product.isAddon ? [hashtag('add on')] : []),
     ...productCategories(product).map(hashtag),
   ].filter(Boolean));
   if (Math.floor(Number(product.maxOrderQty) || 0) > 0) tags.add(hashtag('limited'));
@@ -97,7 +97,7 @@ function productHashtags(product) {
     }
   }
 
-  return [...tags].filter(Boolean).slice(0, 28);
+  return [...tags].filter((tag) => tag && tag !== '#product').slice(0, 28);
 }
 
 function truncate(value, limit) {

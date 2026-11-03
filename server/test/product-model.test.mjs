@@ -72,7 +72,7 @@ test('Telegram product caption includes price and storefront link', () => {
     id: 'product 1', name: 'Pocket Card', description: 'Printed on premium stock',
     pricingMode: 'starting', price: 125,
     maxOrderQty: 50,
-    categoryNames: ['Wedding Invitations'],
+    categoryNames: ['Wedding Invitations', 'Product'],
     variants: [
       { name: 'Size', options: [{ label: 'A6' }, { label: 'A5' }] },
       { name: 'Paper', options: [{ label: 'Matte 300gsm' }] },
@@ -84,6 +84,7 @@ test('Telegram product caption includes price and storefront link', () => {
   assert.match(caption, /Limited quantity: only 50 available/);
   assert.match(caption, /Size: A6, A5/);
   assert.match(caption, /#wedding_invitations/);
+  assert.doesNotMatch(caption, /#product(?:\b|_)/);
   assert.match(caption, /#limited/);
   assert.match(caption, /#size_a6/);
   assert.match(caption, /#paper_matte_300gsm/);
@@ -106,6 +107,7 @@ test('Telegram product caption mentions complimentary items', () => {
   });
 
   assert.match(caption, /Complimentary:/);
+  assert.doesNotMatch(caption, /#product(?:\b|_)/);
   assert.match(caption, /Entrance Cards/);
   assert.match(caption, /Gift Tags/);
   assert.doesNotMatch(caption, /2.5 per card/);
