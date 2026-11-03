@@ -145,10 +145,10 @@ const DEFAULT_DIGITAL_INVITATIONS = {
         "id": "classic",
         "name": "Classic",
         "eyebrow": "",
-        "description": "",
+        "description": "A complete invitation your guests can respond to and share memories through.",
         "price": 9990,
         "compareAtPrice": null,
-        "badge": "",
+        "badge": "Recommended for most weddings",
         "features": [
           "Countdown",
           "Add to calendar",
@@ -161,8 +161,7 @@ const DEFAULT_DIGITAL_INVITATIONS = {
           "Guest photo upload and live slideshow",
           "Downloadable thank-you card",
           "RSVP",
-          "Background music",
-          "Bulk guest sending"
+          "Background music"
         ],
         "footnote": ""
       },
@@ -182,12 +181,11 @@ const DEFAULT_DIGITAL_INVITATIONS = {
           "Wedding day itinerary",
           "20 photos",
           "Custom couple monogram logo",
-          "Guest messages with video and photo options",
+          "Guest messages with photo options",
           "Guest photo upload and live slideshow",
           "Downloadable thank-you card",
           "RSVP",
           "Background music",
-          "Bulk guest sending",
           "1 video",
           "Bride and groom profiles"
         ],
@@ -207,19 +205,17 @@ const DEFAULT_DIGITAL_INVITATIONS = {
           "2+ Google Maps location links",
           "2+ languages",
           "Wedding day itinerary",
-          "Unlimited photos",
+          "20 photos",
           "Custom couple monogram logo",
-          "Guest messages",
+          "Guest messages with photo options",
           "Guest photo upload and live slideshow",
           "Downloadable thank-you card",
           "RSVP",
           "Background music",
-          "Bulk guest sending",
           "Unlimited videos",
           "Bride and groom profiles",
           "Personalized invitations with QR code for every guest",
-          "QR code guest check-in and live attendance reports (optional)",
-          "Seating arrangement"
+          "QR code guest check-in and live attendance reports (optional)"
         ],
         "footnote": ""
       }

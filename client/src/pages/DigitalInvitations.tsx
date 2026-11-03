@@ -42,10 +42,10 @@ const FALLBACK_DIGITAL_INVITATIONS: DigitalInvitationsContent = {
       "id": "classic",
       "name": "Classic",
       "eyebrow": "",
-      "description": "",
+      "description": "A complete invitation your guests can respond to and share memories through.",
       "price": 9990,
       "compareAtPrice": null,
-      "badge": "",
+      "badge": "Recommended for most weddings",
       "features": [
         "Countdown",
         "Add to calendar",
@@ -58,8 +58,7 @@ const FALLBACK_DIGITAL_INVITATIONS: DigitalInvitationsContent = {
         "Guest photo upload and live slideshow",
         "Downloadable thank-you card",
         "RSVP",
-        "Background music",
-        "Bulk guest sending"
+        "Background music"
       ],
       "footnote": ""
     },
@@ -79,12 +78,11 @@ const FALLBACK_DIGITAL_INVITATIONS: DigitalInvitationsContent = {
         "Wedding day itinerary",
         "20 photos",
         "Custom couple monogram logo",
-        "Guest messages with video and photo options",
+        "Guest messages with photo options",
         "Guest photo upload and live slideshow",
         "Downloadable thank-you card",
         "RSVP",
         "Background music",
-        "Bulk guest sending",
         "1 video",
         "Bride and groom profiles"
       ],
@@ -104,19 +102,17 @@ const FALLBACK_DIGITAL_INVITATIONS: DigitalInvitationsContent = {
         "2+ Google Maps location links",
         "2+ languages",
         "Wedding day itinerary",
-        "Unlimited photos",
+        "20 photos",
         "Custom couple monogram logo",
-        "Guest messages",
+        "Guest messages with photo options",
         "Guest photo upload and live slideshow",
         "Downloadable thank-you card",
         "RSVP",
         "Background music",
-        "Bulk guest sending",
         "Unlimited videos",
         "Bride and groom profiles",
         "Personalized invitations with QR code for every guest",
-        "QR code guest check-in and live attendance reports (optional)",
-        "Seating arrangement"
+        "QR code guest check-in and live attendance reports (optional)"
       ],
       "footnote": ""
     }
@@ -184,6 +180,26 @@ function packagePresentation(pkg: DigitalInvitePackage, index: number) {
     { Icon: Crown, color: '#f58220', tint: '#fff4e8', popular: false },
   ];
   return fallback[index % fallback.length];
+}
+
+function packageFeaturesForDisplay(pkg: DigitalInvitePackage, previous?: DigitalInvitePackage) {
+  const features = pkg.features || [];
+  if (!previous || features.some((feature) => /^everything in /i.test(feature))) return features;
+
+  const inherited = (previous.features || []).map((feature) => feature.trim().toLowerCase());
+  const additions = features.filter((feature) => {
+    const name = feature.trim().toLowerCase();
+    return !inherited.includes(name) && !inherited.some((earlier) => earlier.startsWith(`${name} with `));
+  });
+  if (pkg.id === 'classic') {
+    const priorities = ['RSVP', '2 languages', '10 photos', 'Guest photo upload and live slideshow', 'Background music'];
+    additions.sort((a, b) => {
+      const aRank = priorities.indexOf(a);
+      const bRank = priorities.indexOf(b);
+      return (aRank === -1 ? priorities.length : aRank) - (bRank === -1 ? priorities.length : bRank);
+    });
+  }
+  return [`Everything in ${previous.name}`, ...additions];
 }
 
 export function DigitalInvitations() {
@@ -389,7 +405,9 @@ export function DigitalInvitations() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {packages.map((pkg, index) => {
             const presentation = packagePresentation(pkg, index);
-            const highlighted = Boolean(pkg.badge) || presentation.popular;
+            const displayFeatures = packageFeaturesForDisplay(pkg, packages[index - 1]);
+            const recommended = pkg.id === 'classic';
+            const highlighted = recommended || Boolean(pkg.badge) || presentation.popular;
             const { Icon } = presentation;
             const orderMessage = buildPackageMessage(pkg);
             const orderLinks = [
@@ -403,13 +421,14 @@ export function DigitalInvitations() {
                 key={pkg.id}
                 className={cx(
                   'relative flex min-h-[390px] flex-col rounded-2xl border bg-white px-5 pb-5 pt-8 text-center shadow-[0_16px_42px_rgba(28,26,25,0.07)]',
-                  highlighted ? 'border-pink bg-gradient-to-b from-[#fff5f9] to-white shadow-[0_18px_46px_rgba(238,49,123,0.16)]' : 'border-edge/80'
+                  highlighted ? 'border-pink bg-gradient-to-b from-[#fff5f9] to-white shadow-[0_18px_46px_rgba(238,49,123,0.16)]' : 'border-edge/80',
+                  recommended && 'z-10 ring-2 ring-pink/30 md:-translate-y-1'
                 )}
               >
                 {highlighted && (
-                  <div className="absolute left-1/2 top-0 inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-pink px-5 py-2 text-[13px] font-extrabold text-white shadow-[0_8px_20px_rgba(238,49,123,0.28)]">
-                    <Crown className="h-4 w-4 fill-white" />
-                    {pkg.badge || 'Most Popular'}
+                  <div className="absolute left-1/2 top-0 inline-flex max-w-[calc(100%-1rem)] -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-pink px-3 py-2 text-center text-[11px] font-extrabold leading-tight text-white shadow-[0_8px_20px_rgba(238,49,123,0.28)] sm:px-4 sm:text-[12px]">
+                    {recommended ? <Heart className="h-4 w-4 shrink-0 fill-white" /> : <Crown className="h-4 w-4 shrink-0 fill-white" />}
+                    {pkg.badge || (recommended ? 'Recommended for most weddings' : 'Featured')}
                   </div>
                 )}
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ background: presentation.tint }}>
@@ -425,7 +444,7 @@ export function DigitalInvitations() {
                   </span>
                 </div>
                 <ul className="mx-auto mt-7 flex-1 space-y-3 text-left text-[15px] font-semibold leading-5 text-[#6e7795]">
-                  {(pkg.features || []).map((feature) => (
+                  {displayFeatures.map((feature) => (
                     <li key={feature} className="flex items-start gap-3">
                       <span className={cx('mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-white', highlighted ? 'bg-pink' : 'bg-[#39a766]')}>
                         <Check className="h-3.5 w-3.5 stroke-[3]" />
