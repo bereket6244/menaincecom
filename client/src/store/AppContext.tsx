@@ -4,6 +4,7 @@ import type { CartItem, User } from '../lib/types';
 import { apiGet, apiSend, checkApiHealth, onDbStatus, setToken } from '../lib/api';
 import { readLocalWishlist, writeLocalWishlist } from '../lib/wishlist';
 import { clampOrderQty } from '../lib/orderLimits';
+import { trackEvent } from '../lib/observability';
 import { tieredAveragePrice } from '../lib/tieredPricing';
 
 export interface Toast {
@@ -191,6 +192,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addToCart = useCallback((item: Omit<CartItem, 'key'>, mode: 'increment' | 'replace' = 'increment') => {
+    trackEvent('add_to_cart', { product_id: item.productId });
     const key = `${item.productId}|${JSON.stringify(item.variantSelections)}`;
     let result: AddToCartResult = 'added';
     setCart((c) => {

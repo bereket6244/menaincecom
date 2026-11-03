@@ -1,6 +1,7 @@
 import { ApiError, apiSend } from './api';
 import type { BusinessSettings, CartItem, OrderRecord, User } from './types';
 import { buildCartOrderMessage, buildOrderMessage } from './share';
+import { trackEvent } from './observability';
 
 export type OrderChannel = 'whatsapp' | 'telegram' | 'sms';
 
@@ -57,9 +58,11 @@ export async function placeOrder({
         })),
       })),
     });
+    trackEvent('order_saved', { channel });
     return { message: buildOrderMessage(response.order, business, origin), order: response.order };
   } catch (error) {
     if (error instanceof ApiError && error.kind === 'http') throw error;
+    trackEvent('order_save_unavailable', { channel });
     return { message: buildCartOrderMessage(items, note, origin), order: null };
   }
 }

@@ -93,6 +93,34 @@ Optional integrations:
 | WhatsApp delivery | `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_TEAM_NUMBER` |
 | Admin push | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` |
 
+### Optional usage and performance monitoring
+
+The storefront supports self-hosted [Umami](https://docs.umami.is/docs/install) for traffic,
+conversion events, Core Web Vitals, and browser errors, plus [GlitchTip](https://glitchtip.com/documentation/)
+for server errors and sampled Express request traces. Both integrations are disabled when
+their configuration is blank. Host monitoring separately from the cPanel shop so its database
+and workers do not compete with checkout.
+
+1. Create an Umami website. Set the GitHub Actions repository variables
+   `VITE_UMAMI_URL` (HTTPS origin, without a trailing slash) and
+   `VITE_UMAMI_WEBSITE_ID`. The deployment builds these public values into the client.
+2. Create a GlitchTip server project. Set `GLITCHTIP_DSN` in the cPanel
+   Passenger app environment. Restart the server after changing it.
+   Set `GLITCHTIP_TRACE_SAMPLE_RATE=0.01` there to trace 1% of requests, or `0`
+   to capture errors without tracing.
+3. Deploy the client and server, then verify a storefront pageview and a test order
+   in the dashboards. Compare page load and API latency before and after enabling
+   monitoring. The storefront does not load a separate error SDK.
+
+Umami records pageviews and these events: `product_view`, `add_to_cart`,
+`checkout_started`, `order_channel_selected`, `order_saved`,
+`order_save_unavailable`, and `chat_handoff_started`. The last event means the app
+started opening a chat; it cannot confirm that the customer pressed Send in the
+external app. The database `orders` collection is the source of truth for saved
+orders. Analytics events contain product IDs, item counts, channel names, and a
+saved/not-saved flag, not customer contact details or order text. URL query strings
+and fragments are excluded from Umami, and admin/auth pages are excluded.
+
 Unconfigured delivery channels are skipped with a console warning. Orders are still saved and visible
 in the admin panel.
 

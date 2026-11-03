@@ -7,6 +7,7 @@ import { OFFLINE_MESSAGE } from '../lib/api';
 import type { BusinessSettings, Product, UniversalComplimentaryItem } from '../lib/types';
 import { smsOrderUrl, telegramOrderUrl, whatsappOrderUrl } from '../lib/share';
 import { placeOrder } from '../lib/placeOrder';
+import { trackEvent } from '../lib/observability';
 import { EmptyState, IconButton } from '../components/ui';
 import { QuantityPicker } from '../components/QuantityPicker';
 import { ProtectedImage } from '../components/ProtectedImage';
@@ -59,6 +60,7 @@ export function DesktopOrderSummary() {
     sessionStorage.removeItem('mena_go_checkout');
     sessionStorage.removeItem('mena_checkout_keys');
     if (!flagged || cart.length === 0) return;
+    trackEvent('checkout_started', { item_count: rawKeys ? 1 : cart.length });
     // "Buy now" checks out only the item it was pressed on.
     if (rawKeys) {
       try {
@@ -150,6 +152,7 @@ export function DesktopOrderSummary() {
       toast('error', 'Select at least one item to check out.');
       return;
     }
+    trackEvent('checkout_started', { item_count: selectedItems.length });
     setCheckoutPending(true);
     window.setTimeout(() => {
       setStep('checkout');
@@ -176,6 +179,7 @@ export function DesktopOrderSummary() {
       return;
     }
     if (selectedItems.length === 0) return;
+    trackEvent('order_channel_selected', { channel: orderChannel });
     setChannel(orderChannel);
     setSending(orderChannel);
     // The tab has to be opened inside the click, before any await, or the
@@ -197,6 +201,7 @@ export function DesktopOrderSummary() {
         : orderChannel === 'telegram' ? telegramOrderUrl(business, message)
         : smsOrderUrl(business, message);
       setSent({ channel: orderChannel, chatUrl, keys: selectedItems.map((item) => item.key) });
+      trackEvent('chat_handoff_started', { channel: orderChannel, order_saved: !!order });
       if (orderChannel === 'sms') window.location.href = chatUrl;
       else if (chatTab) chatTab.location.replace(chatUrl);
     } catch (error) {

@@ -45,6 +45,8 @@ jobs:
         working-directory: client
         env:
           VITE_APP_BASE_PATH: /shop
+          VITE_UMAMI_URL: ${{ vars.VITE_UMAMI_URL }}
+          VITE_UMAMI_WEBSITE_ID: ${{ vars.VITE_UMAMI_WEBSITE_ID }}
         run: |
           npm ci
           npm run build

@@ -4,8 +4,10 @@ import { BrowserRouter } from 'react-router-dom';
 import './index.css';
 import App from './App';
 import { AppProvider } from './store/AppContext';
+import { startObservability } from './lib/observability';
 
 const routerBase = import.meta.env.BASE_URL.replace(/\/$/, '') || undefined;
+startObservability();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

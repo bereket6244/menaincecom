@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { reportServerFailure } from './instrument.mjs';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const localStorePath = path.join(serverRoot, 'dev-data.json');
@@ -313,6 +314,7 @@ export function dbRoute(handler) {
         return res.status(err.status).json({ error: 'bad_request', message: err.message || 'Invalid request.' });
       }
       console.error('[api] error:', err);
+      reportServerFailure(req.route?.path, String(err?.code || err?.name || 'server_error').replace(/[^A-Za-z0-9_]/g, '').slice(0, 50));
       res.status(500).json({ error: 'server_error', message: 'Unexpected server error.' });
     }
   };

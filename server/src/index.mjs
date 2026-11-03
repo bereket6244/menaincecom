@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { attachErrorMonitoring } from './instrument.mjs';
 import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
@@ -311,6 +312,7 @@ async function seed() {
 
 // Final safety net: uncaught errors (e.g. multer rejections) become clean
 // JSON instead of an HTML stack trace that leaks internals.
+attachErrorMonitoring(app);
 app.use((err, _req, res, _next) => {
   console.error('[server] error:', err.message);
   if (res.headersSent) return;
