@@ -95,16 +95,18 @@ Optional integrations:
 
 ### Optional usage and performance monitoring
 
-The storefront supports self-hosted [Umami](https://docs.umami.is/docs/install) for traffic,
+The storefront supports [Umami](https://umami.is/pricing) for traffic,
 conversion events, Core Web Vitals, and browser errors, plus [GlitchTip](https://glitchtip.com/documentation/)
 for server errors and sampled Express request traces. Both integrations are disabled when
 their configuration is blank. Host monitoring separately from the cPanel shop so its database
 and workers do not compete with checkout.
 
-1. Create an Umami website. Set the GitHub Actions repository variables
+1. For a free hosted setup, create one website on Umami Cloud Hobby. Set the GitHub Actions repository variables
    `VITE_UMAMI_URL` (HTTPS origin, without a trailing slash) and
-   `VITE_UMAMI_WEBSITE_ID`. The deployment builds these public values into the client.
-2. Create a GlitchTip server project. Set `GLITCHTIP_DSN` in the cPanel
+   `VITE_UMAMI_WEBSITE_ID`. For Umami Cloud, the URL is `https://cloud.umami.is`.
+   The deployment builds these public values into the client.
+2. Create a GlitchTip hosted Hobby project. Its free tier allows 1,000 events per month,
+   including sampled performance transactions. Set `GLITCHTIP_DSN` in the cPanel
    Passenger app environment. Restart the server after changing it.
    Set `GLITCHTIP_TRACE_SAMPLE_RATE=0.01` there to trace 1% of requests, or `0`
    to capture errors without tracing.
