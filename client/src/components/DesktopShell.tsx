@@ -140,12 +140,10 @@ export function DesktopShell({ children }: { children: ReactNode }) {
               to="/digital-invitations"
               className={cx('mena-press flex h-10 items-center gap-2 px-1.5 text-[13px] font-medium text-ink/80 hover:text-pink', inviteLanded && 'invite-header-landed')}
             >
-              <img
-                src={assetUrl('digital-invites-logo.svg')}
-                alt=""
-                loading="eager"
-                decoding="async"
-                className="h-7 w-7 object-contain mix-blend-multiply"
+              <span
+                aria-hidden="true"
+                className="h-7 w-7 shrink-0 bg-current [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
+                style={{ WebkitMaskImage: `url(${assetUrl('digital-invites-logo.svg')})`, maskImage: `url(${assetUrl('digital-invites-logo.svg')})` }}
               />
               <span>Digital Invites</span>
             </Link>

@@ -17,6 +17,7 @@ const FALLBACK_DIGITAL_INVITATIONS: DigitalInvitationsContent = {
     { id: 'yeabsra-christian', title: 'Yeabsra & Christian', url: 'https://menaincet.com/yeabsrachristian', description: '' },
     { id: 'yeabsra-and-christian', title: 'Yeabsra & Christian - Wedding', url: 'https://menaincet.com/yeabsra-and-christian/', description: '' },
     { id: 'chris-yeabsra', title: 'Chris & Yeabsra', url: 'https://chris-yeabsra.menaincet.com/', description: '' },
+    { id: 'kuriftu-legacy-night', title: 'Kuriftu Legacy Night', url: 'https://menaincet.com/kuriftu-legacy-night/', description: '' },
   ],
   packages: [
     {
@@ -42,10 +43,10 @@ const FALLBACK_DIGITAL_INVITATIONS: DigitalInvitationsContent = {
       "id": "classic",
       "name": "Classic",
       "eyebrow": "",
-      "description": "A complete invitation your guests can respond to and share memories through.",
+      "description": "",
       "price": 9990,
       "compareAtPrice": null,
-      "badge": "Recommended for most weddings",
+      "badge": "Recommended",
       "features": [
         "Countdown",
         "Add to calendar",
@@ -149,6 +150,7 @@ function initials(title: string) {
 function previewImage(example: { id?: string; url: string }) {
   const key = `${example.id || ''} ${example.url}`.toLowerCase();
   if (key.includes('kalyordi')) return assetUrl('digital-invites/kalyordi-mobile.png');
+  if (key.includes('kuriftu-legacy-night')) return assetUrl('digital-invites/kuriftu-legacy-night-mobile.png');
   if (key.includes('chris-yeabsra')) return assetUrl('digital-invites/chris-yeabsra-mobile.jpg');
   if (key.includes('yeabsra-and-christian')) return assetUrl('digital-invites/yeabsra-and-christian-mobile.jpg');
   if (key.includes('yeabsrachristian') || key.includes('yeabsra-christian')) return assetUrl('digital-invites/yeabsra-christian-mobile.jpg');
@@ -293,7 +295,7 @@ export function DigitalInvitations() {
         <div className="mx-auto max-w-[1240px] lg:px-10">
           <h2 className="sr-only">Invitation examples</h2>
           <div
-            className="relative mx-auto h-[min(137vw,580px)] max-w-[900px] overflow-hidden [perspective:1100px] sm:h-[640px]"
+            className="relative mx-auto h-[min(137vw,640px)] max-w-[900px] overflow-hidden [perspective:1100px] sm:h-[640px]"
             aria-label="Digital invitation examples carousel"
             onTouchStart={(event) => { touchStartX.current = event.touches[0]?.clientX ?? null; }}
             onTouchEnd={(event) => {
@@ -428,7 +430,7 @@ export function DigitalInvitations() {
                 {highlighted && (
                   <div className="absolute left-1/2 top-0 inline-flex max-w-[calc(100%-1rem)] -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-pink px-3 py-2 text-center text-[11px] font-extrabold leading-tight text-white shadow-[0_8px_20px_rgba(238,49,123,0.28)] sm:px-4 sm:text-[12px]">
                     {recommended ? <Heart className="h-4 w-4 shrink-0 fill-white" /> : <Crown className="h-4 w-4 shrink-0 fill-white" />}
-                    {pkg.badge || (recommended ? 'Recommended for most weddings' : 'Featured')}
+                    {recommended ? 'Recommended' : pkg.badge || 'Featured'}
                   </div>
                 )}
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ background: presentation.tint }}>

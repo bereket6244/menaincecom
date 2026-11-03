@@ -121,6 +121,12 @@ const DEFAULT_DIGITAL_INVITATIONS = {
       url: 'https://chris-yeabsra.menaincet.com/',
       description: '',
     },
+    {
+      id: 'kuriftu-legacy-night',
+      title: 'Kuriftu Legacy Night',
+      url: 'https://menaincet.com/kuriftu-legacy-night/',
+      description: '',
+    },
   ],
     packages: [
       {
@@ -146,10 +152,10 @@ const DEFAULT_DIGITAL_INVITATIONS = {
         "id": "classic",
         "name": "Classic",
         "eyebrow": "",
-        "description": "A complete invitation your guests can respond to and share memories through.",
+        "description": "",
         "price": 9990,
         "compareAtPrice": null,
-        "badge": "Recommended for most weddings",
+        "badge": "Recommended",
         "features": [
           "Countdown",
           "Add to calendar",
