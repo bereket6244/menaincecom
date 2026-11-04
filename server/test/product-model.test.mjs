@@ -35,6 +35,10 @@ test('product admin syncs publication transitions and edits to linked published 
     assert.equal(shouldCreateTelegramPost(
       { status: 'draft' },
       { status: 'published', telegramChannelId: '-1001', telegramMessageId: 42 }
+    ), false);
+    assert.equal(shouldCreateTelegramPost(
+      { status: 'draft' },
+      { status: 'published', telegramChannelId: '-1001', telegramMessageId: 42, telegramDeletedAt: '2026-10-12' }
     ), true);
     assert.equal(shouldUpdateTelegramPost(
       { status: 'published', contentVersion: 2 },
@@ -56,7 +60,7 @@ test('product admin syncs publication transitions and edits to linked published 
     assert.equal(shouldUpdateTelegramPost(previous, { ...linked, telegramDeletedAt: '2026-10-12' }), false);
     assert.equal(shouldUpdateTelegramPost(previous, { ...linked, telegramMessageId: null }), false);
     assert.equal(shouldUpdateTelegramPost(null, linked), false);
-    assert.equal(shouldUpdateTelegramPost({ ...previous, status: 'draft' }, linked), false);
+    assert.equal(shouldUpdateTelegramPost({ ...previous, status: 'draft' }, linked), true);
     assert.equal(shouldUpdateTelegramPost(linked, { ...linked, telegramSyncStatus: 'error' }), true);
     process.env.TELEGRAM_SYNC_ENABLED = 'false';
     assert.equal(shouldUpdateTelegramPost(previous, linked), false);

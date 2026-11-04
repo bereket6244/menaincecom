@@ -6,10 +6,11 @@ import { records } from '../src/db.mjs';
 import { signToken } from '../src/auth.mjs';
 
 test('admin saves update linked Telegram posts and retain failed edits for retry', async (t) => {
-  const envKeys = ['TELEGRAM_SYNC_ENABLED', 'TELEGRAM_BOT_TOKEN'];
+  const envKeys = ['TELEGRAM_SYNC_ENABLED', 'TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHANNEL_ID'];
   const originalEnv = Object.fromEntries(envKeys.map((key) => [key, process.env[key]]));
   process.env.TELEGRAM_SYNC_ENABLED = 'true';
   process.env.TELEGRAM_BOT_TOKEN = 'test-token';
+  process.env.TELEGRAM_CHANNEL_ID = '-1001';
   t.after(() => {
     for (const key of envKeys) {
       if (originalEnv[key] === undefined) delete process.env[key];
@@ -63,7 +64,7 @@ test('admin saves update linked Telegram posts and retain failed edits for retry
 
   product = initialProduct();
   let result = await save({ price: 250, description: 'Updated description', photos: ['replacement-file-id'] });
-  assert.equal(result.telegramSyncStatus, 'synced');
+  assert.equal(result.telegramSyncStatus, 'synced', JSON.stringify(result.telegramSyncError));
   assert.equal(result.telegramSyncedVersion, 2);
   assert.equal(result.telegramMessageId, 42);
   assert.deepEqual(calls.map((call) => call.method), ['editMessageMedia']);
@@ -79,6 +80,28 @@ test('admin saves update linked Telegram posts and retain failed edits for retry
   assert.deepEqual(calls.map((call) => call.method), ['editMessageCaption']);
   assert.equal(calls[0].body.message_id, 42);
   assert.match(calls[0].body.caption, /Updated album/);
+
+  calls.length = 0;
+  await save({ photos: ['first', 'new-second'] });
+  assert.deepEqual(calls.map((call) => call.method), ['editMessageMedia', 'editMessageMedia']);
+  assert.equal(product.telegramMessageId, 42);
+  assert.deepEqual(product.telegramMessageIds, [42, 43]);
+
+  calls.length = 0;
+  result = await save({ photos: ['first', 'new-second', 'third'] });
+  assert.equal(result.telegramSyncStatus, 'error');
+  assert.match(result.telegramSyncError.message, /channel admin/);
+  assert.deepEqual(result.telegramMessageIds, [42, 43]);
+  assert.deepEqual(calls, []);
+
+  product.status = 'draft';
+  result = await save({ status: 'published', name: 'Republished album' });
+  assert.equal(result.telegramSyncStatus, 'error');
+  assert.deepEqual(calls, []);
+
+  result = await save({ photos: ['first', 'new-second'] });
+  assert.equal(result.telegramSyncStatus, 'synced');
+  assert.deepEqual(calls.map((call) => call.method), ['editMessageCaption']);
 
   calls.length = 0;
   product = initialProduct();
