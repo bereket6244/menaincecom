@@ -1,16 +1,10 @@
-import { useState } from 'react';
-import { apiSend } from '../lib/api';
 import type { CostInput, Product } from '../lib/types';
 import { useData } from '../lib/useData';
-import { useApp } from '../store/AppContext';
 
 type Draft = Omit<Product, 'id'> & { id?: string };
 
-export function ProductCost({ product, change, refresh }: { product: Draft; change: (next: Draft) => void; refresh: () => void }) {
-  const { data, reload } = useData<CostInput[]>('/admin/cost-inputs');
-  const { toast } = useApp();
-  const [input, setInput] = useState<Partial<CostInput> | null>(null);
-  const [busy, setBusy] = useState(false);
+export function ProductCost({ product, change }: { product: Draft; change: (next: Draft) => void }) {
+  const { data } = useData<CostInput[]>('/admin/cost-inputs');
   const inputs = data || [];
   const cost = product.cost;
   const breaks = product.priceTiers || [];
@@ -31,16 +25,6 @@ export function ProductCost({ product, change, refresh }: { product: Draft; chan
     }
   }
 
-  async function saveInput() {
-    setBusy(true);
-    try {
-      await apiSend('POST', '/admin/cost-inputs', input);
-      setInput(null);
-      reload();
-      refresh();
-    } catch (err) { toast('error', (err as Error).message); }
-    finally { setBusy(false); }
-  }
   return <section className="space-y-3 rounded-xl border border-edge bg-surface2 p-4">
     <h3 className="font-bold">Cost</h3>
     <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!cost}
@@ -59,16 +43,6 @@ export function ProductCost({ product, change, refresh }: { product: Draft; chan
         </div>;
       })}
       <button type="button" onClick={() => change({ ...product, cost: { ...cost, items: [...cost.items, { inputId: '', quantity: 1 }] } })}>+ Add input to product</button>
-      <details className="rounded border border-edge p-2"><summary>Manage shared input costs</summary>
-        <p className="my-2 text-xs">Saving a unit cost updates every product that uses it.</p>
-        {inputs.map(i => <button type="button" key={i.id} className="block py-1" onClick={() => setInput(i)}>Edit {i.name} · {i.unitCost} ETB</button>)}
-        <button type="button" onClick={() => setInput({ name: '' })}>+ New shared input</button>
-        {input && <div className="grid gap-2 pt-2 sm:grid-cols-3">
-          <label>Name<input className="field" value={input.name} onChange={e => setInput({ ...input, name: e.target.value })} /></label>
-          <label>Unit cost (ETB)<input className="field" type="number" step="any" min="0" value={input.unitCost ?? ''} onChange={e => setInput({ ...input, unitCost: Number(e.target.value) })} /></label>
-          <button type="button" disabled={busy} onClick={saveInput}>Save shared input</button>
-        </div>}
-      </details>
       <div className="grid grid-cols-2 gap-2">
         <label>Margin<select className="field" value={cost.margin} onChange={e => change({ ...product, cost: { ...cost, margin: Number(e.target.value) } })}>{[25, 10, 5].map(n => <option key={n} value={n}>{n}%</option>)}</select></label>
         <label>Tax (%)<input className="field" type="number" min="0" max="100" step="any" value={cost.tax} onChange={e => change({ ...product, cost: { ...cost, tax: Number(e.target.value) } })} /></label>

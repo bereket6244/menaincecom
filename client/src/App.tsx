@@ -23,6 +23,7 @@ const BusinessAdmin = lazy(() => import('./admin/BusinessAdmin').then((m) => ({ 
 const StorefrontAdAdmin = lazy(() => import('./admin/StorefrontAdAdmin').then((m) => ({ default: m.StorefrontAdAdmin })));
 const DigitalInvitationsAdmin = lazy(() => import('./admin/DigitalInvitationsAdmin').then((m) => ({ default: m.DigitalInvitationsAdmin })));
 const LeadsAdmin = lazy(() => import('./admin/LeadsAdmin').then((m) => ({ default: m.LeadsAdmin })));
+const MaterialsAdmin = lazy(() => import('./admin/MaterialsAdmin').then((m) => ({ default: m.MaterialsAdmin })));
 const AdminsAdmin = lazy(() => import('./admin/AdminsAdmin').then((m) => ({ default: m.AdminsAdmin })));
 
 function RouteFallback() {
@@ -48,6 +49,7 @@ export default function App() {
           <Route path="business" element={<BusinessAdmin />} />
           <Route path="storefront-ad" element={<StorefrontAdAdmin />} />
           <Route path="leads" element={<LeadsAdmin />} />
+          <Route path="materials" element={<MaterialsAdmin />} />
           <Route path="admins" element={<AdminsAdmin />} />
         </Route>
         <Route

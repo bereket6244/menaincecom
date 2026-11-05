@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet, Link } from 'react-router-dom';
 import {
-  Inbox, Package, FolderTree, Images, Users, ShieldCheck, Bell, ExternalLink, LogOut, Building2, Gift, Globe, Megaphone,
+  Inbox, Package, FolderTree, Images, Users, ShieldCheck, Bell, ExternalLink, LogOut, Building2, Gift, Globe, Megaphone, Layers,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { apiGet, apiSend } from '../lib/api';
@@ -20,6 +20,7 @@ const TABS = [
   { to: '/admin/storefront-ad', label: 'Storefront Ad', icon: Megaphone },
   { to: '/admin/leads', label: 'Leads', icon: Users },
   { to: '/admin/admins', label: 'Admins', icon: ShieldCheck },
+  { to: '/admin/materials', label: 'Materials', icon: Layers },
 ];
 
 function urlBase64ToUint8Array(base64: string) {

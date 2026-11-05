@@ -1396,7 +1396,7 @@ export function ProductsAdmin() {
               </div>
             </div>
 
-            <ProductCost product={editing} change={setEditing} refresh={reload} />
+            <ProductCost product={editing} change={setEditing} />
 
             <div>
               <SysLabel>Order limit</SysLabel>
