@@ -1,0 +1,88 @@
+﻿2026-09-29T18:45:52.0730890Z ##[group]Run curl_resolve_args=()
+2026-09-29T18:45:52.0731117Z [36;1mcurl_resolve_args=()[0m
+2026-09-29T18:45:52.0731298Z [36;1mif [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then[0m
+2026-09-29T18:45:52.0731526Z [36;1m  curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")[0m
+2026-09-29T18:45:52.0731729Z [36;1mfi[0m
+2026-09-29T18:45:52.0731849Z [36;1m[0m
+2026-09-29T18:45:52.0731975Z [36;1mupload_file() {[0m
+2026-09-29T18:45:52.0732128Z [36;1m  local local_file="$1"[0m
+2026-09-29T18:45:52.0732284Z [36;1m  local remote_dir="$2"[0m
+2026-09-29T18:45:52.0732441Z [36;1m  local remote_name="$3"[0m
+2026-09-29T18:45:52.0732648Z [36;1m  echo "Uploading ${local_file} to ${remote_dir}/${remote_name}"[0m
+2026-09-29T18:45:52.0732899Z [36;1m  curl --fail-with-body --show-error --silent \[0m
+2026-09-29T18:45:52.0733098Z [36;1m    "${curl_resolve_args[@]}" \[0m
+2026-09-29T18:45:52.0733272Z [36;1m    --connect-timeout 20 \[0m
+2026-09-29T18:45:52.0733435Z [36;1m    --max-time 120 \[0m
+2026-09-29T18:45:52.0733732Z [36;1m    --retry 2 \[0m
+2026-09-29T18:45:52.0733924Z [36;1m    -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \[0m
+2026-09-29T18:45:52.0734142Z [36;1m    -F "dir=${remote_dir}" \[0m
+2026-09-29T18:45:52.0734308Z [36;1m    -F "overwrite=1" \[0m
+2026-09-29T18:45:52.0734489Z [36;1m    -F "file=@${local_file};filename=${remote_name}" \[0m
+2026-09-29T18:45:52.0734731Z [36;1m    "${CPANEL_BASE_URL}/execute/Fileman/upload_files" >/dev/null[0m
+2026-09-29T18:45:52.0734933Z [36;1m}[0m
+2026-09-29T18:45:52.0735055Z [36;1m[0m
+2026-09-29T18:45:52.0735188Z [36;1mwhile IFS= read -r target; do[0m
+2026-09-29T18:45:52.0735358Z [36;1m  [ -n "${target}" ] || continue[0m
+2026-09-29T18:45:52.0735537Z [36;1m  fileman_server_dir="${target%%::*}"[0m
+2026-09-29T18:45:52.0735934Z [36;1m  while IFS= read -r -d '' file; do[0m
+2026-09-29T18:45:52.0736117Z [36;1m    rel="${file#server-deploy/}"[0m
+2026-09-29T18:45:52.0736293Z [36;1m    dir_name="$(dirname "${rel}")"[0m
+2026-09-29T18:45:52.0736488Z [36;1m    remote_dir="${fileman_server_dir}"[0m
+2026-09-29T18:45:52.0736672Z [36;1m    if [ "${dir_name}" != "." ]; then[0m
+2026-09-29T18:45:52.0736860Z [36;1m      remote_dir="${remote_dir}/${dir_name}"[0m
+2026-09-29T18:45:52.0737034Z [36;1m    fi[0m
+2026-09-29T18:45:52.0737206Z [36;1m    upload_file "${file}" "${remote_dir}" "$(basename "${rel}")"[0m
+2026-09-29T18:45:52.0737443Z [36;1m  done < <(find server-deploy -type f -print0)[0m
+2026-09-29T18:45:52.0737644Z [36;1mdone <<< "${CPANEL_SERVER_TARGETS}"[0m
+2026-09-29T18:45:52.0792632Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:45:52.0792795Z env:
+2026-09-29T18:45:52.0793031Z   CPANEL_BASE_URL: ***
+2026-09-29T18:45:52.0793208Z   CPANEL_TARGET_DIR: ***
+2026-09-29T18:45:52.0793366Z   CPANEL_FILEMAN_TARGET_DIR: public_html/shop
+2026-09-29T18:45:52.0793676Z   CPANEL_SERVER_TARGETS: public_html/shop::public_html/shop
+mena-shop-app-v2/server::mena-shop-app-v2/server
+2026-09-29T18:45:52.0793971Z   CPANEL_USER: ***
+2026-09-29T18:45:52.0794144Z   CPANEL_TOKEN: ***
+2026-09-29T18:45:52.0794280Z ##[endgroup]
+2026-09-29T18:45:52.0896040Z Uploading server-deploy/package-lock.json to public_html/shop/package-lock.json
+2026-09-29T18:45:53.2194844Z Uploading server-deploy/tmp/restart.txt to public_html/shop/tmp/restart.txt
+2026-09-29T18:45:54.1221100Z Uploading server-deploy/uploads/.gitkeep to public_html/shop/uploads/.gitkeep
+2026-09-29T18:45:54.9883188Z Uploading server-deploy/src/notify.mjs to public_html/shop/src/notify.mjs
+2026-09-29T18:45:55.9187379Z Uploading server-deploy/src/index.mjs to public_html/shop/src/index.mjs
+2026-09-29T18:45:56.7082063Z Uploading server-deploy/src/product-telegram.mjs to public_html/shop/src/product-telegram.mjs
+2026-09-29T18:45:57.6346273Z Uploading server-deploy/src/db.mjs to public_html/shop/src/db.mjs
+2026-09-29T18:45:58.3560441Z Uploading server-deploy/src/auth.mjs to public_html/shop/src/auth.mjs
+2026-09-29T18:45:59.1476435Z Uploading server-deploy/src/telegram-import/json-parser.mjs to public_html/shop/src/telegram-import/json-parser.mjs
+2026-09-29T18:46:00.0338185Z Uploading server-deploy/src/telegram-import/production-import.mjs to public_html/shop/src/telegram-import/production-import.mjs
+2026-09-29T18:46:00.9232521Z Uploading server-deploy/src/telegram-import/telegram-api.mjs to public_html/shop/src/telegram-import/telegram-api.mjs
+2026-09-29T18:46:01.9603546Z Uploading server-deploy/src/telegram-import/report.mjs to public_html/shop/src/telegram-import/report.mjs
+2026-09-29T18:46:02.8320436Z Uploading server-deploy/src/telegram-import/cli.mjs to public_html/shop/src/telegram-import/cli.mjs
+2026-09-29T18:46:03.7597204Z Uploading server-deploy/src/telegram-import/html-parser.mjs to public_html/shop/src/telegram-import/html-parser.mjs
+2026-09-29T18:46:04.6876850Z Uploading server-deploy/src/telegram-import/classifier.mjs to public_html/shop/src/telegram-import/classifier.mjs
+2026-09-29T18:46:05.4749856Z Uploading server-deploy/src/telegram-import/legacy-post-check.mjs to public_html/shop/src/telegram-import/legacy-post-check.mjs
+2026-09-29T18:46:06.3180338Z Uploading server-deploy/src/product-model.mjs to public_html/shop/src/product-model.mjs
+2026-09-29T18:46:07.2013203Z Uploading server-deploy/src/catalog-seed.json to public_html/shop/src/catalog-seed.json
+2026-09-29T18:46:08.1285348Z Uploading server-deploy/src/routes.mjs to public_html/shop/src/routes.mjs
+2026-09-29T18:46:09.0303310Z Uploading server-deploy/app.js to public_html/shop/app.js
+2026-09-29T18:46:09.9116895Z Uploading server-deploy/package.json to public_html/shop/package.json
+2026-09-29T18:46:10.7319302Z Uploading server-deploy/package-lock.json to mena-shop-app-v2/server/package-lock.json
+2026-09-29T18:46:11.8267693Z Uploading server-deploy/tmp/restart.txt to mena-shop-app-v2/server/tmp/restart.txt
+2026-09-29T18:46:12.6953092Z Uploading server-deploy/uploads/.gitkeep to mena-shop-app-v2/server/uploads/.gitkeep
+2026-09-29T18:46:13.6275803Z Uploading server-deploy/src/notify.mjs to mena-shop-app-v2/server/src/notify.mjs
+2026-09-29T18:46:14.5513912Z Uploading server-deploy/src/index.mjs to mena-shop-app-v2/server/src/index.mjs
+2026-09-29T18:46:15.4849338Z Uploading server-deploy/src/product-telegram.mjs to mena-shop-app-v2/server/src/product-telegram.mjs
+2026-09-29T18:46:16.3770795Z Uploading server-deploy/src/db.mjs to mena-shop-app-v2/server/src/db.mjs
+2026-09-29T18:46:17.2636655Z Uploading server-deploy/src/auth.mjs to mena-shop-app-v2/server/src/auth.mjs
+2026-09-29T18:46:18.2490101Z Uploading server-deploy/src/telegram-import/json-parser.mjs to mena-shop-app-v2/server/src/telegram-import/json-parser.mjs
+2026-09-29T18:46:19.1790527Z Uploading server-deploy/src/telegram-import/production-import.mjs to mena-shop-app-v2/server/src/telegram-import/production-import.mjs
+2026-09-29T18:46:20.0214554Z Uploading server-deploy/src/telegram-import/telegram-api.mjs to mena-shop-app-v2/server/src/telegram-import/telegram-api.mjs
+2026-09-29T18:46:20.7548683Z Uploading server-deploy/src/telegram-import/report.mjs to mena-shop-app-v2/server/src/telegram-import/report.mjs
+2026-09-29T18:46:21.5419506Z Uploading server-deploy/src/telegram-import/cli.mjs to mena-shop-app-v2/server/src/telegram-import/cli.mjs
+2026-09-29T18:46:22.4810449Z Uploading server-deploy/src/telegram-import/html-parser.mjs to mena-shop-app-v2/server/src/telegram-import/html-parser.mjs
+2026-09-29T18:46:23.5091226Z Uploading server-deploy/src/telegram-import/classifier.mjs to mena-shop-app-v2/server/src/telegram-import/classifier.mjs
+2026-09-29T18:46:24.2671982Z Uploading server-deploy/src/telegram-import/legacy-post-check.mjs to mena-shop-app-v2/server/src/telegram-import/legacy-post-check.mjs
+2026-09-29T18:46:25.0137000Z Uploading server-deploy/src/product-model.mjs to mena-shop-app-v2/server/src/product-model.mjs
+2026-09-29T18:46:25.7953963Z Uploading server-deploy/src/catalog-seed.json to mena-shop-app-v2/server/src/catalog-seed.json
+2026-09-29T18:46:26.7584139Z Uploading server-deploy/src/routes.mjs to mena-shop-app-v2/server/src/routes.mjs
+2026-09-29T18:46:27.6119809Z Uploading server-deploy/app.js to mena-shop-app-v2/server/app.js
+2026-09-29T18:46:28.3598400Z Uploading server-deploy/package.json to mena-shop-app-v2/server/package.json

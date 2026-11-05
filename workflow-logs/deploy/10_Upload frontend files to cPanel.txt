@@ -1,0 +1,92 @@
+﻿2026-09-29T18:45:01.4224164Z ##[group]Run curl_resolve_args=()
+2026-09-29T18:45:01.4224493Z [36;1mcurl_resolve_args=()[0m
+2026-09-29T18:45:01.4224780Z [36;1mif [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then[0m
+2026-09-29T18:45:01.4225136Z [36;1m  curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")[0m
+2026-09-29T18:45:01.4225492Z [36;1mfi[0m
+2026-09-29T18:45:01.4225824Z [36;1m[0m
+2026-09-29T18:45:01.4226013Z [36;1mupload_file() {[0m
+2026-09-29T18:45:01.4226236Z [36;1m  local local_file="$1"[0m
+2026-09-29T18:45:01.4226483Z [36;1m  local remote_dir="$2"[0m
+2026-09-29T18:45:01.4226731Z [36;1m  local remote_name="$3"[0m
+2026-09-29T18:45:01.4227082Z [36;1m  echo "Uploading ${local_file} to ${remote_dir}/${remote_name}"[0m
+2026-09-29T18:45:01.4227494Z [36;1m  curl --fail-with-body --show-error --silent \[0m
+2026-09-29T18:45:01.4227806Z [36;1m    "${curl_resolve_args[@]}" \[0m
+2026-09-29T18:45:01.4228079Z [36;1m    --connect-timeout 20 \[0m
+2026-09-29T18:45:01.4228329Z [36;1m    --max-time 120 \[0m
+2026-09-29T18:45:01.4228601Z [36;1m    --retry 2 \[0m
+2026-09-29T18:45:01.4228903Z [36;1m    -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \[0m
+2026-09-29T18:45:01.4229245Z [36;1m    -F "dir=${remote_dir}" \[0m
+2026-09-29T18:45:01.4229514Z [36;1m    -F "overwrite=1" \[0m
+2026-09-29T18:45:01.4229798Z [36;1m    -F "file=@${local_file};filename=${remote_name}" \[0m
+2026-09-29T18:45:01.4230182Z [36;1m    "${CPANEL_BASE_URL}/execute/Fileman/upload_files" >/dev/null[0m
+2026-09-29T18:45:01.4230509Z [36;1m}[0m
+2026-09-29T18:45:01.4230696Z [36;1m[0m
+2026-09-29T18:45:01.4230905Z [36;1mwhile IFS= read -r -d '' file; do[0m
+2026-09-29T18:45:01.4231396Z [36;1m  rel="${file#client/dist/}"[0m
+2026-09-29T18:45:01.4231662Z [36;1m  dir_name="$(dirname "${rel}")"[0m
+2026-09-29T18:45:01.4231966Z [36;1m  remote_dir="${CPANEL_FILEMAN_TARGET_DIR}"[0m
+2026-09-29T18:45:01.4232271Z [36;1m  if [ "${dir_name}" != "." ]; then[0m
+2026-09-29T18:45:01.4232567Z [36;1m    remote_dir="${remote_dir}/${dir_name}"[0m
+2026-09-29T18:45:01.4232849Z [36;1m  fi[0m
+2026-09-29T18:45:01.4233123Z [36;1m  upload_file "${file}" "${remote_dir}" "$(basename "${rel}")"[0m
+2026-09-29T18:45:01.4233494Z [36;1mdone < <(find client/dist -type f -print0)[0m
+2026-09-29T18:45:01.4289718Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:45:01.4289886Z env:
+2026-09-29T18:45:01.4290203Z   CPANEL_BASE_URL: ***
+2026-09-29T18:45:01.4290568Z   CPANEL_TARGET_DIR: ***
+2026-09-29T18:45:01.4290817Z   CPANEL_FILEMAN_TARGET_DIR: public_html/shop
+2026-09-29T18:45:01.4291095Z   CPANEL_USER: ***
+2026-09-29T18:45:01.4291331Z   CPANEL_TOKEN: ***
+2026-09-29T18:45:01.4291546Z ##[endgroup]
+2026-09-29T18:45:01.4398208Z Uploading client/dist/favicon.svg to public_html/shop/favicon.svg
+2026-09-29T18:45:02.4437290Z Uploading client/dist/menainc-logo-landscape.png to public_html/shop/menainc-logo-landscape.png
+2026-09-29T18:45:03.6434077Z Uploading client/dist/.htaccess to public_html/shop/.htaccess
+2026-09-29T18:45:04.7762947Z Uploading client/dist/assets/DesktopProductCard-aAtfocjZ.js to public_html/shop/assets/DesktopProductCard-aAtfocjZ.js
+2026-09-29T18:45:05.7126877Z Uploading client/dist/assets/mena-watermark-tile-Q-zS4uEt.js to public_html/shop/assets/mena-watermark-tile-Q-zS4uEt.js
+2026-09-29T18:45:06.6445549Z Uploading client/dist/assets/trash-2-BwnEefBt.js to public_html/shop/assets/trash-2-BwnEefBt.js
+2026-09-29T18:45:07.9161966Z Uploading client/dist/assets/Wishlist-BSFRClO0.js to public_html/shop/assets/Wishlist-BSFRClO0.js
+2026-09-29T18:45:08.8104640Z Uploading client/dist/assets/arrow-up-down-DYQiB40d.js to public_html/shop/assets/arrow-up-down-DYQiB40d.js
+2026-09-29T18:45:09.6996171Z Uploading client/dist/assets/OrderSummary-B-XvJeSi.js to public_html/shop/assets/OrderSummary-B-XvJeSi.js
+2026-09-29T18:45:10.7047161Z Uploading client/dist/assets/DigitalInvitations-CP9Wq7Mu.js to public_html/shop/assets/DigitalInvitations-CP9Wq7Mu.js
+2026-09-29T18:45:11.5221573Z Uploading client/dist/assets/gift-BfMWvi24.js to public_html/shop/assets/gift-BfMWvi24.js
+2026-09-29T18:45:12.3048712Z Uploading client/dist/assets/index-BSh8dO6L.js to public_html/shop/assets/index-BSh8dO6L.js
+2026-09-29T18:45:13.6121488Z Uploading client/dist/assets/Contact-ChN-gnOM.js to public_html/shop/assets/Contact-ChN-gnOM.js
+2026-09-29T18:45:14.4758162Z Uploading client/dist/assets/mena-watermark-tile-D3oaRMmc.png to public_html/shop/assets/mena-watermark-tile-D3oaRMmc.png
+2026-09-29T18:45:15.3325249Z Uploading client/dist/assets/GalleryAdmin-WBm4Dt-f.js to public_html/shop/assets/GalleryAdmin-WBm4Dt-f.js
+2026-09-29T18:45:16.2842989Z Uploading client/dist/assets/QuantityPicker-DplJP2P4.js to public_html/shop/assets/QuantityPicker-DplJP2P4.js
+2026-09-29T18:45:17.2620146Z Uploading client/dist/assets/Catalog--AUGPFS8.js to public_html/shop/assets/Catalog--AUGPFS8.js
+2026-09-29T18:45:18.1965244Z Uploading client/dist/assets/PhotoUpload-B_wf_Ks8.js to public_html/shop/assets/PhotoUpload-B_wf_Ks8.js
+2026-09-29T18:45:19.1639703Z Uploading client/dist/assets/ComplimentaryItemsAdmin-BAZsjHPr.js to public_html/shop/assets/ComplimentaryItemsAdmin-BAZsjHPr.js
+2026-09-29T18:45:20.2690760Z Uploading client/dist/assets/CategoriesAdmin-DC1224hg.js to public_html/shop/assets/CategoriesAdmin-DC1224hg.js
+2026-09-29T18:45:21.2038440Z Uploading client/dist/assets/AdminsAdmin-CTbtifAi.js to public_html/shop/assets/AdminsAdmin-CTbtifAi.js
+2026-09-29T18:45:22.0338387Z Uploading client/dist/assets/menainc-wordmark-Djp1Mj4-.png to public_html/shop/assets/menainc-wordmark-Djp1Mj4-.png
+2026-09-29T18:45:23.0968958Z Uploading client/dist/assets/plus-CJPnt4TH.js to public_html/shop/assets/plus-CJPnt4TH.js
+2026-09-29T18:45:24.1729008Z Uploading client/dist/assets/MobileProductCard-gmIjAm2q.js to public_html/shop/assets/MobileProductCard-gmIjAm2q.js
+2026-09-29T18:45:25.0597293Z Uploading client/dist/assets/clock-mJSkKTsA.js to public_html/shop/assets/clock-mJSkKTsA.js
+2026-09-29T18:45:26.0421391Z Uploading client/dist/assets/AdminShell-EfxjCXiX.js to public_html/shop/assets/AdminShell-EfxjCXiX.js
+2026-09-29T18:45:26.9793907Z Uploading client/dist/assets/LeadsAdmin-BNi0MGM9.js to public_html/shop/assets/LeadsAdmin-BNi0MGM9.js
+2026-09-29T18:45:27.7683333Z Uploading client/dist/assets/shield-check-TQUt4Y7E.js to public_html/shop/assets/shield-check-TQUt4Y7E.js
+2026-09-29T18:45:28.6132807Z Uploading client/dist/assets/variantFacets-D2O9l9vY.js to public_html/shop/assets/variantFacets-D2O9l9vY.js
+2026-09-29T18:45:29.4827976Z Uploading client/dist/assets/Gallery-BexA6L47.js to public_html/shop/assets/Gallery-BexA6L47.js
+2026-09-29T18:45:30.2835111Z Uploading client/dist/assets/DataTable-ox695BU_.js to public_html/shop/assets/DataTable-ox695BU_.js
+2026-09-29T18:45:31.0844559Z Uploading client/dist/assets/OrdersAdmin-T5HaMZWc.js to public_html/shop/assets/OrdersAdmin-T5HaMZWc.js
+2026-09-29T18:45:31.8689866Z Uploading client/dist/assets/Login-C29oMurW.js to public_html/shop/assets/Login-C29oMurW.js
+2026-09-29T18:45:32.6015156Z Uploading client/dist/assets/react-vendor-DPFqZsMj.js to public_html/shop/assets/react-vendor-DPFqZsMj.js
+2026-09-29T18:45:33.6006830Z Uploading client/dist/assets/external-link-CQOckPfQ.js to public_html/shop/assets/external-link-CQOckPfQ.js
+2026-09-29T18:45:34.3890662Z Uploading client/dist/assets/productCategories-DlRC3Yei.js to public_html/shop/assets/productCategories-DlRC3Yei.js
+2026-09-29T18:45:35.2057881Z Uploading client/dist/assets/BusinessAdmin-Q7bCbjKI.js to public_html/shop/assets/BusinessAdmin-Q7bCbjKI.js
+2026-09-29T18:45:36.1313928Z Uploading client/dist/assets/ProductDetail-CEUbe6Vn.js to public_html/shop/assets/ProductDetail-CEUbe6Vn.js
+2026-09-29T18:45:37.0095234Z Uploading client/dist/assets/refresh-cw-BlTernRP.js to public_html/shop/assets/refresh-cw-BlTernRP.js
+2026-09-29T18:45:37.9571148Z Uploading client/dist/assets/check-CkdcySWU.js to public_html/shop/assets/check-CkdcySWU.js
+2026-09-29T18:45:38.8572810Z Uploading client/dist/assets/phone-DyqqTf6j.js to public_html/shop/assets/phone-DyqqTf6j.js
+2026-09-29T18:45:39.7864583Z Uploading client/dist/assets/ProductsAdmin-C0NCW_qa.js to public_html/shop/assets/ProductsAdmin-C0NCW_qa.js
+2026-09-29T18:45:40.8079188Z Uploading client/dist/assets/index-CP0Nol3J.css to public_html/shop/assets/index-CP0Nol3J.css
+2026-09-29T18:45:41.8616388Z Uploading client/dist/index.html to public_html/shop/index.html
+2026-09-29T18:45:42.6491918Z Uploading client/dist/menainc-icon.png to public_html/shop/menainc-icon.png
+2026-09-29T18:45:43.6078096Z Uploading client/dist/sw.js to public_html/shop/sw.js
+2026-09-29T18:45:44.4579070Z Uploading client/dist/digital-invites-icon.webp to public_html/shop/digital-invites-icon.webp
+2026-09-29T18:45:45.3910787Z Uploading client/dist/digital-invites-icon.png to public_html/shop/digital-invites-icon.png
+2026-09-29T18:45:46.5667915Z Uploading client/dist/digital-invites/yeabsra-christian.png to public_html/shop/digital-invites/yeabsra-christian.png
+2026-09-29T18:45:47.6973008Z Uploading client/dist/digital-invites/yordanos-kaleab.png to public_html/shop/digital-invites/yordanos-kaleab.png
+2026-09-29T18:45:49.0154138Z Uploading client/dist/digital-invites/yeabsra-christian.webp to public_html/shop/digital-invites/yeabsra-christian.webp
+2026-09-29T18:45:49.9400674Z Uploading client/dist/digital-invites/yordanos-kaleab.webp to public_html/shop/digital-invites/yordanos-kaleab.webp

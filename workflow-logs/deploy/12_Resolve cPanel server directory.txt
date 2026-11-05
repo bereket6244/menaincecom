@@ -1,0 +1,105 @@
+﻿2026-09-29T18:45:51.0878363Z ##[group]Run curl_resolve_args=()
+2026-09-29T18:45:51.0878617Z [36;1mcurl_resolve_args=()[0m
+2026-09-29T18:45:51.0878804Z [36;1mif [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then[0m
+2026-09-29T18:45:51.0879033Z [36;1m  curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")[0m
+2026-09-29T18:45:51.0879236Z [36;1mfi[0m
+2026-09-29T18:45:51.0879370Z [36;1mset -euo pipefail[0m
+2026-09-29T18:45:51.0879517Z [36;1m[0m
+2026-09-29T18:45:51.0879706Z [36;1mapps_json="$(curl --fail-with-body --show-error --silent \[0m
+2026-09-29T18:45:51.0879937Z [36;1m  "${curl_resolve_args[@]}" \[0m
+2026-09-29T18:45:51.0880105Z [36;1m  --connect-timeout 20 \[0m
+2026-09-29T18:45:51.0880267Z [36;1m  --max-time 120 \[0m
+2026-09-29T18:45:51.0880427Z [36;1m  --retry 2 \[0m
+2026-09-29T18:45:51.0880616Z [36;1m  -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \[0m
+2026-09-29T18:45:51.0880896Z [36;1m  "${CPANEL_BASE_URL}/execute/PassengerApps/list_applications")"[0m
+2026-09-29T18:45:51.0881107Z [36;1m[0m
+2026-09-29T18:45:51.0881257Z [36;1mprintf '%s\n' "${apps_json}" | jq '[0m
+2026-09-29T18:45:51.0881432Z [36;1m  (.data // [])[0m
+2026-09-29T18:45:51.0881672Z [36;1m  | map(select(((.base_uri // .uri // .url // "") == "/shop") or ((.name // "") | test("shop"; "i"))))[0m
+2026-09-29T18:45:51.0881926Z [36;1m  | map({[0m
+2026-09-29T18:45:51.0882058Z [36;1m      name,[0m
+2026-09-29T18:45:51.0882228Z [36;1m      path: (.path // .app_root // .app_path // null),[0m
+2026-09-29T18:45:51.0882448Z [36;1m      base_uri: (.base_uri // .uri // .url // null),[0m
+2026-09-29T18:45:51.0882722Z [36;1m      startup_file: (.startup_file // .startupfile // .entry_point // .startup // null),[0m
+2026-09-29T18:45:51.0882992Z [36;1m      app_type: (.app_type // .type // null),[0m
+2026-09-29T18:45:51.0883176Z [36;1m      enabled,[0m
+2026-09-29T18:45:51.0883328Z [36;1m      deployment_mode[0m
+2026-09-29T18:45:51.0883485Z [36;1m    })[0m
+2026-09-29T18:45:51.0883616Z [36;1m'[0m
+2026-09-29T18:45:51.0883732Z [36;1m[0m
+2026-09-29T18:45:51.0883906Z [36;1mdiscovered_app_path="$(printf '%s' "${apps_json}" | jq -r '[0m
+2026-09-29T18:45:51.0884115Z [36;1m  (.data // [])[0m
+2026-09-29T18:45:51.0884343Z [36;1m  | map(select(((.base_uri // .uri // .url // "") == "/shop") or ((.name // "") | test("shop"; "i"))))[0m
+2026-09-29T18:45:51.0884585Z [36;1m  | first[0m
+2026-09-29T18:45:51.0884743Z [36;1m  | (.path // .app_root // .app_path // empty)[0m
+2026-09-29T18:45:51.0884923Z [36;1m')"[0m
+2026-09-29T18:45:51.0885046Z [36;1m[0m
+2026-09-29T18:45:51.0885167Z [36;1mserver_targets=()[0m
+2026-09-29T18:45:51.0885316Z [36;1madd_server_target() {[0m
+2026-09-29T18:45:51.0885467Z [36;1m  local raw_dir="$1"[0m
+2026-09-29T18:45:51.0885793Z [36;1m  local server_dir app_path fileman_server_dir target[0m
+2026-09-29T18:45:51.0886006Z [36;1m  [ -n "${raw_dir}" ] || return 0[0m
+2026-09-29T18:45:51.0886174Z [36;1m  raw_dir="${raw_dir%/}"[0m
+2026-09-29T18:45:51.0886338Z [36;1m  if [[ "${raw_dir}" = /* ]]; then[0m
+2026-09-29T18:45:51.0886509Z [36;1m    server_dir="${raw_dir}"[0m
+2026-09-29T18:45:51.0886698Z [36;1m    app_path="${server_dir#/home/${CPANEL_USER}/}"[0m
+2026-09-29T18:45:51.0886877Z [36;1m  else[0m
+2026-09-29T18:45:51.0887014Z [36;1m    app_path="${raw_dir#/}"[0m
+2026-09-29T18:45:51.0887200Z [36;1m    server_dir="/home/${CPANEL_USER}/${app_path}"[0m
+2026-09-29T18:45:51.0887380Z [36;1m  fi[0m
+2026-09-29T18:45:51.0887516Z [36;1m[0m
+2026-09-29T18:45:51.0887666Z [36;1m  fileman_server_dir="${server_dir}"[0m
+2026-09-29T18:45:51.0887890Z [36;1m  if [[ "${fileman_server_dir}" == "/home/${CPANEL_USER}/"* ]]; then[0m
+2026-09-29T18:45:51.0888156Z [36;1m    fileman_server_dir="${fileman_server_dir#/home/${CPANEL_USER}/}"[0m
+2026-09-29T18:45:51.0888575Z [36;1m  fi[0m
+2026-09-29T18:45:51.0888726Z [36;1m  fileman_server_dir="${fileman_server_dir#/}"[0m
+2026-09-29T18:45:51.0888936Z [36;1m  target="${fileman_server_dir}::${app_path}"[0m
+2026-09-29T18:45:51.0889136Z [36;1m  for existing in "${server_targets[@]}"; do[0m
+2026-09-29T18:45:51.0889445Z [36;1m    if [ "${existing}" = "${target}" ]; then[0m
+2026-09-29T18:45:51.0889618Z [36;1m      return 0[0m
+2026-09-29T18:45:51.0889747Z [36;1m    fi[0m
+2026-09-29T18:45:51.0889871Z [36;1m  done[0m
+2026-09-29T18:45:51.0890015Z [36;1m  echo "Will deploy server to ${server_dir}"[0m
+2026-09-29T18:45:51.0890202Z [36;1m  server_targets+=("${target}")[0m
+2026-09-29T18:45:51.0890354Z [36;1m}[0m
+2026-09-29T18:45:51.0890470Z [36;1m[0m
+2026-09-29T18:45:51.0890609Z [36;1madd_server_target "${CPANEL_TARGET_DIR}"[0m
+2026-09-29T18:45:51.0890804Z [36;1mif [ -n "${CPANEL_SERVER_DIR:-}" ]; then[0m
+2026-09-29T18:45:51.0890995Z [36;1m  add_server_target "${CPANEL_SERVER_DIR}"[0m
+2026-09-29T18:45:51.0891170Z [36;1mfi[0m
+2026-09-29T18:45:51.0891309Z [36;1mif [ -n "${discovered_app_path}" ]; then[0m
+2026-09-29T18:45:51.0891503Z [36;1m  add_server_target "${discovered_app_path}"[0m
+2026-09-29T18:45:51.0891675Z [36;1mfi[0m
+2026-09-29T18:45:51.0891792Z [36;1m[0m
+2026-09-29T18:45:51.0891934Z [36;1mif [ "${#server_targets[@]}" -eq 0 ]; then[0m
+2026-09-29T18:45:51.0892203Z [36;1m  echo "CPANEL_SERVER_DIR is required when the Passenger app cannot be discovered." >&2[0m
+2026-09-29T18:45:51.0892456Z [36;1m  exit 1[0m
+2026-09-29T18:45:51.0892578Z [36;1mfi[0m
+2026-09-29T18:45:51.0892691Z [36;1m[0m
+2026-09-29T18:45:51.0892803Z [36;1m{[0m
+2026-09-29T18:45:51.0892942Z [36;1m  echo "CPANEL_SERVER_TARGETS<<EOF"[0m
+2026-09-29T18:45:51.0893124Z [36;1m  printf '%s\n' "${server_targets[@]}"[0m
+2026-09-29T18:45:51.0893296Z [36;1m  echo "EOF"[0m
+2026-09-29T18:45:51.0893430Z [36;1m} >> "$GITHUB_ENV"[0m
+2026-09-29T18:45:51.0941734Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:45:51.0941891Z env:
+2026-09-29T18:45:51.0942153Z   CPANEL_BASE_URL: ***
+2026-09-29T18:45:51.0942326Z   CPANEL_TARGET_DIR: ***
+2026-09-29T18:45:51.0942485Z   CPANEL_FILEMAN_TARGET_DIR: public_html/shop
+2026-09-29T18:45:51.0942702Z   CPANEL_SERVER_DIR: ***
+2026-09-29T18:45:51.0942847Z   CPANEL_USER: ***
+2026-09-29T18:45:51.0943012Z   CPANEL_TOKEN: ***
+2026-09-29T18:45:51.0943142Z ##[endgroup]
+2026-09-29T18:45:52.0672132Z [
+2026-09-29T18:45:52.0672420Z   {
+2026-09-29T18:45:52.0672620Z     "name": "mena-shop-app-v2",
+2026-09-29T18:45:52.0673269Z     "path": "***",
+2026-09-29T18:45:52.0673494Z     "base_uri": "/shop",
+2026-09-29T18:45:52.0673719Z     "startup_file": null,
+2026-09-29T18:45:52.0673959Z     "app_type": null,
+2026-09-29T18:45:52.0674185Z     "enabled": "1",
+2026-09-29T18:45:52.0674442Z     "deployment_mode": "production"
+2026-09-29T18:45:52.0674702Z   }
+2026-09-29T18:45:52.0674885Z ]
+2026-09-29T18:45:52.0703282Z Will deploy server to ***
+2026-09-29T18:45:52.0703737Z Will deploy server to ***

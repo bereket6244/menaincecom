@@ -1,0 +1,39 @@
+﻿2026-09-29T18:44:58.7803342Z ##[group]Run rm -rf server-deploy
+2026-09-29T18:44:58.7803589Z [36;1mrm -rf server-deploy[0m
+2026-09-29T18:44:58.7803786Z [36;1mmkdir -p server-deploy/tmp server-deploy/uploads[0m
+2026-09-29T18:44:58.7804069Z [36;1mcp server/app.js server/package.json server/package-lock.json server-deploy/[0m
+2026-09-29T18:44:58.7804344Z [36;1mif [ -f server/dev-data.json ]; then[0m
+2026-09-29T18:44:58.7804536Z [36;1m  cp server/dev-data.json server-deploy/[0m
+2026-09-29T18:44:58.7804709Z [36;1mfi[0m
+2026-09-29T18:44:58.7804847Z [36;1mcp -R server/src server-deploy/[0m
+2026-09-29T18:44:58.7805029Z [36;1mtouch server-deploy/uploads/.gitkeep[0m
+2026-09-29T18:44:58.7805248Z [36;1mdate -u +"%Y-%m-%dT%H:%M:%SZ" > server-deploy/tmp/restart.txt[0m
+2026-09-29T18:44:58.7805463Z [36;1mcd server-deploy[0m
+2026-09-29T18:44:58.7805787Z [36;1mzip -r ../server-deploy.zip .[0m
+2026-09-29T18:44:58.7859920Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:44:58.7860111Z ##[endgroup]
+2026-09-29T18:44:58.8024861Z   adding: package-lock.json (deflated 73%)
+2026-09-29T18:44:58.8025395Z   adding: tmp/ (stored 0%)
+2026-09-29T18:44:58.8025824Z   adding: tmp/restart.txt (stored 0%)
+2026-09-29T18:44:58.8026052Z   adding: uploads/ (stored 0%)
+2026-09-29T18:44:58.8026265Z   adding: uploads/.gitkeep (stored 0%)
+2026-09-29T18:44:58.8026483Z   adding: src/ (stored 0%)
+2026-09-29T18:44:58.8026875Z   adding: src/notify.mjs (deflated 62%)
+2026-09-29T18:44:58.8028224Z   adding: src/index.mjs (deflated 64%)
+2026-09-29T18:44:58.8030816Z   adding: src/product-telegram.mjs (deflated 73%)
+2026-09-29T18:44:58.8032521Z   adding: src/db.mjs (deflated 70%)
+2026-09-29T18:44:58.8033410Z   adding: src/auth.mjs (deflated 58%)
+2026-09-29T18:44:58.8033754Z   adding: src/telegram-import/ (stored 0%)
+2026-09-29T18:44:58.8034492Z   adding: src/telegram-import/json-parser.mjs (deflated 63%)
+2026-09-29T18:44:58.8037441Z   adding: src/telegram-import/production-import.mjs (deflated 68%)
+2026-09-29T18:44:58.8037923Z   adding: src/telegram-import/telegram-api.mjs (deflated 43%)
+2026-09-29T18:44:58.8039005Z   adding: src/telegram-import/report.mjs (deflated 69%)
+2026-09-29T18:44:58.8039575Z   adding: src/telegram-import/cli.mjs (deflated 60%)
+2026-09-29T18:44:58.8040842Z   adding: src/telegram-import/html-parser.mjs (deflated 64%)
+2026-09-29T18:44:58.8041872Z   adding: src/telegram-import/classifier.mjs (deflated 66%)
+2026-09-29T18:44:58.8042779Z   adding: src/telegram-import/legacy-post-check.mjs (deflated 62%)
+2026-09-29T18:44:58.8043220Z   adding: src/product-model.mjs (deflated 52%)
+2026-09-29T18:44:58.8045941Z   adding: src/catalog-seed.json (deflated 85%)
+2026-09-29T18:44:58.8053139Z   adding: src/routes.mjs (deflated 74%)
+2026-09-29T18:44:58.8053507Z   adding: app.js (deflated 48%)
+2026-09-29T18:44:58.8053908Z   adding: package.json (deflated 57%)

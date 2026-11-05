@@ -1,0 +1,56 @@
+﻿2026-09-29T18:45:00.5123689Z ##[group]Run set -euo pipefail
+2026-09-29T18:45:00.5123902Z [36;1mset -euo pipefail[0m
+2026-09-29T18:45:00.5124043Z [36;1mmissing=()[0m
+2026-09-29T18:45:00.5124208Z [36;1m[ -n "${CPANEL_USER:-}" ] || missing+=("CPANEL_USER")[0m
+2026-09-29T18:45:00.5124426Z [36;1m[ -n "${CPANEL_TOKEN:-}" ] || missing+=("CPANEL_TOKEN")[0m
+2026-09-29T18:45:00.5124604Z [36;1m[0m
+2026-09-29T18:45:00.5124734Z [36;1mif [ "${#missing[@]}" -gt 0 ]; then[0m
+2026-09-29T18:45:00.5124959Z [36;1m  printf 'Missing required cPanel secret(s): %s\n' "${missing[*]}" >&2[0m
+2026-09-29T18:45:00.5125183Z [36;1m  exit 1[0m
+2026-09-29T18:45:00.5125303Z [36;1mfi[0m
+2026-09-29T18:45:00.5125414Z [36;1m[0m
+2026-09-29T18:45:00.5125546Z [36;1mif [ -z "${CPANEL_TARGET_DIR:-}" ]; then[0m
+2026-09-29T18:45:00.5125915Z [36;1m  CPANEL_TARGET_DIR="/home/${CPANEL_USER}/public_html/shop"[0m
+2026-09-29T18:45:00.5126106Z [36;1mfi[0m
+2026-09-29T18:45:00.5126256Z [36;1mCPANEL_FILEMAN_TARGET_DIR="${CPANEL_TARGET_DIR}"[0m
+2026-09-29T18:45:00.5126514Z [36;1mif [[ "${CPANEL_FILEMAN_TARGET_DIR}" == "/home/${CPANEL_USER}/"* ]]; then[0m
+2026-09-29T18:45:00.5126797Z [36;1m  CPANEL_FILEMAN_TARGET_DIR="${CPANEL_FILEMAN_TARGET_DIR#/home/${CPANEL_USER}/}"[0m
+2026-09-29T18:45:00.5127019Z [36;1mfi[0m
+2026-09-29T18:45:00.5127175Z [36;1mCPANEL_FILEMAN_TARGET_DIR="${CPANEL_FILEMAN_TARGET_DIR#/}"[0m
+2026-09-29T18:45:00.5127365Z [36;1m[0m
+2026-09-29T18:45:00.5127509Z [36;1mecho "Deploying frontend to ${CPANEL_TARGET_DIR}"[0m
+2026-09-29T18:45:00.5127742Z [36;1mecho "Using File Manager directory ${CPANEL_FILEMAN_TARGET_DIR}"[0m
+2026-09-29T18:45:00.5128112Z [36;1mecho "CPANEL_TARGET_DIR=${CPANEL_TARGET_DIR}" >> "$GITHUB_ENV"[0m
+2026-09-29T18:45:00.5128384Z [36;1mecho "CPANEL_FILEMAN_TARGET_DIR=${CPANEL_FILEMAN_TARGET_DIR}" >> "$GITHUB_ENV"[0m
+2026-09-29T18:45:00.5128602Z [36;1m[0m
+2026-09-29T18:45:00.5128724Z [36;1mprint_cpanel_response() {[0m
+2026-09-29T18:45:00.5128875Z [36;1m  local body="$1"[0m
+2026-09-29T18:45:00.5129048Z [36;1m  if printf '%s' "${body}" | jq -e . >/dev/null 2>&1; then[0m
+2026-09-29T18:45:00.5129295Z [36;1m    printf '%s\n' "${body}" | jq -r '.errors? // .messages? // .metadata? // .'[0m
+2026-09-29T18:45:00.5129502Z [36;1m  else[0m
+2026-09-29T18:45:00.5129634Z [36;1m    printf '%s\n' "${body}"[0m
+2026-09-29T18:45:00.5129778Z [36;1m  fi[0m
+2026-09-29T18:45:00.5129895Z [36;1m}[0m
+2026-09-29T18:45:00.5130003Z [36;1m[0m
+2026-09-29T18:45:00.5130151Z [36;1mtarget_json="$(curl --show-error --silent --get \[0m
+2026-09-29T18:45:00.5130341Z [36;1m  --connect-timeout 20 \[0m
+2026-09-29T18:45:00.5130499Z [36;1m  --max-time 60 \[0m
+2026-09-29T18:45:00.5130636Z [36;1m  --retry 2 \[0m
+2026-09-29T18:45:00.5130817Z [36;1m  -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \[0m
+2026-09-29T18:45:00.5131056Z [36;1m  --data-urlencode "dir=${CPANEL_FILEMAN_TARGET_DIR}" \[0m
+2026-09-29T18:45:00.5131274Z [36;1m  "${CPANEL_BASE_URL}/execute/Fileman/list_files")"[0m
+2026-09-29T18:45:00.5131445Z [36;1m[0m
+2026-09-29T18:45:00.5131624Z [36;1mif ! printf '%s' "${target_json}" | jq -e '.status == 1' >/dev/null 2>&1; then[0m
+2026-09-29T18:45:00.5132091Z [36;1m  echo "cPanel File Manager access failed. Regenerate CPANEL_TOKEN for the exact CPANEL_USER account with File Manager/UAPI access, and confirm CPANEL_TARGET_DIR belongs to that user." >&2[0m
+2026-09-29T18:45:00.5132516Z [36;1m  print_cpanel_response "${target_json}" >&2[0m
+2026-09-29T18:45:00.5132687Z [36;1m  exit 1[0m
+2026-09-29T18:45:00.5132803Z [36;1mfi[0m
+2026-09-29T18:45:00.5183910Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:45:00.5184070Z env:
+2026-09-29T18:45:00.5184382Z   CPANEL_BASE_URL: ***
+2026-09-29T18:45:00.5184537Z   CPANEL_USER: ***
+2026-09-29T18:45:00.5184689Z   CPANEL_TOKEN: ***
+2026-09-29T18:45:00.5184847Z   CPANEL_TARGET_DIR: ***
+2026-09-29T18:45:00.5184985Z ##[endgroup]
+2026-09-29T18:45:00.5253043Z Deploying frontend to ***
+2026-09-29T18:45:00.5253401Z Using File Manager directory public_html/shop

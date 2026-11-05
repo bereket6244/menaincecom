@@ -1,0 +1,11 @@
+﻿2026-09-29T18:46:29.1451574Z ##[group]Run echo "Server files were uploaded directly; no archive extraction needed."
+2026-09-29T18:46:29.1451939Z [36;1mecho "Server files were uploaded directly; no archive extraction needed."[0m
+2026-09-29T18:46:29.1504889Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:46:29.1505041Z env:
+2026-09-29T18:46:29.1505291Z   CPANEL_BASE_URL: ***
+2026-09-29T18:46:29.1505460Z   CPANEL_TARGET_DIR: ***
+2026-09-29T18:46:29.1505761Z   CPANEL_FILEMAN_TARGET_DIR: public_html/shop
+2026-09-29T18:46:29.1506054Z   CPANEL_SERVER_TARGETS: public_html/shop::public_html/shop
+mena-shop-app-v2/server::mena-shop-app-v2/server
+2026-09-29T18:46:29.1506334Z ##[endgroup]
+2026-09-29T18:46:29.1569864Z Server files were uploaded directly; no archive extraction needed.

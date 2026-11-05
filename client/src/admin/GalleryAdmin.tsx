@@ -5,7 +5,7 @@ import { useData } from '../lib/useData';
 import { apiSend, apiUpload } from '../lib/api';
 import type { GalleryItem } from '../lib/types';
 import { Button, EmptyState, Spinner } from '../components/ui';
-import { compressImage } from '../lib/utils';
+import { acceptedImageFiles, compressImage, IMAGE_UPLOAD_ACCEPT } from '../lib/utils';
 import { useApp } from '../store/AppContext';
 
 export function GalleryAdmin() {
@@ -18,10 +18,15 @@ export function GalleryAdmin() {
 
   const upload = async (files: FileList | null) => {
     if (!files?.length) return;
+    const imageFiles = acceptedImageFiles(files);
+    if (imageFiles.length !== files.length) {
+      toast('error', 'Please choose photos only. Video uploads are not supported.');
+      return;
+    }
     setUploading(true);
     try {
       const compressed = await Promise.all(
-        [...files].map((file) => compressImage(file, { watermarkSrc: addWatermark ? watermarkImage : undefined }))
+        imageFiles.map((file) => compressImage(file, { watermarkSrc: addWatermark ? watermarkImage : undefined }))
       );
       const urls = await apiUpload(compressed);
       await Promise.all(
@@ -96,7 +101,7 @@ export function GalleryAdmin() {
               {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
               Upload photos
             </span>
-            <input type="file" accept="image/*" multiple hidden disabled={uploading} onChange={(e) => upload(e.target.files)} />
+            <input type="file" accept={IMAGE_UPLOAD_ACCEPT} multiple hidden disabled={uploading} onChange={(e) => upload(e.target.files)} />
           </label>
         </div>
       </div>

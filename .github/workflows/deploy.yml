@@ -454,10 +454,50 @@ jobs:
           echo "${health_json}" | jq -e '.version == "shop-backend-20260930-digital-invites"' >/dev/null
           business_json="$(curl --fail --show-error --silent https://menaincet.com/shop/api/content/business)"
           echo "${business_json}" | jq -e '
-            (.digitalInvitations.packages | type == "array" and length > 0) and
-            all(.digitalInvitations.packages[];
-              (.id | type == "string" and length > 0) and
-              (.name | type == "string" and length > 0) and
-              (.price | type == "number" and . >= 0)
-            )
+            .digitalInvitations.packages == [
+              {
+                "id": "basic",
+                "name": "Basic",
+                "eyebrow": "",
+                "description": "Simple and elegant",
+                "price": 9000,
+                "compareAtPrice": null,
+                "badge": "",
+                "features": ["Wedding details", "3 photos", "1 venue + map", "RSVP"],
+                "footnote": ""
+              },
+              {
+                "id": "standard",
+                "name": "Standard",
+                "eyebrow": "",
+                "description": "Best for most weddings",
+                "price": 13000,
+                "compareAtPrice": null,
+                "badge": "Most Popular",
+                "features": ["Everything in Basic", "10 photos", "2 venues + map", "2 languages + timeline"],
+                "footnote": ""
+              },
+              {
+                "id": "premium",
+                "name": "Premium",
+                "eyebrow": "",
+                "description": "More personal and complete",
+                "price": 16000,
+                "compareAtPrice": null,
+                "badge": "",
+                "features": ["Everything in Standard", "Unlimited photos", "Video + couple profile", "Gift info"],
+                "footnote": ""
+              },
+              {
+                "id": "ultimate",
+                "name": "Ultimate",
+                "eyebrow": "",
+                "description": "For full guest management",
+                "price": 18500,
+                "compareAtPrice": null,
+                "badge": "",
+                "features": ["Everything in Premium", "3+ languages", "QR code", "Live guest check-in"],
+                "footnote": ""
+              }
+            ]
           ' >/dev/null

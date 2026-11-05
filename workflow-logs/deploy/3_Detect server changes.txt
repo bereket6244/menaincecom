@@ -1,0 +1,18 @@
+﻿2026-09-29T18:44:46.7983783Z ##[group]Run set -euo pipefail
+2026-09-29T18:44:46.7984140Z [36;1mset -euo pipefail[0m
+2026-09-29T18:44:46.7984372Z [36;1mif [ "push" = "workflow_dispatch" ]; then[0m
+2026-09-29T18:44:46.7984628Z [36;1m  echo "server_changed=true" >> "$GITHUB_OUTPUT"[0m
+2026-09-29T18:44:46.7984852Z [36;1m  exit 0[0m
+2026-09-29T18:44:46.7985011Z [36;1mfi[0m
+2026-09-29T18:44:46.7985363Z [36;1m[0m
+2026-09-29T18:44:46.7985559Z [36;1mchanged_files="$(git diff --name-only HEAD^ HEAD)"[0m
+2026-09-29T18:44:46.7986065Z [36;1mprintf '%s\n' "${changed_files}"[0m
+2026-09-29T18:44:46.7986390Z [36;1mif printf '%s\n' "${changed_files}" | grep -Eq '^(server/|\.github/workflows/deploy\.yml$)'; then[0m
+2026-09-29T18:44:46.7986717Z [36;1m  echo "server_changed=true" >> "$GITHUB_OUTPUT"[0m
+2026-09-29T18:44:46.7986938Z [36;1melse[0m
+2026-09-29T18:44:46.7987139Z [36;1m  echo "server_changed=false" >> "$GITHUB_OUTPUT"[0m
+2026-09-29T18:44:46.7987354Z [36;1mfi[0m
+2026-09-29T18:44:46.8305397Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:44:46.8305866Z ##[endgroup]
+2026-09-29T18:44:46.8408101Z .github/workflows/deploy.yml
+2026-09-29T18:44:46.8408490Z server/src/index.mjs

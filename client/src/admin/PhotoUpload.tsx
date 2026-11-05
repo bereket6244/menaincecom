@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ImagePlus, Loader2, X } from 'lucide-react';
 import watermarkImage from '../assets/mena-watermark-tile.png';
 import { apiUpload } from '../lib/api';
-import { compressImage } from '../lib/utils';
+import { acceptedImageFiles, compressImage, IMAGE_UPLOAD_ACCEPT } from '../lib/utils';
 import { useApp } from '../store/AppContext';
 
 const move = (list: string[], from: number, to: number) => {
@@ -60,10 +60,16 @@ export function PhotoUpload({
 
   const pick = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+    const imageFiles = acceptedImageFiles(files);
+    if (imageFiles.length !== files.length) {
+      toast('error', 'Please choose photos only. Video uploads are not supported.');
+      if (input.current) input.current.value = '';
+      return;
+    }
     setBusy(true);
     try {
       const compressed = await Promise.all(
-        [...files].map((file) => compressImage(file, { watermarkSrc: showWatermark && addWatermark ? watermarkImage : undefined }))
+        imageFiles.map((file) => compressImage(file, { watermarkSrc: showWatermark && addWatermark ? watermarkImage : undefined }))
       );
       const urls = await apiUpload(compressed);
       onChange(single ? urls.slice(0, 1) : [...photos, ...urls].slice(0, max));
@@ -238,7 +244,7 @@ export function PhotoUpload({
         <input
           ref={input}
           type="file"
-          accept="image/*"
+          accept={IMAGE_UPLOAD_ACCEPT}
           multiple={!single}
           hidden
           onChange={(e) => pick(e.target.files)}

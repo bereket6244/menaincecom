@@ -1,0 +1,48 @@
+﻿2026-09-29T18:47:32.7414370Z ##[group]Run curl --fail --show-error --silent --head https://***/shop/
+2026-09-29T18:47:32.7414744Z [36;1mcurl --fail --show-error --silent --head https://***/shop/[0m
+2026-09-29T18:47:32.7415034Z [36;1mcurl --fail --show-error --silent --head https://***/shop/catalog[0m
+2026-09-29T18:47:32.7415374Z [36;1mcurl --fail --show-error --silent https://***/shop/api/complimentary-items >/dev/null[0m
+2026-09-29T18:47:32.7415893Z [36;1mhealth_json="$(curl --fail --show-error --silent https://***/shop/api/health)"[0m
+2026-09-29T18:47:32.7416133Z [36;1mecho "${health_json}"[0m
+2026-09-29T18:47:32.7416383Z [36;1mecho "${health_json}" | jq -e '.version == "shop-backend-20260929-catalog-seed"' >/dev/null[0m
+2026-09-29T18:47:32.7469081Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:47:32.7469230Z env:
+2026-09-29T18:47:32.7469411Z   CPANEL_BASE_URL: ***
+2026-09-29T18:47:32.7469582Z   CPANEL_TARGET_DIR: ***
+2026-09-29T18:47:32.7469741Z   CPANEL_FILEMAN_TARGET_DIR: public_html/shop
+2026-09-29T18:47:32.7470178Z   CPANEL_SERVER_TARGETS: public_html/shop::public_html/shop
+mena-shop-app-v2/server::mena-shop-app-v2/server
+2026-09-29T18:47:32.7470474Z ##[endgroup]
+2026-09-29T18:47:33.2675064Z HTTP/2 200 
+2026-09-29T18:47:33.2675395Z vary: Origin, Accept-Encoding
+2026-09-29T18:47:33.2675871Z x-content-type-options: nosniff
+2026-09-29T18:47:33.2676121Z x-frame-options: DENY
+2026-09-29T18:47:33.2676428Z referrer-policy: strict-origin-when-cross-origin
+2026-09-29T18:47:33.2676848Z permissions-policy: camera=(), microphone=(), geolocation=()
+2026-09-29T18:47:33.2677181Z cache-control: no-cache
+2026-09-29T18:47:33.2677407Z accept-ranges: bytes
+2026-09-29T18:47:33.2677696Z last-modified: Tue, 29 Sep 2026 18:45:42 GMT
+2026-09-29T18:47:33.2677977Z etag: W/"33f-1a0ee7ca9ad"
+2026-09-29T18:47:33.2678275Z content-type: text/html; charset=UTF-8
+2026-09-29T18:47:33.2678540Z content-length: 831
+2026-09-29T18:47:33.2678798Z date: Tue, 29 Sep 2026 18:47:33 GMT
+2026-09-29T18:47:33.2679040Z server: LiteSpeed
+2026-09-29T18:47:33.2679364Z alt-svc: h3=":443"; ma=2592000, h3-29=":443"; ma=2592000
+2026-09-29T18:47:33.2679578Z 
+2026-09-29T18:47:33.7360740Z HTTP/2 200 
+2026-09-29T18:47:33.7361092Z vary: Origin, Accept-Encoding
+2026-09-29T18:47:33.7361416Z x-content-type-options: nosniff
+2026-09-29T18:47:33.7361663Z x-frame-options: DENY
+2026-09-29T18:47:33.7361968Z referrer-policy: strict-origin-when-cross-origin
+2026-09-29T18:47:33.7362385Z permissions-policy: camera=(), microphone=(), geolocation=()
+2026-09-29T18:47:33.7362718Z cache-control: no-cache
+2026-09-29T18:47:33.7362941Z accept-ranges: bytes
+2026-09-29T18:47:33.7363223Z last-modified: Tue, 29 Sep 2026 18:45:42 GMT
+2026-09-29T18:47:33.7363500Z etag: W/"33f-1a0ee7ca9ad"
+2026-09-29T18:47:33.7363772Z content-type: text/html; charset=UTF-8
+2026-09-29T18:47:33.7364036Z content-length: 831
+2026-09-29T18:47:33.7364287Z date: Tue, 29 Sep 2026 18:47:33 GMT
+2026-09-29T18:47:33.7364531Z server: LiteSpeed
+2026-09-29T18:47:34.7204794Z alt-svc: h3=":443"; ma=2592000, h3-29=":443"; ma=2592000
+2026-09-29T18:47:34.7205209Z 
+2026-09-29T18:47:34.7205923Z {"ok":true,"db":false,"version":"shop-backend-20260929-catalog-seed","primary":"local","writable":true,"localStore":true,"requireMysql":false}

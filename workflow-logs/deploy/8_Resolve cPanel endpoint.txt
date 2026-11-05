@@ -1,0 +1,75 @@
+﻿2026-09-29T18:44:58.8084299Z ##[group]Run set -euo pipefail
+2026-09-29T18:44:58.8084548Z [36;1mset -euo pipefail[0m
+2026-09-29T18:44:58.8084691Z [36;1m[0m
+2026-09-29T18:44:58.8084812Z [36;1mtrim() {[0m
+2026-09-29T18:44:58.8084944Z [36;1m  local value="$1"[0m
+2026-09-29T18:44:58.8085113Z [36;1m  value="${value#"${value%%[![:space:]]*}"}"[0m
+2026-09-29T18:44:58.8085317Z [36;1m  value="${value%"${value##*[![:space:]]}"}"[0m
+2026-09-29T18:44:58.8085500Z [36;1m  printf '%s' "${value}"[0m
+2026-09-29T18:44:58.8085805Z [36;1m}[0m
+2026-09-29T18:44:58.8085934Z [36;1m[0m
+2026-09-29T18:44:58.8086063Z [36;1mif [ -n "${CPANEL_URL}" ]; then[0m
+2026-09-29T18:44:58.8086244Z [36;1m  base_url="$(trim "${CPANEL_URL}")"[0m
+2026-09-29T18:44:58.8086419Z [36;1m  base_url="${base_url%/}"[0m
+2026-09-29T18:44:58.8086593Z [36;1m  host_port="${base_url#https://}"[0m
+2026-09-29T18:44:58.8086771Z [36;1m  host_port="${host_port#http://}"[0m
+2026-09-29T18:44:58.8086945Z [36;1m  host_port="${host_port%%/*}"[0m
+2026-09-29T18:44:58.8087100Z [36;1melse[0m
+2026-09-29T18:44:58.8087425Z [36;1m  host="$(trim "${CPANEL_HOST:-cpanel.***}")"[0m
+2026-09-29T18:44:58.8087633Z [36;1m  host="${host#https://}"[0m
+2026-09-29T18:44:58.8087796Z [36;1m  host="${host#http://}"[0m
+2026-09-29T18:44:58.8087948Z [36;1m  host="${host%/}"[0m
+2026-09-29T18:44:58.8088097Z [36;1m  host="${host%%/*}"[0m
+2026-09-29T18:44:58.8088250Z [36;1m  port="${CPANEL_PORT:-2083}"[0m
+2026-09-29T18:44:58.8088425Z [36;1m  if [[ "${host}" == *:* ]]; then[0m
+2026-09-29T18:44:58.8088609Z [36;1m    base_url="https://${host}"[0m
+2026-09-29T18:44:58.8088776Z [36;1m    host_port="${host}"[0m
+2026-09-29T18:44:58.8088921Z [36;1m  else[0m
+2026-09-29T18:44:58.8089065Z [36;1m    base_url="https://${host}:${port}"[0m
+2026-09-29T18:44:58.8089245Z [36;1m    host_port="${host}:${port}"[0m
+2026-09-29T18:44:58.8089398Z [36;1m  fi[0m
+2026-09-29T18:44:58.8089517Z [36;1mfi[0m
+2026-09-29T18:44:58.8089633Z [36;1m[0m
+2026-09-29T18:44:58.8089755Z [36;1mhost="${host_port%%:*}"[0m
+2026-09-29T18:44:58.8089964Z [36;1mif [ -z "${host}" ] || [[ "${host}" == *"*"* ]] || [[ "${host}" == *" "* ]]; then[0m
+2026-09-29T18:44:58.8090396Z [36;1m  echo "Invalid cPanel hostname. CPANEL_HOST should look like 'server.example.com' or CPANEL_URL should look like 'https://server.example.com:2083'." >&2[0m
+2026-09-29T18:44:58.8090782Z [36;1m  exit 1[0m
+2026-09-29T18:44:58.8090911Z [36;1mfi[0m
+2026-09-29T18:44:58.8091027Z [36;1m[0m
+2026-09-29T18:44:58.8091154Z [36;1mport="${host_port##*:}"[0m
+2026-09-29T18:44:58.8091447Z [36;1mif [ "${port}" = "${host_port}" ]; then[0m
+2026-09-29T18:44:58.8091625Z [36;1m  port="443"[0m
+2026-09-29T18:44:58.8091766Z [36;1mfi[0m
+2026-09-29T18:44:58.8091890Z [36;1m[0m
+2026-09-29T18:44:58.8092043Z [36;1mecho "Resolved cPanel endpoint on port ${port}."[0m
+2026-09-29T18:44:58.8092266Z [36;1mif ! getent hosts "${host}" >/dev/null 2>&1; then[0m
+2026-09-29T18:44:58.8092503Z [36;1m  fallback_host="cpanel.***"[0m
+2026-09-29T18:44:58.8092696Z [36;1m  fallback_url="https://${fallback_host}:2083"[0m
+2026-09-29T18:44:58.8092974Z [36;1m  echo "Could not resolve the cPanel host from DNS. Falling back to ${fallback_url}."[0m
+2026-09-29T18:44:58.8093260Z [36;1m  if ! getent hosts "${fallback_host}" >/dev/null 2>&1; then[0m
+2026-09-29T18:44:58.8093535Z [36;1m    echo "Could not resolve the configured cPanel host or the fallback host." >&2[0m
+2026-09-29T18:44:58.8093912Z [36;1m    echo "Set CPANEL_URL to the full cPanel base URL, for example '***'." >&2[0m
+2026-09-29T18:44:58.8094141Z [36;1m    exit 1[0m
+2026-09-29T18:44:58.8094304Z [36;1m  fi[0m
+2026-09-29T18:44:58.8094439Z [36;1m  base_url="${fallback_url}"[0m
+2026-09-29T18:44:58.8094609Z [36;1m  host_port="${fallback_host}:2083"[0m
+2026-09-29T18:44:58.8094785Z [36;1m  host="${fallback_host}"[0m
+2026-09-29T18:44:58.8094937Z [36;1m  port="2083"[0m
+2026-09-29T18:44:58.8095073Z [36;1mfi[0m
+2026-09-29T18:44:58.8095190Z [36;1m[0m
+2026-09-29T18:44:58.8095347Z [36;1mecho "CPANEL_BASE_URL=${base_url}" >> "$GITHUB_ENV"[0m
+2026-09-29T18:44:58.8095888Z [36;1mecho "Using cPanel DNS/TLS routing for ${host}:${port}."[0m
+2026-09-29T18:44:58.8096107Z [36;1mcurl --show-error --silent --head \[0m
+2026-09-29T18:44:58.8096283Z [36;1m  --connect-timeout 15 \[0m
+2026-09-29T18:44:58.8096441Z [36;1m  --max-time 30 \[0m
+2026-09-29T18:44:58.8096584Z [36;1m  --retry 2 \[0m
+2026-09-29T18:44:58.8096732Z [36;1m  --retry-all-errors \[0m
+2026-09-29T18:44:58.8096889Z [36;1m  "${base_url}/" >/dev/null[0m
+2026-09-29T18:44:58.8150843Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:44:58.8151014Z env:
+2026-09-29T18:44:58.8151180Z   CPANEL_HOST: ***
+2026-09-29T18:44:58.8151375Z   CPANEL_URL: ***
+2026-09-29T18:44:58.8151506Z   CPANEL_PORT: 
+2026-09-29T18:44:58.8151636Z ##[endgroup]
+2026-09-29T18:44:58.8230384Z Resolved cPanel endpoint on port 2083.
+2026-09-29T18:44:59.4773069Z Using cPanel DNS/TLS routing for cpanel.***:2083.

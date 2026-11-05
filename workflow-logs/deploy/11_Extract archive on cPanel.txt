@@ -1,0 +1,9 @@
+﻿2026-09-29T18:45:51.0731675Z ##[group]Run echo "Frontend files were uploaded directly; no archive extraction needed."
+2026-09-29T18:45:51.0732050Z [36;1mecho "Frontend files were uploaded directly; no archive extraction needed."[0m
+2026-09-29T18:45:51.0785072Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:45:51.0785244Z env:
+2026-09-29T18:45:51.0785709Z   CPANEL_BASE_URL: ***
+2026-09-29T18:45:51.0786089Z   CPANEL_TARGET_DIR: ***
+2026-09-29T18:45:51.0786255Z   CPANEL_FILEMAN_TARGET_DIR: public_html/shop
+2026-09-29T18:45:51.0786435Z ##[endgroup]
+2026-09-29T18:45:51.0852782Z Frontend files were uploaded directly; no archive extraction needed.

@@ -1192,9 +1192,16 @@ export function ProductsAdmin() {
           : cleanComplimentaryItems(editing.complimentaryItems),
         universalComplimentaryItemIds: editing.isAddon ? [] : editing.universalComplimentaryItemIds || [],
       };
-      if (editing.id) await apiSend('PUT', `/admin/products/${editing.id}`, payload);
-      else await apiSend('POST', '/admin/products', payload);
-      toast('success', 'Product saved.');
+      const saved = await apiSend<{ status?: string; telegramMessageId?: number; telegramSyncStatus?: string }>(
+        editing.id ? 'PUT' : 'POST',
+        editing.id ? `/admin/products/${editing.id}` : '/admin/products',
+        payload,
+      );
+      if (saved.status === 'published' && (!saved.telegramMessageId || saved.telegramSyncStatus === 'error')) {
+        toast('error', 'Product saved on the website. Check Telegram synchronization in the channel.');
+      } else {
+        toast('success', 'Product saved.');
+      }
       setEditing(null);
       reload();
     } catch (err) {

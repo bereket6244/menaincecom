@@ -204,3 +204,26 @@ export async function compressImage(file: File, options: CompressImageOptions = 
   const base = file.name.replace(/\.[^.]+$/, '');
   return new File([blob], `${base}-watermarked.${keepPng ? 'png' : 'jpg'}`, { type: blob.type });
 }
+
+export const IMAGE_UPLOAD_ACCEPT = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.webp',
+  '.gif',
+  '.avif',
+].join(',');
+
+const ALLOWED_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']);
+const ALLOWED_IMAGE_EXTENSIONS = /\.(jpe?g|png|webp|gif|avif)$/i;
+
+export function acceptedImageFiles(files: FileList | File[]): File[] {
+  return Array.from(files).filter((file) => (
+    ALLOWED_IMAGE_MIME_TYPES.has(file.type) || (file.type === '' && ALLOWED_IMAGE_EXTENSIONS.test(file.name))
+  ));
+}

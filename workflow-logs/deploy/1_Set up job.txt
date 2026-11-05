@@ -1,0 +1,33 @@
+﻿2026-09-29T18:44:43.8713081Z Current runner version: '2.337.0'
+2026-09-29T18:44:43.8749248Z ##[group]Runner Image Provisioner
+2026-09-29T18:44:43.8749838Z Hosted Compute Agent
+2026-09-29T18:44:43.8750264Z Version: 20260828.587
+2026-09-29T18:44:43.8750721Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-09-29T18:44:43.8751201Z Build Date: 2026-08-28T16:44:25Z
+2026-09-29T18:44:43.8751688Z Worker ID: {72b55369-5129-434d-80d7-d30265def515}
+2026-09-29T18:44:43.8752135Z Azure Region: centralus
+2026-09-29T18:44:43.8752598Z ##[endgroup]
+2026-09-29T18:44:43.8753350Z ##[group]Operating System
+2026-09-29T18:44:43.8753786Z Ubuntu
+2026-09-29T18:44:43.8754134Z 24.04.5
+2026-09-29T18:44:43.8754511Z LTS
+2026-09-29T18:44:43.8754900Z ##[endgroup]
+2026-09-29T18:44:43.8755276Z ##[group]Runner Image
+2026-09-29T18:44:43.8755951Z Image: ubuntu-24.04
+2026-09-29T18:44:43.8756406Z Version: 20260920.314.1
+2026-09-29T18:44:43.8757068Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260920.314/images/ubuntu/Ubuntu2404-Readme.md
+2026-09-29T18:44:43.8758082Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260920.314
+2026-09-29T18:44:43.8758712Z ##[endgroup]
+2026-09-29T18:44:43.8759497Z ##[group]GITHUB_TOKEN Permissions
+2026-09-29T18:44:43.8760720Z Contents: read
+2026-09-29T18:44:43.8761147Z Metadata: read
+2026-09-29T18:44:43.8761508Z Packages: read
+2026-09-29T18:44:43.8761900Z ##[endgroup]
+2026-09-29T18:44:43.8763205Z Secret source: Actions
+2026-09-29T18:44:43.8763840Z Cache mode: write
+2026-09-29T18:44:43.8764313Z Prepare workflow directory
+2026-09-29T18:44:43.9144404Z Prepare all required actions
+2026-09-29T18:44:43.9175097Z Getting action download info
+2026-09-29T18:44:44.1764822Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-09-29T18:44:44.4222195Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-09-29T18:44:45.1045092Z Complete job name: deploy

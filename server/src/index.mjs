@@ -157,10 +157,10 @@ const DEFAULT_DIGITAL_INVITATIONS = {
         "id": "classic",
         "name": "Classic",
         "eyebrow": "",
-        "description": "",
+      "description": "",
         "price": 9990,
         "compareAtPrice": null,
-        "badge": "Recommended",
+      "badge": "Recommended",
         "features": [
           "Countdown",
           "Add to calendar",
@@ -328,6 +328,9 @@ app.use((err, _req, res, _next) => {
   console.error('[server] error:', err.message);
   if (res.headersSent) return;
   if (err.name === 'MulterError') {
+    if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({ error: 'upload_failed', message: 'Please choose photos only. Video uploads are not supported.' });
+    }
     return res.status(400).json({ error: 'upload_failed', message: `Upload failed: ${err.message}` });
   }
   res.status(err.status || 500).json({ error: 'server_error', message: 'Unexpected server error.' });

@@ -1,0 +1,73 @@
+﻿2026-09-29T18:44:45.1553890Z ##[group]Run actions/checkout@v4
+2026-09-29T18:44:45.1554408Z with:
+2026-09-29T18:44:45.1554679Z   fetch-depth: 2
+2026-09-29T18:44:45.1554976Z   repository: bereket6244/menaincecom
+2026-09-29T18:44:45.1557296Z   token: ***
+2026-09-29T18:44:45.1557573Z   ssh-strict: true
+2026-09-29T18:44:45.1557857Z   ssh-user: git
+2026-09-29T18:44:45.1558144Z   persist-credentials: true
+2026-09-29T18:44:45.1558448Z   clean: true
+2026-09-29T18:44:45.1558731Z   sparse-checkout-cone-mode: true
+2026-09-29T18:44:45.1559052Z   fetch-tags: false
+2026-09-29T18:44:45.1559334Z   show-progress: true
+2026-09-29T18:44:45.1559612Z   lfs: false
+2026-09-29T18:44:45.1559877Z   submodules: false
+2026-09-29T18:44:45.1560181Z   set-safe-directory: true
+2026-09-29T18:44:45.1560497Z   allow-unsafe-pr-checkout: false
+2026-09-29T18:44:45.1560889Z ##[endgroup]
+2026-09-29T18:44:45.2238014Z Syncing repository: bereket6244/menaincecom
+2026-09-29T18:44:45.2239508Z ##[group]Getting Git version info
+2026-09-29T18:44:45.2239972Z Working directory is '/home/runner/work/menaincecom/menaincecom'
+2026-09-29T18:44:45.2240829Z [command]/usr/bin/git version
+2026-09-29T18:44:45.2330992Z git version 2.55.0
+2026-09-29T18:44:45.2348125Z ##[endgroup]
+2026-09-29T18:44:45.2360334Z Temporarily overriding HOME='/home/runner/work/_temp/4a7ee43e-253d-4d09-8617-6a9fae4ced4a' before making global git config changes
+2026-09-29T18:44:45.2361644Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-29T18:44:45.2364741Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/menaincecom/menaincecom
+2026-09-29T18:44:45.3001339Z Deleting the contents of '/home/runner/work/menaincecom/menaincecom'
+2026-09-29T18:44:45.3009496Z ##[group]Initializing the repository
+2026-09-29T18:44:45.3013524Z [command]/usr/bin/git init /home/runner/work/menaincecom/menaincecom
+2026-09-29T18:44:45.4224115Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-09-29T18:44:45.4225776Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-09-29T18:44:45.4227312Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-09-29T18:44:45.4228272Z hint: call:
+2026-09-29T18:44:45.4228770Z hint:
+2026-09-29T18:44:45.4229412Z hint: 	git config --global init.defaultBranch <name>
+2026-09-29T18:44:45.4230190Z hint:
+2026-09-29T18:44:45.4230943Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-09-29T18:44:45.4232359Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-09-29T18:44:45.4233563Z hint:
+2026-09-29T18:44:45.4234237Z hint: 	git branch -m <name>
+2026-09-29T18:44:45.4235019Z hint:
+2026-09-29T18:44:45.4236218Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-09-29T18:44:45.4237957Z Initialized empty Git repository in /home/runner/work/menaincecom/menaincecom/.git/
+2026-09-29T18:44:45.4245251Z [command]/usr/bin/git remote add origin https://github.com/bereket6244/menaincecom
+2026-09-29T18:44:45.4820524Z ##[endgroup]
+2026-09-29T18:44:45.4821989Z ##[group]Disabling automatic garbage collection
+2026-09-29T18:44:45.4823523Z [command]/usr/bin/git config --local gc.auto 0
+2026-09-29T18:44:45.5420377Z ##[endgroup]
+2026-09-29T18:44:45.5421975Z ##[group]Setting up auth
+2026-09-29T18:44:45.5423272Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-29T18:44:45.5453107Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-29T18:44:45.5750029Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-29T18:44:45.5782754Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-29T18:44:45.5958137Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-29T18:44:45.5987474Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-29T18:44:45.6166082Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-29T18:44:45.6303044Z ##[endgroup]
+2026-09-29T18:44:45.6305202Z ##[group]Fetching the repository
+2026-09-29T18:44:45.6312381Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=2 origin +32d3c13da793c9469a5eb57069dfff491c1e658a:refs/remotes/origin/main
+2026-09-29T18:44:46.7110516Z From https://github.com/bereket6244/menaincecom
+2026-09-29T18:44:46.7111206Z  * [new ref]         32d3c13da793c9469a5eb57069dfff491c1e658a -> origin/main
+2026-09-29T18:44:46.7113494Z ##[endgroup]
+2026-09-29T18:44:46.7113993Z ##[group]Determining the checkout info
+2026-09-29T18:44:46.7115698Z ##[endgroup]
+2026-09-29T18:44:46.7120094Z [command]/usr/bin/git sparse-checkout disable
+2026-09-29T18:44:46.7186201Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-09-29T18:44:46.7214476Z ##[group]Checking out the ref
+2026-09-29T18:44:46.7217685Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-09-29T18:44:46.7732251Z Switched to a new branch 'main'
+2026-09-29T18:44:46.7735400Z branch 'main' set up to track 'origin/main'.
+2026-09-29T18:44:46.7744547Z ##[endgroup]
+2026-09-29T18:44:46.7783784Z [command]/usr/bin/git log -1 --format=%H
+2026-09-29T18:44:46.7867265Z 32d3c13da793c9469a5eb57069dfff491c1e658a

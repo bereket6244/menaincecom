@@ -945,7 +945,11 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024, files: 12 },
   fileFilter: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, IMAGE_MIME_RE.test(file.mimetype) && (ext === '' || IMAGE_EXTENSIONS.has(ext)));
+    if (IMAGE_MIME_RE.test(file.mimetype) && (ext === '' || IMAGE_EXTENSIONS.has(ext))) {
+      cb(null, true);
+      return;
+    }
+    cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', file.fieldname));
   },
 });
 

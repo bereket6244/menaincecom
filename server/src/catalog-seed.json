@@ -4,7 +4,7 @@
       "id": "cat-wedding-invitations",
       "name": "Wedding Invitations",
       "sortOrder": 0,
-      "photo": "/uploads/demo/invitation-blush.svg",
+      "photo": "",
       "createdAt": "2026-09-17T11:31:24.937Z",
       "updatedAt": "2026-09-29T11:31:24.923Z"
     },
@@ -12,7 +12,7 @@
       "id": "cat-save-the-dates",
       "name": "Save-the-Dates",
       "sortOrder": 1,
-      "photo": "/uploads/demo/invitation-sage.svg",
+      "photo": "",
       "createdAt": "2026-09-18T11:31:24.937Z",
       "updatedAt": "2026-09-29T11:31:24.923Z"
     },
@@ -20,7 +20,7 @@
       "id": "cat-thank-you-cards",
       "name": "Thank-You Cards",
       "sortOrder": 2,
-      "photo": "/uploads/demo/invitation-gold.svg",
+      "photo": "",
       "createdAt": "2026-09-19T11:31:24.937Z",
       "updatedAt": "2026-09-29T11:31:24.923Z"
     },
@@ -28,7 +28,7 @@
       "id": "cat-full-suites",
       "name": "Full Suites",
       "sortOrder": 3,
-      "photo": "/uploads/demo/invitation-navy.svg",
+      "photo": "",
       "createdAt": "2026-09-20T11:31:24.937Z",
       "updatedAt": "2026-09-29T11:31:24.923Z"
     },
@@ -36,7 +36,7 @@
       "id": "cat-menus-details",
       "name": "Menus & Details",
       "sortOrder": 4,
-      "photo": "/uploads/demo/invitation-minimal.svg",
+      "photo": "",
       "createdAt": "2026-09-21T11:31:24.937Z",
       "updatedAt": "2026-09-29T11:31:24.923Z"
     },
@@ -44,7 +44,7 @@
       "id": "cat-add-ons",
       "name": "Add-ons",
       "sortOrder": 5,
-      "photo": "/uploads/demo/invitation-terracotta.svg",
+      "photo": "",
       "createdAt": "2026-09-22T11:31:24.937Z",
       "updatedAt": "2026-09-29T11:31:24.923Z"
     }
@@ -126,10 +126,10 @@
             "id": "classic",
             "name": "Classic",
             "eyebrow": "",
-            "description": "",
+      "description": "",
             "price": 9990,
             "compareAtPrice": null,
-            "badge": "Recommended",
+      "badge": "Recommended",
             "features": [
               "Countdown",
               "Add to calendar",
@@ -213,7 +213,7 @@
       "qty": 1,
       "extraPriceEach": 10,
       "description": "Matching envelope for every card.",
-      "photo": "/uploads/demo/invitation-minimal.svg",
+      "photo": "",
       "sortOrder": 0,
       "createdAt": "2026-09-20T11:31:24.937Z",
       "updatedAt": "2026-09-29T11:31:24.923Z"
@@ -226,7 +226,7 @@
       "qty": 2,
       "extraPriceEach": 8,
       "description": "Guest entrance cards for events.",
-      "photo": "/uploads/demo/invitation-terracotta.svg",
+      "photo": "",
       "sortOrder": 1,
       "createdAt": "2026-09-21T11:31:24.937Z",
       "updatedAt": "2026-09-29T11:31:24.923Z"
@@ -239,7 +239,7 @@
       "qty": 25,
       "extraPriceEach": 5,
       "description": "Fixed free bundle for gift favors.",
-      "photo": "/uploads/demo/invitation-gold.svg",
+      "photo": "",
       "sortOrder": 2,
       "createdAt": "2026-09-22T11:31:24.937Z",
       "updatedAt": "2026-09-29T11:31:24.923Z"
@@ -254,10 +254,7 @@
       ],
       "categoryId": "cat-wedding-invitations",
       "description": "Soft blush pocket invitation with floral accents, RSVP insert, and matching envelope styling.",
-      "photos": [
-        "/uploads/demo/invitation-blush.svg",
-        "/uploads/demo/invitation-watercolor.svg"
-      ],
+      "photos": [],
       "pricingMode": "exact",
       "price": 145,
       "maxOrderQty": 300,
@@ -289,15 +286,15 @@
           "options": [
             {
               "label": "Blush",
-              "photo": "/uploads/demo/invitation-blush.svg"
+              "photo": ""
             },
             {
               "label": "Ivory",
-              "photo": "/uploads/demo/invitation-minimal.svg"
+              "photo": ""
             },
             {
               "label": "Rose",
-              "photo": "/uploads/demo/invitation-watercolor.svg"
+              "photo": ""
             }
           ]
         }
@@ -335,9 +332,7 @@
       ],
       "categoryId": "cat-save-the-dates",
       "description": "Clean sage save-the-date card with date highlight and optional photo back.",
-      "photos": [
-        "/uploads/demo/invitation-sage.svg"
-      ],
+      "photos": [],
       "pricingMode": "starting",
       "price": 85,
       "maxOrderQty": null,
@@ -388,10 +383,7 @@
       ],
       "categoryId": "cat-full-suites",
       "description": "Premium invitation suite with main invite, RSVP, details card, belly band, and gold-style accents.",
-      "photos": [
-        "/uploads/demo/invitation-navy.svg",
-        "/uploads/demo/gallery-suite.svg"
-      ],
+      "photos": [],
       "pricingMode": "exact",
       "price": 290,
       "maxOrderQty": 150,
@@ -467,9 +459,7 @@
       ],
       "categoryId": "cat-thank-you-cards",
       "description": "Thank-you card for wedding favors and post-event appreciation.",
-      "photos": [
-        "/uploads/demo/invitation-gold.svg"
-      ],
+      "photos": [],
       "pricingMode": "exact",
       "price": 55,
       "maxOrderQty": 500,
@@ -490,11 +480,11 @@
           "options": [
             {
               "label": "Gold",
-              "photo": "/uploads/demo/invitation-gold.svg"
+              "photo": ""
             },
             {
               "label": "Ivory",
-              "photo": "/uploads/demo/invitation-minimal.svg"
+              "photo": ""
             }
           ]
         }
@@ -520,9 +510,7 @@
       ],
       "categoryId": "cat-menus-details",
       "description": "Reception menu card with simple typography and pearl paper finish.",
-      "photos": [
-        "/uploads/demo/invitation-minimal.svg"
-      ],
+      "photos": [],
       "pricingMode": "starting",
       "price": 70,
       "maxOrderQty": null,
@@ -571,9 +559,7 @@
       ],
       "categoryId": "cat-menus-details",
       "description": "Small details card for map, parking, accommodation, and schedule notes.",
-      "photos": [
-        "/uploads/demo/invitation-terracotta.svg"
-      ],
+      "photos": [],
       "pricingMode": "exact",
       "price": 45,
       "maxOrderQty": 400,
@@ -624,9 +610,7 @@
       ],
       "categoryId": "cat-wedding-invitations",
       "description": "RSVP card with soft dove artwork and meal-selection line.",
-      "photos": [
-        "/uploads/demo/invitation-watercolor.svg"
-      ],
+      "photos": [],
       "pricingMode": "exact",
       "price": 60,
       "maxOrderQty": 350,
@@ -676,9 +660,7 @@
       ],
       "categoryId": "cat-wedding-invitations",
       "description": "Bold modern invite with Amharic and English layout options.",
-      "photos": [
-        "/uploads/demo/invitation-modern.svg"
-      ],
+      "photos": [],
       "pricingMode": "quote",
       "price": null,
       "maxOrderQty": null,
@@ -732,9 +714,7 @@
       ],
       "categoryId": "cat-add-ons",
       "description": "Patterned envelope liner to match the invitation design.",
-      "photos": [
-        "/uploads/demo/gallery-studio.svg"
-      ],
+      "photos": [],
       "pricingMode": "exact",
       "price": 25,
       "maxOrderQty": null,
@@ -773,9 +753,7 @@
       ],
       "categoryId": "cat-add-ons",
       "description": "Decorative wax seal for envelopes, available in multiple colors.",
-      "photos": [
-        "/uploads/demo/invitation-gold.svg"
-      ],
+      "photos": [],
       "pricingMode": "exact",
       "price": 18,
       "maxOrderQty": null,
@@ -785,15 +763,15 @@
           "options": [
             {
               "label": "Gold",
-              "photo": "/uploads/demo/invitation-gold.svg"
+              "photo": ""
             },
             {
               "label": "Blush",
-              "photo": "/uploads/demo/invitation-blush.svg"
+              "photo": ""
             },
             {
               "label": "Ivory",
-              "photo": "/uploads/demo/invitation-minimal.svg"
+              "photo": ""
             }
           ]
         }
@@ -817,9 +795,7 @@
       ],
       "categoryId": "cat-add-ons",
       "description": "Matching table number card for reception tables.",
-      "photos": [
-        "/uploads/demo/invitation-minimal.svg"
-      ],
+      "photos": [],
       "pricingMode": "exact",
       "price": 40,
       "maxOrderQty": 100,
@@ -855,9 +831,7 @@
       ],
       "categoryId": "cat-wedding-invitations",
       "description": "Admin-only draft product for testing publish and restore flows.",
-      "photos": [
-        "/uploads/demo/invitation-blush.svg"
-      ],
+      "photos": [],
       "pricingMode": "exact",
       "price": 99,
       "maxOrderQty": 25,
@@ -875,38 +849,5 @@
       "updatedAt": "2026-09-29T11:36:36.624Z"
     }
   ],
-  "gallery": [
-    {
-      "id": "gallery-studio-table",
-      "photo": "/uploads/demo/gallery-studio.svg",
-      "caption": "Studio sample table with invitation suites",
-      "sortOrder": 0,
-      "createdAt": "2026-09-24T11:31:24.938Z",
-      "updatedAt": "2026-09-29T11:31:24.923Z"
-    },
-    {
-      "id": "gallery-full-suite",
-      "photo": "/uploads/demo/gallery-suite.svg",
-      "caption": "Full wedding suite layout",
-      "sortOrder": 1,
-      "createdAt": "2026-09-25T11:31:24.938Z",
-      "updatedAt": "2026-09-29T11:31:24.923Z"
-    },
-    {
-      "id": "gallery-blush-invite",
-      "photo": "/uploads/demo/invitation-blush.svg",
-      "caption": "Blush garden invitation close-up",
-      "sortOrder": 2,
-      "createdAt": "2026-09-26T11:31:24.938Z",
-      "updatedAt": "2026-09-29T11:31:24.923Z"
-    },
-    {
-      "id": "gallery-navy-suite",
-      "photo": "/uploads/demo/invitation-navy.svg",
-      "caption": "Navy and gold suite sample",
-      "sortOrder": 3,
-      "createdAt": "2026-09-27T11:31:24.938Z",
-      "updatedAt": "2026-09-29T11:31:24.923Z"
-    }
-  ]
+  "gallery": []
 }

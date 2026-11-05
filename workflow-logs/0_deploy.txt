@@ -1,0 +1,1002 @@
+﻿2026-09-29T18:44:43.8714020Z Current runner version: '2.337.0'
+2026-09-29T18:44:43.8749269Z ##[group]Runner Image Provisioner
+2026-09-29T18:44:43.8749840Z Hosted Compute Agent
+2026-09-29T18:44:43.8750265Z Version: 20260828.587
+2026-09-29T18:44:43.8750724Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-09-29T18:44:43.8751202Z Build Date: 2026-08-28T16:44:25Z
+2026-09-29T18:44:43.8751690Z Worker ID: {72b55369-5129-434d-80d7-d30265def515}
+2026-09-29T18:44:43.8752136Z Azure Region: centralus
+2026-09-29T18:44:43.8752599Z ##[endgroup]
+2026-09-29T18:44:43.8753353Z ##[group]Operating System
+2026-09-29T18:44:43.8753788Z Ubuntu
+2026-09-29T18:44:43.8754135Z 24.04.5
+2026-09-29T18:44:43.8754514Z LTS
+2026-09-29T18:44:43.8754902Z ##[endgroup]
+2026-09-29T18:44:43.8755278Z ##[group]Runner Image
+2026-09-29T18:44:43.8755954Z Image: ubuntu-24.04
+2026-09-29T18:44:43.8756409Z Version: 20260920.314.1
+2026-09-29T18:44:43.8757227Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260920.314/images/ubuntu/Ubuntu2404-Readme.md
+2026-09-29T18:44:43.8758143Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260920.314
+2026-09-29T18:44:43.8758715Z ##[endgroup]
+2026-09-29T18:44:43.8759499Z ##[group]GITHUB_TOKEN Permissions
+2026-09-29T18:44:43.8760724Z Contents: read
+2026-09-29T18:44:43.8761149Z Metadata: read
+2026-09-29T18:44:43.8761509Z Packages: read
+2026-09-29T18:44:43.8761901Z ##[endgroup]
+2026-09-29T18:44:43.8763208Z Secret source: Actions
+2026-09-29T18:44:43.8763842Z Cache mode: write
+2026-09-29T18:44:43.8764315Z Prepare workflow directory
+2026-09-29T18:44:43.9144446Z Prepare all required actions
+2026-09-29T18:44:43.9175129Z Getting action download info
+2026-09-29T18:44:44.1764862Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-09-29T18:44:44.4222228Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-09-29T18:44:45.1045131Z Complete job name: deploy
+2026-09-29T18:44:45.1553926Z ##[group]Run actions/checkout@v4
+2026-09-29T18:44:45.1554411Z with:
+2026-09-29T18:44:45.1554682Z   fetch-depth: 2
+2026-09-29T18:44:45.1554978Z   repository: bereket6244/menaincecom
+2026-09-29T18:44:45.1557298Z   token: ***
+2026-09-29T18:44:45.1557579Z   ssh-strict: true
+2026-09-29T18:44:45.1557859Z   ssh-user: git
+2026-09-29T18:44:45.1558146Z   persist-credentials: true
+2026-09-29T18:44:45.1558449Z   clean: true
+2026-09-29T18:44:45.1558733Z   sparse-checkout-cone-mode: true
+2026-09-29T18:44:45.1559054Z   fetch-tags: false
+2026-09-29T18:44:45.1559335Z   show-progress: true
+2026-09-29T18:44:45.1559614Z   lfs: false
+2026-09-29T18:44:45.1559892Z   submodules: false
+2026-09-29T18:44:45.1560184Z   set-safe-directory: true
+2026-09-29T18:44:45.1560499Z   allow-unsafe-pr-checkout: false
+2026-09-29T18:44:45.1560891Z ##[endgroup]
+2026-09-29T18:44:45.2238095Z Syncing repository: bereket6244/menaincecom
+2026-09-29T18:44:45.2239516Z ##[group]Getting Git version info
+2026-09-29T18:44:45.2240097Z Working directory is '/home/runner/work/menaincecom/menaincecom'
+2026-09-29T18:44:45.2240832Z [command]/usr/bin/git version
+2026-09-29T18:44:45.2331097Z git version 2.55.0
+2026-09-29T18:44:45.2348181Z ##[endgroup]
+2026-09-29T18:44:45.2360364Z Temporarily overriding HOME='/home/runner/work/_temp/4a7ee43e-253d-4d09-8617-6a9fae4ced4a' before making global git config changes
+2026-09-29T18:44:45.2361651Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-29T18:44:45.2364746Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/menaincecom/menaincecom
+2026-09-29T18:44:45.3001448Z Deleting the contents of '/home/runner/work/menaincecom/menaincecom'
+2026-09-29T18:44:45.3009538Z ##[group]Initializing the repository
+2026-09-29T18:44:45.3013559Z [command]/usr/bin/git init /home/runner/work/menaincecom/menaincecom
+2026-09-29T18:44:45.4224194Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-09-29T18:44:45.4225840Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-09-29T18:44:45.4227316Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-09-29T18:44:45.4228277Z hint: call:
+2026-09-29T18:44:45.4228773Z hint:
+2026-09-29T18:44:45.4229415Z hint: 	git config --global init.defaultBranch <name>
+2026-09-29T18:44:45.4230192Z hint:
+2026-09-29T18:44:45.4230945Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-09-29T18:44:45.4232363Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-09-29T18:44:45.4233566Z hint:
+2026-09-29T18:44:45.4234241Z hint: 	git branch -m <name>
+2026-09-29T18:44:45.4235022Z hint:
+2026-09-29T18:44:45.4236224Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-09-29T18:44:45.4237959Z Initialized empty Git repository in /home/runner/work/menaincecom/menaincecom/.git/
+2026-09-29T18:44:45.4245287Z [command]/usr/bin/git remote add origin https://github.com/bereket6244/menaincecom
+2026-09-29T18:44:45.4820598Z ##[endgroup]
+2026-09-29T18:44:45.4821994Z ##[group]Disabling automatic garbage collection
+2026-09-29T18:44:45.4823526Z [command]/usr/bin/git config --local gc.auto 0
+2026-09-29T18:44:45.5420456Z ##[endgroup]
+2026-09-29T18:44:45.5421979Z ##[group]Setting up auth
+2026-09-29T18:44:45.5423276Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-29T18:44:45.5453135Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-29T18:44:45.5750111Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-29T18:44:45.5782814Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-29T18:44:45.5958775Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-29T18:44:45.5987525Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-29T18:44:45.6166142Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-29T18:44:45.6303119Z ##[endgroup]
+2026-09-29T18:44:45.6305214Z ##[group]Fetching the repository
+2026-09-29T18:44:45.6312399Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=2 origin +32d3c13da793c9469a5eb57069dfff491c1e658a:refs/remotes/origin/main
+2026-09-29T18:44:46.7110605Z From https://github.com/bereket6244/menaincecom
+2026-09-29T18:44:46.7111211Z  * [new ref]         32d3c13da793c9469a5eb57069dfff491c1e658a -> origin/main
+2026-09-29T18:44:46.7113500Z ##[endgroup]
+2026-09-29T18:44:46.7113997Z ##[group]Determining the checkout info
+2026-09-29T18:44:46.7115786Z ##[endgroup]
+2026-09-29T18:44:46.7120099Z [command]/usr/bin/git sparse-checkout disable
+2026-09-29T18:44:46.7186238Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-09-29T18:44:46.7214507Z ##[group]Checking out the ref
+2026-09-29T18:44:46.7217690Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-09-29T18:44:46.7732328Z Switched to a new branch 'main'
+2026-09-29T18:44:46.7735413Z branch 'main' set up to track 'origin/main'.
+2026-09-29T18:44:46.7744561Z ##[endgroup]
+2026-09-29T18:44:46.7783817Z [command]/usr/bin/git log -1 --format=%H
+2026-09-29T18:44:46.7867316Z 32d3c13da793c9469a5eb57069dfff491c1e658a
+2026-09-29T18:44:46.7983811Z ##[group]Run set -euo pipefail
+2026-09-29T18:44:46.7984143Z [36;1mset -euo pipefail[0m
+2026-09-29T18:44:46.7984375Z [36;1mif [ "push" = "workflow_dispatch" ]; then[0m
+2026-09-29T18:44:46.7984630Z [36;1m  echo "server_changed=true" >> "$GITHUB_OUTPUT"[0m
+2026-09-29T18:44:46.7984855Z [36;1m  exit 0[0m
+2026-09-29T18:44:46.7985014Z [36;1mfi[0m
+2026-09-29T18:44:46.7985366Z [36;1m[0m
+2026-09-29T18:44:46.7985562Z [36;1mchanged_files="$(git diff --name-only HEAD^ HEAD)"[0m
+2026-09-29T18:44:46.7986068Z [36;1mprintf '%s\n' "${changed_files}"[0m
+2026-09-29T18:44:46.7986395Z [36;1mif printf '%s\n' "${changed_files}" | grep -Eq '^(server/|\.github/workflows/deploy\.yml$)'; then[0m
+2026-09-29T18:44:46.7986720Z [36;1m  echo "server_changed=true" >> "$GITHUB_OUTPUT"[0m
+2026-09-29T18:44:46.7986940Z [36;1melse[0m
+2026-09-29T18:44:46.7987142Z [36;1m  echo "server_changed=false" >> "$GITHUB_OUTPUT"[0m
+2026-09-29T18:44:46.7987356Z [36;1mfi[0m
+2026-09-29T18:44:46.8305464Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:44:46.8305868Z ##[endgroup]
+2026-09-29T18:44:46.8408131Z .github/workflows/deploy.yml
+2026-09-29T18:44:46.8408493Z server/src/index.mjs
+2026-09-29T18:44:46.8503255Z ##[group]Run actions/setup-node@v4
+2026-09-29T18:44:46.8503534Z with:
+2026-09-29T18:44:46.8503717Z   node-version: 20
+2026-09-29T18:44:46.8503888Z   always-auth: false
+2026-09-29T18:44:46.8504084Z   check-latest: false
+2026-09-29T18:44:46.8505721Z   token: ***
+2026-09-29T18:44:46.8505895Z ##[endgroup]
+2026-09-29T18:44:46.9430822Z Attempting to download 20...
+2026-09-29T18:44:46.9501214Z (node:2039) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-09-29T18:44:46.9501939Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-09-29T18:44:47.7343682Z Acquiring 20.20.2 - x64 from https://github.com/actions/node-versions/releases/download/20.20.2-23521894959/node-20.20.2-linux-x64.tar.gz
+2026-09-29T18:44:48.1777764Z Extracting ...
+2026-09-29T18:44:48.1861361Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/e6fc2621-d943-4223-b399-8e5b8acfcdeb -f /home/runner/work/_temp/1e6c60f9-f059-4af7-9d40-d8c6b67c1803
+2026-09-29T18:44:48.9308469Z Adding to the cache ...
+2026-09-29T18:44:50.4686049Z ##[group]Environment details
+2026-09-29T18:44:50.6232122Z node: v20.20.2
+2026-09-29T18:44:50.6232452Z npm: 10.8.2
+2026-09-29T18:44:50.6232631Z yarn: 1.22.22
+2026-09-29T18:44:50.6233122Z ##[endgroup]
+2026-09-29T18:44:50.6382126Z ##[group]Run npm ci
+2026-09-29T18:44:50.6382301Z [36;1mnpm ci[0m
+2026-09-29T18:44:50.6382427Z [36;1mnpm run build[0m
+2026-09-29T18:44:50.6437269Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:44:50.6437434Z env:
+2026-09-29T18:44:50.6437560Z   VITE_APP_BASE_PATH: /shop
+2026-09-29T18:44:50.6437709Z ##[endgroup]
+2026-09-29T18:44:53.2283548Z 
+2026-09-29T18:44:53.2290760Z added 89 packages, and audited 90 packages in 3s
+2026-09-29T18:44:53.2291081Z 
+2026-09-29T18:44:53.2291306Z 14 packages are looking for funding
+2026-09-29T18:44:53.2291624Z   run `npm fund` for details
+2026-09-29T18:44:53.2491891Z 
+2026-09-29T18:44:53.2492817Z 6 vulnerabilities (1 moderate, 5 high)
+2026-09-29T18:44:53.2493022Z 
+2026-09-29T18:44:53.2493149Z To address all issues, run:
+2026-09-29T18:44:53.2493338Z   npm audit fix
+2026-09-29T18:44:53.2493420Z 
+2026-09-29T18:44:53.2493499Z Run `npm audit` for details.
+2026-09-29T18:44:53.3323578Z 
+2026-09-29T18:44:53.3324283Z > mena-inc-client@1.0.0 build
+2026-09-29T18:44:53.3324717Z > tsc -b && vite build
+2026-09-29T18:44:53.3324813Z 
+2026-09-29T18:44:56.5435410Z [36mvite v6.4.3 [32mbuilding for production...[36m[39m
+2026-09-29T18:44:56.5886593Z transforming...
+2026-09-29T18:44:58.4580417Z [32m✓[39m 1713 modules transformed.
+2026-09-29T18:44:58.5829495Z rendering chunks...
+2026-09-29T18:44:58.6613843Z computing gzip size...
+2026-09-29T18:44:58.6699140Z [2mdist/[22m[32mindex.html                                  [39m[1m[2m  0.83 kB[22m[1m[22m[2m │ gzip:  0.45 kB[22m
+2026-09-29T18:44:58.6700124Z [2mdist/[22m[2massets/[22m[32mmena-watermark-tile-D3oaRMmc.png     [39m[1m[2m  8.01 kB[22m[1m[22m
+2026-09-29T18:44:58.6701018Z [2mdist/[22m[2massets/[22m[32mmenainc-wordmark-Djp1Mj4-.png        [39m[1m[2m 62.18 kB[22m[1m[22m
+2026-09-29T18:44:58.6701955Z [2mdist/[22m[2massets/[22m[35mindex-CP0Nol3J.css                   [39m[1m[2m 72.49 kB[22m[1m[22m[2m │ gzip: 12.74 kB[22m
+2026-09-29T18:44:58.6703757Z [2mdist/[22m[2massets/[22m[36mmena-watermark-tile-Q-zS4uEt.js      [39m[1m[2m  0.07 kB[22m[1m[22m[2m │ gzip:  0.09 kB[22m
+2026-09-29T18:44:58.6704794Z [2mdist/[22m[2massets/[22m[36mproductCategories-DlRC3Yei.js        [39m[1m[2m  0.21 kB[22m[1m[22m[2m │ gzip:  0.17 kB[22m
+2026-09-29T18:44:58.6705952Z [2mdist/[22m[2massets/[22m[36mcheck-CkdcySWU.js                    [39m[1m[2m  0.29 kB[22m[1m[22m[2m │ gzip:  0.24 kB[22m
+2026-09-29T18:44:58.6706873Z [2mdist/[22m[2massets/[22m[36mplus-CJPnt4TH.js                     [39m[1m[2m  0.33 kB[22m[1m[22m[2m │ gzip:  0.25 kB[22m
+2026-09-29T18:44:58.6707748Z [2mdist/[22m[2massets/[22m[36mclock-mJSkKTsA.js                    [39m[1m[2m  0.34 kB[22m[1m[22m[2m │ gzip:  0.27 kB[22m
+2026-09-29T18:44:58.6708641Z [2mdist/[22m[2massets/[22m[36marrow-up-down-DYQiB40d.js            [39m[1m[2m  0.42 kB[22m[1m[22m[2m │ gzip:  0.30 kB[22m
+2026-09-29T18:44:58.6709584Z [2mdist/[22m[2massets/[22m[36mexternal-link-CQOckPfQ.js            [39m[1m[2m  0.42 kB[22m[1m[22m[2m │ gzip:  0.30 kB[22m
+2026-09-29T18:44:58.6710288Z [2mdist/[22m[2massets/[22m[36mshield-check-TQUt4Y7E.js             [39m[1m[2m  0.49 kB[22m[1m[22m[2m │ gzip:  0.35 kB[22m
+2026-09-29T18:44:58.6710889Z [2mdist/[22m[2massets/[22m[36mrefresh-cw-BlTernRP.js               [39m[1m[2m  0.49 kB[22m[1m[22m[2m │ gzip:  0.33 kB[22m
+2026-09-29T18:44:58.6711425Z [2mdist/[22m[2massets/[22m[36mphone-DyqqTf6j.js                    [39m[1m[2m  0.50 kB[22m[1m[22m[2m │ gzip:  0.33 kB[22m
+2026-09-29T18:44:58.6711938Z [2mdist/[22m[2massets/[22m[36mgift-BfMWvi24.js                     [39m[1m[2m  0.53 kB[22m[1m[22m[2m │ gzip:  0.36 kB[22m
+2026-09-29T18:44:58.6712479Z [2mdist/[22m[2massets/[22m[36mtrash-2-BwnEefBt.js                  [39m[1m[2m  0.53 kB[22m[1m[22m[2m │ gzip:  0.35 kB[22m
+2026-09-29T18:44:58.6713352Z [2mdist/[22m[2massets/[22m[36mGallery-BexA6L47.js                  [39m[1m[2m  1.57 kB[22m[1m[22m[2m │ gzip:  0.78 kB[22m
+2026-09-29T18:44:58.6713929Z [2mdist/[22m[2massets/[22m[36mWishlist-BSFRClO0.js                 [39m[1m[2m  1.63 kB[22m[1m[22m[2m │ gzip:  0.81 kB[22m
+2026-09-29T18:44:58.6714503Z [2mdist/[22m[2massets/[22m[36mLeadsAdmin-BNi0MGM9.js               [39m[1m[2m  1.81 kB[22m[1m[22m[2m │ gzip:  0.90 kB[22m
+2026-09-29T18:44:58.6715079Z [2mdist/[22m[2massets/[22m[36mvariantFacets-D2O9l9vY.js            [39m[1m[2m  2.03 kB[22m[1m[22m[2m │ gzip:  0.97 kB[22m
+2026-09-29T18:44:58.6715918Z [2mdist/[22m[2massets/[22m[36mContact-ChN-gnOM.js                  [39m[1m[2m  2.40 kB[22m[1m[22m[2m │ gzip:  1.20 kB[22m
+2026-09-29T18:44:58.6716491Z [2mdist/[22m[2massets/[22m[36mAdminsAdmin-CTbtifAi.js              [39m[1m[2m  3.16 kB[22m[1m[22m[2m │ gzip:  1.44 kB[22m
+2026-09-29T18:44:58.6717060Z [2mdist/[22m[2massets/[22m[36mQuantityPicker-DplJP2P4.js           [39m[1m[2m  3.39 kB[22m[1m[22m[2m │ gzip:  1.60 kB[22m
+2026-09-29T18:44:58.6717648Z [2mdist/[22m[2massets/[22m[36mLogin-C29oMurW.js                    [39m[1m[2m  3.47 kB[22m[1m[22m[2m │ gzip:  1.50 kB[22m
+2026-09-29T18:44:58.6718280Z [2mdist/[22m[2massets/[22m[36mDataTable-ox695BU_.js                [39m[1m[2m  3.78 kB[22m[1m[22m[2m │ gzip:  1.73 kB[22m
+2026-09-29T18:44:58.6718859Z [2mdist/[22m[2massets/[22m[36mCategoriesAdmin-DC1224hg.js          [39m[1m[2m  3.85 kB[22m[1m[22m[2m │ gzip:  1.72 kB[22m
+2026-09-29T18:44:58.6719455Z [2mdist/[22m[2massets/[22m[36mDesktopProductCard-aAtfocjZ.js       [39m[1m[2m  3.94 kB[22m[1m[22m[2m │ gzip:  1.72 kB[22m
+2026-09-29T18:44:58.6720045Z [2mdist/[22m[2massets/[22m[36mGalleryAdmin-WBm4Dt-f.js             [39m[1m[2m  4.25 kB[22m[1m[22m[2m │ gzip:  1.77 kB[22m
+2026-09-29T18:44:58.6720742Z [2mdist/[22m[2massets/[22m[36mOrdersAdmin-T5HaMZWc.js              [39m[1m[2m  5.43 kB[22m[1m[22m[2m │ gzip:  2.07 kB[22m
+2026-09-29T18:44:58.6721544Z [2mdist/[22m[2massets/[22m[36mComplimentaryItemsAdmin-BAZsjHPr.js  [39m[1m[2m  5.97 kB[22m[1m[22m[2m │ gzip:  2.28 kB[22m
+2026-09-29T18:44:58.6722157Z [2mdist/[22m[2massets/[22m[36mPhotoUpload-B_wf_Ks8.js              [39m[1m[2m  6.13 kB[22m[1m[22m[2m │ gzip:  2.75 kB[22m
+2026-09-29T18:44:58.6722820Z [2mdist/[22m[2massets/[22m[36mMobileProductCard-gmIjAm2q.js        [39m[1m[2m  7.27 kB[22m[1m[22m[2m │ gzip:  3.04 kB[22m
+2026-09-29T18:44:58.6723429Z [2mdist/[22m[2massets/[22m[36mAdminShell-EfxjCXiX.js               [39m[1m[2m  8.58 kB[22m[1m[22m[2m │ gzip:  3.00 kB[22m
+2026-09-29T18:44:58.6724044Z [2mdist/[22m[2massets/[22m[36mDigitalInvitations-CP9Wq7Mu.js       [39m[1m[2m  9.67 kB[22m[1m[22m[2m │ gzip:  3.55 kB[22m
+2026-09-29T18:44:58.6724701Z [2mdist/[22m[2massets/[22m[36mBusinessAdmin-Q7bCbjKI.js            [39m[1m[2m 10.52 kB[22m[1m[22m[2m │ gzip:  3.09 kB[22m
+2026-09-29T18:44:58.6725396Z [2mdist/[22m[2massets/[22m[36mProductDetail-CEUbe6Vn.js            [39m[1m[2m 23.24 kB[22m[1m[22m[2m │ gzip:  6.58 kB[22m
+2026-09-29T18:44:58.6726132Z [2mdist/[22m[2massets/[22m[36mCatalog--AUGPFS8.js                  [39m[1m[2m 25.15 kB[22m[1m[22m[2m │ gzip:  7.39 kB[22m
+2026-09-29T18:44:58.6726671Z [2mdist/[22m[2massets/[22m[36mOrderSummary-B-XvJeSi.js             [39m[1m[2m 33.04 kB[22m[1m[22m[2m │ gzip:  6.78 kB[22m
+2026-09-29T18:44:58.6727233Z [2mdist/[22m[2massets/[22m[36mProductsAdmin-C0NCW_qa.js            [39m[1m[2m 42.99 kB[22m[1m[22m[2m │ gzip: 11.12 kB[22m
+2026-09-29T18:44:58.6727795Z [2mdist/[22m[2massets/[22m[36mreact-vendor-DPFqZsMj.js             [39m[1m[2m 50.46 kB[22m[1m[22m[2m │ gzip: 17.85 kB[22m
+2026-09-29T18:44:58.6728340Z [2mdist/[22m[2massets/[22m[36mindex-BSh8dO6L.js                    [39m[1m[2m231.01 kB[22m[1m[22m[2m │ gzip: 72.46 kB[22m
+2026-09-29T18:44:58.6728719Z [32m✓ built in 2.10s[39m
+2026-09-29T18:44:58.7178916Z ##[group]Run cd client/dist
+2026-09-29T18:44:58.7179155Z [36;1mcd client/dist[0m
+2026-09-29T18:44:58.7179320Z [36;1mzip -r ../../shop-deploy.zip .[0m
+2026-09-29T18:44:58.7232199Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:44:58.7232365Z ##[endgroup]
+2026-09-29T18:44:58.7458024Z   adding: favicon.svg (deflated 26%)
+2026-09-29T18:44:58.7474841Z   adding: menainc-logo-landscape.png (deflated 13%)
+2026-09-29T18:44:58.7475209Z   adding: .htaccess (deflated 49%)
+2026-09-29T18:44:58.7475495Z   adding: assets/ (stored 0%)
+2026-09-29T18:44:58.7476351Z   adding: assets/DesktopProductCard-aAtfocjZ.js (deflated 57%)
+2026-09-29T18:44:58.7476805Z   adding: assets/mena-watermark-tile-Q-zS4uEt.js (stored 0%)
+2026-09-29T18:44:58.7477213Z   adding: assets/trash-2-BwnEefBt.js (deflated 37%)
+2026-09-29T18:44:58.7477599Z   adding: assets/Wishlist-BSFRClO0.js (deflated 51%)
+2026-09-29T18:44:58.7478000Z   adding: assets/arrow-up-down-DYQiB40d.js (deflated 33%)
+2026-09-29T18:44:58.7482515Z   adding: assets/OrderSummary-B-XvJeSi.js (deflated 80%)
+2026-09-29T18:44:58.7484188Z   adding: assets/DigitalInvitations-CP9Wq7Mu.js (deflated 64%)
+2026-09-29T18:44:58.7484583Z   adding: assets/gift-BfMWvi24.js (deflated 36%)
+2026-09-29T18:44:58.7546484Z   adding: assets/index-BSh8dO6L.js (deflated 69%)
+2026-09-29T18:44:58.7547121Z   adding: assets/Contact-ChN-gnOM.js (deflated 51%)
+2026-09-29T18:44:58.7548578Z   adding: assets/mena-watermark-tile-D3oaRMmc.png (deflated 2%)
+2026-09-29T18:44:58.7549386Z   adding: assets/GalleryAdmin-WBm4Dt-f.js (deflated 59%)
+2026-09-29T18:44:58.7550206Z   adding: assets/QuantityPicker-DplJP2P4.js (deflated 54%)
+2026-09-29T18:44:58.7554373Z   adding: assets/Catalog--AUGPFS8.js (deflated 71%)
+2026-09-29T18:44:58.7555717Z   adding: assets/PhotoUpload-B_wf_Ks8.js (deflated 55%)
+2026-09-29T18:44:58.7557048Z   adding: assets/ComplimentaryItemsAdmin-BAZsjHPr.js (deflated 62%)
+2026-09-29T18:44:58.7557833Z   adding: assets/CategoriesAdmin-DC1224hg.js (deflated 56%)
+2026-09-29T18:44:58.7558609Z   adding: assets/AdminsAdmin-CTbtifAi.js (deflated 55%)
+2026-09-29T18:44:58.7573470Z   adding: assets/menainc-wordmark-Djp1Mj4-.png (deflated 11%)
+2026-09-29T18:44:58.7573855Z   adding: assets/plus-CJPnt4TH.js (deflated 28%)
+2026-09-29T18:44:58.7575356Z   adding: assets/MobileProductCard-gmIjAm2q.js (deflated 58%)
+2026-09-29T18:44:58.7575863Z   adding: assets/clock-mJSkKTsA.js (deflated 26%)
+2026-09-29T18:44:58.7577393Z   adding: assets/AdminShell-EfxjCXiX.js (deflated 65%)
+2026-09-29T18:44:58.7577902Z   adding: assets/LeadsAdmin-BNi0MGM9.js (deflated 52%)
+2026-09-29T18:44:58.7578278Z   adding: assets/shield-check-TQUt4Y7E.js (deflated 32%)
+2026-09-29T18:44:58.7579011Z   adding: assets/variantFacets-D2O9l9vY.js (deflated 53%)
+2026-09-29T18:44:58.7579463Z   adding: assets/Gallery-BexA6L47.js (deflated 52%)
+2026-09-29T18:44:58.7580379Z   adding: assets/DataTable-ox695BU_.js (deflated 55%)
+2026-09-29T18:44:58.7581607Z   adding: assets/OrdersAdmin-T5HaMZWc.js (deflated 62%)
+2026-09-29T18:44:58.7582286Z   adding: assets/Login-C29oMurW.js (deflated 57%)
+2026-09-29T18:44:58.7595282Z   adding: assets/react-vendor-DPFqZsMj.js (deflated 65%)
+2026-09-29T18:44:58.7595770Z   adding: assets/external-link-CQOckPfQ.js (deflated 32%)
+2026-09-29T18:44:58.7596176Z   adding: assets/productCategories-DlRC3Yei.js (deflated 27%)
+2026-09-29T18:44:58.7597762Z   adding: assets/BusinessAdmin-Q7bCbjKI.js (deflated 71%)
+2026-09-29T18:44:58.7601401Z   adding: assets/ProductDetail-CEUbe6Vn.js (deflated 72%)
+2026-09-29T18:44:58.7601793Z   adding: assets/refresh-cw-BlTernRP.js (deflated 38%)
+2026-09-29T18:44:58.7602154Z   adding: assets/check-CkdcySWU.js (deflated 22%)
+2026-09-29T18:44:58.7602502Z   adding: assets/phone-DyqqTf6j.js (deflated 37%)
+2026-09-29T18:44:58.7610074Z   adding: assets/ProductsAdmin-C0NCW_qa.js (deflated 74%)
+2026-09-29T18:44:58.7620190Z   adding: assets/index-CP0Nol3J.css (deflated 83%)
+2026-09-29T18:44:58.7620516Z   adding: index.html (deflated 48%)
+2026-09-29T18:44:58.7624586Z   adding: menainc-icon.png (deflated 6%)
+2026-09-29T18:44:58.7625213Z   adding: sw.js (deflated 49%)
+2026-09-29T18:44:58.7625950Z   adding: digital-invites-icon.webp (stored 0%)
+2026-09-29T18:44:58.7656525Z   adding: digital-invites-icon.png (deflated 0%)
+2026-09-29T18:44:58.7656843Z   adding: digital-invites/ (stored 0%)
+2026-09-29T18:44:58.7677339Z   adding: digital-invites/yeabsra-christian.png (deflated 1%)
+2026-09-29T18:44:58.7742890Z   adding: digital-invites/yordanos-kaleab.png (deflated 0%)
+2026-09-29T18:44:58.7745528Z   adding: digital-invites/yeabsra-christian.webp (deflated 2%)
+2026-09-29T18:44:58.7752236Z   adding: digital-invites/yordanos-kaleab.webp (deflated 0%)
+2026-09-29T18:44:58.7803355Z ##[group]Run rm -rf server-deploy
+2026-09-29T18:44:58.7803591Z [36;1mrm -rf server-deploy[0m
+2026-09-29T18:44:58.7803788Z [36;1mmkdir -p server-deploy/tmp server-deploy/uploads[0m
+2026-09-29T18:44:58.7804071Z [36;1mcp server/app.js server/package.json server/package-lock.json server-deploy/[0m
+2026-09-29T18:44:58.7804346Z [36;1mif [ -f server/dev-data.json ]; then[0m
+2026-09-29T18:44:58.7804537Z [36;1m  cp server/dev-data.json server-deploy/[0m
+2026-09-29T18:44:58.7804711Z [36;1mfi[0m
+2026-09-29T18:44:58.7804849Z [36;1mcp -R server/src server-deploy/[0m
+2026-09-29T18:44:58.7805030Z [36;1mtouch server-deploy/uploads/.gitkeep[0m
+2026-09-29T18:44:58.7805250Z [36;1mdate -u +"%Y-%m-%dT%H:%M:%SZ" > server-deploy/tmp/restart.txt[0m
+2026-09-29T18:44:58.7805464Z [36;1mcd server-deploy[0m
+2026-09-29T18:44:58.7805789Z [36;1mzip -r ../server-deploy.zip .[0m
+2026-09-29T18:44:58.7859935Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:44:58.7860113Z ##[endgroup]
+2026-09-29T18:44:58.8024979Z   adding: package-lock.json (deflated 73%)
+2026-09-29T18:44:58.8025399Z   adding: tmp/ (stored 0%)
+2026-09-29T18:44:58.8025827Z   adding: tmp/restart.txt (stored 0%)
+2026-09-29T18:44:58.8026054Z   adding: uploads/ (stored 0%)
+2026-09-29T18:44:58.8026267Z   adding: uploads/.gitkeep (stored 0%)
+2026-09-29T18:44:58.8026485Z   adding: src/ (stored 0%)
+2026-09-29T18:44:58.8026876Z   adding: src/notify.mjs (deflated 62%)
+2026-09-29T18:44:58.8028226Z   adding: src/index.mjs (deflated 64%)
+2026-09-29T18:44:58.8030819Z   adding: src/product-telegram.mjs (deflated 73%)
+2026-09-29T18:44:58.8032529Z   adding: src/db.mjs (deflated 70%)
+2026-09-29T18:44:58.8033412Z   adding: src/auth.mjs (deflated 58%)
+2026-09-29T18:44:58.8033756Z   adding: src/telegram-import/ (stored 0%)
+2026-09-29T18:44:58.8034495Z   adding: src/telegram-import/json-parser.mjs (deflated 63%)
+2026-09-29T18:44:58.8037443Z   adding: src/telegram-import/production-import.mjs (deflated 68%)
+2026-09-29T18:44:58.8037934Z   adding: src/telegram-import/telegram-api.mjs (deflated 43%)
+2026-09-29T18:44:58.8039007Z   adding: src/telegram-import/report.mjs (deflated 69%)
+2026-09-29T18:44:58.8039577Z   adding: src/telegram-import/cli.mjs (deflated 60%)
+2026-09-29T18:44:58.8040844Z   adding: src/telegram-import/html-parser.mjs (deflated 64%)
+2026-09-29T18:44:58.8041874Z   adding: src/telegram-import/classifier.mjs (deflated 66%)
+2026-09-29T18:44:58.8042782Z   adding: src/telegram-import/legacy-post-check.mjs (deflated 62%)
+2026-09-29T18:44:58.8043222Z   adding: src/product-model.mjs (deflated 52%)
+2026-09-29T18:44:58.8045943Z   adding: src/catalog-seed.json (deflated 85%)
+2026-09-29T18:44:58.8053142Z   adding: src/routes.mjs (deflated 74%)
+2026-09-29T18:44:58.8053509Z   adding: app.js (deflated 48%)
+2026-09-29T18:44:58.8053910Z   adding: package.json (deflated 57%)
+2026-09-29T18:44:58.8084309Z ##[group]Run set -euo pipefail
+2026-09-29T18:44:58.8084549Z [36;1mset -euo pipefail[0m
+2026-09-29T18:44:58.8084692Z [36;1m[0m
+2026-09-29T18:44:58.8084814Z [36;1mtrim() {[0m
+2026-09-29T18:44:58.8084946Z [36;1m  local value="$1"[0m
+2026-09-29T18:44:58.8085115Z [36;1m  value="${value#"${value%%[![:space:]]*}"}"[0m
+2026-09-29T18:44:58.8085319Z [36;1m  value="${value%"${value##*[![:space:]]}"}"[0m
+2026-09-29T18:44:58.8085501Z [36;1m  printf '%s' "${value}"[0m
+2026-09-29T18:44:58.8085807Z [36;1m}[0m
+2026-09-29T18:44:58.8085936Z [36;1m[0m
+2026-09-29T18:44:58.8086065Z [36;1mif [ -n "${CPANEL_URL}" ]; then[0m
+2026-09-29T18:44:58.8086246Z [36;1m  base_url="$(trim "${CPANEL_URL}")"[0m
+2026-09-29T18:44:58.8086421Z [36;1m  base_url="${base_url%/}"[0m
+2026-09-29T18:44:58.8086594Z [36;1m  host_port="${base_url#https://}"[0m
+2026-09-29T18:44:58.8086775Z [36;1m  host_port="${host_port#http://}"[0m
+2026-09-29T18:44:58.8086947Z [36;1m  host_port="${host_port%%/*}"[0m
+2026-09-29T18:44:58.8087129Z [36;1melse[0m
+2026-09-29T18:44:58.8087427Z [36;1m  host="$(trim "${CPANEL_HOST:-cpanel.***}")"[0m
+2026-09-29T18:44:58.8087634Z [36;1m  host="${host#https://}"[0m
+2026-09-29T18:44:58.8087797Z [36;1m  host="${host#http://}"[0m
+2026-09-29T18:44:58.8087950Z [36;1m  host="${host%/}"[0m
+2026-09-29T18:44:58.8088098Z [36;1m  host="${host%%/*}"[0m
+2026-09-29T18:44:58.8088252Z [36;1m  port="${CPANEL_PORT:-2083}"[0m
+2026-09-29T18:44:58.8088426Z [36;1m  if [[ "${host}" == *:* ]]; then[0m
+2026-09-29T18:44:58.8088610Z [36;1m    base_url="https://${host}"[0m
+2026-09-29T18:44:58.8088777Z [36;1m    host_port="${host}"[0m
+2026-09-29T18:44:58.8088922Z [36;1m  else[0m
+2026-09-29T18:44:58.8089066Z [36;1m    base_url="https://${host}:${port}"[0m
+2026-09-29T18:44:58.8089246Z [36;1m    host_port="${host}:${port}"[0m
+2026-09-29T18:44:58.8089399Z [36;1m  fi[0m
+2026-09-29T18:44:58.8089518Z [36;1mfi[0m
+2026-09-29T18:44:58.8089634Z [36;1m[0m
+2026-09-29T18:44:58.8089759Z [36;1mhost="${host_port%%:*}"[0m
+2026-09-29T18:44:58.8089966Z [36;1mif [ -z "${host}" ] || [[ "${host}" == *"*"* ]] || [[ "${host}" == *" "* ]]; then[0m
+2026-09-29T18:44:58.8090399Z [36;1m  echo "Invalid cPanel hostname. CPANEL_HOST should look like 'server.example.com' or CPANEL_URL should look like 'https://server.example.com:2083'." >&2[0m
+2026-09-29T18:44:58.8090784Z [36;1m  exit 1[0m
+2026-09-29T18:44:58.8090913Z [36;1mfi[0m
+2026-09-29T18:44:58.8091028Z [36;1m[0m
+2026-09-29T18:44:58.8091156Z [36;1mport="${host_port##*:}"[0m
+2026-09-29T18:44:58.8091449Z [36;1mif [ "${port}" = "${host_port}" ]; then[0m
+2026-09-29T18:44:58.8091627Z [36;1m  port="443"[0m
+2026-09-29T18:44:58.8091767Z [36;1mfi[0m
+2026-09-29T18:44:58.8091891Z [36;1m[0m
+2026-09-29T18:44:58.8092044Z [36;1mecho "Resolved cPanel endpoint on port ${port}."[0m
+2026-09-29T18:44:58.8092268Z [36;1mif ! getent hosts "${host}" >/dev/null 2>&1; then[0m
+2026-09-29T18:44:58.8092505Z [36;1m  fallback_host="cpanel.***"[0m
+2026-09-29T18:44:58.8092702Z [36;1m  fallback_url="https://${fallback_host}:2083"[0m
+2026-09-29T18:44:58.8092976Z [36;1m  echo "Could not resolve the cPanel host from DNS. Falling back to ${fallback_url}."[0m
+2026-09-29T18:44:58.8093262Z [36;1m  if ! getent hosts "${fallback_host}" >/dev/null 2>&1; then[0m
+2026-09-29T18:44:58.8093537Z [36;1m    echo "Could not resolve the configured cPanel host or the fallback host." >&2[0m
+2026-09-29T18:44:58.8093914Z [36;1m    echo "Set CPANEL_URL to the full cPanel base URL, for example '***'." >&2[0m
+2026-09-29T18:44:58.8094143Z [36;1m    exit 1[0m
+2026-09-29T18:44:58.8094306Z [36;1m  fi[0m
+2026-09-29T18:44:58.8094440Z [36;1m  base_url="${fallback_url}"[0m
+2026-09-29T18:44:58.8094611Z [36;1m  host_port="${fallback_host}:2083"[0m
+2026-09-29T18:44:58.8094786Z [36;1m  host="${fallback_host}"[0m
+2026-09-29T18:44:58.8094938Z [36;1m  port="2083"[0m
+2026-09-29T18:44:58.8095074Z [36;1mfi[0m
+2026-09-29T18:44:58.8095192Z [36;1m[0m
+2026-09-29T18:44:58.8095477Z [36;1mecho "CPANEL_BASE_URL=${base_url}" >> "$GITHUB_ENV"[0m
+2026-09-29T18:44:58.8095889Z [36;1mecho "Using cPanel DNS/TLS routing for ${host}:${port}."[0m
+2026-09-29T18:44:58.8096109Z [36;1mcurl --show-error --silent --head \[0m
+2026-09-29T18:44:58.8096285Z [36;1m  --connect-timeout 15 \[0m
+2026-09-29T18:44:58.8096443Z [36;1m  --max-time 30 \[0m
+2026-09-29T18:44:58.8096585Z [36;1m  --retry 2 \[0m
+2026-09-29T18:44:58.8096734Z [36;1m  --retry-all-errors \[0m
+2026-09-29T18:44:58.8096890Z [36;1m  "${base_url}/" >/dev/null[0m
+2026-09-29T18:44:58.8150854Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:44:58.8151017Z env:
+2026-09-29T18:44:58.8151183Z   CPANEL_HOST: ***
+2026-09-29T18:44:58.8151376Z   CPANEL_URL: ***
+2026-09-29T18:44:58.8151510Z   CPANEL_PORT: 
+2026-09-29T18:44:58.8151638Z ##[endgroup]
+2026-09-29T18:44:58.8230407Z Resolved cPanel endpoint on port 2083.
+2026-09-29T18:44:59.4773114Z Using cPanel DNS/TLS routing for cpanel.***:2083.
+2026-09-29T18:45:00.5123704Z ##[group]Run set -euo pipefail
+2026-09-29T18:45:00.5123904Z [36;1mset -euo pipefail[0m
+2026-09-29T18:45:00.5124044Z [36;1mmissing=()[0m
+2026-09-29T18:45:00.5124211Z [36;1m[ -n "${CPANEL_USER:-}" ] || missing+=("CPANEL_USER")[0m
+2026-09-29T18:45:00.5124427Z [36;1m[ -n "${CPANEL_TOKEN:-}" ] || missing+=("CPANEL_TOKEN")[0m
+2026-09-29T18:45:00.5124606Z [36;1m[0m
+2026-09-29T18:45:00.5124735Z [36;1mif [ "${#missing[@]}" -gt 0 ]; then[0m
+2026-09-29T18:45:00.5124960Z [36;1m  printf 'Missing required cPanel secret(s): %s\n' "${missing[*]}" >&2[0m
+2026-09-29T18:45:00.5125184Z [36;1m  exit 1[0m
+2026-09-29T18:45:00.5125305Z [36;1mfi[0m
+2026-09-29T18:45:00.5125415Z [36;1m[0m
+2026-09-29T18:45:00.5125547Z [36;1mif [ -z "${CPANEL_TARGET_DIR:-}" ]; then[0m
+2026-09-29T18:45:00.5125918Z [36;1m  CPANEL_TARGET_DIR="/home/${CPANEL_USER}/public_html/shop"[0m
+2026-09-29T18:45:00.5126107Z [36;1mfi[0m
+2026-09-29T18:45:00.5126280Z [36;1mCPANEL_FILEMAN_TARGET_DIR="${CPANEL_TARGET_DIR}"[0m
+2026-09-29T18:45:00.5126516Z [36;1mif [[ "${CPANEL_FILEMAN_TARGET_DIR}" == "/home/${CPANEL_USER}/"* ]]; then[0m
+2026-09-29T18:45:00.5126799Z [36;1m  CPANEL_FILEMAN_TARGET_DIR="${CPANEL_FILEMAN_TARGET_DIR#/home/${CPANEL_USER}/}"[0m
+2026-09-29T18:45:00.5127020Z [36;1mfi[0m
+2026-09-29T18:45:00.5127177Z [36;1mCPANEL_FILEMAN_TARGET_DIR="${CPANEL_FILEMAN_TARGET_DIR#/}"[0m
+2026-09-29T18:45:00.5127366Z [36;1m[0m
+2026-09-29T18:45:00.5127511Z [36;1mecho "Deploying frontend to ${CPANEL_TARGET_DIR}"[0m
+2026-09-29T18:45:00.5127744Z [36;1mecho "Using File Manager directory ${CPANEL_FILEMAN_TARGET_DIR}"[0m
+2026-09-29T18:45:00.5128113Z [36;1mecho "CPANEL_TARGET_DIR=${CPANEL_TARGET_DIR}" >> "$GITHUB_ENV"[0m
+2026-09-29T18:45:00.5128385Z [36;1mecho "CPANEL_FILEMAN_TARGET_DIR=${CPANEL_FILEMAN_TARGET_DIR}" >> "$GITHUB_ENV"[0m
+2026-09-29T18:45:00.5128603Z [36;1m[0m
+2026-09-29T18:45:00.5128725Z [36;1mprint_cpanel_response() {[0m
+2026-09-29T18:45:00.5128877Z [36;1m  local body="$1"[0m
+2026-09-29T18:45:00.5129051Z [36;1m  if printf '%s' "${body}" | jq -e . >/dev/null 2>&1; then[0m
+2026-09-29T18:45:00.5129299Z [36;1m    printf '%s\n' "${body}" | jq -r '.errors? // .messages? // .metadata? // .'[0m
+2026-09-29T18:45:00.5129504Z [36;1m  else[0m
+2026-09-29T18:45:00.5129635Z [36;1m    printf '%s\n' "${body}"[0m
+2026-09-29T18:45:00.5129779Z [36;1m  fi[0m
+2026-09-29T18:45:00.5129896Z [36;1m}[0m
+2026-09-29T18:45:00.5130004Z [36;1m[0m
+2026-09-29T18:45:00.5130153Z [36;1mtarget_json="$(curl --show-error --silent --get \[0m
+2026-09-29T18:45:00.5130343Z [36;1m  --connect-timeout 20 \[0m
+2026-09-29T18:45:00.5130501Z [36;1m  --max-time 60 \[0m
+2026-09-29T18:45:00.5130637Z [36;1m  --retry 2 \[0m
+2026-09-29T18:45:00.5130819Z [36;1m  -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \[0m
+2026-09-29T18:45:00.5131058Z [36;1m  --data-urlencode "dir=${CPANEL_FILEMAN_TARGET_DIR}" \[0m
+2026-09-29T18:45:00.5131276Z [36;1m  "${CPANEL_BASE_URL}/execute/Fileman/list_files")"[0m
+2026-09-29T18:45:00.5131448Z [36;1m[0m
+2026-09-29T18:45:00.5131626Z [36;1mif ! printf '%s' "${target_json}" | jq -e '.status == 1' >/dev/null 2>&1; then[0m
+2026-09-29T18:45:00.5132095Z [36;1m  echo "cPanel File Manager access failed. Regenerate CPANEL_TOKEN for the exact CPANEL_USER account with File Manager/UAPI access, and confirm CPANEL_TARGET_DIR belongs to that user." >&2[0m
+2026-09-29T18:45:00.5132518Z [36;1m  print_cpanel_response "${target_json}" >&2[0m
+2026-09-29T18:45:00.5132688Z [36;1m  exit 1[0m
+2026-09-29T18:45:00.5132804Z [36;1mfi[0m
+2026-09-29T18:45:00.5183918Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:45:00.5184072Z env:
+2026-09-29T18:45:00.5184384Z   CPANEL_BASE_URL: ***
+2026-09-29T18:45:00.5184538Z   CPANEL_USER: ***
+2026-09-29T18:45:00.5184691Z   CPANEL_TOKEN: ***
+2026-09-29T18:45:00.5184848Z   CPANEL_TARGET_DIR: ***
+2026-09-29T18:45:00.5184986Z ##[endgroup]
+2026-09-29T18:45:00.5253062Z Deploying frontend to ***
+2026-09-29T18:45:00.5253404Z Using File Manager directory public_html/shop
+2026-09-29T18:45:01.4224182Z ##[group]Run curl_resolve_args=()
+2026-09-29T18:45:01.4224496Z [36;1mcurl_resolve_args=()[0m
+2026-09-29T18:45:01.4224783Z [36;1mif [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then[0m
+2026-09-29T18:45:01.4225139Z [36;1m  curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")[0m
+2026-09-29T18:45:01.4225495Z [36;1mfi[0m
+2026-09-29T18:45:01.4225826Z [36;1m[0m
+2026-09-29T18:45:01.4226015Z [36;1mupload_file() {[0m
+2026-09-29T18:45:01.4226238Z [36;1m  local local_file="$1"[0m
+2026-09-29T18:45:01.4226485Z [36;1m  local remote_dir="$2"[0m
+2026-09-29T18:45:01.4226734Z [36;1m  local remote_name="$3"[0m
+2026-09-29T18:45:01.4227084Z [36;1m  echo "Uploading ${local_file} to ${remote_dir}/${remote_name}"[0m
+2026-09-29T18:45:01.4227497Z [36;1m  curl --fail-with-body --show-error --silent \[0m
+2026-09-29T18:45:01.4227809Z [36;1m    "${curl_resolve_args[@]}" \[0m
+2026-09-29T18:45:01.4228081Z [36;1m    --connect-timeout 20 \[0m
+2026-09-29T18:45:01.4228372Z [36;1m    --max-time 120 \[0m
+2026-09-29T18:45:01.4228603Z [36;1m    --retry 2 \[0m
+2026-09-29T18:45:01.4228906Z [36;1m    -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \[0m
+2026-09-29T18:45:01.4229247Z [36;1m    -F "dir=${remote_dir}" \[0m
+2026-09-29T18:45:01.4229516Z [36;1m    -F "overwrite=1" \[0m
+2026-09-29T18:45:01.4229801Z [36;1m    -F "file=@${local_file};filename=${remote_name}" \[0m
+2026-09-29T18:45:01.4230184Z [36;1m    "${CPANEL_BASE_URL}/execute/Fileman/upload_files" >/dev/null[0m
+2026-09-29T18:45:01.4230515Z [36;1m}[0m
+2026-09-29T18:45:01.4230698Z [36;1m[0m
+2026-09-29T18:45:01.4230908Z [36;1mwhile IFS= read -r -d '' file; do[0m
+2026-09-29T18:45:01.4231398Z [36;1m  rel="${file#client/dist/}"[0m
+2026-09-29T18:45:01.4231665Z [36;1m  dir_name="$(dirname "${rel}")"[0m
+2026-09-29T18:45:01.4231969Z [36;1m  remote_dir="${CPANEL_FILEMAN_TARGET_DIR}"[0m
+2026-09-29T18:45:01.4232273Z [36;1m  if [ "${dir_name}" != "." ]; then[0m
+2026-09-29T18:45:01.4232574Z [36;1m    remote_dir="${remote_dir}/${dir_name}"[0m
+2026-09-29T18:45:01.4232851Z [36;1m  fi[0m
+2026-09-29T18:45:01.4233125Z [36;1m  upload_file "${file}" "${remote_dir}" "$(basename "${rel}")"[0m
+2026-09-29T18:45:01.4233496Z [36;1mdone < <(find client/dist -type f -print0)[0m
+2026-09-29T18:45:01.4289724Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:45:01.4289888Z env:
+2026-09-29T18:45:01.4290204Z   CPANEL_BASE_URL: ***
+2026-09-29T18:45:01.4290570Z   CPANEL_TARGET_DIR: ***
+2026-09-29T18:45:01.4290820Z   CPANEL_FILEMAN_TARGET_DIR: public_html/shop
+2026-09-29T18:45:01.4291097Z   CPANEL_USER: ***
+2026-09-29T18:45:01.4291333Z   CPANEL_TOKEN: ***
+2026-09-29T18:45:01.4291548Z ##[endgroup]
+2026-09-29T18:45:01.4398230Z Uploading client/dist/favicon.svg to public_html/shop/favicon.svg
+2026-09-29T18:45:02.4437334Z Uploading client/dist/menainc-logo-landscape.png to public_html/shop/menainc-logo-landscape.png
+2026-09-29T18:45:03.6434145Z Uploading client/dist/.htaccess to public_html/shop/.htaccess
+2026-09-29T18:45:04.7763041Z Uploading client/dist/assets/DesktopProductCard-aAtfocjZ.js to public_html/shop/assets/DesktopProductCard-aAtfocjZ.js
+2026-09-29T18:45:05.7126927Z Uploading client/dist/assets/mena-watermark-tile-Q-zS4uEt.js to public_html/shop/assets/mena-watermark-tile-Q-zS4uEt.js
+2026-09-29T18:45:06.6445721Z Uploading client/dist/assets/trash-2-BwnEefBt.js to public_html/shop/assets/trash-2-BwnEefBt.js
+2026-09-29T18:45:07.9162014Z Uploading client/dist/assets/Wishlist-BSFRClO0.js to public_html/shop/assets/Wishlist-BSFRClO0.js
+2026-09-29T18:45:08.8104689Z Uploading client/dist/assets/arrow-up-down-DYQiB40d.js to public_html/shop/assets/arrow-up-down-DYQiB40d.js
+2026-09-29T18:45:09.6996220Z Uploading client/dist/assets/OrderSummary-B-XvJeSi.js to public_html/shop/assets/OrderSummary-B-XvJeSi.js
+2026-09-29T18:45:10.7047209Z Uploading client/dist/assets/DigitalInvitations-CP9Wq7Mu.js to public_html/shop/assets/DigitalInvitations-CP9Wq7Mu.js
+2026-09-29T18:45:11.5222005Z Uploading client/dist/assets/gift-BfMWvi24.js to public_html/shop/assets/gift-BfMWvi24.js
+2026-09-29T18:45:12.3048763Z Uploading client/dist/assets/index-BSh8dO6L.js to public_html/shop/assets/index-BSh8dO6L.js
+2026-09-29T18:45:13.6121545Z Uploading client/dist/assets/Contact-ChN-gnOM.js to public_html/shop/assets/Contact-ChN-gnOM.js
+2026-09-29T18:45:14.4758207Z Uploading client/dist/assets/mena-watermark-tile-D3oaRMmc.png to public_html/shop/assets/mena-watermark-tile-D3oaRMmc.png
+2026-09-29T18:45:15.3325288Z Uploading client/dist/assets/GalleryAdmin-WBm4Dt-f.js to public_html/shop/assets/GalleryAdmin-WBm4Dt-f.js
+2026-09-29T18:45:16.2843032Z Uploading client/dist/assets/QuantityPicker-DplJP2P4.js to public_html/shop/assets/QuantityPicker-DplJP2P4.js
+2026-09-29T18:45:17.2620191Z Uploading client/dist/assets/Catalog--AUGPFS8.js to public_html/shop/assets/Catalog--AUGPFS8.js
+2026-09-29T18:45:18.1965284Z Uploading client/dist/assets/PhotoUpload-B_wf_Ks8.js to public_html/shop/assets/PhotoUpload-B_wf_Ks8.js
+2026-09-29T18:45:19.1640944Z Uploading client/dist/assets/ComplimentaryItemsAdmin-BAZsjHPr.js to public_html/shop/assets/ComplimentaryItemsAdmin-BAZsjHPr.js
+2026-09-29T18:45:20.2690802Z Uploading client/dist/assets/CategoriesAdmin-DC1224hg.js to public_html/shop/assets/CategoriesAdmin-DC1224hg.js
+2026-09-29T18:45:21.2038488Z Uploading client/dist/assets/AdminsAdmin-CTbtifAi.js to public_html/shop/assets/AdminsAdmin-CTbtifAi.js
+2026-09-29T18:45:22.0338433Z Uploading client/dist/assets/menainc-wordmark-Djp1Mj4-.png to public_html/shop/assets/menainc-wordmark-Djp1Mj4-.png
+2026-09-29T18:45:23.0969005Z Uploading client/dist/assets/plus-CJPnt4TH.js to public_html/shop/assets/plus-CJPnt4TH.js
+2026-09-29T18:45:24.1729064Z Uploading client/dist/assets/MobileProductCard-gmIjAm2q.js to public_html/shop/assets/MobileProductCard-gmIjAm2q.js
+2026-09-29T18:45:25.0597347Z Uploading client/dist/assets/clock-mJSkKTsA.js to public_html/shop/assets/clock-mJSkKTsA.js
+2026-09-29T18:45:26.0421439Z Uploading client/dist/assets/AdminShell-EfxjCXiX.js to public_html/shop/assets/AdminShell-EfxjCXiX.js
+2026-09-29T18:45:26.9793992Z Uploading client/dist/assets/LeadsAdmin-BNi0MGM9.js to public_html/shop/assets/LeadsAdmin-BNi0MGM9.js
+2026-09-29T18:45:27.7683375Z Uploading client/dist/assets/shield-check-TQUt4Y7E.js to public_html/shop/assets/shield-check-TQUt4Y7E.js
+2026-09-29T18:45:28.6132850Z Uploading client/dist/assets/variantFacets-D2O9l9vY.js to public_html/shop/assets/variantFacets-D2O9l9vY.js
+2026-09-29T18:45:29.4828023Z Uploading client/dist/assets/Gallery-BexA6L47.js to public_html/shop/assets/Gallery-BexA6L47.js
+2026-09-29T18:45:30.2835153Z Uploading client/dist/assets/DataTable-ox695BU_.js to public_html/shop/assets/DataTable-ox695BU_.js
+2026-09-29T18:45:31.0844602Z Uploading client/dist/assets/OrdersAdmin-T5HaMZWc.js to public_html/shop/assets/OrdersAdmin-T5HaMZWc.js
+2026-09-29T18:45:31.8689919Z Uploading client/dist/assets/Login-C29oMurW.js to public_html/shop/assets/Login-C29oMurW.js
+2026-09-29T18:45:32.6015236Z Uploading client/dist/assets/react-vendor-DPFqZsMj.js to public_html/shop/assets/react-vendor-DPFqZsMj.js
+2026-09-29T18:45:33.6006872Z Uploading client/dist/assets/external-link-CQOckPfQ.js to public_html/shop/assets/external-link-CQOckPfQ.js
+2026-09-29T18:45:34.3890706Z Uploading client/dist/assets/productCategories-DlRC3Yei.js to public_html/shop/assets/productCategories-DlRC3Yei.js
+2026-09-29T18:45:35.2057933Z Uploading client/dist/assets/BusinessAdmin-Q7bCbjKI.js to public_html/shop/assets/BusinessAdmin-Q7bCbjKI.js
+2026-09-29T18:45:36.1313971Z Uploading client/dist/assets/ProductDetail-CEUbe6Vn.js to public_html/shop/assets/ProductDetail-CEUbe6Vn.js
+2026-09-29T18:45:37.0095275Z Uploading client/dist/assets/refresh-cw-BlTernRP.js to public_html/shop/assets/refresh-cw-BlTernRP.js
+2026-09-29T18:45:37.9571214Z Uploading client/dist/assets/check-CkdcySWU.js to public_html/shop/assets/check-CkdcySWU.js
+2026-09-29T18:45:38.8572854Z Uploading client/dist/assets/phone-DyqqTf6j.js to public_html/shop/assets/phone-DyqqTf6j.js
+2026-09-29T18:45:39.7865022Z Uploading client/dist/assets/ProductsAdmin-C0NCW_qa.js to public_html/shop/assets/ProductsAdmin-C0NCW_qa.js
+2026-09-29T18:45:40.8079234Z Uploading client/dist/assets/index-CP0Nol3J.css to public_html/shop/assets/index-CP0Nol3J.css
+2026-09-29T18:45:41.8616430Z Uploading client/dist/index.html to public_html/shop/index.html
+2026-09-29T18:45:42.6491960Z Uploading client/dist/menainc-icon.png to public_html/shop/menainc-icon.png
+2026-09-29T18:45:43.6078143Z Uploading client/dist/sw.js to public_html/shop/sw.js
+2026-09-29T18:45:44.4579121Z Uploading client/dist/digital-invites-icon.webp to public_html/shop/digital-invites-icon.webp
+2026-09-29T18:45:45.3910830Z Uploading client/dist/digital-invites-icon.png to public_html/shop/digital-invites-icon.png
+2026-09-29T18:45:46.5667964Z Uploading client/dist/digital-invites/yeabsra-christian.png to public_html/shop/digital-invites/yeabsra-christian.png
+2026-09-29T18:45:47.6973048Z Uploading client/dist/digital-invites/yordanos-kaleab.png to public_html/shop/digital-invites/yordanos-kaleab.png
+2026-09-29T18:45:49.0154217Z Uploading client/dist/digital-invites/yeabsra-christian.webp to public_html/shop/digital-invites/yeabsra-christian.webp
+2026-09-29T18:45:49.9400727Z Uploading client/dist/digital-invites/yordanos-kaleab.webp to public_html/shop/digital-invites/yordanos-kaleab.webp
+2026-09-29T18:45:51.0731690Z ##[group]Run echo "Frontend files were uploaded directly; no archive extraction needed."
+2026-09-29T18:45:51.0732052Z [36;1mecho "Frontend files were uploaded directly; no archive extraction needed."[0m
+2026-09-29T18:45:51.0785078Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:45:51.0785247Z env:
+2026-09-29T18:45:51.0785711Z   CPANEL_BASE_URL: ***
+2026-09-29T18:45:51.0786090Z   CPANEL_TARGET_DIR: ***
+2026-09-29T18:45:51.0786258Z   CPANEL_FILEMAN_TARGET_DIR: public_html/shop
+2026-09-29T18:45:51.0786437Z ##[endgroup]
+2026-09-29T18:45:51.0852800Z Frontend files were uploaded directly; no archive extraction needed.
+2026-09-29T18:45:51.0878371Z ##[group]Run curl_resolve_args=()
+2026-09-29T18:45:51.0878619Z [36;1mcurl_resolve_args=()[0m
+2026-09-29T18:45:51.0878806Z [36;1mif [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then[0m
+2026-09-29T18:45:51.0879035Z [36;1m  curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")[0m
+2026-09-29T18:45:51.0879238Z [36;1mfi[0m
+2026-09-29T18:45:51.0879372Z [36;1mset -euo pipefail[0m
+2026-09-29T18:45:51.0879518Z [36;1m[0m
+2026-09-29T18:45:51.0879708Z [36;1mapps_json="$(curl --fail-with-body --show-error --silent \[0m
+2026-09-29T18:45:51.0879939Z [36;1m  "${curl_resolve_args[@]}" \[0m
+2026-09-29T18:45:51.0880106Z [36;1m  --connect-timeout 20 \[0m
+2026-09-29T18:45:51.0880269Z [36;1m  --max-time 120 \[0m
+2026-09-29T18:45:51.0880429Z [36;1m  --retry 2 \[0m
+2026-09-29T18:45:51.0880618Z [36;1m  -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \[0m
+2026-09-29T18:45:51.0880898Z [36;1m  "${CPANEL_BASE_URL}/execute/PassengerApps/list_applications")"[0m
+2026-09-29T18:45:51.0881123Z [36;1m[0m
+2026-09-29T18:45:51.0881259Z [36;1mprintf '%s\n' "${apps_json}" | jq '[0m
+2026-09-29T18:45:51.0881434Z [36;1m  (.data // [])[0m
+2026-09-29T18:45:51.0881674Z [36;1m  | map(select(((.base_uri // .uri // .url // "") == "/shop") or ((.name // "") | test("shop"; "i"))))[0m
+2026-09-29T18:45:51.0881927Z [36;1m  | map({[0m
+2026-09-29T18:45:51.0882059Z [36;1m      name,[0m
+2026-09-29T18:45:51.0882230Z [36;1m      path: (.path // .app_root // .app_path // null),[0m
+2026-09-29T18:45:51.0882452Z [36;1m      base_uri: (.base_uri // .uri // .url // null),[0m
+2026-09-29T18:45:51.0882724Z [36;1m      startup_file: (.startup_file // .startupfile // .entry_point // .startup // null),[0m
+2026-09-29T18:45:51.0882994Z [36;1m      app_type: (.app_type // .type // null),[0m
+2026-09-29T18:45:51.0883177Z [36;1m      enabled,[0m
+2026-09-29T18:45:51.0883330Z [36;1m      deployment_mode[0m
+2026-09-29T18:45:51.0883487Z [36;1m    })[0m
+2026-09-29T18:45:51.0883618Z [36;1m'[0m
+2026-09-29T18:45:51.0883736Z [36;1m[0m
+2026-09-29T18:45:51.0883908Z [36;1mdiscovered_app_path="$(printf '%s' "${apps_json}" | jq -r '[0m
+2026-09-29T18:45:51.0884117Z [36;1m  (.data // [])[0m
+2026-09-29T18:45:51.0884345Z [36;1m  | map(select(((.base_uri // .uri // .url // "") == "/shop") or ((.name // "") | test("shop"; "i"))))[0m
+2026-09-29T18:45:51.0884587Z [36;1m  | first[0m
+2026-09-29T18:45:51.0884745Z [36;1m  | (.path // .app_root // .app_path // empty)[0m
+2026-09-29T18:45:51.0884925Z [36;1m')"[0m
+2026-09-29T18:45:51.0885048Z [36;1m[0m
+2026-09-29T18:45:51.0885168Z [36;1mserver_targets=()[0m
+2026-09-29T18:45:51.0885317Z [36;1madd_server_target() {[0m
+2026-09-29T18:45:51.0885470Z [36;1m  local raw_dir="$1"[0m
+2026-09-29T18:45:51.0885795Z [36;1m  local server_dir app_path fileman_server_dir target[0m
+2026-09-29T18:45:51.0886008Z [36;1m  [ -n "${raw_dir}" ] || return 0[0m
+2026-09-29T18:45:51.0886175Z [36;1m  raw_dir="${raw_dir%/}"[0m
+2026-09-29T18:45:51.0886342Z [36;1m  if [[ "${raw_dir}" = /* ]]; then[0m
+2026-09-29T18:45:51.0886510Z [36;1m    server_dir="${raw_dir}"[0m
+2026-09-29T18:45:51.0886700Z [36;1m    app_path="${server_dir#/home/${CPANEL_USER}/}"[0m
+2026-09-29T18:45:51.0886878Z [36;1m  else[0m
+2026-09-29T18:45:51.0887015Z [36;1m    app_path="${raw_dir#/}"[0m
+2026-09-29T18:45:51.0887201Z [36;1m    server_dir="/home/${CPANEL_USER}/${app_path}"[0m
+2026-09-29T18:45:51.0887382Z [36;1m  fi[0m
+2026-09-29T18:45:51.0887518Z [36;1m[0m
+2026-09-29T18:45:51.0887668Z [36;1m  fileman_server_dir="${server_dir}"[0m
+2026-09-29T18:45:51.0887892Z [36;1m  if [[ "${fileman_server_dir}" == "/home/${CPANEL_USER}/"* ]]; then[0m
+2026-09-29T18:45:51.0888158Z [36;1m    fileman_server_dir="${fileman_server_dir#/home/${CPANEL_USER}/}"[0m
+2026-09-29T18:45:51.0888576Z [36;1m  fi[0m
+2026-09-29T18:45:51.0888727Z [36;1m  fileman_server_dir="${fileman_server_dir#/}"[0m
+2026-09-29T18:45:51.0888938Z [36;1m  target="${fileman_server_dir}::${app_path}"[0m
+2026-09-29T18:45:51.0889250Z [36;1m  for existing in "${server_targets[@]}"; do[0m
+2026-09-29T18:45:51.0889447Z [36;1m    if [ "${existing}" = "${target}" ]; then[0m
+2026-09-29T18:45:51.0889620Z [36;1m      return 0[0m
+2026-09-29T18:45:51.0889748Z [36;1m    fi[0m
+2026-09-29T18:45:51.0889872Z [36;1m  done[0m
+2026-09-29T18:45:51.0890017Z [36;1m  echo "Will deploy server to ${server_dir}"[0m
+2026-09-29T18:45:51.0890203Z [36;1m  server_targets+=("${target}")[0m
+2026-09-29T18:45:51.0890356Z [36;1m}[0m
+2026-09-29T18:45:51.0890471Z [36;1m[0m
+2026-09-29T18:45:51.0890611Z [36;1madd_server_target "${CPANEL_TARGET_DIR}"[0m
+2026-09-29T18:45:51.0890805Z [36;1mif [ -n "${CPANEL_SERVER_DIR:-}" ]; then[0m
+2026-09-29T18:45:51.0890996Z [36;1m  add_server_target "${CPANEL_SERVER_DIR}"[0m
+2026-09-29T18:45:51.0891171Z [36;1mfi[0m
+2026-09-29T18:45:51.0891310Z [36;1mif [ -n "${discovered_app_path}" ]; then[0m
+2026-09-29T18:45:51.0891504Z [36;1m  add_server_target "${discovered_app_path}"[0m
+2026-09-29T18:45:51.0891677Z [36;1mfi[0m
+2026-09-29T18:45:51.0891798Z [36;1m[0m
+2026-09-29T18:45:51.0891935Z [36;1mif [ "${#server_targets[@]}" -eq 0 ]; then[0m
+2026-09-29T18:45:51.0892205Z [36;1m  echo "CPANEL_SERVER_DIR is required when the Passenger app cannot be discovered." >&2[0m
+2026-09-29T18:45:51.0892459Z [36;1m  exit 1[0m
+2026-09-29T18:45:51.0892579Z [36;1mfi[0m
+2026-09-29T18:45:51.0892694Z [36;1m[0m
+2026-09-29T18:45:51.0892804Z [36;1m{[0m
+2026-09-29T18:45:51.0892943Z [36;1m  echo "CPANEL_SERVER_TARGETS<<EOF"[0m
+2026-09-29T18:45:51.0893125Z [36;1m  printf '%s\n' "${server_targets[@]}"[0m
+2026-09-29T18:45:51.0893298Z [36;1m  echo "EOF"[0m
+2026-09-29T18:45:51.0893432Z [36;1m} >> "$GITHUB_ENV"[0m
+2026-09-29T18:45:51.0941739Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:45:51.0941895Z env:
+2026-09-29T18:45:51.0942155Z   CPANEL_BASE_URL: ***
+2026-09-29T18:45:51.0942329Z   CPANEL_TARGET_DIR: ***
+2026-09-29T18:45:51.0942487Z   CPANEL_FILEMAN_TARGET_DIR: public_html/shop
+2026-09-29T18:45:51.0942704Z   CPANEL_SERVER_DIR: ***
+2026-09-29T18:45:51.0942858Z   CPANEL_USER: ***
+2026-09-29T18:45:51.0943013Z   CPANEL_TOKEN: ***
+2026-09-29T18:45:51.0943144Z ##[endgroup]
+2026-09-29T18:45:52.0672176Z [
+2026-09-29T18:45:52.0672422Z   {
+2026-09-29T18:45:52.0672623Z     "name": "mena-shop-app-v2",
+2026-09-29T18:45:52.0673272Z     "path": "***",
+2026-09-29T18:45:52.0673496Z     "base_uri": "/shop",
+2026-09-29T18:45:52.0673730Z     "startup_file": null,
+2026-09-29T18:45:52.0673961Z     "app_type": null,
+2026-09-29T18:45:52.0674187Z     "enabled": "1",
+2026-09-29T18:45:52.0674445Z     "deployment_mode": "production"
+2026-09-29T18:45:52.0674704Z   }
+2026-09-29T18:45:52.0674889Z ]
+2026-09-29T18:45:52.0703298Z Will deploy server to ***
+2026-09-29T18:45:52.0703740Z Will deploy server to ***
+2026-09-29T18:45:52.0730899Z ##[group]Run curl_resolve_args=()
+2026-09-29T18:45:52.0731119Z [36;1mcurl_resolve_args=()[0m
+2026-09-29T18:45:52.0731301Z [36;1mif [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then[0m
+2026-09-29T18:45:52.0731528Z [36;1m  curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")[0m
+2026-09-29T18:45:52.0731731Z [36;1mfi[0m
+2026-09-29T18:45:52.0731854Z [36;1m[0m
+2026-09-29T18:45:52.0731977Z [36;1mupload_file() {[0m
+2026-09-29T18:45:52.0732129Z [36;1m  local local_file="$1"[0m
+2026-09-29T18:45:52.0732285Z [36;1m  local remote_dir="$2"[0m
+2026-09-29T18:45:52.0732443Z [36;1m  local remote_name="$3"[0m
+2026-09-29T18:45:52.0732650Z [36;1m  echo "Uploading ${local_file} to ${remote_dir}/${remote_name}"[0m
+2026-09-29T18:45:52.0732901Z [36;1m  curl --fail-with-body --show-error --silent \[0m
+2026-09-29T18:45:52.0733100Z [36;1m    "${curl_resolve_args[@]}" \[0m
+2026-09-29T18:45:52.0733274Z [36;1m    --connect-timeout 20 \[0m
+2026-09-29T18:45:52.0733458Z [36;1m    --max-time 120 \[0m
+2026-09-29T18:45:52.0733734Z [36;1m    --retry 2 \[0m
+2026-09-29T18:45:52.0733925Z [36;1m    -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \[0m
+2026-09-29T18:45:52.0734143Z [36;1m    -F "dir=${remote_dir}" \[0m
+2026-09-29T18:45:52.0734310Z [36;1m    -F "overwrite=1" \[0m
+2026-09-29T18:45:52.0734491Z [36;1m    -F "file=@${local_file};filename=${remote_name}" \[0m
+2026-09-29T18:45:52.0734733Z [36;1m    "${CPANEL_BASE_URL}/execute/Fileman/upload_files" >/dev/null[0m
+2026-09-29T18:45:52.0734938Z [36;1m}[0m
+2026-09-29T18:45:52.0735056Z [36;1m[0m
+2026-09-29T18:45:52.0735189Z [36;1mwhile IFS= read -r target; do[0m
+2026-09-29T18:45:52.0735359Z [36;1m  [ -n "${target}" ] || continue[0m
+2026-09-29T18:45:52.0735539Z [36;1m  fileman_server_dir="${target%%::*}"[0m
+2026-09-29T18:45:52.0735937Z [36;1m  while IFS= read -r -d '' file; do[0m
+2026-09-29T18:45:52.0736118Z [36;1m    rel="${file#server-deploy/}"[0m
+2026-09-29T18:45:52.0736298Z [36;1m    dir_name="$(dirname "${rel}")"[0m
+2026-09-29T18:45:52.0736490Z [36;1m    remote_dir="${fileman_server_dir}"[0m
+2026-09-29T18:45:52.0736673Z [36;1m    if [ "${dir_name}" != "." ]; then[0m
+2026-09-29T18:45:52.0736861Z [36;1m      remote_dir="${remote_dir}/${dir_name}"[0m
+2026-09-29T18:45:52.0737035Z [36;1m    fi[0m
+2026-09-29T18:45:52.0737207Z [36;1m    upload_file "${file}" "${remote_dir}" "$(basename "${rel}")"[0m
+2026-09-29T18:45:52.0737444Z [36;1m  done < <(find server-deploy -type f -print0)[0m
+2026-09-29T18:45:52.0737646Z [36;1mdone <<< "${CPANEL_SERVER_TARGETS}"[0m
+2026-09-29T18:45:52.0792646Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:45:52.0792797Z env:
+2026-09-29T18:45:52.0793034Z   CPANEL_BASE_URL: ***
+2026-09-29T18:45:52.0793209Z   CPANEL_TARGET_DIR: ***
+2026-09-29T18:45:52.0793369Z   CPANEL_FILEMAN_TARGET_DIR: public_html/shop
+2026-09-29T18:45:52.0793680Z   CPANEL_SERVER_TARGETS: public_html/shop::public_html/shop
+mena-shop-app-v2/server::mena-shop-app-v2/server
+2026-09-29T18:45:52.0793973Z   CPANEL_USER: ***
+2026-09-29T18:45:52.0794152Z   CPANEL_TOKEN: ***
+2026-09-29T18:45:52.0794281Z ##[endgroup]
+2026-09-29T18:45:52.0896061Z Uploading server-deploy/package-lock.json to public_html/shop/package-lock.json
+2026-09-29T18:45:53.2194890Z Uploading server-deploy/tmp/restart.txt to public_html/shop/tmp/restart.txt
+2026-09-29T18:45:54.1221148Z Uploading server-deploy/uploads/.gitkeep to public_html/shop/uploads/.gitkeep
+2026-09-29T18:45:54.9883238Z Uploading server-deploy/src/notify.mjs to public_html/shop/src/notify.mjs
+2026-09-29T18:45:55.9187432Z Uploading server-deploy/src/index.mjs to public_html/shop/src/index.mjs
+2026-09-29T18:45:56.7082121Z Uploading server-deploy/src/product-telegram.mjs to public_html/shop/src/product-telegram.mjs
+2026-09-29T18:45:57.6346313Z Uploading server-deploy/src/db.mjs to public_html/shop/src/db.mjs
+2026-09-29T18:45:58.3560488Z Uploading server-deploy/src/auth.mjs to public_html/shop/src/auth.mjs
+2026-09-29T18:45:59.1476911Z Uploading server-deploy/src/telegram-import/json-parser.mjs to public_html/shop/src/telegram-import/json-parser.mjs
+2026-09-29T18:46:00.0338231Z Uploading server-deploy/src/telegram-import/production-import.mjs to public_html/shop/src/telegram-import/production-import.mjs
+2026-09-29T18:46:00.9232567Z Uploading server-deploy/src/telegram-import/telegram-api.mjs to public_html/shop/src/telegram-import/telegram-api.mjs
+2026-09-29T18:46:01.9603595Z Uploading server-deploy/src/telegram-import/report.mjs to public_html/shop/src/telegram-import/report.mjs
+2026-09-29T18:46:02.8320492Z Uploading server-deploy/src/telegram-import/cli.mjs to public_html/shop/src/telegram-import/cli.mjs
+2026-09-29T18:46:03.7597252Z Uploading server-deploy/src/telegram-import/html-parser.mjs to public_html/shop/src/telegram-import/html-parser.mjs
+2026-09-29T18:46:04.6876898Z Uploading server-deploy/src/telegram-import/classifier.mjs to public_html/shop/src/telegram-import/classifier.mjs
+2026-09-29T18:46:05.4749948Z Uploading server-deploy/src/telegram-import/legacy-post-check.mjs to public_html/shop/src/telegram-import/legacy-post-check.mjs
+2026-09-29T18:46:06.3180378Z Uploading server-deploy/src/product-model.mjs to public_html/shop/src/product-model.mjs
+2026-09-29T18:46:07.2013254Z Uploading server-deploy/src/catalog-seed.json to public_html/shop/src/catalog-seed.json
+2026-09-29T18:46:08.1285396Z Uploading server-deploy/src/routes.mjs to public_html/shop/src/routes.mjs
+2026-09-29T18:46:09.0303363Z Uploading server-deploy/app.js to public_html/shop/app.js
+2026-09-29T18:46:09.9116938Z Uploading server-deploy/package.json to public_html/shop/package.json
+2026-09-29T18:46:10.7319350Z Uploading server-deploy/package-lock.json to mena-shop-app-v2/server/package-lock.json
+2026-09-29T18:46:11.8267734Z Uploading server-deploy/tmp/restart.txt to mena-shop-app-v2/server/tmp/restart.txt
+2026-09-29T18:46:12.6953146Z Uploading server-deploy/uploads/.gitkeep to mena-shop-app-v2/server/uploads/.gitkeep
+2026-09-29T18:46:13.6275843Z Uploading server-deploy/src/notify.mjs to mena-shop-app-v2/server/src/notify.mjs
+2026-09-29T18:46:14.5514008Z Uploading server-deploy/src/index.mjs to mena-shop-app-v2/server/src/index.mjs
+2026-09-29T18:46:15.4849390Z Uploading server-deploy/src/product-telegram.mjs to mena-shop-app-v2/server/src/product-telegram.mjs
+2026-09-29T18:46:16.3770839Z Uploading server-deploy/src/db.mjs to mena-shop-app-v2/server/src/db.mjs
+2026-09-29T18:46:17.2636708Z Uploading server-deploy/src/auth.mjs to mena-shop-app-v2/server/src/auth.mjs
+2026-09-29T18:46:18.2490148Z Uploading server-deploy/src/telegram-import/json-parser.mjs to mena-shop-app-v2/server/src/telegram-import/json-parser.mjs
+2026-09-29T18:46:19.1790570Z Uploading server-deploy/src/telegram-import/production-import.mjs to mena-shop-app-v2/server/src/telegram-import/production-import.mjs
+2026-09-29T18:46:20.0214601Z Uploading server-deploy/src/telegram-import/telegram-api.mjs to mena-shop-app-v2/server/src/telegram-import/telegram-api.mjs
+2026-09-29T18:46:20.7548768Z Uploading server-deploy/src/telegram-import/report.mjs to mena-shop-app-v2/server/src/telegram-import/report.mjs
+2026-09-29T18:46:21.5419560Z Uploading server-deploy/src/telegram-import/cli.mjs to mena-shop-app-v2/server/src/telegram-import/cli.mjs
+2026-09-29T18:46:22.4810494Z Uploading server-deploy/src/telegram-import/html-parser.mjs to mena-shop-app-v2/server/src/telegram-import/html-parser.mjs
+2026-09-29T18:46:23.5091273Z Uploading server-deploy/src/telegram-import/classifier.mjs to mena-shop-app-v2/server/src/telegram-import/classifier.mjs
+2026-09-29T18:46:24.2672032Z Uploading server-deploy/src/telegram-import/legacy-post-check.mjs to mena-shop-app-v2/server/src/telegram-import/legacy-post-check.mjs
+2026-09-29T18:46:25.0137040Z Uploading server-deploy/src/product-model.mjs to mena-shop-app-v2/server/src/product-model.mjs
+2026-09-29T18:46:25.7954011Z Uploading server-deploy/src/catalog-seed.json to mena-shop-app-v2/server/src/catalog-seed.json
+2026-09-29T18:46:26.7584181Z Uploading server-deploy/src/routes.mjs to mena-shop-app-v2/server/src/routes.mjs
+2026-09-29T18:46:27.6120302Z Uploading server-deploy/app.js to mena-shop-app-v2/server/app.js
+2026-09-29T18:46:28.3598444Z Uploading server-deploy/package.json to mena-shop-app-v2/server/package.json
+2026-09-29T18:46:29.1451588Z ##[group]Run echo "Server files were uploaded directly; no archive extraction needed."
+2026-09-29T18:46:29.1451941Z [36;1mecho "Server files were uploaded directly; no archive extraction needed."[0m
+2026-09-29T18:46:29.1504893Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:46:29.1505043Z env:
+2026-09-29T18:46:29.1505293Z   CPANEL_BASE_URL: ***
+2026-09-29T18:46:29.1505462Z   CPANEL_TARGET_DIR: ***
+2026-09-29T18:46:29.1505764Z   CPANEL_FILEMAN_TARGET_DIR: public_html/shop
+2026-09-29T18:46:29.1506058Z   CPANEL_SERVER_TARGETS: public_html/shop::public_html/shop
+mena-shop-app-v2/server::mena-shop-app-v2/server
+2026-09-29T18:46:29.1506335Z ##[endgroup]
+2026-09-29T18:46:29.1569878Z Server files were uploaded directly; no archive extraction needed.
+2026-09-29T18:46:29.1599655Z ##[group]Run curl_resolve_args=()
+2026-09-29T18:46:29.1599973Z [36;1mcurl_resolve_args=()[0m
+2026-09-29T18:46:29.1600438Z [36;1mif [ -n "${CPANEL_CURL_RESOLVE:-}" ]; then[0m
+2026-09-29T18:46:29.1600790Z [36;1m  curl_resolve_args=(--resolve "${CPANEL_CURL_RESOLVE}")[0m
+2026-09-29T18:46:29.1601101Z [36;1mfi[0m
+2026-09-29T18:46:29.1601309Z [36;1mwhile IFS= read -r target; do[0m
+2026-09-29T18:46:29.1601567Z [36;1m  [ -n "${target}" ] || continue[0m
+2026-09-29T18:46:29.1601831Z [36;1m  app_path="${target#*::}"[0m
+2026-09-29T18:46:29.1602143Z [36;1m  echo "Installing server dependencies for ${app_path}"[0m
+2026-09-29T18:46:29.1602561Z [36;1m  deps_json="$(curl --fail-with-body --show-error --silent --get \[0m
+2026-09-29T18:46:29.1602917Z [36;1m    "${curl_resolve_args[@]}" \[0m
+2026-09-29T18:46:29.1603182Z [36;1m    --connect-timeout 20 \[0m
+2026-09-29T18:46:29.1603429Z [36;1m    --max-time 180 \[0m
+2026-09-29T18:46:29.1603656Z [36;1m    --retry 2 \[0m
+2026-09-29T18:46:29.1603981Z [36;1m    -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \[0m
+2026-09-29T18:46:29.1604348Z [36;1m    --data-urlencode "type=npm" \[0m
+2026-09-29T18:46:29.1604656Z [36;1m    --data-urlencode "app_path=${app_path}" \[0m
+2026-09-29T18:46:29.1605024Z [36;1m    "${CPANEL_BASE_URL}/execute/PassengerApps/ensure_deps")"[0m
+2026-09-29T18:46:29.1605333Z [36;1m[0m
+2026-09-29T18:46:29.1605525Z [36;1m  echo "${deps_json}"[0m
+2026-09-29T18:46:29.1606070Z [36;1m  sse_url="$(printf '%s' "${deps_json}" | jq -r '.data.sse_url // empty')"[0m
+2026-09-29T18:46:29.1606434Z [36;1m  if [ -n "${sse_url}" ]; then[0m
+2026-09-29T18:46:29.1606736Z [36;1m    echo "Waiting for cPanel npm dependency task..."[0m
+2026-09-29T18:46:29.1607084Z [36;1m    log_file="ensure-deps-${app_path//\//-}.log"[0m
+2026-09-29T18:46:29.1607433Z [36;1m    timeout 240 curl --show-error --silent --no-buffer \[0m
+2026-09-29T18:46:29.1607765Z [36;1m      "${curl_resolve_args[@]}" \[0m
+2026-09-29T18:46:29.1608113Z [36;1m      -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \[0m
+2026-09-29T18:46:29.1608524Z [36;1m      "${CPANEL_BASE_URL}${sse_url}" | tee "${log_file}" || true[0m
+2026-09-29T18:46:29.1608966Z [36;1m    if grep -Eiq 'npm ERR!|error:|failed|traceback|exception' "${log_file}"; then[0m
+2026-09-29T18:46:29.1609417Z [36;1m      echo "cPanel dependency installation reported an error." >&2[0m
+2026-09-29T18:46:29.1609750Z [36;1m      exit 1[0m
+2026-09-29T18:46:29.1609948Z [36;1m    fi[0m
+2026-09-29T18:46:29.1610141Z [36;1m  fi[0m
+2026-09-29T18:46:29.1610355Z [36;1mdone <<< "${CPANEL_SERVER_TARGETS}"[0m
+2026-09-29T18:46:29.1667497Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:46:29.1667663Z env:
+2026-09-29T18:46:29.1667892Z   CPANEL_BASE_URL: ***
+2026-09-29T18:46:29.1668069Z   CPANEL_TARGET_DIR: ***
+2026-09-29T18:46:29.1668249Z   CPANEL_FILEMAN_TARGET_DIR: public_html/shop
+2026-09-29T18:46:29.1668561Z   CPANEL_SERVER_TARGETS: public_html/shop::public_html/shop
+mena-shop-app-v2/server::mena-shop-app-v2/server
+2026-09-29T18:46:29.1668855Z   CPANEL_USER: ***
+2026-09-29T18:46:29.1669016Z   CPANEL_TOKEN: ***
+2026-09-29T18:46:29.1669147Z ##[endgroup]
+2026-09-29T18:46:29.1731689Z Installing server dependencies for public_html/shop
+2026-09-29T18:46:30.1906316Z {"data":{"task_id":"00000000/6abc07861cbe99","sse_url":"/sse/UserTasks/00000000_6abc07861cbe99/1790707590-ensure_deps.log"},"errors":null,"warnings":null,"status":1,"messages":null,"metadata":{}}
+2026-09-29T18:46:30.1932591Z Waiting for cPanel npm dependency task...
+2026-09-29T18:46:30.9675759Z <!DOCTYPE html>
+2026-09-29T18:46:30.9676042Z <html>
+2026-09-29T18:46:30.9676221Z     <head>
+2026-09-29T18:46:30.9676455Z         <title>Forbidden</title>
+2026-09-29T18:46:30.9676629Z 
+2026-09-29T18:46:30.9676745Z         <style type="text/css">
+2026-09-29T18:46:30.9676901Z             body {
+2026-09-29T18:46:30.9677116Z                 font-family: "Open Sans", helvetica, arial, sans-serif;
+2026-09-29T18:46:30.9677323Z             }
+2026-09-29T18:46:30.9677888Z 
+2026-09-29T18:46:30.9677980Z             .applinks,
+2026-09-29T18:46:30.9678195Z             .copyright {
+2026-09-29T18:46:30.9678590Z                 margin-top: 25px;
+2026-09-29T18:46:30.9678743Z             }
+2026-09-29T18:46:30.9678819Z 
+2026-09-29T18:46:30.9678913Z             .copyright {
+2026-09-29T18:46:30.9679159Z                 font-size: 9.33333px;
+2026-09-29T18:46:30.9679435Z                 text-align: center;
+2026-09-29T18:46:30.9679678Z             }
+2026-09-29T18:46:30.9679787Z 
+2026-09-29T18:46:30.9679881Z             span.applogin {
+2026-09-29T18:46:30.9680138Z                 display: inline-block;
+2026-09-29T18:46:30.9680303Z 
+2026-09-29T18:46:30.9680435Z                 background-repeat: no-repeat;
+2026-09-29T18:46:30.9680735Z                 background-size: contain;
+2026-09-29T18:46:30.9681013Z                 padding-right: 200px;
+2026-09-29T18:46:30.9681285Z                 padding-bottom: 20px;
+2026-09-29T18:46:30.9681514Z             }
+2026-09-29T18:46:30.9681620Z 
+2026-09-29T18:46:30.9681739Z             span.applogin > svg {
+2026-09-29T18:46:30.9681977Z                 height: 1em;
+2026-09-29T18:46:30.9682203Z                 width: auto;
+2026-09-29T18:46:30.9682454Z                 vertical-align: middle;
+2026-09-29T18:46:30.9682688Z             }
+2026-09-29T18:46:30.9682808Z 
+2026-09-29T18:46:30.9682898Z             img.applogin {
+2026-09-29T18:46:30.9683177Z                 object-fit: cover;
+2026-09-29T18:46:30.9683398Z             }
+2026-09-29T18:46:30.9683508Z 
+2026-09-29T18:46:30.9683595Z             a, a:visited, a:hover {
+2026-09-29T18:46:30.9683766Z                 text-decoration: none;
+2026-09-29T18:46:30.9683917Z             }
+2026-09-29T18:46:30.9684036Z         </style>
+2026-09-29T18:46:30.9684156Z     </head>
+2026-09-29T18:46:30.9684227Z 
+2026-09-29T18:46:30.9684279Z     <body>
+2026-09-29T18:46:30.9684419Z         <h2>HTTP error 403: Forbidden</h2>
+2026-09-29T18:46:30.9684527Z 
+2026-09-29T18:46:30.9684674Z         <p>Token authentication allows access to UAPI or API 2 calls only.</p>
+2026-09-29T18:46:30.9684842Z 
+2026-09-29T18:46:30.9693932Z         <ul class="applinks"><li><a href="https://sunrise.hostns.io:2096">Log in to <span class="applogin" title="Webmail"><svg xmlns="http://www.w3.org/2000/svg" width="1462pt" height="320" viewBox="0 0 1462 240"><defs><clipPath id="a"><path d="M1339 0h122.44v240H1339zm0 0"/></clipPath></defs><path d="M365.102 14.398l-43.204 160.204c-2.597 9.597-6.597 18.45-12 26.546-5.398 8.102-11.847 15-19.347 20.704-7.5 5.7-15.855 10.152-25.05 13.347-9.2 3.202-18.8 4.8-28.8 4.8H0L60.3 13.5c.997-3.996 3.153-7.246 6.45-9.75C70.05 1.254 73.8 0 78 0h32.102c3.796 0 6.847 1.5 9.148 4.5 2.297 3 2.95 6.3 1.95 9.898l-44.7 166.8h60.898l45-167.698c1-3.996 3.153-7.246 6.454-9.75 3.296-2.496 6.945-3.75 10.95-3.75h32.397c3.796 0 6.796 1.5 9 4.5 2.198 3 2.8 6.3 1.8 9.898l-44.7 166.8H234.9c7.204 0 13.653-2.143 19.352-6.448 5.7-4.297 9.45-9.945 11.25-16.95l38.7-144.3c1-3.996 3.152-7.246 6.448-9.75 3.3-2.496 7.05-3.75 11.25-3.75H354c3.797 0 6.852 1.5 9.148 4.5 2.297 3 2.954 6.3 1.954 9.898M414.598 116.25c-2.403 1.902-4.102 4.352-5.102 7.352l-13.5 51c-.8 2.8-.3 5.398 1.5 7.796 1.805 2.403 4.2 3.602 7.2 3.602h124.202l-9.597 35.7c-1.605 5.402-4.605 9.8-9 13.198-4.405 3.407-9.405 5.102-15 5.102H382.196c-8.203 0-15.703-1.75-22.5-5.25-6.8-3.496-12.45-8.2-16.95-14.102-4.5-5.894-7.6-12.597-9.3-20.097-1.69-7.5-1.445-15.152.75-22.948l18.3-68.102c1.997-7.395 5.103-14.2 9.306-20.398 4.196-6.2 9.145-11.5 14.848-15.903 5.7-4.395 12.098-7.845 19.2-10.348 7.097-2.5 14.45-3.75 22.05-3.75h80.098c8.2 0 15.7 1.796 22.5 5.398 6.8 3.602 12.45 8.3 16.95 14.102 4.5 5.8 7.546 12.5 9.152 20.097 1.597 7.605 1.394 15.3-.602 23.1l-5.398 20.4c-2.403 9-7.25 16.253-14.547 21.75-7.308 5.503-15.558 8.25-24.75 8.25h-90.605l6-22.2c1.403-5.398 4.3-9.797 8.703-13.2 4.4-3.398 9.497-5.1 15.297-5.1H477.3c3.395 0 5.595-1.696 6.598-5.098l1.2-4.5c.597-2.2.2-4.204-1.2-6-1.402-1.8-3.203-2.704-5.402-2.704h-55.8c-3 0-5.7.954-8.098 2.852M619.492 0c4.203 0 8 .898 11.403 2.7 3.398 1.8 6.2 4.155 8.402 7.05 2.195 2.902 3.75 6.254 4.648 10.05.9 3.802.75 7.704-.453 11.7l-39.898 149.7h50.703c7.195 0 13.598-2.196 19.195-6.598 5.602-4.4 9.403-10.098 11.403-17.102 1.394-4.996 1.546-9.898.45-14.7-1.103-4.8-3.103-9.046-6-12.75-2.904-3.698-6.5-6.698-10.798-9-4.305-2.296-9.055-3.448-14.25-3.448h-2.102c-4.6 0-8.203-1.75-10.8-5.25-2.602-3.497-3.403-7.45-2.403-11.852l11.403-41.7h6.597c14.602 0 27.95 3.15 40.055 9.45 12.098 6.3 22.144 14.652 30.148 25.05 7.996 10.4 13.5 22.305 16.5 35.7 3 13.402 2.594 27.105-1.203 41.102l-1.195 4.5c-2.606 9.597-6.652 18.45-12.152 26.546-5.504 8.102-12 15-19.5 20.704-7.5 5.7-15.856 10.152-25.05 13.347-9.2 3.202-18.802 4.8-28.798 4.8h-96.602c-4.203 0-7.953-.898-11.25-2.7-3.3-1.8-6.1-4.148-8.398-7.05-2.305-2.895-3.856-6.246-4.652-10.05-.797-3.798-.7-7.696.3-11.7L590.992 0h28.5M739.19 225.898l44.404-166.796H973.19c14.6 0 27.95 3.148 40.048 9.45 12.102 6.3 22.153 14.65 30.153 25.05 8 10.402 13.5 22.3 16.5 35.7 3 13.4 2.598 27.1-1.2 41.096l-15.3 56.403c-1 4.005-3.152 7.2-6.45 9.598-3.3 2.403-6.952 3.602-10.952 3.602h-32.394c-3.8 0-6.8-1.45-9-4.352-2.203-2.894-2.805-6.148-1.8-9.75l17.995-68.097c1.4-4.995 1.55-9.902.448-14.698-1.097-4.8-3.047-9.047-5.843-12.75-2.805-3.7-6.407-6.7-10.8-9-4.404-2.297-9.204-3.454-14.404-3.454h-19.5L921.595 226.8c-1.004 4.005-3.153 7.2-6.45 9.598-3.3 2.403-7.05 3.602-11.25 3.602h-32.1c-3.802 0-6.853-1.45-9.15-4.352-2.304-2.894-2.953-6.148-1.953-9.75l29.103-108h-60.898L799.793 226.8c-1.004 4.005-3.148 7.2-6.45 9.598-3.3 2.403-7.05 3.602-11.25 3.602h-32.1c-3.598 0-6.556-1.45-8.848-4.352-2.297-2.894-2.954-6.148-1.954-9.75M1220.988 121.8l.903-3.3c.4-1.598.15-2.95-.75-4.05-.902-1.095-2.152-1.65-3.75-1.65h-97.5c-4.2 0-8-.902-11.402-2.698-3.41-1.8-6.2-4.153-8.398-7.05-2.21-2.9-3.71-6.25-4.5-10.052-.8-3.797-.71-7.695.3-11.7l6-22.8h132c8.2 0 15.7 1.8 22.5 5.398 6.79 3.602 12.45 8.3 16.95 14.102 4.5 5.805 7.6 12.45 9.3 19.95 1.688 7.5 1.54 15.253-.45 23.25l-23.702 88.198c-2.398 9-7.25 16.305-14.547 21.903-7.31 5.602-15.65 8.4-25.05 8.4l-97.5-.302c-8.6 0-16.5-1.843-23.7-5.546-7.202-3.7-13.1-8.598-17.702-14.704-4.61-6.097-7.797-13.093-9.597-21-1.8-7.894-1.6-15.945.598-24.148l1.203-4.5c1.388-5.598 3.75-10.8 7.048-15.602 3.3-4.796 7.153-8.894 11.55-12.296 4.392-3.403 9.302-6.047 14.7-7.954 5.403-1.894 11.102-2.847 17.102-2.847h81.898l-6 22.5c-1.61 5.4-4.61 9.802-9 13.2-4.398 3.402-9.41 5.102-15 5.102h-36.597c-3.41 0-5.6 1.7-6.6 5.097-.6 2.202-.2 4.155 1.198 5.85 1.39 1.704 3.192 2.552 5.403 2.552h59.098c2.203 0 4.09-.602 5.703-1.8 1.6-1.2 2.6-2.798 3-4.802l.6-2.398 14.698-54.3M1320.29 30.898l4.5-17.398c1-3.996 3.15-7.246 6.448-9.75 3.3-2.496 7.05-3.75 11.25-3.75h32.403c3.598 0 6.55 1.5 8.848 4.5 2.3 3 2.953 6.2 1.953 9.602l-4.8 17.7c-1.01 4.003-3.152 7.25-6.45 9.75-3.3 2.503-6.952 3.75-10.952 3.75h-32.398c-3.8 0-6.8-1.5-9-4.5-2.21-3-2.8-6.302-1.8-9.904zM1264.487 240l38.403-144.3c1.4-5.4 3.65-10.348 6.75-14.848 3.098-4.5 6.75-8.403 10.95-11.704 4.2-3.296 8.89-5.847 14.1-7.648 5.2-1.8 10.6-2.7 16.2-2.7h22.8l-38.702 144.302c-1.398 5.398-3.648 10.347-6.75 14.847-3.11 4.5-6.75 8.402-10.95 11.698-4.198 3.3-8.897 5.852-14.097 7.653-5.21 1.802-10.612 2.7-16.202 2.7h-22.5" fill="#ff6c2c"/><g clip-path="url(#a)"><path d="M1339.79 240l60.3-226.5c.988-3.996 3.148-7.246 6.45-9.75 3.3-2.496 7.05-3.75 11.25-3.75h32.1c3.79 0 6.84 1.453 9.15 4.352 2.288 2.902 2.94 6.148 1.948 9.75l-45 167.097c-2.207 8.804-5.758 16.8-10.648 24-4.91 7.198-10.71 13.35-17.4 18.448-6.71 5.102-14.15 9.106-22.35 12-8.21 2.903-16.8 4.352-25.8 4.352" fill="#ff6c2c"/></g></svg>
+2026-09-29T18:46:30.9702770Z </span></a></li>
+2026-09-29T18:46:30.9702853Z 
+2026-09-29T18:46:30.9713548Z <li><a href="https://sunrise.hostns.io:2083">Log in to <span class="applogin" title="cPanel"><svg xmlns="http://www.w3.org/2000/svg" width="1516" height="320" viewBox="0 0 1137 240"><defs><clipPath id="a"><path d="M1095 0h41.578v42H1095zm0 0"/></clipPath></defs><path d="M89.69 59.102h67.802l-10.5 40.2c-1.605 5.6-4.605 10.1-9 13.5-4.402 3.4-9.504 5.096-15.3 5.096h-31.5c-7.2 0-13.55 2.102-19.05 6.3-5.505 4.2-9.353 9.904-11.552 17.103-1.4 5.4-1.55 10.5-.45 15.302 1.098 4.796 3.047 9.05 5.852 12.75 2.797 3.703 6.4 6.652 10.8 8.85 4.395 2.2 9.196 3.298 14.4 3.298h19.2c3.6 0 6.55 1.453 8.85 4.352 2.297 2.902 2.95 6.148 1.95 9.75l-12 44.398h-21c-14.4 0-27.653-3.148-39.75-9.45-12.102-6.3-22.153-14.648-30.15-25.05-8.003-10.395-13.452-22.246-16.35-35.547-2.903-13.3-2.55-26.95 1.05-40.953l1.2-4.5c2.597-9.602 6.648-18.45 12.148-26.55 5.5-8.098 12-15 19.5-20.7 7.5-5.7 15.85-10.148 25.05-13.352 9.2-3.195 18.797-4.796 28.8-4.796M123.89 240L182.99 18.602c1.598-5.598 4.598-10.098 9-13.5C196.388 1.7 201.484 0 207.288 0h62.7c14.403 0 27.65 3.148 39.75 9.45 12.098 6.3 22.15 14.655 30.153 25.05 7.997 10.402 13.5 22.254 16.5 35.55 3 13.305 2.594 26.954-1.202 40.95l-1.2 4.5c-2.6 9.602-6.597 18.45-12 26.55-5.398 8.098-11.847 15.052-19.347 20.848-7.5 5.805-15.855 10.305-25.05 13.5-9.203 3.204-18.8 4.805-28.8 4.805h-54.302l10.8-40.504c1.6-5.4 4.6-9.798 9-13.2 4.4-3.398 9.497-5.102 15.302-5.102h17.398c7.2 0 13.653-2.2 19.352-6.597 5.7-4.398 9.45-10.097 11.25-17.1 1.394-4.997 1.547-9.9.45-14.7-1.103-4.8-3.052-9.047-5.853-12.75-2.8-3.7-6.402-6.7-10.796-9-4.402-2.297-9.202-3.45-14.402-3.45H233.39l-43.8 162.903c-1.606 5.4-4.606 9.797-9 13.195-4.403 3.407-9.403 5.102-15 5.102h-41.7M497.984 121.8l.903-3.3c.398-1.598.148-2.95-.75-4.05-.903-1.095-2.153-1.65-3.75-1.65h-97.5c-4.2 0-8.004-.902-11.403-2.698-3.402-1.8-6.2-4.153-8.398-7.05-2.203-2.9-3.703-6.25-4.5-10.052-.8-3.797-.703-7.695.3-11.7l6-22.8h132c8.2 0 15.7 1.8 22.5 5.398 6.798 3.602 12.45 8.3 16.95 14.102 4.5 5.805 7.598 12.45 9.3 19.95 1.696 7.5 1.548 15.253-.448 23.25l-23.704 88.198c-2.398 9-7.25 16.305-14.547 21.903-7.304 5.602-15.652 8.403-25.05 8.403l-97.5-.305c-8.602 0-16.5-1.843-23.7-5.546-7.203-3.7-13.1-8.598-17.703-14.704-4.6-6.093-7.796-13.093-9.597-21-1.8-7.894-1.598-15.945.597-24.148l1.204-4.5c1.394-5.598 3.75-10.797 7.046-15.602 3.3-4.796 7.15-8.894 11.55-12.296 4.4-3.403 9.302-6.047 14.7-7.954 5.403-1.894 11.102-2.847 17.102-2.847h81.898l-6 22.5c-1.6 5.403-4.6 9.802-9 13.2-4.398 3.402-9.402 5.102-15 5.102h-36.597c-3.403 0-5.602 1.703-6.602 5.1-.598 2.2-.2 4.153 1.2 5.85 1.398 1.702 3.2 2.55 5.402 2.55h59.097c2.2 0 4.098-.602 5.704-1.8 1.597-1.2 2.593-2.798 3-4.802l.597-2.398 14.7-54.3M672.586 59.102c14.594 0 27.945 3.148 40.047 9.45 12.1 6.3 22.148 14.65 30.152 25.05 7.996 10.402 13.45 22.3 16.348 35.7 2.898 13.4 2.45 27.1-1.348 41.096l-15 56.403c-1.004 4.005-3.152 7.2-6.45 9.598-3.3 2.403-6.952 3.602-10.952 3.602h-32.4c-3.8 0-6.8-1.445-9-4.352-2.202-2.894-2.803-6.148-1.8-9.75l18-68.097c1.4-4.995 1.547-9.902.45-14.698-1.102-4.8-3.05-9.047-5.848-12.75-2.805-3.7-6.402-6.7-10.8-9-4.403-2.297-9.204-3.454-14.4-3.454h-33.6L606.882 226.8c-1 4.005-3.15 7.2-6.45 9.598-3.3 2.403-7.05 3.602-11.25 3.602h-32.097c-3.602 0-6.555-1.445-8.852-4.352-2.297-2.894-2.95-6.148-1.95-9.75l44.4-166.796h81.902M849.28 116.25c-2.397 1.902-4.1 4.352-5.096 7.352l-13.5 51c-.8 2.8-.3 5.398 1.5 7.796 1.8 2.403 4.2 3.602 7.2 3.602H963.58l-9.598 35.703c-1.605 5.4-4.605 9.797-9 13.195-4.402 3.407-9.406 5.102-15 5.102h-113.1c-8.204 0-15.704-1.75-22.5-5.25-6.802-3.496-12.45-8.195-16.95-14.102-4.5-5.894-7.606-12.597-9.3-20.097-1.697-7.5-1.45-15.152.75-22.948l18.3-68.102c1.996-7.395 5.097-14.2 9.3-20.398 4.2-6.2 9.15-11.5 14.848-15.903 5.7-4.395 12.098-7.845 19.2-10.348 7.097-2.5 14.448-3.75 22.05-3.75h80.102c8.2 0 15.7 1.796 22.5 5.398 6.796 3.602 12.45 8.3 16.95 14.102 4.5 5.8 7.546 12.5 9.147 20.097 1.603 7.605 1.4 15.3-.596 23.1l-5.403 20.4c-2.397 9.003-7.25 16.253-14.546 21.753-7.304 5.5-15.554 8.25-24.75 8.25h-90.6l6-22.203c1.397-5.398 4.296-9.797 8.698-13.2 4.398-3.398 9.496-5.1 15.3-5.1h36.602c3.4 0 5.594-1.696 6.598-5.098l1.2-4.5c.6-2.2.198-4.204-1.2-6-1.402-1.8-3.2-2.704-5.398-2.704h-55.8c-3 0-5.7.954-8.103 2.852M963.277 240l60.3-226.5c.993-3.996 3.153-7.246 6.454-9.75 3.298-2.496 7.048-3.75 11.25-3.75h32.1c3.792 0 6.85 1.453 9.15 4.352 2.29 2.902 2.95 6.148 1.95 9.75l-45 167.1c-2.21 8.802-5.75 16.798-10.652 24-4.906 7.196-10.7 13.35-17.398 18.446-6.71 5.102-14.153 9.106-22.352 12-8.203 2.907-16.8 4.352-25.8 4.352" fill="#ff6c2c"/><g clip-path="url(#a)"><path d="M1112.488 19.715h2.96c1.462 0 2.63-.38 3.513-1.137.892-.754 1.33-1.715 1.33-2.883 0-1.367-.392-2.347-1.18-2.937-.782-.594-2.02-.89-3.72-.89h-2.902zm11.87-4.13c0 1.462-.378 2.75-1.16 3.868-.776 1.12-1.858 1.957-3.268 2.504l6.51 10.8h-4.588l-5.66-9.68h-3.704v9.68h-4.04V8.396h7.13c3.03 0 5.25.593 6.66 1.777 1.422 1.183 2.12 2.988 2.12 5.414zm-26.03 4.977c0 3.157.793 6.102 2.383 8.844 1.59 2.746 3.75 4.907 6.49 6.485 2.75 1.575 5.69 2.364 8.82 2.364 3.17 0 6.12-.793 8.832-2.38 2.718-1.585 4.878-3.73 6.468-6.437 1.602-2.707 2.39-5.667 2.39-8.875 0-3.17-.788-6.117-2.382-8.832a17.746 17.746 0 0 0-6.43-6.464c-2.707-1.598-5.668-2.395-8.878-2.395-3.168 0-6.11.794-8.83 2.38-2.72 1.586-4.87 3.73-6.47 6.438-1.59 2.707-2.392 5.667-2.392 8.874zm-2.867 0c0-3.644.91-7.062 2.73-10.253 1.83-3.193 4.33-5.705 7.52-7.548A20.29 20.29 0 0 1 1116.02 0c3.652 0 7.07.91 10.26 2.734 3.19 1.825 5.7 4.329 7.54 7.52a20.298 20.298 0 0 1 2.758 10.309c0 3.59-.88 6.964-2.648 10.117-1.77 3.156-4.25 5.68-7.442 7.574-3.18 1.894-6.68 2.844-10.468 2.844-3.77 0-7.25-.946-10.442-2.828-3.187-1.887-5.68-4.41-7.45-7.563-1.776-3.152-2.667-6.535-2.667-10.145" fill="#ff6c2c"/></g></svg>
+2026-09-29T18:46:30.9724497Z </span></a></li>
+2026-09-29T18:46:30.9724584Z 
+2026-09-29T18:46:30.9731198Z <li><a href="https://sunrise.hostns.io:2087">Log in to <span class="applogin" title="WHM"><svg xmlns="http://www.w3.org/2000/svg" width="1212" height="320" viewBox="0 0 909 240"><defs><clipPath id="a"><path d="M867 0h41.727v42H867zm0 0"/></clipPath></defs><path d="M365.102 14.398l-43.204 160.204c-2.597 9.597-6.597 18.45-12 26.546-5.398 8.102-11.847 15-19.347 20.704-7.5 5.7-15.855 10.152-25.05 13.347-9.2 3.202-18.8 4.8-28.8 4.8H0L60.3 13.5c.997-3.996 3.15-7.246 6.45-9.75C70.05 1.254 73.8 0 78 0h32.102c3.796 0 6.847 1.5 9.148 4.5 2.297 3 2.95 6.3 1.95 9.898l-44.7 166.8h60.898l45-167.698c1-3.996 3.153-7.246 6.454-9.75 3.296-2.496 6.945-3.75 10.95-3.75h32.397c3.796 0 6.796 1.5 9 4.5 2.198 3 2.8 6.3 1.8 9.898l-44.7 166.8H234.9c7.204 0 13.653-2.143 19.352-6.448 5.7-4.297 9.45-9.945 11.25-16.95l38.7-144.3c1-3.996 3.152-7.246 6.448-9.75 3.3-2.496 7.05-3.75 11.25-3.75H354c3.797 0 6.848 1.5 9.148 4.5 2.297 3 2.95 6.3 1.954 9.898M406.797 149.398l-20.7 77.102c-1.003 4.004-3.152 7.25-6.45 9.75-3.3 2.504-7.05 3.75-11.25 3.75h-32.1c-3.602 0-6.555-1.5-8.852-4.5-2.297-3-2.945-6.195-1.95-9.602l56.7-212.398c1-3.996 3.153-7.246 6.453-9.75 3.297-2.496 7.047-3.75 11.25-3.75h46.5l-23.703 90.602h75L518.398 13.5c.997-3.996 3.15-7.246 6.45-9.75 3.3-2.496 6.945-3.75 10.95-3.75h47.1l-60.902 226.5c-1 4.004-3.148 7.25-6.45 9.75-3.3 2.504-6.948 3.75-10.948 3.75h-32.403c-3.8 0-6.8-1.5-9-4.5-2.203-3-2.8-6.195-1.797-9.602l20.4-76.5h-75M539.695 225.602L600.297 0h189.598c14.597 0 27.95 3.148 40.05 9.45 12.098 6.3 22.15 14.655 30.15 25.05 8 10.402 13.5 22.305 16.5 35.7 3 13.402 2.596 27.105-1.2 41.1l-30.9 115.2c-1.003 4.004-3.15 7.25-6.448 9.75-3.3 2.504-7.05 3.75-11.25 3.75h-32.102c-3.8 0-6.85-1.5-9.148-4.5-2.305-3-2.953-6.3-1.953-9.898l32.703-121.204c1.394-5.593 1.5-11.144.297-16.648-1.2-5.496-3.45-10.395-6.75-14.7-3.297-4.296-7.4-7.75-12.297-10.35-4.906-2.595-10.352-3.9-16.352-3.9h-13.8l-45 167.7c-1.004 4.004-3.15 7.25-6.45 9.75-3.3 2.504-6.953 3.75-10.95 3.75h-32.4c-3.802 0-6.802-1.5-9-4.5-2.204-3-2.802-6.3-1.798-9.898l44.7-166.8h-60.903l-45 167.698c-1 4.004-3.15 7.25-6.45 9.75-3.3 2.504-7.05 3.75-11.25 3.75h-32.097c-3.805 0-6.856-1.5-9.152-4.5-2.3-3-2.954-6.3-1.95-9.898" fill="#ff6c2c"/><g clip-path="url(#a)"><path d="M884.637 20.516h2.953c1.46 0 2.63-.375 3.515-1.133.883-.758 1.325-1.72 1.325-2.887 0-1.367-.39-2.348-1.176-2.937-.78-.595-2.024-.892-3.72-.892h-2.897zm11.867-4.13c0 1.462-.387 2.75-1.16 3.872-.778 1.12-1.864 1.953-3.27 2.5l6.508 10.8h-4.594l-5.66-9.68h-3.69v9.68h-4.048V9.196h7.137c3.027 0 5.246.594 6.66 1.778 1.41 1.183 2.117 2.992 2.117 5.414zm-26.03 4.977c0 3.157.792 6.106 2.378 8.848a17.347 17.347 0 0 0 6.496 6.477c2.742 1.583 5.683 2.368 8.816 2.368 3.172 0 6.117-.793 8.832-2.38a17.818 17.818 0 0 0 6.47-6.44c1.593-2.708 2.39-5.665 2.39-8.872 0-3.172-.793-6.117-2.38-8.832a17.838 17.838 0 0 0-6.437-6.467c-2.708-1.59-5.665-2.39-8.876-2.39-3.172 0-6.113.792-8.832 2.378a17.797 17.797 0 0 0-6.465 6.438c-1.597 2.707-2.394 5.668-2.394 8.875zm-2.872 0c0-3.644.914-7.062 2.734-10.254a20.096 20.096 0 0 1 7.52-7.547C881.045 1.722 884.483.8 888.163.8c3.65 0 7.066.915 10.254 2.735a20.04 20.04 0 0 1 7.547 7.52c1.844 3.19 2.762 6.63 2.762 10.308 0 3.59-.883 6.965-2.653 10.117-1.765 3.157-4.246 5.68-7.437 7.575-3.188 1.894-6.68 2.843-10.473 2.843-3.773 0-7.254-.945-10.445-2.832-3.19-1.882-5.673-4.406-7.45-7.558-1.778-3.153-2.668-6.535-2.668-10.145" fill="#ff6c2c"/></g></svg>
+2026-09-29T18:46:30.9736216Z </span></a></li>
+2026-09-29T18:46:30.9736340Z </ul>
+2026-09-29T18:46:30.9736408Z 
+2026-09-29T18:46:30.9736787Z         <p class="copyright">Copyright © 2026 cPanel, Inc.</p>
+2026-09-29T18:46:30.9736981Z     </body>
+2026-09-29T18:46:30.9737099Z </html>
+2026-09-29T18:46:30.9737167Z 
+2026-09-29T18:46:30.9737309Z Installing server dependencies for mena-shop-app-v2/server
+2026-09-29T18:46:31.9762118Z {"warnings":null,"data":{"sse_url":"/sse/UserTasks/00000000_6abc0787d9c3d3/1790707591-ensure_deps.log","task_id":"00000000/6abc0787d9c3d3"},"errors":null,"metadata":{},"status":1,"messages":null}
+2026-09-29T18:46:31.9790115Z Waiting for cPanel npm dependency task...
+2026-09-29T18:46:32.7166409Z <!DOCTYPE html>
+2026-09-29T18:46:32.7166667Z <html>
+2026-09-29T18:46:32.7166848Z     <head>
+2026-09-29T18:46:32.7167089Z         <title>Forbidden</title>
+2026-09-29T18:46:32.7167271Z 
+2026-09-29T18:46:32.7167383Z         <style type="text/css">
+2026-09-29T18:46:32.7167625Z             body {
+2026-09-29T18:46:32.7167941Z                 font-family: "Open Sans", helvetica, arial, sans-serif;
+2026-09-29T18:46:32.7168247Z             }
+2026-09-29T18:46:32.7168367Z 
+2026-09-29T18:46:32.7168460Z             .applinks,
+2026-09-29T18:46:32.7168667Z             .copyright {
+2026-09-29T18:46:32.7168903Z                 margin-top: 25px;
+2026-09-29T18:46:32.7169134Z             }
+2026-09-29T18:46:32.7169237Z 
+2026-09-29T18:46:32.7169326Z             .copyright {
+2026-09-29T18:46:32.7169611Z                 font-size: 9.33333px;
+2026-09-29T18:46:32.7170532Z                 text-align: center;
+2026-09-29T18:46:32.7170778Z             }
+2026-09-29T18:46:32.7170887Z 
+2026-09-29T18:46:32.7170979Z             span.applogin {
+2026-09-29T18:46:32.7171231Z                 display: inline-block;
+2026-09-29T18:46:32.7171394Z 
+2026-09-29T18:46:32.7171527Z                 background-repeat: no-repeat;
+2026-09-29T18:46:32.7171818Z                 background-size: contain;
+2026-09-29T18:46:32.7172100Z                 padding-right: 200px;
+2026-09-29T18:46:32.7172372Z                 padding-bottom: 20px;
+2026-09-29T18:46:32.7172601Z             }
+2026-09-29T18:46:32.7172710Z 
+2026-09-29T18:46:32.7172820Z             span.applogin > svg {
+2026-09-29T18:46:32.7173056Z                 height: 1em;
+2026-09-29T18:46:32.7173281Z                 width: auto;
+2026-09-29T18:46:32.7173531Z                 vertical-align: middle;
+2026-09-29T18:46:32.7173767Z             }
+2026-09-29T18:46:32.7173878Z 
+2026-09-29T18:46:32.7173969Z             img.applogin {
+2026-09-29T18:46:32.7174234Z                 object-fit: cover;
+2026-09-29T18:46:32.7174460Z             }
+2026-09-29T18:46:32.7174565Z 
+2026-09-29T18:46:32.7174676Z             a, a:visited, a:hover {
+2026-09-29T18:46:32.7174940Z                 text-decoration: none;
+2026-09-29T18:46:32.7175168Z             }
+2026-09-29T18:46:32.7175350Z         </style>
+2026-09-29T18:46:32.7175534Z     </head>
+2026-09-29T18:46:32.7175774Z 
+2026-09-29T18:46:32.7175851Z     <body>
+2026-09-29T18:46:32.7176071Z         <h2>HTTP error 403: Forbidden</h2>
+2026-09-29T18:46:32.7176237Z 
+2026-09-29T18:46:32.7176461Z         <p>Token authentication allows access to UAPI or API 2 calls only.</p>
+2026-09-29T18:46:32.7176724Z 
+2026-09-29T18:46:32.7191759Z         <ul class="applinks"><li><a href="https://sunrise.hostns.io:2096">Log in to <span class="applogin" title="Webmail"><svg xmlns="http://www.w3.org/2000/svg" width="1462pt" height="320" viewBox="0 0 1462 240"><defs><clipPath id="a"><path d="M1339 0h122.44v240H1339zm0 0"/></clipPath></defs><path d="M365.102 14.398l-43.204 160.204c-2.597 9.597-6.597 18.45-12 26.546-5.398 8.102-11.847 15-19.347 20.704-7.5 5.7-15.855 10.152-25.05 13.347-9.2 3.202-18.8 4.8-28.8 4.8H0L60.3 13.5c.997-3.996 3.153-7.246 6.45-9.75C70.05 1.254 73.8 0 78 0h32.102c3.796 0 6.847 1.5 9.148 4.5 2.297 3 2.95 6.3 1.95 9.898l-44.7 166.8h60.898l45-167.698c1-3.996 3.153-7.246 6.454-9.75 3.296-2.496 6.945-3.75 10.95-3.75h32.397c3.796 0 6.796 1.5 9 4.5 2.198 3 2.8 6.3 1.8 9.898l-44.7 166.8H234.9c7.204 0 13.653-2.143 19.352-6.448 5.7-4.297 9.45-9.945 11.25-16.95l38.7-144.3c1-3.996 3.152-7.246 6.448-9.75 3.3-2.496 7.05-3.75 11.25-3.75H354c3.797 0 6.852 1.5 9.148 4.5 2.297 3 2.954 6.3 1.954 9.898M414.598 116.25c-2.403 1.902-4.102 4.352-5.102 7.352l-13.5 51c-.8 2.8-.3 5.398 1.5 7.796 1.805 2.403 4.2 3.602 7.2 3.602h124.202l-9.597 35.7c-1.605 5.402-4.605 9.8-9 13.198-4.405 3.407-9.405 5.102-15 5.102H382.196c-8.203 0-15.703-1.75-22.5-5.25-6.8-3.496-12.45-8.2-16.95-14.102-4.5-5.894-7.6-12.597-9.3-20.097-1.69-7.5-1.445-15.152.75-22.948l18.3-68.102c1.997-7.395 5.103-14.2 9.306-20.398 4.196-6.2 9.145-11.5 14.848-15.903 5.7-4.395 12.098-7.845 19.2-10.348 7.097-2.5 14.45-3.75 22.05-3.75h80.098c8.2 0 15.7 1.796 22.5 5.398 6.8 3.602 12.45 8.3 16.95 14.102 4.5 5.8 7.546 12.5 9.152 20.097 1.597 7.605 1.394 15.3-.602 23.1l-5.398 20.4c-2.403 9-7.25 16.253-14.547 21.75-7.308 5.503-15.558 8.25-24.75 8.25h-90.605l6-22.2c1.403-5.398 4.3-9.797 8.703-13.2 4.4-3.398 9.497-5.1 15.297-5.1H477.3c3.395 0 5.595-1.696 6.598-5.098l1.2-4.5c.597-2.2.2-4.204-1.2-6-1.402-1.8-3.203-2.704-5.402-2.704h-55.8c-3 0-5.7.954-8.098 2.852M619.492 0c4.203 0 8 .898 11.403 2.7 3.398 1.8 6.2 4.155 8.402 7.05 2.195 2.902 3.75 6.254 4.648 10.05.9 3.802.75 7.704-.453 11.7l-39.898 149.7h50.703c7.195 0 13.598-2.196 19.195-6.598 5.602-4.4 9.403-10.098 11.403-17.102 1.394-4.996 1.546-9.898.45-14.7-1.103-4.8-3.103-9.046-6-12.75-2.904-3.698-6.5-6.698-10.798-9-4.305-2.296-9.055-3.448-14.25-3.448h-2.102c-4.6 0-8.203-1.75-10.8-5.25-2.602-3.497-3.403-7.45-2.403-11.852l11.403-41.7h6.597c14.602 0 27.95 3.15 40.055 9.45 12.098 6.3 22.144 14.652 30.148 25.05 7.996 10.4 13.5 22.305 16.5 35.7 3 13.402 2.594 27.105-1.203 41.102l-1.195 4.5c-2.606 9.597-6.652 18.45-12.152 26.546-5.504 8.102-12 15-19.5 20.704-7.5 5.7-15.856 10.152-25.05 13.347-9.2 3.202-18.802 4.8-28.798 4.8h-96.602c-4.203 0-7.953-.898-11.25-2.7-3.3-1.8-6.1-4.148-8.398-7.05-2.305-2.895-3.856-6.246-4.652-10.05-.797-3.798-.7-7.696.3-11.7L590.992 0h28.5M739.19 225.898l44.404-166.796H973.19c14.6 0 27.95 3.148 40.048 9.45 12.102 6.3 22.153 14.65 30.153 25.05 8 10.402 13.5 22.3 16.5 35.7 3 13.4 2.598 27.1-1.2 41.096l-15.3 56.403c-1 4.005-3.152 7.2-6.45 9.598-3.3 2.403-6.952 3.602-10.952 3.602h-32.394c-3.8 0-6.8-1.45-9-4.352-2.203-2.894-2.805-6.148-1.8-9.75l17.995-68.097c1.4-4.995 1.55-9.902.448-14.698-1.097-4.8-3.047-9.047-5.843-12.75-2.805-3.7-6.407-6.7-10.8-9-4.404-2.297-9.204-3.454-14.404-3.454h-19.5L921.595 226.8c-1.004 4.005-3.153 7.2-6.45 9.598-3.3 2.403-7.05 3.602-11.25 3.602h-32.1c-3.802 0-6.853-1.45-9.15-4.352-2.304-2.894-2.953-6.148-1.953-9.75l29.103-108h-60.898L799.793 226.8c-1.004 4.005-3.148 7.2-6.45 9.598-3.3 2.403-7.05 3.602-11.25 3.602h-32.1c-3.598 0-6.556-1.45-8.848-4.352-2.297-2.894-2.954-6.148-1.954-9.75M1220.988 121.8l.903-3.3c.4-1.598.15-2.95-.75-4.05-.902-1.095-2.152-1.65-3.75-1.65h-97.5c-4.2 0-8-.902-11.402-2.698-3.41-1.8-6.2-4.153-8.398-7.05-2.21-2.9-3.71-6.25-4.5-10.052-.8-3.797-.71-7.695.3-11.7l6-22.8h132c8.2 0 15.7 1.8 22.5 5.398 6.79 3.602 12.45 8.3 16.95 14.102 4.5 5.805 7.6 12.45 9.3 19.95 1.688 7.5 1.54 15.253-.45 23.25l-23.702 88.198c-2.398 9-7.25 16.305-14.547 21.903-7.31 5.602-15.65 8.4-25.05 8.4l-97.5-.302c-8.6 0-16.5-1.843-23.7-5.546-7.202-3.7-13.1-8.598-17.702-14.704-4.61-6.097-7.797-13.093-9.597-21-1.8-7.894-1.6-15.945.598-24.148l1.203-4.5c1.388-5.598 3.75-10.8 7.048-15.602 3.3-4.796 7.153-8.894 11.55-12.296 4.392-3.403 9.302-6.047 14.7-7.954 5.403-1.894 11.102-2.847 17.102-2.847h81.898l-6 22.5c-1.61 5.4-4.61 9.802-9 13.2-4.398 3.402-9.41 5.102-15 5.102h-36.597c-3.41 0-5.6 1.7-6.6 5.097-.6 2.202-.2 4.155 1.198 5.85 1.39 1.704 3.192 2.552 5.403 2.552h59.098c2.203 0 4.09-.602 5.703-1.8 1.6-1.2 2.6-2.798 3-4.802l.6-2.398 14.698-54.3M1320.29 30.898l4.5-17.398c1-3.996 3.15-7.246 6.448-9.75 3.3-2.496 7.05-3.75 11.25-3.75h32.403c3.598 0 6.55 1.5 8.848 4.5 2.3 3 2.953 6.2 1.953 9.602l-4.8 17.7c-1.01 4.003-3.152 7.25-6.45 9.75-3.3 2.503-6.952 3.75-10.952 3.75h-32.398c-3.8 0-6.8-1.5-9-4.5-2.21-3-2.8-6.302-1.8-9.904zM1264.487 240l38.403-144.3c1.4-5.4 3.65-10.348 6.75-14.848 3.098-4.5 6.75-8.403 10.95-11.704 4.2-3.296 8.89-5.847 14.1-7.648 5.2-1.8 10.6-2.7 16.2-2.7h22.8l-38.702 144.302c-1.398 5.398-3.648 10.347-6.75 14.847-3.11 4.5-6.75 8.402-10.95 11.698-4.198 3.3-8.897 5.852-14.097 7.653-5.21 1.802-10.612 2.7-16.202 2.7h-22.5" fill="#ff6c2c"/><g clip-path="url(#a)"><path d="M1339.79 240l60.3-226.5c.988-3.996 3.148-7.246 6.45-9.75 3.3-2.496 7.05-3.75 11.25-3.75h32.1c3.79 0 6.84 1.453 9.15 4.352 2.288 2.902 2.94 6.148 1.948 9.75l-45 167.097c-2.207 8.804-5.758 16.8-10.648 24-4.91 7.198-10.71 13.35-17.4 18.448-6.71 5.102-14.15 9.106-22.35 12-8.21 2.903-16.8 4.352-25.8 4.352" fill="#ff6c2c"/></g></svg>
+2026-09-29T18:46:32.7201573Z </span></a></li>
+2026-09-29T18:46:32.7201653Z 
+2026-09-29T18:46:32.7212623Z <li><a href="https://sunrise.hostns.io:2083">Log in to <span class="applogin" title="cPanel"><svg xmlns="http://www.w3.org/2000/svg" width="1516" height="320" viewBox="0 0 1137 240"><defs><clipPath id="a"><path d="M1095 0h41.578v42H1095zm0 0"/></clipPath></defs><path d="M89.69 59.102h67.802l-10.5 40.2c-1.605 5.6-4.605 10.1-9 13.5-4.402 3.4-9.504 5.096-15.3 5.096h-31.5c-7.2 0-13.55 2.102-19.05 6.3-5.505 4.2-9.353 9.904-11.552 17.103-1.4 5.4-1.55 10.5-.45 15.302 1.098 4.796 3.047 9.05 5.852 12.75 2.797 3.703 6.4 6.652 10.8 8.85 4.395 2.2 9.196 3.298 14.4 3.298h19.2c3.6 0 6.55 1.453 8.85 4.352 2.297 2.902 2.95 6.148 1.95 9.75l-12 44.398h-21c-14.4 0-27.653-3.148-39.75-9.45-12.102-6.3-22.153-14.648-30.15-25.05-8.003-10.395-13.452-22.246-16.35-35.547-2.903-13.3-2.55-26.95 1.05-40.953l1.2-4.5c2.597-9.602 6.648-18.45 12.148-26.55 5.5-8.098 12-15 19.5-20.7 7.5-5.7 15.85-10.148 25.05-13.352 9.2-3.195 18.797-4.796 28.8-4.796M123.89 240L182.99 18.602c1.598-5.598 4.598-10.098 9-13.5C196.388 1.7 201.484 0 207.288 0h62.7c14.403 0 27.65 3.148 39.75 9.45 12.098 6.3 22.15 14.655 30.153 25.05 7.997 10.402 13.5 22.254 16.5 35.55 3 13.305 2.594 26.954-1.202 40.95l-1.2 4.5c-2.6 9.602-6.597 18.45-12 26.55-5.398 8.098-11.847 15.052-19.347 20.848-7.5 5.805-15.855 10.305-25.05 13.5-9.203 3.204-18.8 4.805-28.8 4.805h-54.302l10.8-40.504c1.6-5.4 4.6-9.798 9-13.2 4.4-3.398 9.497-5.102 15.302-5.102h17.398c7.2 0 13.653-2.2 19.352-6.597 5.7-4.398 9.45-10.097 11.25-17.1 1.394-4.997 1.547-9.9.45-14.7-1.103-4.8-3.052-9.047-5.853-12.75-2.8-3.7-6.402-6.7-10.796-9-4.402-2.297-9.202-3.45-14.402-3.45H233.39l-43.8 162.903c-1.606 5.4-4.606 9.797-9 13.195-4.403 3.407-9.403 5.102-15 5.102h-41.7M497.984 121.8l.903-3.3c.398-1.598.148-2.95-.75-4.05-.903-1.095-2.153-1.65-3.75-1.65h-97.5c-4.2 0-8.004-.902-11.403-2.698-3.402-1.8-6.2-4.153-8.398-7.05-2.203-2.9-3.703-6.25-4.5-10.052-.8-3.797-.703-7.695.3-11.7l6-22.8h132c8.2 0 15.7 1.8 22.5 5.398 6.798 3.602 12.45 8.3 16.95 14.102 4.5 5.805 7.598 12.45 9.3 19.95 1.696 7.5 1.548 15.253-.448 23.25l-23.704 88.198c-2.398 9-7.25 16.305-14.547 21.903-7.304 5.602-15.652 8.403-25.05 8.403l-97.5-.305c-8.602 0-16.5-1.843-23.7-5.546-7.203-3.7-13.1-8.598-17.703-14.704-4.6-6.093-7.796-13.093-9.597-21-1.8-7.894-1.598-15.945.597-24.148l1.204-4.5c1.394-5.598 3.75-10.797 7.046-15.602 3.3-4.796 7.15-8.894 11.55-12.296 4.4-3.403 9.302-6.047 14.7-7.954 5.403-1.894 11.102-2.847 17.102-2.847h81.898l-6 22.5c-1.6 5.403-4.6 9.802-9 13.2-4.398 3.402-9.402 5.102-15 5.102h-36.597c-3.403 0-5.602 1.703-6.602 5.1-.598 2.2-.2 4.153 1.2 5.85 1.398 1.702 3.2 2.55 5.402 2.55h59.097c2.2 0 4.098-.602 5.704-1.8 1.597-1.2 2.593-2.798 3-4.802l.597-2.398 14.7-54.3M672.586 59.102c14.594 0 27.945 3.148 40.047 9.45 12.1 6.3 22.148 14.65 30.152 25.05 7.996 10.402 13.45 22.3 16.348 35.7 2.898 13.4 2.45 27.1-1.348 41.096l-15 56.403c-1.004 4.005-3.152 7.2-6.45 9.598-3.3 2.403-6.952 3.602-10.952 3.602h-32.4c-3.8 0-6.8-1.445-9-4.352-2.202-2.894-2.803-6.148-1.8-9.75l18-68.097c1.4-4.995 1.547-9.902.45-14.698-1.102-4.8-3.05-9.047-5.848-12.75-2.805-3.7-6.402-6.7-10.8-9-4.403-2.297-9.204-3.454-14.4-3.454h-33.6L606.882 226.8c-1 4.005-3.15 7.2-6.45 9.598-3.3 2.403-7.05 3.602-11.25 3.602h-32.097c-3.602 0-6.555-1.445-8.852-4.352-2.297-2.894-2.95-6.148-1.95-9.75l44.4-166.796h81.902M849.28 116.25c-2.397 1.902-4.1 4.352-5.096 7.352l-13.5 51c-.8 2.8-.3 5.398 1.5 7.796 1.8 2.403 4.2 3.602 7.2 3.602H963.58l-9.598 35.703c-1.605 5.4-4.605 9.797-9 13.195-4.402 3.407-9.406 5.102-15 5.102h-113.1c-8.204 0-15.704-1.75-22.5-5.25-6.802-3.496-12.45-8.195-16.95-14.102-4.5-5.894-7.606-12.597-9.3-20.097-1.697-7.5-1.45-15.152.75-22.948l18.3-68.102c1.996-7.395 5.097-14.2 9.3-20.398 4.2-6.2 9.15-11.5 14.848-15.903 5.7-4.395 12.098-7.845 19.2-10.348 7.097-2.5 14.448-3.75 22.05-3.75h80.102c8.2 0 15.7 1.796 22.5 5.398 6.796 3.602 12.45 8.3 16.95 14.102 4.5 5.8 7.546 12.5 9.147 20.097 1.603 7.605 1.4 15.3-.596 23.1l-5.403 20.4c-2.397 9.003-7.25 16.253-14.546 21.753-7.304 5.5-15.554 8.25-24.75 8.25h-90.6l6-22.203c1.397-5.398 4.296-9.797 8.698-13.2 4.398-3.398 9.496-5.1 15.3-5.1h36.602c3.4 0 5.594-1.696 6.598-5.098l1.2-4.5c.6-2.2.198-4.204-1.2-6-1.402-1.8-3.2-2.704-5.398-2.704h-55.8c-3 0-5.7.954-8.103 2.852M963.277 240l60.3-226.5c.993-3.996 3.153-7.246 6.454-9.75 3.298-2.496 7.048-3.75 11.25-3.75h32.1c3.792 0 6.85 1.453 9.15 4.352 2.29 2.902 2.95 6.148 1.95 9.75l-45 167.1c-2.21 8.802-5.75 16.798-10.652 24-4.906 7.196-10.7 13.35-17.398 18.446-6.71 5.102-14.153 9.106-22.352 12-8.203 2.907-16.8 4.352-25.8 4.352" fill="#ff6c2c"/><g clip-path="url(#a)"><path d="M1112.488 19.715h2.96c1.462 0 2.63-.38 3.513-1.137.892-.754 1.33-1.715 1.33-2.883 0-1.367-.392-2.347-1.18-2.937-.782-.594-2.02-.89-3.72-.89h-2.902zm11.87-4.13c0 1.462-.378 2.75-1.16 3.868-.776 1.12-1.858 1.957-3.268 2.504l6.51 10.8h-4.588l-5.66-9.68h-3.704v9.68h-4.04V8.396h7.13c3.03 0 5.25.593 6.66 1.777 1.422 1.183 2.12 2.988 2.12 5.414zm-26.03 4.977c0 3.157.793 6.102 2.383 8.844 1.59 2.746 3.75 4.907 6.49 6.485 2.75 1.575 5.69 2.364 8.82 2.364 3.17 0 6.12-.793 8.832-2.38 2.718-1.585 4.878-3.73 6.468-6.437 1.602-2.707 2.39-5.667 2.39-8.875 0-3.17-.788-6.117-2.382-8.832a17.746 17.746 0 0 0-6.43-6.464c-2.707-1.598-5.668-2.395-8.878-2.395-3.168 0-6.11.794-8.83 2.38-2.72 1.586-4.87 3.73-6.47 6.438-1.59 2.707-2.392 5.667-2.392 8.874zm-2.867 0c0-3.644.91-7.062 2.73-10.253 1.83-3.193 4.33-5.705 7.52-7.548A20.29 20.29 0 0 1 1116.02 0c3.652 0 7.07.91 10.26 2.734 3.19 1.825 5.7 4.329 7.54 7.52a20.298 20.298 0 0 1 2.758 10.309c0 3.59-.88 6.964-2.648 10.117-1.77 3.156-4.25 5.68-7.442 7.574-3.18 1.894-6.68 2.844-10.468 2.844-3.77 0-7.25-.946-10.442-2.828-3.187-1.887-5.68-4.41-7.45-7.563-1.776-3.152-2.667-6.535-2.667-10.145" fill="#ff6c2c"/></g></svg>
+2026-09-29T18:46:32.7221067Z </span></a></li>
+2026-09-29T18:46:32.7221145Z 
+2026-09-29T18:46:32.7227645Z <li><a href="https://sunrise.hostns.io:2087">Log in to <span class="applogin" title="WHM"><svg xmlns="http://www.w3.org/2000/svg" width="1212" height="320" viewBox="0 0 909 240"><defs><clipPath id="a"><path d="M867 0h41.727v42H867zm0 0"/></clipPath></defs><path d="M365.102 14.398l-43.204 160.204c-2.597 9.597-6.597 18.45-12 26.546-5.398 8.102-11.847 15-19.347 20.704-7.5 5.7-15.855 10.152-25.05 13.347-9.2 3.202-18.8 4.8-28.8 4.8H0L60.3 13.5c.997-3.996 3.15-7.246 6.45-9.75C70.05 1.254 73.8 0 78 0h32.102c3.796 0 6.847 1.5 9.148 4.5 2.297 3 2.95 6.3 1.95 9.898l-44.7 166.8h60.898l45-167.698c1-3.996 3.153-7.246 6.454-9.75 3.296-2.496 6.945-3.75 10.95-3.75h32.397c3.796 0 6.796 1.5 9 4.5 2.198 3 2.8 6.3 1.8 9.898l-44.7 166.8H234.9c7.204 0 13.653-2.143 19.352-6.448 5.7-4.297 9.45-9.945 11.25-16.95l38.7-144.3c1-3.996 3.152-7.246 6.448-9.75 3.3-2.496 7.05-3.75 11.25-3.75H354c3.797 0 6.848 1.5 9.148 4.5 2.297 3 2.95 6.3 1.954 9.898M406.797 149.398l-20.7 77.102c-1.003 4.004-3.152 7.25-6.45 9.75-3.3 2.504-7.05 3.75-11.25 3.75h-32.1c-3.602 0-6.555-1.5-8.852-4.5-2.297-3-2.945-6.195-1.95-9.602l56.7-212.398c1-3.996 3.153-7.246 6.453-9.75 3.297-2.496 7.047-3.75 11.25-3.75h46.5l-23.703 90.602h75L518.398 13.5c.997-3.996 3.15-7.246 6.45-9.75 3.3-2.496 6.945-3.75 10.95-3.75h47.1l-60.902 226.5c-1 4.004-3.148 7.25-6.45 9.75-3.3 2.504-6.948 3.75-10.948 3.75h-32.403c-3.8 0-6.8-1.5-9-4.5-2.203-3-2.8-6.195-1.797-9.602l20.4-76.5h-75M539.695 225.602L600.297 0h189.598c14.597 0 27.95 3.148 40.05 9.45 12.098 6.3 22.15 14.655 30.15 25.05 8 10.402 13.5 22.305 16.5 35.7 3 13.402 2.596 27.105-1.2 41.1l-30.9 115.2c-1.003 4.004-3.15 7.25-6.448 9.75-3.3 2.504-7.05 3.75-11.25 3.75h-32.102c-3.8 0-6.85-1.5-9.148-4.5-2.305-3-2.953-6.3-1.953-9.898l32.703-121.204c1.394-5.593 1.5-11.144.297-16.648-1.2-5.496-3.45-10.395-6.75-14.7-3.297-4.296-7.4-7.75-12.297-10.35-4.906-2.595-10.352-3.9-16.352-3.9h-13.8l-45 167.7c-1.004 4.004-3.15 7.25-6.45 9.75-3.3 2.504-6.953 3.75-10.95 3.75h-32.4c-3.802 0-6.802-1.5-9-4.5-2.204-3-2.802-6.3-1.798-9.898l44.7-166.8h-60.903l-45 167.698c-1 4.004-3.15 7.25-6.45 9.75-3.3 2.504-7.05 3.75-11.25 3.75h-32.097c-3.805 0-6.856-1.5-9.152-4.5-2.3-3-2.954-6.3-1.95-9.898" fill="#ff6c2c"/><g clip-path="url(#a)"><path d="M884.637 20.516h2.953c1.46 0 2.63-.375 3.515-1.133.883-.758 1.325-1.72 1.325-2.887 0-1.367-.39-2.348-1.176-2.937-.78-.595-2.024-.892-3.72-.892h-2.897zm11.867-4.13c0 1.462-.387 2.75-1.16 3.872-.778 1.12-1.864 1.953-3.27 2.5l6.508 10.8h-4.594l-5.66-9.68h-3.69v9.68h-4.048V9.196h7.137c3.027 0 5.246.594 6.66 1.778 1.41 1.183 2.117 2.992 2.117 5.414zm-26.03 4.977c0 3.157.792 6.106 2.378 8.848a17.347 17.347 0 0 0 6.496 6.477c2.742 1.583 5.683 2.368 8.816 2.368 3.172 0 6.117-.793 8.832-2.38a17.818 17.818 0 0 0 6.47-6.44c1.593-2.708 2.39-5.665 2.39-8.872 0-3.172-.793-6.117-2.38-8.832a17.838 17.838 0 0 0-6.437-6.467c-2.708-1.59-5.665-2.39-8.876-2.39-3.172 0-6.113.792-8.832 2.378a17.797 17.797 0 0 0-6.465 6.438c-1.597 2.707-2.394 5.668-2.394 8.875zm-2.872 0c0-3.644.914-7.062 2.734-10.254a20.096 20.096 0 0 1 7.52-7.547C881.045 1.722 884.483.8 888.163.8c3.65 0 7.066.915 10.254 2.735a20.04 20.04 0 0 1 7.547 7.52c1.844 3.19 2.762 6.63 2.762 10.308 0 3.59-.883 6.965-2.653 10.117-1.765 3.157-4.246 5.68-7.437 7.575-3.188 1.894-6.68 2.843-10.473 2.843-3.773 0-7.254-.945-10.445-2.832-3.19-1.882-5.673-4.406-7.45-7.558-1.778-3.153-2.668-6.535-2.668-10.145" fill="#ff6c2c"/></g></svg>
+2026-09-29T18:46:32.7232463Z </span></a></li>
+2026-09-29T18:46:32.7232587Z </ul>
+2026-09-29T18:46:32.7232653Z 
+2026-09-29T18:46:32.7233027Z         <p class="copyright">Copyright © 2026 cPanel, Inc.</p>
+2026-09-29T18:46:32.7233223Z     </body>
+2026-09-29T18:46:32.7233338Z </html>
+2026-09-29T18:46:32.7233405Z 
+2026-09-29T18:46:32.7254587Z ##[group]Run sleep 60
+2026-09-29T18:46:32.7254756Z [36;1msleep 60[0m
+2026-09-29T18:46:32.7306852Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:46:32.7307003Z env:
+2026-09-29T18:46:32.7307274Z   CPANEL_BASE_URL: ***
+2026-09-29T18:46:32.7307444Z   CPANEL_TARGET_DIR: ***
+2026-09-29T18:46:32.7307606Z   CPANEL_FILEMAN_TARGET_DIR: public_html/shop
+2026-09-29T18:46:32.7307907Z   CPANEL_SERVER_TARGETS: public_html/shop::public_html/shop
+mena-shop-app-v2/server::mena-shop-app-v2/server
+2026-09-29T18:46:32.7308193Z ##[endgroup]
+2026-09-29T18:47:32.7414386Z ##[group]Run curl --fail --show-error --silent --head https://***/shop/
+2026-09-29T18:47:32.7414746Z [36;1mcurl --fail --show-error --silent --head https://***/shop/[0m
+2026-09-29T18:47:32.7415035Z [36;1mcurl --fail --show-error --silent --head https://***/shop/catalog[0m
+2026-09-29T18:47:32.7415375Z [36;1mcurl --fail --show-error --silent https://***/shop/api/complimentary-items >/dev/null[0m
+2026-09-29T18:47:32.7415895Z [36;1mhealth_json="$(curl --fail --show-error --silent https://***/shop/api/health)"[0m
+2026-09-29T18:47:32.7416135Z [36;1mecho "${health_json}"[0m
+2026-09-29T18:47:32.7416385Z [36;1mecho "${health_json}" | jq -e '.version == "shop-backend-20260929-catalog-seed"' >/dev/null[0m
+2026-09-29T18:47:32.7469084Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:47:32.7469231Z env:
+2026-09-29T18:47:32.7469413Z   CPANEL_BASE_URL: ***
+2026-09-29T18:47:32.7469583Z   CPANEL_TARGET_DIR: ***
+2026-09-29T18:47:32.7469744Z   CPANEL_FILEMAN_TARGET_DIR: public_html/shop
+2026-09-29T18:47:32.7470199Z   CPANEL_SERVER_TARGETS: public_html/shop::public_html/shop
+mena-shop-app-v2/server::mena-shop-app-v2/server
+2026-09-29T18:47:32.7470477Z ##[endgroup]
+2026-09-29T18:47:33.2675092Z HTTP/2 200 
+2026-09-29T18:47:33.2675398Z vary: Origin, Accept-Encoding
+2026-09-29T18:47:33.2675873Z x-content-type-options: nosniff
+2026-09-29T18:47:33.2676123Z x-frame-options: DENY
+2026-09-29T18:47:33.2676431Z referrer-policy: strict-origin-when-cross-origin
+2026-09-29T18:47:33.2676851Z permissions-policy: camera=(), microphone=(), geolocation=()
+2026-09-29T18:47:33.2677183Z cache-control: no-cache
+2026-09-29T18:47:33.2677409Z accept-ranges: bytes
+2026-09-29T18:47:33.2677700Z last-modified: Tue, 29 Sep 2026 18:45:42 GMT
+2026-09-29T18:47:33.2677980Z etag: W/"33f-1a0ee7ca9ad"
+2026-09-29T18:47:33.2678278Z content-type: text/html; charset=UTF-8
+2026-09-29T18:47:33.2678543Z content-length: 831
+2026-09-29T18:47:33.2678799Z date: Tue, 29 Sep 2026 18:47:33 GMT
+2026-09-29T18:47:33.2679042Z server: LiteSpeed
+2026-09-29T18:47:33.2679378Z alt-svc: h3=":443"; ma=2592000, h3-29=":443"; ma=2592000
+2026-09-29T18:47:33.2679582Z 
+2026-09-29T18:47:33.7360786Z HTTP/2 200 
+2026-09-29T18:47:33.7361095Z vary: Origin, Accept-Encoding
+2026-09-29T18:47:33.7361418Z x-content-type-options: nosniff
+2026-09-29T18:47:33.7361665Z x-frame-options: DENY
+2026-09-29T18:47:33.7361971Z referrer-policy: strict-origin-when-cross-origin
+2026-09-29T18:47:33.7362388Z permissions-policy: camera=(), microphone=(), geolocation=()
+2026-09-29T18:47:33.7362720Z cache-control: no-cache
+2026-09-29T18:47:33.7362943Z accept-ranges: bytes
+2026-09-29T18:47:33.7363226Z last-modified: Tue, 29 Sep 2026 18:45:42 GMT
+2026-09-29T18:47:33.7363503Z etag: W/"33f-1a0ee7ca9ad"
+2026-09-29T18:47:33.7363775Z content-type: text/html; charset=UTF-8
+2026-09-29T18:47:33.7364038Z content-length: 831
+2026-09-29T18:47:33.7364289Z date: Tue, 29 Sep 2026 18:47:33 GMT
+2026-09-29T18:47:33.7364533Z server: LiteSpeed
+2026-09-29T18:47:34.7204887Z alt-svc: h3=":443"; ma=2592000, h3-29=":443"; ma=2592000
+2026-09-29T18:47:34.7205213Z 
+2026-09-29T18:47:34.7205927Z {"ok":true,"db":false,"version":"shop-backend-20260929-catalog-seed","primary":"local","writable":true,"localStore":true,"requireMysql":false}
+2026-09-29T18:47:34.7302870Z Post job cleanup.
+2026-09-29T18:47:34.8058825Z (node:2631) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-09-29T18:47:34.8059286Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-09-29T18:47:34.8200193Z Post job cleanup.
+2026-09-29T18:47:34.8747680Z [command]/usr/bin/git version
+2026-09-29T18:47:34.8777570Z git version 2.55.0
+2026-09-29T18:47:34.8801632Z Temporarily overriding HOME='/home/runner/work/_temp/a575a930-673f-4285-a853-20f57942ab1f' before making global git config changes
+2026-09-29T18:47:34.8802610Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-29T18:47:34.8805205Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/menaincecom/menaincecom
+2026-09-29T18:47:34.8835937Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-29T18:47:34.8862152Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-29T18:47:34.9061166Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-29T18:47:34.9096511Z http.https://github.com/.extraheader
+2026-09-29T18:47:34.9107310Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-09-29T18:47:34.9147021Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-29T18:47:34.9375410Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-29T18:47:34.9408100Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-29T18:47:34.9699776Z Cleaning up orphan processes
+2026-09-29T18:47:34.9894334Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

@@ -1,0 +1,70 @@
+﻿2026-09-29T18:44:50.6382112Z ##[group]Run npm ci
+2026-09-29T18:44:50.6382299Z [36;1mnpm ci[0m
+2026-09-29T18:44:50.6382426Z [36;1mnpm run build[0m
+2026-09-29T18:44:50.6437259Z shell: /usr/bin/bash -e {0}
+2026-09-29T18:44:50.6437432Z env:
+2026-09-29T18:44:50.6437559Z   VITE_APP_BASE_PATH: /shop
+2026-09-29T18:44:50.6437707Z ##[endgroup]
+2026-09-29T18:44:53.2283484Z 
+2026-09-29T18:44:53.2290735Z added 89 packages, and audited 90 packages in 3s
+2026-09-29T18:44:53.2291077Z 
+2026-09-29T18:44:53.2291302Z 14 packages are looking for funding
+2026-09-29T18:44:53.2291622Z   run `npm fund` for details
+2026-09-29T18:44:53.2491833Z 
+2026-09-29T18:44:53.2492806Z 6 vulnerabilities (1 moderate, 5 high)
+2026-09-29T18:44:53.2493019Z 
+2026-09-29T18:44:53.2493146Z To address all issues, run:
+2026-09-29T18:44:53.2493332Z   npm audit fix
+2026-09-29T18:44:53.2493418Z 
+2026-09-29T18:44:53.2493497Z Run `npm audit` for details.
+2026-09-29T18:44:53.3323526Z 
+2026-09-29T18:44:53.3324279Z > mena-inc-client@1.0.0 build
+2026-09-29T18:44:53.3324611Z > tsc -b && vite build
+2026-09-29T18:44:53.3324810Z 
+2026-09-29T18:44:56.5435366Z [36mvite v6.4.3 [32mbuilding for production...[36m[39m
+2026-09-29T18:44:56.5886547Z transforming...
+2026-09-29T18:44:58.4580370Z [32m✓[39m 1713 modules transformed.
+2026-09-29T18:44:58.5829438Z rendering chunks...
+2026-09-29T18:44:58.6613796Z computing gzip size...
+2026-09-29T18:44:58.6699096Z [2mdist/[22m[32mindex.html                                  [39m[1m[2m  0.83 kB[22m[1m[22m[2m │ gzip:  0.45 kB[22m
+2026-09-29T18:44:58.6700118Z [2mdist/[22m[2massets/[22m[32mmena-watermark-tile-D3oaRMmc.png     [39m[1m[2m  8.01 kB[22m[1m[22m
+2026-09-29T18:44:58.6701014Z [2mdist/[22m[2massets/[22m[32mmenainc-wordmark-Djp1Mj4-.png        [39m[1m[2m 62.18 kB[22m[1m[22m
+2026-09-29T18:44:58.6701951Z [2mdist/[22m[2massets/[22m[35mindex-CP0Nol3J.css                   [39m[1m[2m 72.49 kB[22m[1m[22m[2m │ gzip: 12.74 kB[22m
+2026-09-29T18:44:58.6703727Z [2mdist/[22m[2massets/[22m[36mmena-watermark-tile-Q-zS4uEt.js      [39m[1m[2m  0.07 kB[22m[1m[22m[2m │ gzip:  0.09 kB[22m
+2026-09-29T18:44:58.6704791Z [2mdist/[22m[2massets/[22m[36mproductCategories-DlRC3Yei.js        [39m[1m[2m  0.21 kB[22m[1m[22m[2m │ gzip:  0.17 kB[22m
+2026-09-29T18:44:58.6705947Z [2mdist/[22m[2massets/[22m[36mcheck-CkdcySWU.js                    [39m[1m[2m  0.29 kB[22m[1m[22m[2m │ gzip:  0.24 kB[22m
+2026-09-29T18:44:58.6706866Z [2mdist/[22m[2massets/[22m[36mplus-CJPnt4TH.js                     [39m[1m[2m  0.33 kB[22m[1m[22m[2m │ gzip:  0.25 kB[22m
+2026-09-29T18:44:58.6707745Z [2mdist/[22m[2massets/[22m[36mclock-mJSkKTsA.js                    [39m[1m[2m  0.34 kB[22m[1m[22m[2m │ gzip:  0.27 kB[22m
+2026-09-29T18:44:58.6708638Z [2mdist/[22m[2massets/[22m[36marrow-up-down-DYQiB40d.js            [39m[1m[2m  0.42 kB[22m[1m[22m[2m │ gzip:  0.30 kB[22m
+2026-09-29T18:44:58.6709564Z [2mdist/[22m[2massets/[22m[36mexternal-link-CQOckPfQ.js            [39m[1m[2m  0.42 kB[22m[1m[22m[2m │ gzip:  0.30 kB[22m
+2026-09-29T18:44:58.6710286Z [2mdist/[22m[2massets/[22m[36mshield-check-TQUt4Y7E.js             [39m[1m[2m  0.49 kB[22m[1m[22m[2m │ gzip:  0.35 kB[22m
+2026-09-29T18:44:58.6710888Z [2mdist/[22m[2massets/[22m[36mrefresh-cw-BlTernRP.js               [39m[1m[2m  0.49 kB[22m[1m[22m[2m │ gzip:  0.33 kB[22m
+2026-09-29T18:44:58.6711423Z [2mdist/[22m[2massets/[22m[36mphone-DyqqTf6j.js                    [39m[1m[2m  0.50 kB[22m[1m[22m[2m │ gzip:  0.33 kB[22m
+2026-09-29T18:44:58.6711936Z [2mdist/[22m[2massets/[22m[36mgift-BfMWvi24.js                     [39m[1m[2m  0.53 kB[22m[1m[22m[2m │ gzip:  0.36 kB[22m
+2026-09-29T18:44:58.6712477Z [2mdist/[22m[2massets/[22m[36mtrash-2-BwnEefBt.js                  [39m[1m[2m  0.53 kB[22m[1m[22m[2m │ gzip:  0.35 kB[22m
+2026-09-29T18:44:58.6713044Z [2mdist/[22m[2massets/[22m[36mGallery-BexA6L47.js                  [39m[1m[2m  1.57 kB[22m[1m[22m[2m │ gzip:  0.78 kB[22m
+2026-09-29T18:44:58.6713927Z [2mdist/[22m[2massets/[22m[36mWishlist-BSFRClO0.js                 [39m[1m[2m  1.63 kB[22m[1m[22m[2m │ gzip:  0.81 kB[22m
+2026-09-29T18:44:58.6714501Z [2mdist/[22m[2massets/[22m[36mLeadsAdmin-BNi0MGM9.js               [39m[1m[2m  1.81 kB[22m[1m[22m[2m │ gzip:  0.90 kB[22m
+2026-09-29T18:44:58.6715075Z [2mdist/[22m[2massets/[22m[36mvariantFacets-D2O9l9vY.js            [39m[1m[2m  2.03 kB[22m[1m[22m[2m │ gzip:  0.97 kB[22m
+2026-09-29T18:44:58.6715915Z [2mdist/[22m[2massets/[22m[36mContact-ChN-gnOM.js                  [39m[1m[2m  2.40 kB[22m[1m[22m[2m │ gzip:  1.20 kB[22m
+2026-09-29T18:44:58.6716489Z [2mdist/[22m[2massets/[22m[36mAdminsAdmin-CTbtifAi.js              [39m[1m[2m  3.16 kB[22m[1m[22m[2m │ gzip:  1.44 kB[22m
+2026-09-29T18:44:58.6717059Z [2mdist/[22m[2massets/[22m[36mQuantityPicker-DplJP2P4.js           [39m[1m[2m  3.39 kB[22m[1m[22m[2m │ gzip:  1.60 kB[22m
+2026-09-29T18:44:58.6717640Z [2mdist/[22m[2massets/[22m[36mLogin-C29oMurW.js                    [39m[1m[2m  3.47 kB[22m[1m[22m[2m │ gzip:  1.50 kB[22m
+2026-09-29T18:44:58.6718279Z [2mdist/[22m[2massets/[22m[36mDataTable-ox695BU_.js                [39m[1m[2m  3.78 kB[22m[1m[22m[2m │ gzip:  1.73 kB[22m
+2026-09-29T18:44:58.6718857Z [2mdist/[22m[2massets/[22m[36mCategoriesAdmin-DC1224hg.js          [39m[1m[2m  3.85 kB[22m[1m[22m[2m │ gzip:  1.72 kB[22m
+2026-09-29T18:44:58.6719453Z [2mdist/[22m[2massets/[22m[36mDesktopProductCard-aAtfocjZ.js       [39m[1m[2m  3.94 kB[22m[1m[22m[2m │ gzip:  1.72 kB[22m
+2026-09-29T18:44:58.6720042Z [2mdist/[22m[2massets/[22m[36mGalleryAdmin-WBm4Dt-f.js             [39m[1m[2m  4.25 kB[22m[1m[22m[2m │ gzip:  1.77 kB[22m
+2026-09-29T18:44:58.6720739Z [2mdist/[22m[2massets/[22m[36mOrdersAdmin-T5HaMZWc.js              [39m[1m[2m  5.43 kB[22m[1m[22m[2m │ gzip:  2.07 kB[22m
+2026-09-29T18:44:58.6721537Z [2mdist/[22m[2massets/[22m[36mComplimentaryItemsAdmin-BAZsjHPr.js  [39m[1m[2m  5.97 kB[22m[1m[22m[2m │ gzip:  2.28 kB[22m
+2026-09-29T18:44:58.6722153Z [2mdist/[22m[2massets/[22m[36mPhotoUpload-B_wf_Ks8.js              [39m[1m[2m  6.13 kB[22m[1m[22m[2m │ gzip:  2.75 kB[22m
+2026-09-29T18:44:58.6722818Z [2mdist/[22m[2massets/[22m[36mMobileProductCard-gmIjAm2q.js        [39m[1m[2m  7.27 kB[22m[1m[22m[2m │ gzip:  3.04 kB[22m
+2026-09-29T18:44:58.6723427Z [2mdist/[22m[2massets/[22m[36mAdminShell-EfxjCXiX.js               [39m[1m[2m  8.58 kB[22m[1m[22m[2m │ gzip:  3.00 kB[22m
+2026-09-29T18:44:58.6724040Z [2mdist/[22m[2massets/[22m[36mDigitalInvitations-CP9Wq7Mu.js       [39m[1m[2m  9.67 kB[22m[1m[22m[2m │ gzip:  3.55 kB[22m
+2026-09-29T18:44:58.6724699Z [2mdist/[22m[2massets/[22m[36mBusinessAdmin-Q7bCbjKI.js            [39m[1m[2m 10.52 kB[22m[1m[22m[2m │ gzip:  3.09 kB[22m
+2026-09-29T18:44:58.6725389Z [2mdist/[22m[2massets/[22m[36mProductDetail-CEUbe6Vn.js            [39m[1m[2m 23.24 kB[22m[1m[22m[2m │ gzip:  6.58 kB[22m
+2026-09-29T18:44:58.6726130Z [2mdist/[22m[2massets/[22m[36mCatalog--AUGPFS8.js                  [39m[1m[2m 25.15 kB[22m[1m[22m[2m │ gzip:  7.39 kB[22m
+2026-09-29T18:44:58.6726670Z [2mdist/[22m[2massets/[22m[36mOrderSummary-B-XvJeSi.js             [39m[1m[2m 33.04 kB[22m[1m[22m[2m │ gzip:  6.78 kB[22m
+2026-09-29T18:44:58.6727231Z [2mdist/[22m[2massets/[22m[36mProductsAdmin-C0NCW_qa.js            [39m[1m[2m 42.99 kB[22m[1m[22m[2m │ gzip: 11.12 kB[22m
+2026-09-29T18:44:58.6727794Z [2mdist/[22m[2massets/[22m[36mreact-vendor-DPFqZsMj.js             [39m[1m[2m 50.46 kB[22m[1m[22m[2m │ gzip: 17.85 kB[22m
+2026-09-29T18:44:58.6728338Z [2mdist/[22m[2massets/[22m[36mindex-BSh8dO6L.js                    [39m[1m[2m231.01 kB[22m[1m[22m[2m │ gzip: 72.46 kB[22m
+2026-09-29T18:44:58.6728717Z [32m✓ built in 2.10s[39m
