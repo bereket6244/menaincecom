@@ -41,7 +41,6 @@ export interface ProductCost {
   thresholds?: { minQty: number; margin: number }[];
   items: { inputId: string; quantity: number }[];
   margin: number;
-  tax: number;
 }
 
 export interface Product {

@@ -11,8 +11,8 @@ export function pricedProduct(product, inputs) {
   let tiers = normalizePriceTiers(product.priceTiers);
   let price = product.price == null ? null : money(Number(product.price));
   if (recipe) {
-    if (![25, 10, 5].includes(recipe.margin) || !Number.isFinite(recipe.tax) || recipe.tax < 0 || recipe.tax > 100)
-      invalidPrice('Choose a margin and enter tax between 0 and 100%.');
+    if (![25, 10, 5].includes(recipe.margin))
+      invalidPrice('Choose a margin of 25%, 10%, or 5%.');
     if (!Array.isArray(recipe.items) || !recipe.items.length) invalidPrice('Choose at least one cost input.');
     let cost = 0;
     for (const item of recipe.items) {
@@ -20,7 +20,7 @@ export function pricedProduct(product, inputs) {
       if (!input || !Number.isFinite(item.quantity) || item.quantity <= 0) invalidPrice('Each cost input needs a positive quantity.');
       cost += input.unitCost * item.quantity;
     }
-    const sellingPrice = margin => money(cost / (1 - margin / 100) * (1 + recipe.tax / 100));
+    const sellingPrice = margin => money(cost / (1 - margin / 100));
     price = sellingPrice(recipe.margin);
     const thresholds = recipe.thresholds ?? [];
     if (!Array.isArray(thresholds) || thresholds.some(t => !Number.isSafeInteger(t?.minQty) || t.minQty < 2
@@ -34,7 +34,9 @@ export function pricedProduct(product, inputs) {
   }
   const breaks = tiers.filter((tier) => tier.minQty > 1);
   const priced = price > 0 && Number.isFinite(price);
-  return { ...product, price: priced ? price : null, pricingMode: breaks.length && priced ? 'tiered' : 'exact',
+  return { ...product,
+    ...(recipe && { cost: { items: recipe.items, margin: recipe.margin, thresholds: recipe.thresholds ?? [] } }),
+    price: priced ? price : null, pricingMode: breaks.length && priced ? 'tiered' : 'exact',
     priceTiers: breaks.length && priced ? [{ minQty: 1, priceEach: price }, ...breaks] : [],
     ...(!priced && (!product.status || product.status === 'published') ? { status: 'draft' } : {}) };
 }

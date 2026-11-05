@@ -27,7 +27,7 @@ type ProductBulkPatch = {
 const EMPTY: Draft = {
   name: '', categoryId: '', description: '', photos: [],
   categoryIds: [],
-  cost: { items: [], margin: 25, tax: 0 }, pricingMode: 'exact', price: null, priceTiers: [], maxOrderQty: null, variants: [],
+  cost: { items: [], margin: 25 }, pricingMode: 'exact', price: null, priceTiers: [], maxOrderQty: null, variants: [],
   isAddon: false, suggestedAddonIds: [], complimentaryItems: [], universalComplimentaryItemIds: [], featured: false,
   status: 'published',
 };

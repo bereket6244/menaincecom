@@ -730,9 +730,9 @@ function applyProductBulkPatch(product, body) {
 }
 
 async function priceForSave(input) {
-  const { price, pricingMode, priceTiers } = pricedProduct(input, await costInputs());
+  const { price, pricingMode, priceTiers, cost } = pricedProduct(input, await costInputs());
   if (price == null && normalizeProductStatus(input.status) === 'published') invalidPrice('Enter an exact selling price before publishing.');
-  return { price, pricingMode, priceTiers };
+  return { price, pricingMode, priceTiers, ...(cost && { cost }) };
 }
 
 api.get('/admin/cost-inputs', requireAdmin, dbRoute(async (_req, res) => res.json(await costInputs())));

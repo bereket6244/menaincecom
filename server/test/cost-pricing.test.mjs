@@ -7,18 +7,23 @@ import { publicProduct } from '../src/product-model.mjs';
 const inputs = [{ id: 'paper', unitCost: 8 }, { id: 'print', unitCost: 8 }];
 const card = { price: 999, cost: {
   items: [{ inputId: 'paper', quantity: 1 }, { inputId: 'print', quantity: 0.5 }],
-  margin: 25, tax: 15, thresholds: [{ minQty: 50, margin: 10 }],
+  margin: 25, thresholds: [{ minQty: 50, margin: 10 }],
 } };
 
-test('shared inputs, true margin and tax produce exact all-unit prices', () => {
+test('shared inputs and true margin produce exact all-unit prices', () => {
   const priced = pricedProduct(card, inputs);
-  assert.equal(priced.price, 18.4);
-  assert.equal(tieredLineTotal(priced.priceTiers, 49), 901.6);
-  assert.equal(tieredLineTotal(priced.priceTiers, 50), 766.5);
-  assert.equal(tieredLineTotal(priced.priceTiers, 51), 781.83);
+  assert.equal(priced.price, 16);
+  assert.equal(tieredLineTotal(priced.priceTiers, 49), 784);
+  assert.equal(tieredLineTotal(priced.priceTiers, 50), 666.5);
+  assert.equal(tieredLineTotal(priced.priceTiers, 51), 679.83);
   assert.equal(publicProduct(priced).cost, undefined);
-  assert.equal(pricedProduct(card, [{ ...inputs[0], unitCost: 11 }, inputs[1]]).priceTiers[1].priceEach, 19.17);
+  assert.equal(pricedProduct(card, [{ ...inputs[0], unitCost: 11 }, inputs[1]]).priceTiers[1].priceEach, 16.67);
   assert.throws(() => pricedProduct(card, []), /cost input/);
+});
+
+test('a previously saved tax rate has no effect on current prices or the returned recipe', () => {
+  const oldCard = { ...card, price: 18.4, cost: { ...card.cost, tax: 15 } };
+  assert.deepEqual(pricedProduct(oldCard, inputs), pricedProduct(card, inputs));
 });
 
 test('legacy amounts remain exact and missing prices are held for review', () => {

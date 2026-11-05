@@ -9,7 +9,7 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
   const cost = product.cost;
   const breaks = product.priceTiers || [];
   const subtotal = cost?.items.reduce((sum, row) => sum + (inputs.find(i => i.id === row.inputId)?.unitCost || 0) * row.quantity, 0) || 0;
-  const sellingPrice = (margin: number) => Math.round((subtotal / (1 - margin / 100) * (1 + (cost?.tax || 0) / 100) + Number.EPSILON) * 100) / 100;
+  const sellingPrice = (margin: number) => Math.round((subtotal / (1 - margin / 100) + Number.EPSILON) * 100) / 100;
   const price = cost ? sellingPrice(cost.margin) : product.price;
   const thresholds = cost?.thresholds || [];
   const costBreaks = thresholds.map(t => ({ ...t, priceEach: sellingPrice(t.margin) }));
@@ -28,7 +28,7 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
   return <section className="space-y-3 rounded-xl border border-edge bg-surface2 p-4">
     <h3 className="font-bold">Cost</h3>
     <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!cost}
-      onChange={e => change({ ...product, price, priceTiers: cost ? costBreaks : [], cost: e.target.checked ? { items: [], margin: 25, tax: 0 } : null })} />
+      onChange={e => change({ ...product, price, priceTiers: cost ? costBreaks : [], cost: e.target.checked ? { items: [], margin: 25 } : null })} />
       Calculate selling price from input costs</label>
     {cost && <>
       {cost.items.map((row, index) => {
@@ -45,12 +45,10 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
       <button type="button" onClick={() => change({ ...product, cost: { ...cost, items: [...cost.items, { inputId: '', quantity: 1 }] } })}>+ Add input to product</button>
       <div className="grid grid-cols-2 gap-2">
         <label>Margin<select className="field" value={cost.margin} onChange={e => change({ ...product, cost: { ...cost, margin: Number(e.target.value) } })}>{[25, 10, 5].map(n => <option key={n} value={n}>{n}%</option>)}</select></label>
-        <label>Tax (%)<input className="field" type="number" min="0" max="100" step="any" value={cost.tax} onChange={e => change({ ...product, cost: { ...cost, tax: Number(e.target.value) } })} /></label>
       </div>
-      <div className="grid grid-cols-3 gap-2 text-xs">
+      <div className="grid grid-cols-2 gap-2 text-xs">
         <span>Input cost<br /><strong>{subtotal.toFixed(2)} ETB</strong></span>
-        <span>Profit before tax<br /><strong>{(subtotal / (1 - cost.margin / 100) - subtotal).toFixed(2)} ETB</strong></span>
-        <span>Tax<br /><strong>{(subtotal / (1 - cost.margin / 100) * cost.tax / 100).toFixed(2)} ETB</strong></span>
+        <span>Profit<br /><strong>{(subtotal / (1 - cost.margin / 100) - subtotal).toFixed(2)} ETB</strong></span>
       </div>
       <p>Selling price <strong>{price?.toLocaleString()} ETB each</strong></p>
     </>}
