@@ -49,9 +49,7 @@ export function buildOrderMessage(order: OrderRecord, _business: BusinessSetting
     const lineTotal = cartLineTotal(item);
     const price =
       lineTotal != null
-        ? item.pricingMode === 'tiered'
-          ? `${formatEtbAmount(lineTotal)} ETB (progressive quantity pricing)`
-          : `${from}${formatEtbAmount(item.priceEach!)} ETB each = ${from}${formatEtbAmount(lineTotal)} ETB`
+        ? `${from}${formatEtbAmount(item.priceEach!)} ETB each = ${from}${formatEtbAmount(lineTotal)} ETB`
         : 'price on request';
     lines.push(`• ${item.qty} × ${item.name}${variants ? ` (${variants})` : ''} — ${price}`);
     if (origin) lines.push(`  ${productUrl(item.productId, origin)}`);
@@ -74,7 +72,7 @@ export function buildOrderMessage(order: OrderRecord, _business: BusinessSetting
       hasStarting ? 'some items are starting prices' : '',
     ].filter(Boolean);
     lines.push(
-      `Estimated total: ${order.estimatedTotal.toLocaleString()} ETB${caveats.length ? ` (${caveats.join('; ')})` : ''}`
+      `Total: ${order.estimatedTotal.toLocaleString()} ETB${caveats.length ? ` (${caveats.join('; ')})` : ''}`
     );
   }
   // Contact lines only when known — guests check out without credentials.

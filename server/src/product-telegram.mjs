@@ -27,10 +27,10 @@ function productPrice(product) {
       const range = next ? `${tier.minQty}-${next.minQty - 1}` : `${tier.minQty}+`;
       return `${range}: ${Number(tier.priceEach).toLocaleString('en-US')} ETB each`;
     });
-    return `Progressive pricing:\n${ranges.join('\n')}`;
+    return `Quantity pricing:\n${ranges.join('\n')}`;
   }
   const amount = `${Number(product.price).toLocaleString('en-US')} ETB`;
-  return product.pricingMode === 'starting' ? `Price: From ${amount}` : `Price: ${amount}`;
+  return `Price: ${amount}`;
 }
 
 function compactText(value, limit = 80) {

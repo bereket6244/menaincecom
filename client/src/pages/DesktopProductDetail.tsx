@@ -219,7 +219,8 @@ export function DesktopProductDetail() {
           <h1 className="mt-1.5 font-sans text-[42px] font-semibold leading-[1.05]">{product.name}</h1>
           <div className="mt-3 text-[30px] font-extrabold text-[#ee0a24]">
             {formatPrice(product, qty)}
-            {!isQuote && <span className="ml-2 text-sm font-medium text-muted">{product.pricingMode === 'tiered' ? 'average each' : 'each'}</span>}
+            {!isQuote && <span className="ml-2 text-sm font-medium text-muted">each</span>}
+            {qty > 1 && <div className="mt-1 text-sm font-semibold">Total for {qty}: {((cartPriceEach(product, qty) || 0) * qty).toLocaleString(undefined, { maximumFractionDigits: 2 })} ETB</div>}
           </div>
           {limitText && <div className="mt-2 text-sm font-extrabold text-[#ee0a24]">{limitText}</div>}
           {description && <p className="mt-5 whitespace-pre-line text-[15px] leading-[1.55] text-ink/70">{description}</p>}

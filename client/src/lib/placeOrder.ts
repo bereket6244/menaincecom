@@ -50,6 +50,7 @@ export async function placeOrder({
       items: items.map((item) => ({
         productId: item.productId,
         qty: item.qty,
+        expectedPriceEach: item.priceEach,
         note: item.note,
         variantSelections: item.variantSelections,
         complimentaryItems: (item.complimentaryItems || []).map((freeItem) => ({

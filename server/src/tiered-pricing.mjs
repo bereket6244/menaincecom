@@ -10,23 +10,20 @@ export function normalizePriceTiers(tiers) {
     .sort((a, b) => a.minQty - b.minQty);
 }
 
-export function tieredLineTotal(tiers, quantity) {
+export function tieredUnitPrice(tiers, quantity) {
   const clean = normalizePriceTiers(tiers);
   const qty = Math.max(1, Math.floor(Number(quantity) || 1));
-  if (!clean.length || clean[0].minQty !== 1) return null;
-
-  let total = 0;
-  for (let index = 0; index < clean.length; index += 1) {
-    const tier = clean[index];
+  if (clean[0]?.minQty !== 1) return null;
+  let rate = clean[0].priceEach;
+  for (const tier of clean) {
     if (tier.minQty > qty) break;
-    const nextMinimum = clean[index + 1]?.minQty ?? qty + 1;
-    total += Math.max(0, Math.min(qty + 1, nextMinimum) - tier.minQty) * tier.priceEach;
+    rate = tier.priceEach;
   }
-  return total;
+  return Math.round(rate * 100) / 100;
 }
 
-export function tieredAveragePrice(tiers, quantity) {
+export function tieredLineTotal(tiers, quantity) {
   const qty = Math.max(1, Math.floor(Number(quantity) || 1));
-  const total = tieredLineTotal(tiers, qty);
-  return total == null ? null : total / qty;
+  const rate = tieredUnitPrice(tiers, qty);
+  return rate == null ? null : Math.round(rate * 100) * qty / 100;
 }

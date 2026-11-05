@@ -36,7 +36,16 @@ export interface ComplimentaryCartItem {
   extraTotal?: number;
 }
 
+export interface CostInput { id: string; name: string; unitCost: number }
+export interface ProductCost {
+  thresholds?: { minQty: number; margin: number }[];
+  items: { inputId: string; quantity: number }[];
+  margin: number;
+  tax: number;
+}
+
 export interface Product {
+  cost?: ProductCost | null;
   id: string;
   status?: 'draft' | 'published' | 'archived';
   name: string;
@@ -46,7 +55,7 @@ export interface Product {
   photos: string[];
   pricingMode: PricingMode;
   price: number | null; // ETB; used by 'exact' and 'starting'
-  priceTiers?: PriceTier[]; // progressive quantity ranges when pricingMode is 'tiered'
+  priceTiers?: PriceTier[]; // all-unit quantity thresholds when pricingMode is 'tiered'
   maxOrderQty?: number | null; // blank means unlimited
   variants: VariantGroup[];
   isAddon: boolean; // complimentary/add-on item (entrance cards, schedule cards…)

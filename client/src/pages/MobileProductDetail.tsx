@@ -294,7 +294,8 @@ export function MobileProductDetail() {
           <h1 className="mt-1 font-sans text-[30px] font-semibold leading-[1.15]">{product.name}</h1>
           <div className="mt-2 text-[26px] font-extrabold text-[#ee0a24]">
             {formatPrice(product, qty)}
-            {!isQuote && <span className="ml-1 text-[13px] font-medium text-muted">{product.pricingMode === 'tiered' ? 'average each' : 'each'}</span>}
+            {!isQuote && <span className="ml-1 text-[13px] font-medium text-muted">each</span>}
+            {qty > 1 && <div className="mt-1 text-sm font-semibold">Total for {qty}: {((cartPriceEach(product, qty) || 0) * qty).toLocaleString(undefined, { maximumFractionDigits: 2 })} ETB</div>}
           </div>
           {limitText && <div className="mt-2 text-[13px] font-extrabold text-[#ee0a24]">{limitText}</div>}
           {description && <p className="mt-3 whitespace-pre-line text-[14.5px] leading-[1.5] text-ink/70">{description}</p>}

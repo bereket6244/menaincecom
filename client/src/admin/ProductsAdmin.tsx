@@ -2,10 +2,11 @@ import { useMemo, useState } from 'react';
 import { Check, GripVertical, MoreHorizontal, Pencil, Plus, Search, SlidersHorizontal, Star, Tags, X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import { apiSend } from '../lib/api';
-import type { Category, PriceTier, PricingMode, Product, UniversalComplimentaryItem, VariantGroup } from '../lib/types';
+import type { Category, Product, UniversalComplimentaryItem, VariantGroup } from '../lib/types';
 import { DataTable } from './DataTable';
 import type { Column } from './DataTable';
 import { Button, IconButton, Modal, SysLabel } from '../components/ui';
+import { ProductCost } from './ProductCost';
 import { PhotoUpload } from './PhotoUpload';
 import { useApp } from '../store/AppContext';
 import { COMPLIMENTARY_MAX_MULTIPLIER } from '../lib/complimentary';
@@ -26,7 +27,7 @@ type ProductBulkPatch = {
 const EMPTY: Draft = {
   name: '', categoryId: '', description: '', photos: [],
   categoryIds: [],
-  pricingMode: 'exact', price: null, priceTiers: [], maxOrderQty: null, variants: [],
+  cost: { items: [], margin: 25, tax: 0 }, pricingMode: 'exact', price: null, priceTiers: [], maxOrderQty: null, variants: [],
   isAddon: false, suggestedAddonIds: [], complimentaryItems: [], universalComplimentaryItemIds: [], featured: false,
   status: 'published',
 };
@@ -61,17 +62,7 @@ function cleanComplimentaryItems(items: NonNullable<Product['complimentaryItems'
     .filter((item) => item.name);
 }
 
-function cleanPriceTiers(tiers: PriceTier[] | undefined) {
-  const byMinimum = new Map<number, number>();
-  for (const tier of tiers || []) {
-    const minQty = Math.max(1, Math.floor(Number(tier.minQty) || 0));
-    const priceEach = Math.max(0, Number(tier.priceEach) || 0);
-    if (priceEach > 0) byMinimum.set(minQty, priceEach);
-  }
-  return [...byMinimum.entries()]
-    .map(([minQty, priceEach]) => ({ minQty, priceEach }))
-    .sort((a, b) => a.minQty - b.minQty);
-}
+
 
 function colorGroupIndex(variants: VariantGroup[]) {
   return variants.findIndex((group) => isColorGroupName(group.name));
@@ -859,7 +850,7 @@ function BulkEditProductsModal({
   const [shouldSetAddon, setShouldSetAddon] = useState(false);
   const [isAddon, setIsAddon] = useState(false);
   const [shouldSetPricing, setShouldSetPricing] = useState(false);
-  const [pricingMode, setPricingMode] = useState<PricingMode>('exact');
+
   const [price, setPrice] = useState<number | null>(null);
   const [shouldSetLimit, setShouldSetLimit] = useState(false);
   const [maxOrderQty, setMaxOrderQty] = useState<number | null>(null);
@@ -902,7 +893,6 @@ function BulkEditProductsModal({
     setShouldSetAddon(false);
     setIsAddon(false);
     setShouldSetPricing(false);
-    setPricingMode('exact');
     setPrice(null);
     setShouldSetLimit(false);
     setMaxOrderQty(null);
@@ -931,8 +921,8 @@ function BulkEditProductsModal({
     if (shouldSetFeatured) set.featured = featured;
     if (shouldSetAddon) set.isAddon = isAddon;
     if (shouldSetPricing) {
-      set.pricingMode = pricingMode;
-      set.price = pricingMode === 'quote' ? null : price;
+      set.pricingMode = 'exact';
+      set.price = price;
     }
     if (shouldSetLimit) set.maxOrderQty = maxOrderQty;
     if (Object.keys(set).length > 0) patch.set = set;
@@ -1010,19 +1000,15 @@ function BulkEditProductsModal({
             Pricing
           </label>
           <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_1fr]">
-            <select value={pricingMode} onChange={(e) => setPricingMode(e.target.value as PricingMode)} disabled={!shouldSetPricing} className="field py-1 text-[12px] disabled:opacity-40">
-              <option value="exact">Exact</option>
-              <option value="starting">From...</option>
-              <option value="quote">Request a quote</option>
-            </select>
+            <span>Exact price (manual products only)</span>
             <input
               type="number"
               min={0}
               value={price ?? ''}
-              disabled={!shouldSetPricing || pricingMode === 'quote'}
+              disabled={!shouldSetPricing}
               onChange={(e) => setPrice(e.target.value === '' ? null : Number(e.target.value))}
               className="field py-1 text-[12px] disabled:opacity-40"
-              placeholder={pricingMode === 'quote' ? 'Quoted on request' : 'ETB'}
+              placeholder="ETB"
             />
           </div>
         </div>
@@ -1182,13 +1168,13 @@ export function ProductsAdmin() {
     if (!editing.name.trim()) { toast('error', 'Product name is required.'); return; }
     const selectedCategoryIds = productCategoryIds(editing);
     if (!editing.isAddon && selectedCategoryIds.length === 0) { toast('error', 'Pick at least one category for this product.'); return; }
-    const priceTiers = cleanPriceTiers(editing.priceTiers);
-    if (editing.pricingMode === 'tiered' && (priceTiers.length < 2 || priceTiers[0]?.minQty !== 1)) {
-      toast('error', 'Tiered pricing needs at least two ranges, starting at quantity 1.');
+    const priceTiers = editing.cost ? [] : editing.priceTiers || [];
+    if (priceTiers.some(t => t.minQty < 2)) {
+      toast('error', 'Quantity thresholds must start at two or more.');
       return;
     }
-    if (!['quote', 'tiered'].includes(editing.pricingMode) && (editing.price == null || editing.price <= 0)) {
-      toast('error', 'Enter a price, or switch to "Request a quote".');
+    if (!editing.cost && editing.status === 'published' && !(Number(editing.price) > 0)) {
+      toast('error', 'Enter an exact price before publishing.');
       return;
     }
     setBusy(true);
@@ -1197,8 +1183,8 @@ export function ProductsAdmin() {
         ...editing,
         categoryId: editing.isAddon ? '' : selectedCategoryIds[0] || '',
         categoryIds: editing.isAddon ? [] : selectedCategoryIds,
-        price: editing.pricingMode === 'quote' ? null : editing.pricingMode === 'tiered' ? priceTiers[0].priceEach : editing.price,
-        priceTiers: editing.pricingMode === 'tiered' ? priceTiers : [],
+        pricingMode: priceTiers.length ? 'tiered' : 'exact',
+        priceTiers,
         maxOrderQty: editing.maxOrderQty && editing.maxOrderQty > 0 ? Math.floor(editing.maxOrderQty) : null,
         variants: cleanVariants(editing.variants),
         complimentaryItems: editing.isAddon
@@ -1286,7 +1272,7 @@ export function ProductsAdmin() {
       key: 'actions', label: '', width: '40px',
       render: (p) => (
         <div onClick={(e) => e.stopPropagation()}>
-          <IconButton icon={<Pencil className="h-3.5 w-3.5" />} title="Edit" onClick={() => setEditing({ ...p })} />
+          <IconButton icon={<Pencil className="h-3.5 w-3.5" />} title="Edit" onClick={() => setEditing({ ...p, priceTiers: (p.priceTiers || []).filter(t => t.minQty > 1) })} />
         </div>
       ),
     },
@@ -1300,7 +1286,7 @@ export function ProductsAdmin() {
         columns={columns}
         loading={loading}
         searchText={(p) => `${p.name} ${p.description} ${catLabel(p)}`}
-        onRowClick={(p) => setEditing({ ...p })}
+        onRowClick={(p) => setEditing({ ...p, priceTiers: (p.priceTiers || []).filter(t => t.minQty > 1) })}
         bulkActions={(ids) => (
           <Button variant="outline" onClick={() => setBulkEditingIds(ids)} disabled={!online}>
             <SlidersHorizontal className="h-3.5 w-3.5" /> Bulk edit {ids.length}
@@ -1410,102 +1396,7 @@ export function ProductsAdmin() {
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <SysLabel>Pricing mode</SysLabel>
-                <div className="mt-1 grid grid-cols-4 gap-1 rounded border border-edge bg-surface2 p-1">
-                  {([['exact', 'Exact'], ['starting', 'From…'], ['tiered', 'Tiered'], ['quote', 'Quote']] as [PricingMode, string][]).map(([mode, label]) => (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => setEditing({ ...editing, pricingMode: mode })}
-                      className={cx(
-                        'rounded py-1 text-[11px] font-semibold',
-                        editing.pricingMode === mode ? 'bg-pink text-white' : 'text-muted hover:text-ink'
-                      )}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <SysLabel>Price (ETB)</SysLabel>
-                <input
-                  type="number"
-                  min={0}
-                  value={editing.price ?? ''}
-                  disabled={editing.pricingMode === 'quote' || editing.pricingMode === 'tiered'}
-                  onChange={(e) => setEditing({ ...editing, price: e.target.value === '' ? null : Number(e.target.value) })}
-                  className="field mt-1 disabled:opacity-40"
-                  placeholder={editing.pricingMode === 'quote' ? 'Quoted on request' : editing.pricingMode === 'tiered' ? 'Set by first tier' : 'e.g. 85'}
-                />
-              </div>
-            </div>
-
-            {editing.pricingMode === 'tiered' && (
-              <div className="rounded-xl border border-edge bg-surface2 p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <SysLabel>Progressive quantity ranges</SysLabel>
-                    <p className="mt-1 text-[10px] leading-relaxed text-muted">Each rate applies only to the units in that range. The final range continues upward.</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const tiers = cleanPriceTiers(editing.priceTiers);
-                      const last = tiers[tiers.length - 1];
-                      setEditing({ ...editing, priceTiers: [...tiers, { minQty: last ? last.minQty + 10 : 1, priceEach: last?.priceEach || 1 }] });
-                    }}
-                    className="rounded-lg border border-edge bg-white px-2.5 py-1.5 text-[11px] font-bold text-ink hover:border-pink"
-                  >
-                    + Add range
-                  </button>
-                </div>
-                <div className="mt-3 space-y-2">
-                  {(editing.priceTiers || []).map((tier, index, tiers) => {
-                    const nextStart = tiers[index + 1]?.minQty;
-                    return (
-                      <div key={index} className="grid grid-cols-[1fr_1fr_auto] items-end gap-2 rounded-lg bg-white p-2">
-                        <label className="text-[10px] font-semibold text-muted">
-                          Starts at quantity
-                          <input
-                            type="number"
-                            min={1}
-                            value={tier.minQty}
-                            disabled={index === 0}
-                            onChange={(e) => setEditing({ ...editing, priceTiers: tiers.map((item, i) => i === index ? { ...item, minQty: Number(e.target.value) } : item) })}
-                            className="field mt-1 py-1.5 disabled:opacity-60"
-                          />
-                        </label>
-                        <label className="text-[10px] font-semibold text-muted">
-                          Price per item (ETB)
-                          <input
-                            type="number"
-                            min={0.01}
-                            step="0.01"
-                            value={tier.priceEach}
-                            onChange={(e) => setEditing({ ...editing, priceTiers: tiers.map((item, i) => i === index ? { ...item, priceEach: Number(e.target.value) } : item) })}
-                            className="field mt-1 py-1.5"
-                          />
-                        </label>
-                        <button type="button" disabled={tiers.length <= 2} onClick={() => setEditing({ ...editing, priceTiers: tiers.filter((_, i) => i !== index) })} className="mb-0.5 flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-red-50 hover:text-red-600 disabled:opacity-30" aria-label="Remove price range">
-                          <X className="h-4 w-4" />
-                        </button>
-                        <div className="col-span-3 text-[10px] font-bold text-green">
-                          Units {tier.minQty.toLocaleString()}–{nextStart ? (nextStart - 1).toLocaleString() : 'and above'} cost {Number(tier.priceEach || 0).toLocaleString()} ETB each
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {(editing.priceTiers || []).length === 0 && (
-                    <button type="button" onClick={() => setEditing({ ...editing, priceTiers: [{ minQty: 1, priceEach: 10 }, { minQty: 11, priceEach: 9 }] })} className="w-full rounded-lg border border-dashed border-edge bg-white px-3 py-3 text-[11px] font-bold text-muted hover:border-pink hover:text-ink">
-                      Create example ranges: 1–10 at 10 ETB, 11+ at 9 ETB
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
+            <ProductCost product={editing} change={setEditing} refresh={reload} />
 
             <div>
               <SysLabel>Order limit</SysLabel>

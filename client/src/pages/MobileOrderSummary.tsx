@@ -117,7 +117,6 @@ export function MobileOrderSummary() {
     return priced.reduce((sum, item) => sum + (cartLineTotal(item) || 0), extras);
   }, [products, selectedItems, universalComplimentaryItems]);
   const hasQuoteItems = selectedItems.some((item) => item.priceEach == null);
-  const hasStartingItems = selectedItems.some((item) => item.pricingMode === 'starting');
   const selectedQty = selectedItems.reduce((sum, item) => sum + item.qty, 0);
   const cartQty = cart.reduce((sum, item) => sum + item.qty, 0);
 
@@ -393,7 +392,7 @@ export function MobileOrderSummary() {
               </div>
               <div className="min-w-0 text-right">
               <div className="text-[11px] text-muted">Total</div>
-              <div className="truncate text-lg font-extrabold text-[#ee0a24]">{formatCartTotal(selectedTotal, { hasQuote: hasQuoteItems, hasStarting: hasStartingItems })}</div>
+              <div className="truncate text-lg font-extrabold text-[#ee0a24]">{formatCartTotal(selectedTotal, { hasQuote: hasQuoteItems })}</div>
               </div>
             </div>
             <button type="button" onClick={() => void submitOrder()} disabled={!online || sending !== null} aria-busy={sending !== null} className="btn-primary btn-order-gradient h-12 w-full px-5">
@@ -562,7 +561,7 @@ export function MobileOrderSummary() {
             </div>
             <div className="min-w-0 text-right">
               <div className="text-[11px] text-muted">Total</div>
-              <div className="truncate text-lg font-extrabold text-[#ee0a24]">{formatCartTotal(selectedTotal, { hasQuote: hasQuoteItems, hasStarting: hasStartingItems })}</div>
+              <div className="truncate text-lg font-extrabold text-[#ee0a24]">{formatCartTotal(selectedTotal, { hasQuote: hasQuoteItems })}</div>
             </div>
           </div>
           <button type="button" onClick={goCheckout} disabled={!selectedItems.length || checkoutPending} aria-busy={checkoutPending} className="btn-primary h-12 w-full px-5">

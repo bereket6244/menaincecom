@@ -1,51 +1,40 @@
 import type { CartItem, Product } from './types';
-import { formatEtbAmount, tieredAveragePrice, tieredLineTotal } from './tieredPricing';
+import { formatEtbAmount, tieredUnitPrice } from './tieredPricing';
 
 export function formatPrice(product: Pick<Product, 'pricingMode' | 'price' | 'priceTiers'>, quantity?: number): string {
-  if (product.pricingMode === 'quote') return 'Request a quote';
+  if (product.pricingMode === 'quote') return 'Price needed';
   if (product.pricingMode === 'tiered') {
-    const average = tieredAveragePrice(product.priceTiers, quantity || 1);
-    if (average == null) return 'Request a quote';
-    return `${quantity ? 'Avg. ' : ''}${formatEtbAmount(average)} ETB`;
+    const rate = tieredUnitPrice(product.priceTiers, quantity || 1);
+    if (rate == null) return 'Price needed';
+    return `${formatEtbAmount(rate)} ETB`;
   }
-  if (product.price == null) return 'Request a quote';
+  if (product.price == null) return 'Price needed';
   const amount = `${product.price.toLocaleString()} ETB`;
-  return product.pricingMode === 'starting' ? `From ${amount}` : amount;
+  return amount;
 }
 
-/**
- * The unit price a cart line carries. Anything with a real number counts —
- * a 'starting' price is an estimate the studio confirms, not a quote-only item,
- * so it has to reach the cart total instead of silently becoming "Quote".
- */
 export function cartPriceEach(product: Pick<Product, 'pricingMode' | 'price' | 'priceTiers'>, quantity = 1): number | null {
-  if (product.pricingMode === 'tiered') return tieredAveragePrice(product.priceTiers, quantity);
+  if (product.pricingMode === 'tiered') return tieredUnitPrice(product.priceTiers, quantity);
   return product.pricingMode !== 'quote' && product.price != null ? product.price : null;
 }
 
 export function cartLineTotal(item: Pick<CartItem, 'pricingMode' | 'priceEach' | 'priceTiers' | 'qty'>): number | null {
-  if (item.pricingMode === 'tiered') return tieredLineTotal(item.priceTiers, item.qty);
-  return item.priceEach == null ? null : item.priceEach * item.qty;
+  return item.priceEach == null ? null : Math.round(item.priceEach * item.qty * 100) / 100;
 }
 
-/** Line total for a cart item, prefixed with "From" for starting prices. */
 export function formatLineTotal(item: Pick<CartItem, 'pricingMode' | 'priceEach' | 'priceTiers' | 'qty'>): string {
   const total = cartLineTotal(item);
   if (total == null) return 'Quote';
   const amount = `${formatEtbAmount(total)} ETB`;
-  return item.pricingMode === 'starting' ? `From ${amount}` : amount;
+  return amount;
 }
 
-/**
- * Cart/checkout total. `+` marks items priced on request, `From` marks a total
- * that includes starting prices — both mean the studio confirms the final figure.
- */
 export function formatCartTotal(
   total: number | null,
-  { hasQuote = false, hasStarting = false }: { hasQuote?: boolean; hasStarting?: boolean } = {}
+  { hasQuote = false }: { hasQuote?: boolean } = {}
 ): string {
   if (total == null) return hasQuote ? 'Quote' : '0 ETB';
-  return `${hasStarting ? 'From ' : ''}${total.toLocaleString()} ETB${hasQuote ? ' +' : ''}`;
+  return `${formatEtbAmount(total)} ETB${hasQuote ? ' +' : ''}`;
 }
 
 /**

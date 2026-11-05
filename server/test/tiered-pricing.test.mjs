@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { normalizePriceTiers, tieredAveragePrice, tieredLineTotal } from '../src/tiered-pricing.mjs';
+import { normalizePriceTiers, tieredUnitPrice, tieredLineTotal } from '../src/tiered-pricing.mjs';
 
-test('progressive tiers charge only the units inside each quantity range', () => {
+test('the qualifying rate applies to the entire line', () => {
   const tiers = [
     { minQty: 1, priceEach: 10 },
     { minQty: 11, priceEach: 9 },
@@ -10,10 +10,10 @@ test('progressive tiers charge only the units inside each quantity range', () =>
   ];
 
   assert.equal(tieredLineTotal(tiers, 10), 100);
-  assert.equal(tieredLineTotal(tiers, 20), 190);
-  assert.equal(tieredAveragePrice(tiers, 20), 9.5);
-  assert.equal(tieredLineTotal(tiers, 25), 230);
-  assert.equal(tieredAveragePrice(tiers, 25), 9.2);
+  assert.equal(tieredLineTotal(tiers, 20), 180);
+  assert.equal(tieredUnitPrice(tiers, 20), 9);
+  assert.equal(tieredLineTotal(tiers, 25), 200);
+  assert.equal(tieredUnitPrice(tiers, 25), 8);
 });
 
 test('tier normalization sorts ranges and keeps the last value for duplicate starts', () => {

@@ -83,7 +83,7 @@ test('Telegram product caption includes price and storefront link', () => {
     ],
   });
   assert.match(caption, /Pocket Card/);
-  assert.match(caption, /Price: From 125 ETB/);
+  assert.match(caption, /Price: 125 ETB/);
   assert.match(caption, /Item type: Wedding Invitations/);
   assert.match(caption, /Limited quantity: only 50 available/);
   assert.match(caption, /Size: A6, A5/);
@@ -120,7 +120,7 @@ test('Telegram product caption mentions complimentary items', () => {
   assert.ok(caption.length <= 1024);
 });
 
-test('Telegram product caption explains progressive quantity ranges', () => {
+test('Telegram product caption explains all-unit quantity ranges', () => {
   const caption = formatProductCaption({
     id: 'tiered-product',
     name: 'Tiered Card',
@@ -134,7 +134,7 @@ test('Telegram product caption explains progressive quantity ranges', () => {
     ],
   });
 
-  assert.match(caption, /Progressive pricing:/);
+  assert.match(caption, /Quantity pricing:/);
   assert.match(caption, /1-10: 10 ETB each/);
   assert.match(caption, /11-20: 9 ETB each/);
   assert.match(caption, /21\+: 8 ETB each/);

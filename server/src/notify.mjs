@@ -1,6 +1,5 @@
 import webpush from 'web-push';
 import { records } from './db.mjs';
-import { tieredLineTotal } from './tiered-pricing.mjs';
 
 const vapidReady = Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);
 if (vapidReady) {
@@ -25,7 +24,7 @@ export function formatOrderMessage(order) {
       .map(([k, v]) => `${k}: ${v}`)
       .join(', ');
     const from = item.pricingMode === 'starting' ? 'from ' : '';
-    const lineTotal = item.pricingMode === 'tiered' ? tieredLineTotal(item.priceTiers, item.qty) : item.priceEach == null ? null : item.priceEach * item.qty;
+    const lineTotal = item.priceEach == null ? null : item.priceEach * item.qty;
     lines.push(`• ${item.qty} × ${item.name}${item.isAddon ? ' (add-on)' : ''}${variants ? ` [${variants}]` : ''}${lineTotal != null ? ` — ${from}${lineTotal.toLocaleString('en-US')} ETB` : ' — quote'}`);
     const freebies = (item.complimentaryItems || [])
       .filter((freeItem) => freeItem?.qty > 0 && freeItem?.name)
@@ -44,7 +43,7 @@ export function formatOrderMessage(order) {
     const caveats = ['includes paid extras'];
     if (order.items.some((item) => item.priceEach == null)) caveats.push('quote-only items excluded');
     if (order.items.some((item) => item.pricingMode === 'starting')) caveats.push('some items are starting prices');
-    lines.push('', `Estimated total: ${order.estimatedTotal} ETB (${caveats.join('; ')})`);
+    lines.push('', `Total: ${order.estimatedTotal} ETB (${caveats.join('; ')})`);
   }
   return lines.join('\n');
 }

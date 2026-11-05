@@ -27,7 +27,15 @@ import {
   shouldUpdateTelegramPost,
   updateTelegramProductPost,
 } from './product-telegram.mjs';
-import { normalizePriceTiers, tieredAveragePrice, tieredLineTotal } from './tiered-pricing.mjs';
+import { normalizePriceTiers, tieredUnitPrice } from './tiered-pricing.mjs';
+
+import { invalidPrice, pricedProduct } from './cost-pricing.mjs';
+
+const costInputs = () => records.list('cost_inputs');
+async function catalogProducts() {
+  const [products, inputs] = await Promise.all([records.list('products'), costInputs()]);
+  return products.map((product) => pricedProduct(product, inputs));
+}
 
 export const api = Router();
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -229,12 +237,13 @@ api.get('/categories', dbRoute(async (_req, res) => {
 
 api.get('/products', dbRoute(async (_req, res) => {
   publicCache(res, 30);
-  const products = await records.list('products');
+  const products = await catalogProducts();
   res.json(products.filter(isPublicProduct).map(publicProduct));
 }));
 
 api.get('/products/:id', optionalAuth, dbRoute(async (req, res) => {
-  const product = await records.get('products', req.params.id);
+  const stored = await records.get('products', req.params.id);
+  const product = stored && pricedProduct(stored, await costInputs());
   if (!product || (!isPublicProduct(product) && req.auth?.role !== 'admin')) {
     return res.status(404).json({ error: 'not_found' });
   }
@@ -376,7 +385,7 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
   }
 
   const [allProducts, universalComplimentaryItems] = await Promise.all([
-    records.list('products'),
+    catalogProducts(),
     records.list('complimentary_items'),
   ]);
   const products = allProducts.filter(isPublicProduct);
@@ -385,7 +394,7 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
   // Prices always come from the catalog — never trust amounts sent by the browser.
   for (const raw of rawItems) {
     const product = productById.get(String(raw?.productId || ''));
-    if (!product) continue;
+    if (!product) return res.status(400).json({ message: 'An item is unavailable. Remove it before ordering.' });
     const qty = Math.min(100000, Math.max(1, Math.floor(Number(raw?.qty)) || 1));
     const maxOrderQty = cleanMaxOrderQty(product.maxOrderQty);
     if (maxOrderQty && qty > maxOrderQty) {
@@ -413,8 +422,11 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
           .map((item) => [String(item.name).trim().slice(0, 100), Number(item.qty)])
       );
       const priceEach = product.pricingMode === 'tiered'
-        ? tieredAveragePrice(product.priceTiers, qty)
+        ? tieredUnitPrice(product.priceTiers, qty)
         : product.pricingMode !== 'quote' && product.price != null ? Number(product.price) : null;
+      if (raw.expectedPriceEach !== undefined && raw.expectedPriceEach !== priceEach) {
+        throw Object.assign(new Error('The price changed. Refresh your cart and review the new total.'), { status: 409 });
+      }
       return {
         ...base,
         productId: product.id,
@@ -422,8 +434,6 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
         photo: product.photos?.[0] || '',
         isAddon: !!product.isAddon,
         pricingMode: product.pricingMode,
-        // 'starting' prices are estimates the studio confirms — they still
-        // count towards the total. Only 'quote' items have no price.
         priceEach,
         priceTiers: product.pricingMode === 'tiered' ? normalizePriceTiers(product.priceTiers) : [],
         complimentaryItems: complimentaryForProduct(product, qty, complimentarySelections),
@@ -441,7 +451,7 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
     0
   );
   const estimatedTotal = priced.length || extraTotal > 0
-    ? priced.reduce((sum, i) => sum + (i.pricingMode === 'tiered' ? tieredLineTotal(i.priceTiers, i.qty) : i.priceEach * i.qty), extraTotal)
+    ? Math.round(priced.reduce((sum, i) => sum + i.priceEach * i.qty, extraTotal) * 100) / 100
     : null;
 
   const orderCustomer = {
@@ -504,7 +514,7 @@ function crud(collection) {
 // and Telegram re-imports do not resurrect it. Deleted products are hidden from
 // the admin list; products merely archived by hand still show.
 api.get('/admin/products', requireAdmin, dbRoute(async (_req, res) => {
-  const products = await records.list('products');
+  const products = await catalogProducts();
   res.json(products.filter((product) => !product.deletedAt));
 }));
 
@@ -590,23 +600,12 @@ function cleanMaxOrderQty(value) {
 
 function cleanProductInput(input, { includeDefaultLimit = false } = {}) {
   const next = { ...input };
-  if (Object.prototype.hasOwnProperty.call(next, 'pricingMode')) {
-    next.pricingMode = ['exact', 'starting', 'tiered', 'quote'].includes(next.pricingMode) ? next.pricingMode : 'exact';
-  }
-  if (Object.prototype.hasOwnProperty.call(next, 'priceTiers') || next.pricingMode === 'tiered') {
-    next.priceTiers = normalizePriceTiers(next.priceTiers);
-    if (next.pricingMode === 'tiered') {
-      if (next.priceTiers.length < 2 || next.priceTiers[0]?.minQty !== 1) {
-        const error = new Error('Tiered pricing needs at least two ranges, starting at quantity 1.');
-        error.status = 400;
-        throw error;
-      }
-      next.price = next.priceTiers[0].priceEach;
-    }
-  }
-  if (next.pricingMode === 'quote') {
-    next.price = null;
-    next.priceTiers = [];
+  if (next.priceTiers != null) {
+    if (!Array.isArray(next.priceTiers) || next.priceTiers.some((tier) =>
+      !Number.isSafeInteger(tier?.minQty) || tier.minQty < 1 || !Number.isFinite(tier.priceEach)
+      || tier.priceEach <= 0 || Math.abs(tier.priceEach * 100 - Math.round(tier.priceEach * 100)) > 0.000001)
+      || new Set(next.priceTiers.map(t => t.minQty)).size !== next.priceTiers.length)
+      invalidPrice('Enter unique whole quantity thresholds and positive ETB rates with up to two decimals.');
   }
   if (includeDefaultLimit || Object.prototype.hasOwnProperty.call(next, 'maxOrderQty')) {
     next.maxOrderQty = cleanMaxOrderQty(next.maxOrderQty);
@@ -627,6 +626,7 @@ function telegramErrorPatch(error) {
 
 async function resolveTelegramProduct(product) {
   const universalComplimentaryItems = await records.list('complimentary_items');
+  product = pricedProduct(product, await costInputs());
   return resolveComplimentaryProduct(product, universalComplimentaryItems);
 }
 
@@ -688,12 +688,10 @@ function applyProductBulkPatch(product, body) {
     }
   }
   if (set.pricingMode !== undefined || set.price !== undefined) {
-    // Tier schedules are edited per product; bulk pricing intentionally only supports one-rate modes.
-    const pricingMode = ['exact', 'starting', 'quote'].includes(set.pricingMode) ? set.pricingMode : product.pricingMode;
-    if (pricingMode !== 'tiered') {
-      patch.pricingMode = pricingMode;
-      patch.price = pricingMode === 'quote' ? null : Math.max(0, Number(set.price) || 0);
-      patch.priceTiers = [];
+    if (!product.cost && product.pricingMode !== 'tiered') {
+      if (!Number.isFinite(set.price) || set.price <= 0) invalidPrice('Enter a positive exact price.');
+      patch.pricingMode = 'exact';
+      patch.price = set.price;
     }
   }
   if (set.maxOrderQty !== undefined) patch.maxOrderQty = cleanMaxOrderQty(set.maxOrderQty);
@@ -731,6 +729,37 @@ function applyProductBulkPatch(product, body) {
   return patch;
 }
 
+async function priceForSave(input) {
+  const { price, pricingMode, priceTiers } = pricedProduct(input, await costInputs());
+  if (price == null && normalizeProductStatus(input.status) === 'published') invalidPrice('Enter an exact selling price before publishing.');
+  return { price, pricingMode, priceTiers };
+}
+
+api.get('/admin/cost-inputs', requireAdmin, dbRoute(async (_req, res) => res.json(await costInputs())));
+api.post('/admin/cost-inputs', requireAdmin, dbRoute(async (req, res) => {
+  const name = String(req.body.name || '').trim();
+  const unitCost = req.body.unitCost;
+  if (!name || !Number.isFinite(unitCost) || unitCost <= 0) invalidPrice('Enter an input name and positive unit cost.');
+  const input = { name, unitCost };
+  if (req.body.id) {
+    const inputs = (await costInputs()).map(i => i.id === req.body.id ? { ...i, ...input } : i);
+    for (const p of await records.list('products')) {
+      if (p.cost?.items.some(i => i.inputId === req.body.id)) pricedProduct(p, inputs);
+    }
+  }
+  const doc = req.body.id ? await records.update('cost_inputs', req.body.id, input) : await records.insert('cost_inputs', input);
+  if (!doc) return res.status(404).json({ message: 'Cost input no longer exists.' });
+  if (req.body.id) {
+    const affected = (await catalogProducts()).filter(p => !p.deletedAt && p.cost?.items.some(i => i.inputId === doc.id));
+    for (const p of affected) {
+      if (!shouldUpdateTelegramPost(p, { ...p, contentVersion: (p.contentVersion || 1) + 1 })) continue;
+      const next = await records.update('products', p.id, { contentVersion: (p.contentVersion || 1) + 1 });
+      await syncProductPublicationTransition(p, next);
+    }
+  }
+  res.json(doc);
+}));
+
 api.patch('/admin/products/bulk', requireAdmin, dbRoute(async (req, res) => {
   const ids = cleanIdList(req.body?.ids).slice(0, 200);
   if (!ids.length) return res.status(400).json({ error: 'bad_request', message: 'Choose at least one product.' });
@@ -740,6 +769,9 @@ api.patch('/admin/products/bulk', requireAdmin, dbRoute(async (req, res) => {
     if (!existing || existing.deletedAt) continue;
     const patch = applyProductBulkPatch(existing, req.body);
     if (Object.keys(patch).length === 0) continue;
+    if (patch.status === 'published' || patch.price !== undefined) {
+      Object.assign(patch, await priceForSave({ ...existing, ...patch }));
+    }
     const doc = await records.update('products', id, {
       ...patch,
       contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,
@@ -758,6 +790,7 @@ api.post('/admin/products', requireAdmin, dbRoute(async (req, res) => {
     { ...req.body, status: normalizeProductStatus(req.body?.status) },
     { includeDefaultLimit: true }
   );
+  Object.assign(input, await priceForSave(input));
   const identity = telegramProductIdentity(input);
   if (identity) {
     const existing = await records.find('products', (product) => telegramProductIdentity(product) === identity);
@@ -783,6 +816,7 @@ api.put('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
   };
   const doc = await records.update('products', req.params.id, {
     ...body,
+    ...await priceForSave(input),
     status: input.status,
     contentVersion: nextVersion,
   });
@@ -803,8 +837,10 @@ api.delete('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
 api.post('/admin/products/:id/restore', requireAdmin, dbRoute(async (req, res) => {
   const existing = await records.get('products', req.params.id);
   if (!existing) return res.status(404).json({ error: 'not_found' });
+  const status = normalizeProductStatus(req.body?.status || 'draft');
   const doc = await records.update('products', req.params.id, {
-    status: normalizeProductStatus(req.body?.status || 'draft'),
+    ...await priceForSave({ ...existing, status }),
+    status,
     deletedAt: null,
     contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,
   });

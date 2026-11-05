@@ -121,8 +121,7 @@ export function DesktopOrderSummary() {
 
   const selectedCount = selectedItems.reduce((sum, item) => sum + item.qty, 0);
   const hasQuoteItems = selectedItems.some((item) => item.priceEach == null);
-  const hasStartingItems = selectedItems.some((item) => item.pricingMode === 'starting');
-  const totalText = formatCartTotal(selectedTotal, { hasQuote: hasQuoteItems, hasStarting: hasStartingItems });
+  const totalText = formatCartTotal(selectedTotal, { hasQuote: hasQuoteItems });
   const selectedItemsForMessage = selectedItems.map((item) => ({ ...item, complimentaryItems: freebiesFor(item) }));
   const complimentaryRows = selectedItems.flatMap((item) =>
     freebiesFor(item).filter((freeItem) => freeItem.qty > 0).map((freeItem) => ({

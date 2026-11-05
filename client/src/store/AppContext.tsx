@@ -5,7 +5,7 @@ import { apiGet, apiSend, checkApiHealth, onDbStatus, setToken } from '../lib/ap
 import { readLocalWishlist, writeLocalWishlist } from '../lib/wishlist';
 import { clampOrderQty } from '../lib/orderLimits';
 import { trackEvent } from '../lib/observability';
-import { tieredAveragePrice } from '../lib/tieredPricing';
+import { tieredUnitPrice } from '../lib/tieredPricing';
 
 export interface Toast {
   id: number;
@@ -205,11 +205,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
             ? `${existing.note} | ${item.note}`
             : existing.note || item.note;
         const merged = { ...existing, ...item, qty, note, complimentaryItems: item.complimentaryItems };
-        if (merged.pricingMode === 'tiered') merged.priceEach = tieredAveragePrice(merged.priceTiers, qty);
+        if (merged.pricingMode === 'tiered') merged.priceEach = tieredUnitPrice(merged.priceTiers, qty);
         return c.map((x) => (x.key === key ? merged : x));
       }
       const qty = clampOrderQty(item.qty, item);
-      const priceEach = item.pricingMode === 'tiered' ? tieredAveragePrice(item.priceTiers, qty) : item.priceEach;
+      const priceEach = item.pricingMode === 'tiered' ? tieredUnitPrice(item.priceTiers, qty) : item.priceEach;
       return [...c, { ...item, qty, priceEach, key }];
     });
     return result;
@@ -220,7 +220,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (x.key !== key) return x;
       const next = { ...x, ...patch };
       const qty = clampOrderQty(next.qty, next);
-      const priceEach = next.pricingMode === 'tiered' ? tieredAveragePrice(next.priceTiers, qty) : next.priceEach;
+      const priceEach = next.pricingMode === 'tiered' ? tieredUnitPrice(next.priceTiers, qty) : next.priceEach;
       return { ...next, qty, priceEach };
     }));
   }, []);
