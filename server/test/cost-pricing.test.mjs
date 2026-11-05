@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { pricedProduct } from '../src/cost-pricing.mjs';
+import { materialInput, pricedProduct } from '../src/cost-pricing.mjs';
 import { tieredLineTotal } from '../src/tiered-pricing.mjs';
 import { publicProduct } from '../src/product-model.mjs';
 
@@ -30,4 +30,29 @@ test('legacy amounts remain exact and missing prices are held for review', () =>
   assert.equal(pricedProduct({ price: 125, pricingMode: 'starting' }, []).pricingMode, 'exact');
   assert.equal(pricedProduct({ price: null, pricingMode: 'quote' }, []).status, 'draft');
   assert.equal(pricedProduct({ price: null, pricingMode: 'quote', status: 'archived' }, []).status, 'archived');
+});
+
+test('selected material option sets the product rate before margins and quantity breaks', () => {
+  const medium = { id: 'm', name: 'Medium', unitCost: 24 };
+  const glass = { id: 'glass', ...materialInput({ name: 'Glass', options: [
+    { id: 's', name: 'Small', unitCost: 12 }, medium,
+  ] }) };
+  const product = { cost: { items: [{ inputId: glass.id, optionId: 'm', quantity: 0.5 }],
+    margin: 20, thresholds: [{ minQty: 50, margin: 10 }] } };
+  const priced = pricedProduct(product, [glass]);
+  assert.equal(priced.price, 15);
+  assert.equal(tieredLineTotal(priced.priceTiers, 49), 735);
+  assert.equal(tieredLineTotal(priced.priceTiers, 50), 666.5);
+  assert.equal(publicProduct(priced).cost, undefined);
+  for (const optionId of [undefined, 'unknown']) {
+    const cost = { ...product.cost, items: [{ inputId: glass.id, optionId, quantity: 1 }] };
+    assert.throws(() => pricedProduct({ cost }, [glass]), /valid option/);
+  }
+  assert.throws(() => materialInput({ name: 'Glass', options: [medium] }, glass), /retained/);
+});
+
+test('adding options to a plain material preserves the base cost for existing recipes', () => {
+  const paper = { ...inputs[0], name: 'Paper' };
+  const updated = materialInput({ name: 'Paper', options: [{ id: 'p', name: 'Premium', unitCost: 18 }] }, paper);
+  assert.equal(pricedProduct(card, [{ ...updated, id: paper.id }, inputs[1]]).price, 16);
 });

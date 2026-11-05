@@ -36,10 +36,11 @@ export interface ComplimentaryCartItem {
   extraTotal?: number;
 }
 
-export interface CostInput { id: string; name: string; unitCost: number }
+export interface MaterialOption { id: string; name: string; unitCost: number }
+export interface CostInput { id: string; name: string; unitCost: number | null; options?: MaterialOption[] }
 export interface ProductCost {
   thresholds?: { minQty: number; margin: number }[];
-  items: { inputId: string; quantity: number }[];
+  items: { inputId: string; optionId?: string; quantity: number }[];
   margin: number;
 }
 

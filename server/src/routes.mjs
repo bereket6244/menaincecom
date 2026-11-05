@@ -29,7 +29,7 @@ import {
 } from './product-telegram.mjs';
 import { normalizePriceTiers, tieredUnitPrice } from './tiered-pricing.mjs';
 
-import { invalidPrice, pricedProduct } from './cost-pricing.mjs';
+import { invalidPrice, materialInput, pricedProduct, validMargin } from './cost-pricing.mjs';
 
 const costInputs = () => records.list('cost_inputs');
 async function catalogProducts() {
@@ -729,18 +729,36 @@ function applyProductBulkPatch(product, body) {
   return patch;
 }
 
+async function marginChoices() {
+  const saved = await records.list('cost_margins');
+  return [...new Set([25, 10, 5, ...saved.map(row => row.percent)])].sort((a, b) => b - a);
+}
+
+api.get('/admin/cost-margins', requireAdmin, dbRoute(async (_req, res) => res.json(await marginChoices())));
+api.post('/admin/cost-margins', requireAdmin, dbRoute(async (req, res) => {
+  const percent = req.body?.percent;
+  if (!validMargin(percent)) invalidPrice('Margin must be at least zero and below 100%.');
+  const choices = await marginChoices();
+  if (!choices.includes(percent)) await records.insert('cost_margins', { percent });
+  res.json(await marginChoices());
+}));
+
 async function priceForSave(input) {
   const { price, pricingMode, priceTiers, cost } = pricedProduct(input, await costInputs());
+  if (cost) {
+    const choices = await marginChoices();
+    if (![cost.margin, ...cost.thresholds.map(t => t.margin)].every(margin => choices.includes(margin)))
+      invalidPrice('Choose a saved margin or add it in Materials.');
+  }
   if (price == null && normalizeProductStatus(input.status) === 'published') invalidPrice('Enter an exact selling price before publishing.');
   return { price, pricingMode, priceTiers, ...(cost && { cost }) };
 }
 
 api.get('/admin/cost-inputs', requireAdmin, dbRoute(async (_req, res) => res.json(await costInputs())));
 api.post('/admin/cost-inputs', requireAdmin, dbRoute(async (req, res) => {
-  const name = String(req.body.name || '').trim();
-  const unitCost = req.body.unitCost;
-  if (!name || !Number.isFinite(unitCost) || unitCost <= 0) invalidPrice('Enter an input name and positive unit cost.');
-  const input = { name, unitCost };
+  const existing = req.body.id ? await records.get('cost_inputs', req.body.id) : null;
+  if (req.body.id && !existing) return res.status(404).json({ message: 'Cost input no longer exists.' });
+  const input = materialInput(req.body, existing);
   if (req.body.id) {
     const inputs = (await costInputs()).map(i => i.id === req.body.id ? { ...i, ...input } : i);
     for (const p of await records.list('products')) {
