@@ -16,6 +16,7 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
     return sum + (rate ?? 0) * row.quantity;
   }, 0) || 0;
   const sellingPrice = (margin: number) => Math.round((subtotal / (1 - margin / 100) + Number.EPSILON) * 100) / 100;
+  const profitPerItem = (margin: number) => Math.round((sellingPrice(margin) - subtotal + Number.EPSILON) * 100) / 100;
   const price = cost ? sellingPrice(cost.margin) : product.price;
   const thresholds = cost?.thresholds || [];
   const costBreaks = thresholds.map(t => ({ ...t, priceEach: sellingPrice(t.margin) }));
@@ -57,11 +58,11 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
       <div className="grid grid-cols-2 gap-2">
         <label>Margin<select className="field" value={cost.margin} onChange={e => change({ ...product, cost: { ...cost, margin: Number(e.target.value) } })}>{margins.map(n => <option key={n} value={n}>{n}%</option>)}</select></label>
       </div>
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        <span>Input cost<br /><strong>{subtotal.toFixed(2)} ETB</strong></span>
-        <span>Profit<br /><strong>{(subtotal / (1 - cost.margin / 100) - subtotal).toFixed(2)} ETB</strong></span>
+      <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
+        <span>Input cost per item (ETB)<br /><strong>{subtotal.toFixed(2)}</strong></span>
+        <span>Selling price per item (ETB)<br /><strong>{sellingPrice(cost.margin).toFixed(2)}</strong></span>
+        <span>Profit per item (ETB)<br /><strong>{profitPerItem(cost.margin).toFixed(2)}</strong></span>
       </div>
-      <p>Selling price <strong>{price?.toLocaleString()} ETB each</strong></p>
     </>}
     {!cost && <label className="block">Exact selling price (ETB)<input className="field" type="number" min="0.01" step=".01" value={product.price ?? ''} onChange={e => change({ ...product, price: e.target.value === '' ? null : Number(e.target.value) })} /></label>}
     <h4 className="font-semibold">Quantity pricing</h4>
@@ -81,6 +82,7 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
         <label>Minimum quantity<input type="number" min="2" className="field" value={tier.minQty || ''} onChange={e => update({ minQty: Number(e.target.value) })} /></label>
         <label>Tier margin<select className="field" value={tier.margin} onChange={e => update({ margin: Number(e.target.value) })}>{margins.map(n => <option key={n} value={n}>{n}%</option>)}</select></label>
         <button type="button" onClick={() => setThresholds(thresholds.filter((_, i) => i !== index))}>Remove</button>
+        <p className="col-span-3 text-xs">Profit per item (ETB) <strong>{profitPerItem(tier.margin).toFixed(2)}</strong></p>
         {tier.minQty > 1 && <p className="col-span-3 text-xs">{tier.minQty - 1} &times; {previous} = {((tier.minQty - 1) * previous).toFixed(2)} ETB &middot; {tier.minQty} &times; {sellingPrice(tier.margin)} = {(tier.minQty * sellingPrice(tier.margin)).toFixed(2)} ETB</p>}
       </div>;
     })}
