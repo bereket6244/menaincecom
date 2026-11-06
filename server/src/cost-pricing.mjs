@@ -43,7 +43,7 @@ export function pricedProduct(product, inputs, previous = product) {
   const items = [];
   if (recipe) {
     if (recipe.adjustment !== undefined && !Number.isFinite(recipe.adjustment)) invalidPrice('Enter a finite ETB adjustment.');
-    if (recipe.roundUp != null && (!Number.isFinite(recipe.roundUp) || recipe.roundUp <= 0)) invalidPrice('Enter a positive round-up increment or leave it blank.');
+    if (recipe.roundUp != null && (!Number.isFinite(recipe.roundUp) || recipe.roundUp <= 0)) invalidPrice('Enter a positive rounding increment or leave it blank.');
     if (!validMargin(recipe.margin))
       invalidPrice('Margin percentage must be a finite number of zero or more.');
     if (!Array.isArray(recipe.items) || !recipe.items.length) invalidPrice('Choose at least one cost input.');
@@ -68,7 +68,8 @@ export function pricedProduct(product, inputs, previous = product) {
         ...(legacyBaseCost != null && { legacyBaseCost }) });
       cost += unitCost * item.quantity;
     }
-    const calculatePrice = margin => sellingPrice(cost, margin, recipe.adjustment, recipe.roundUp);
+    if (recipe.roundDirection !== undefined && !['up', 'down'].includes(recipe.roundDirection)) invalidPrice('Choose round up or round down.');
+    const calculatePrice = margin => sellingPrice(cost, margin, recipe.adjustment, recipe.roundUp, recipe.roundDirection);
     price = calculatePrice(recipe.margin);
     const thresholds = recipe.thresholds ?? [];
     if (!Array.isArray(thresholds) || thresholds.some(t => !Number.isSafeInteger(t?.minQty) || t.minQty < 2
@@ -83,7 +84,7 @@ export function pricedProduct(product, inputs, previous = product) {
   const breaks = tiers.filter((tier) => tier.minQty > 1);
   const priced = price > 0 && Number.isFinite(price);
   return { ...product,
-    ...(recipe && { cost: { items, margin: recipe.margin, adjustment: recipe.adjustment ?? 0, roundUp: recipe.roundUp ?? null, thresholds: recipe.thresholds ?? [] } }),
+    ...(recipe && { cost: { items, margin: recipe.margin, adjustment: recipe.adjustment ?? 0, roundUp: recipe.roundUp ?? null, roundDirection: recipe.roundDirection ?? 'up', thresholds: recipe.thresholds ?? [] } }),
     price: priced ? price : null, pricingMode: breaks.length && priced ? 'tiered' : 'exact',
     priceTiers: breaks.length && priced ? [{ minQty: 1, priceEach: price }, ...breaks] : [],
     ...(!priced && (!product.status || product.status === 'published') ? { status: 'draft' } : {}) };

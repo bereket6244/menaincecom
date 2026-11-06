@@ -34,3 +34,18 @@ test('product and all-unit tiers retain adjustments across shared cost updates',
   assert.equal(publicProduct(priced).cost, undefined);
   assert.throws(() => pricedProduct({ cost: { ...product.cost, adjustment: -100 } }, [{ id: 'paper', unitCost: 24 }]), /positive|0.01/);
 });
+
+ test('round down preserves boundaries and applies to custom margins and tiers', () => {
+  assert.equal(sellingPrice(100, 27.75, 0, 5, 'down'), 125);
+  assert.equal(sellingPrice(100, 25, 0, 5, 'down'), 125);
+  assert.equal(sellingPrice(0.3, 0, 0, 0.1, 'down'), 0.3);
+  assert.equal(sellingPrice(100, 27.75, -3, 5, 'down'), 120);
+  assert.ok(Number.isNaN(sellingPrice(1, 0, 0, 5, 'down')));
+  const cost = { items: [{ inputId: 'paper', quantity: 1 }], margin: 27.75,
+    roundUp: 5, roundDirection: 'down', thresholds: [{ minQty: 50, margin: 13.7 }] };
+  const result = pricedProduct({ cost }, [{ id: 'paper', unitCost: 100 }]);
+  assert.equal(result.price, 125);
+  assert.equal(result.cost.roundDirection, 'down');
+  assert.equal(tieredLineTotal(result.priceTiers, 50), 5500);
+  assert.throws(() => pricedProduct({ cost: { ...cost, roundDirection: 'invalid' } }, [{ id: 'paper', unitCost: 100 }]), /round up or round down/);
+});

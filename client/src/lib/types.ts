@@ -41,6 +41,7 @@ export interface CostInput { id: string; name: string; unitCost: number | null; 
 export interface ProductCost {
   adjustment?: number;
   roundUp?: number | null;
+  roundDirection?: 'up' | 'down';
   thresholds?: { minQty: number; margin: number }[];
   items: { inputId: string; optionId?: string; legacyBaseCost?: number; quantity: number }[];
   margin: number;

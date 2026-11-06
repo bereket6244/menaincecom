@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil, Plus } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { Button, IconButton, Modal } from '../components/ui';
 import { apiSend } from '../lib/api';
 import type { CostInput, MaterialOption } from '../lib/types';
@@ -16,6 +16,7 @@ export function MaterialsAdmin() {
   const [savingMargin, setSavingMargin] = useState(false);
   const { toast, online } = useApp();
   const [draft, setDraft] = useState<Partial<CostInput> | null>(null);
+  const [deleting, setDeleting] = useState<CostInput | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function addMargin(event: React.FormEvent) {
@@ -58,12 +59,25 @@ export function MaterialsAdmin() {
     }
   }
 
+  async function removeMaterial() {
+    if (!deleting || busy) return;
+    setBusy(true);
+    try {
+      await apiSend('DELETE', `${endpoint}/${deleting.id}`);
+      setDeleting(null);
+      reload();
+      toast('success', 'Material deleted.');
+    } catch (err) { toast('error', (err as Error).message); }
+    finally { setBusy(false); }
+  }
+
   const columns: Column<CostInput>[] = [
     { key: 'name', label: 'Material', render: row => row.name, sortValue: row => row.name },
     { key: 'unitCost', label: 'Unit cost (ETB)', render: row => [
       ...(row.options?.length || row.unitCost == null ? [] : [String(row.unitCost)]),
       ...(row.options || []).map(o => `${o.name}: ${o.unitCost}`),
     ].join(' · '), sortValue: row => row.unitCost ?? 0 },
+    { key: 'delete', label: '', width: '52px', render: row => <IconButton title={`Delete ${row.name}`} icon={<Trash2 className="h-3.5 w-3.5" />} onClick={() => setDeleting(row)} /> },
     { key: 'edit', label: '', width: '52px', render: row =>
       <IconButton title={`Edit ${row.name}`} icon={<Pencil className="h-3.5 w-3.5" />} onClick={() => setDraft(row)} /> },
   ];
@@ -81,9 +95,16 @@ export function MaterialsAdmin() {
       </form>
     </details>
     {error && <p role="alert" className="text-sm">{error}</p>}
-    <DataTable rows={data || []} columns={columns} loading={loading} searchText={row => row.name}
+    <DataTable rows={data || []} columns={columns} loading={loading} searchText={row => [row.name, ...(row.options || []).map(o => o.name)].join(' ')}
       onRowClick={setDraft} emptyMessage="No shared materials yet."
       toolbar={<Button disabled={!online} onClick={() => setDraft({ name: '' })}><Plus className="h-3.5 w-3.5" />New material</Button>} />
+    <Modal open={deleting !== null} title="Delete material" onClose={() => { if (!busy) setDeleting(null); }}>
+      <p>Delete {deleting?.name}? Materials used by a product must first be removed from its recipe.</p>
+      <div className="mt-4 flex justify-end gap-2">
+        <Button variant="ghost" disabled={busy} onClick={() => setDeleting(null)}>Cancel</Button>
+        <Button busy={busy} disabled={!online} onClick={removeMaterial}>Delete material</Button>
+      </div>
+    </Modal>
     <Modal open={draft !== null} title={draft?.id ? 'Edit material' : 'New material'} onClose={() => { if (!busy) setDraft(null); }}>
       {draft && <form onSubmit={save} className="space-y-3">
         <label className="block">Material name<input className="field mt-1" required value={draft.name || ''}

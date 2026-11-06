@@ -745,16 +745,18 @@ api.post('/admin/cost-margins', requireAdmin, dbRoute(async (req, res) => {
 
 async function priceForSave(input, previous = null) {
   const { price, pricingMode, priceTiers, cost } = pricedProduct(input, await costInputs(), previous);
-  if (cost) {
-    const choices = await marginChoices();
-    if (![cost.margin, ...cost.thresholds.map(t => t.margin)].every(margin => choices.includes(margin)))
-      invalidPrice('Choose a saved margin or add it in Materials.');
-  }
   if (price == null && normalizeProductStatus(input.status) === 'published') invalidPrice('Enter an exact selling price before publishing.');
   return { price, pricingMode, priceTiers, ...(cost && { cost }) };
 }
 
 api.get('/admin/cost-inputs', requireAdmin, dbRoute(async (_req, res) => res.json(await costInputs())));
+api.delete('/admin/cost-inputs/:id', requireAdmin, dbRoute(async (req, res) => {
+  const input = await records.get('cost_inputs', req.params.id);
+  if (!input) return res.status(404).json({ message: 'Material no longer exists.' });
+  const usedBy = (await records.list('products')).filter(p => p.cost?.items?.some(row => row.inputId === input.id));
+  if (usedBy.length) return res.status(409).json({ message: 'This material is used by ' + usedBy.map(p => p.name).join(', ') + '. Remove it from those product recipes first (including archived products).' });
+  res.json({ ok: await records.remove('cost_inputs', input.id) });
+}));
 api.post('/admin/cost-inputs', requireAdmin, dbRoute(async (req, res) => {
   const existing = req.body.id ? await records.get('cost_inputs', req.body.id) : null;
   if (req.body.id && !existing) return res.status(404).json({ message: 'Cost input no longer exists.' });
