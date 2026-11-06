@@ -12,7 +12,7 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
   const breaks = product.priceTiers || [];
   const subtotal = cost?.items.reduce((sum, row) => {
     const input = inputs.find(i => i.id === row.inputId);
-    const rate = row.optionId ? input?.options?.find(o => o.id === row.optionId)?.unitCost : input?.unitCost;
+    const rate = row.optionId ? input?.options?.find(o => o.id === row.optionId)?.unitCost : input?.options?.length ? row.legacyBaseCost : input?.unitCost;
     return sum + (rate ?? 0) * row.quantity;
   }, 0) || 0;
   const sellingPrice = (margin: number) => Math.round((subtotal / (1 - margin / 100) + Number.EPSILON) * 100) / 100;
@@ -41,14 +41,14 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
         const material = inputs.find(i => i.id === row.inputId);
         const update = (patch: Partial<typeof row>) => change({ ...product, cost: { ...cost, items: cost.items.map((item, i) => i === index ? { ...item, ...patch } : item) } });
         return <div key={index} className="grid grid-cols-[1fr_6rem_auto] items-end gap-2">
-          <label>Shared input<select className="field" value={row.inputId} onChange={e => update({ inputId: e.target.value, optionId: undefined })}>
+          <label>Shared input<select className="field" value={row.inputId} onChange={e => update({ inputId: e.target.value, optionId: undefined, legacyBaseCost: undefined })}>
             <option value="">Choose input</option>
             {inputs.map(i => <option key={i.id} value={i.id}>{i.name}{i.options?.length ? '' : ` (${i.unitCost} ETB)`}</option>)}
           </select></label>
           <label>Quantity<input className="field" type="number" min="0" step="any" value={row.quantity || ''} onChange={e => update({ quantity: Number(e.target.value) })} /></label>
           <button type="button" onClick={() => change({ ...product, cost: { ...cost, items: cost.items.filter((_, i) => i !== index) } })}>Remove</button>
-          {!!material?.options?.length && <label className="col-span-full">Material option<select className="field" value={row.optionId || ''} onChange={e => update({ optionId: e.target.value || undefined })}>
-            <option value="" disabled={material.unitCost == null}>{material.unitCost == null ? 'Choose option' : `Base rate (${material.unitCost} ETB)`}</option>
+          {!!material?.options?.length && <label className="col-span-full">Material option<select className="field" value={row.optionId || ''} onChange={e => update({ optionId: e.target.value || undefined, legacyBaseCost: undefined })}>
+            <option value="" disabled>{row.legacyBaseCost == null ? 'Choose option' : `Previous rate (${row.legacyBaseCost} ETB)`}</option>
             {material.options.map(o => <option key={o.id} value={o.id}>{o.name} ({o.unitCost} ETB)</option>)}
           </select></label>}
         </div>;

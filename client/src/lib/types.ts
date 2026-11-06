@@ -40,7 +40,7 @@ export interface MaterialOption { id: string; name: string; unitCost: number }
 export interface CostInput { id: string; name: string; unitCost: number | null; options?: MaterialOption[] }
 export interface ProductCost {
   thresholds?: { minQty: number; margin: number }[];
-  items: { inputId: string; optionId?: string; quantity: number }[];
+  items: { inputId: string; optionId?: string; legacyBaseCost?: number; quantity: number }[];
   margin: number;
 }
 

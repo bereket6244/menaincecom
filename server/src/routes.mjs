@@ -743,8 +743,8 @@ api.post('/admin/cost-margins', requireAdmin, dbRoute(async (req, res) => {
   res.json(await marginChoices());
 }));
 
-async function priceForSave(input) {
-  const { price, pricingMode, priceTiers, cost } = pricedProduct(input, await costInputs());
+async function priceForSave(input, previous = null) {
+  const { price, pricingMode, priceTiers, cost } = pricedProduct(input, await costInputs(), previous);
   if (cost) {
     const choices = await marginChoices();
     if (![cost.margin, ...cost.thresholds.map(t => t.margin)].every(margin => choices.includes(margin)))
@@ -762,7 +762,12 @@ api.post('/admin/cost-inputs', requireAdmin, dbRoute(async (req, res) => {
   if (req.body.id) {
     const inputs = (await costInputs()).map(i => i.id === req.body.id ? { ...i, ...input } : i);
     for (const p of await records.list('products')) {
-      if (p.cost?.items.some(i => i.inputId === req.body.id)) pricedProduct(p, inputs);
+      const rows = p.cost?.items.filter(i => i.inputId === req.body.id) || [];
+      for (const row of rows) {
+        if (row.optionId && !input.options.some(option => option.id === row.optionId))
+          invalidPrice('An option you removed is used by ' + p.name + '. Change its product recipe first.');
+      }
+      if (rows.length) pricedProduct(p, inputs);
     }
   }
   const doc = req.body.id ? await records.update('cost_inputs', req.body.id, input) : await records.insert('cost_inputs', input);
@@ -788,7 +793,7 @@ api.patch('/admin/products/bulk', requireAdmin, dbRoute(async (req, res) => {
     const patch = applyProductBulkPatch(existing, req.body);
     if (Object.keys(patch).length === 0) continue;
     if (patch.status === 'published' || patch.price !== undefined) {
-      Object.assign(patch, await priceForSave({ ...existing, ...patch }));
+      Object.assign(patch, await priceForSave({ ...existing, ...patch }, existing));
     }
     const doc = await records.update('products', id, {
       ...patch,
@@ -834,7 +839,7 @@ api.put('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
   };
   const doc = await records.update('products', req.params.id, {
     ...body,
-    ...await priceForSave(input),
+    ...await priceForSave(input, existing),
     status: input.status,
     contentVersion: nextVersion,
   });
@@ -857,7 +862,7 @@ api.post('/admin/products/:id/restore', requireAdmin, dbRoute(async (req, res) =
   if (!existing) return res.status(404).json({ error: 'not_found' });
   const status = normalizeProductStatus(req.body?.status || 'draft');
   const doc = await records.update('products', req.params.id, {
-    ...await priceForSave({ ...existing, status }),
+    ...await priceForSave({ ...existing, status }, existing),
     status,
     deletedAt: null,
     contentVersion: Math.max(1, Number(existing.contentVersion) || 1) + 1,

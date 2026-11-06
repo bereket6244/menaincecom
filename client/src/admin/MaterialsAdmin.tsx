@@ -47,7 +47,7 @@ export function MaterialsAdmin() {
     }
     setBusy(true);
     try {
-      await apiSend('POST', endpoint, draft);
+      await apiSend('POST', endpoint, { ...draft, unitCost: draft.options?.length ? null : draft.unitCost });
       setDraft(null);
       reload();
       toast('success', 'Material saved.');
@@ -61,7 +61,7 @@ export function MaterialsAdmin() {
   const columns: Column<CostInput>[] = [
     { key: 'name', label: 'Material', render: row => row.name, sortValue: row => row.name },
     { key: 'unitCost', label: 'Unit cost (ETB)', render: row => [
-      ...(row.unitCost == null ? [] : [String(row.unitCost)]),
+      ...(row.options?.length || row.unitCost == null ? [] : [String(row.unitCost)]),
       ...(row.options || []).map(o => `${o.name}: ${o.unitCost}`),
     ].join(' · '), sortValue: row => row.unitCost ?? 0 },
     { key: 'edit', label: '', width: '52px', render: row =>
@@ -87,14 +87,13 @@ export function MaterialsAdmin() {
       {draft && <form onSubmit={save} className="space-y-3">
         <label className="block">Material name<input className="field mt-1" required value={draft.name || ''}
           onChange={e => setDraft({ ...draft, name: e.target.value })} /></label>
-        {(!draft.options?.length || draft.unitCost != null) && <label className="block">Unit cost (ETB)<input className="field mt-1" type="number" required min="0" step="any"
+        {!draft.options?.length && <label className="block">Unit cost (ETB)<input className="field mt-1" type="number" required min="0" step="any"
           value={draft.unitCost ?? ''} onChange={e => setDraft({ ...draft, unitCost: e.target.value === '' ? undefined : Number(e.target.value) })} /></label>}
         <fieldset className="space-y-2"><legend className="font-semibold">Priced options</legend>
           {(draft.options || []).map(o => <div key={o.id} className="grid grid-cols-2 gap-2">
             <label>Option name<input className="field" required value={o.name} onChange={e => updateOption(o.id, { name: e.target.value })} /></label>
             <label>Option cost (ETB)<input className="field" required type="number" min="0" step="any" value={o.unitCost || ''} onChange={e => updateOption(o.id, { unitCost: Number(e.target.value) })} /></label>
-            {!data?.find(i => i.id === draft.id)?.options?.some(saved => saved.id === o.id) &&
-              <button type="button" className="text-left text-xs" onClick={() => setDraft({ ...draft, options: draft.options?.filter(item => item.id !== o.id) })}>Remove option</button>}
+            <button type="button" className="text-left text-xs" onClick={() => setDraft({ ...draft, options: draft.options?.filter(item => item.id !== o.id) })}>Remove option</button>
           </div>)}
           <Button type="button" variant="outline" onClick={() => setDraft({ ...draft, options: [...(draft.options || []), { id: crypto.randomUUID(), name: '', unitCost: 0 }] })}>Add option</Button>
         </fieldset>

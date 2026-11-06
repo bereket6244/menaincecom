@@ -48,11 +48,19 @@ test('selected material option sets the product rate before margins and quantity
     const cost = { ...product.cost, items: [{ inputId: glass.id, optionId, quantity: 1 }] };
     assert.throws(() => pricedProduct({ cost }, [glass]), /valid option/);
   }
-  assert.throws(() => materialInput({ name: 'Glass', options: [medium] }, glass), /retained/);
+  assert.equal(materialInput({ name: 'Glass', unitCost: 99, options: [medium] }).unitCost, null);
+  assert.throws(() => materialInput({ name: 'Glass', options: [] }, glass), /unit cost/);
+  assert.equal(materialInput({ name: 'Glass', options: [], unitCost: 14 }, glass).unitCost, 14);
 });
 
 test('adding options to a plain material preserves the base cost for existing recipes', () => {
   const paper = { ...inputs[0], name: 'Paper' };
   const updated = materialInput({ name: 'Paper', options: [{ id: 'p', name: 'Premium', unitCost: 18 }] }, paper);
-  assert.equal(pricedProduct(card, [{ ...updated, id: paper.id }, inputs[1]]).price, 16);
+  const converted = [{ ...updated, id: paper.id }, inputs[1]];
+  assert.equal(updated.unitCost, null);
+  assert.equal(updated.legacyUnitCost, 8);
+  assert.equal(pricedProduct(card, converted).price, 16);
+  assert.equal(pricedProduct(card, converted, card).cost.items[0].legacyBaseCost, 8);
+  assert.throws(() => pricedProduct(card, converted, null), /valid option/);
+  assert.throws(() => pricedProduct({ cost: { ...card.cost, items: [...card.cost.items, card.cost.items[0]] } }, converted, card), /valid option/);
 });

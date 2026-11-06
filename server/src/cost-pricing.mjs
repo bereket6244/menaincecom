@@ -25,32 +25,44 @@ export function materialInput(body, existing) {
     names.add(label.toLowerCase());
     return { id, name: label, unitCost: option.unitCost };
   });
-  if (existing?.options?.some(option => !ids.has(option.id))) invalidPrice('Saved material options must be retained.');
   // Recipes using an existing plain material keep its original unit rate when options are added.
-  const unitCost = body.unitCost ?? existing?.unitCost ?? null;
-  if ((!cleanOptions.length || unitCost != null) && !(Number.isFinite(unitCost) && unitCost > 0))
+  const legacyUnitCost = cleanOptions.length ? existing?.legacyUnitCost ?? existing?.unitCost ?? null : null;
+  const unitCost = cleanOptions.length ? null : body.unitCost;
+  if (!cleanOptions.length && !(Number.isFinite(unitCost) && unitCost > 0))
     invalidPrice('Enter a positive unit cost.');
-  return { name, unitCost, options: cleanOptions };
+  return { name, unitCost, legacyUnitCost, options: cleanOptions };
 }
 
 const money = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
 
-export function pricedProduct(product, inputs) {
+export function pricedProduct(product, inputs, previous = product) {
   const recipe = product.cost;
   let tiers = normalizePriceTiers(product.priceTiers);
   let price = product.price == null ? null : money(Number(product.price));
+  const items = [];
   if (recipe) {
     if (!validMargin(recipe.margin))
       invalidPrice('Margin must be at least zero and below 100%.');
     if (!Array.isArray(recipe.items) || !recipe.items.length) invalidPrice('Choose at least one cost input.');
+    // Only rows already assigned this material without an option may retain its old rate.
+    const baseRows = (previous?.cost?.items || []).filter(row => !row.optionId);
     let cost = 0;
     for (const item of recipe.items) {
       const input = inputs.find((row) => row.id === item.inputId);
       if (!input || !Number.isFinite(item.quantity) || item.quantity <= 0) invalidPrice('Each cost input needs a positive quantity.');
+      let legacyBaseCost;
+      if (input.options?.length && !item.optionId) {
+        const index = baseRows.findIndex(row => row.inputId === input.id);
+        if (index < 0) invalidPrice('Select a valid option for ' + input.name + '.');
+        baseRows.splice(index, 1);
+        legacyBaseCost = input.legacyUnitCost ?? input.unitCost;
+      }
       const unitCost = item.optionId
         ? input.options?.find(option => option.id === item.optionId)?.unitCost
-        : input.unitCost;
+        : legacyBaseCost ?? input.unitCost;
       if (!(Number.isFinite(unitCost) && unitCost > 0)) invalidPrice('Select a valid option for ' + input.name + '.');
+      items.push({ inputId: input.id, quantity: item.quantity, ...(item.optionId && { optionId: item.optionId }),
+        ...(legacyBaseCost != null && { legacyBaseCost }) });
       cost += unitCost * item.quantity;
     }
     const sellingPrice = margin => money(cost / (1 - margin / 100));
@@ -68,7 +80,7 @@ export function pricedProduct(product, inputs) {
   const breaks = tiers.filter((tier) => tier.minQty > 1);
   const priced = price > 0 && Number.isFinite(price);
   return { ...product,
-    ...(recipe && { cost: { items: recipe.items, margin: recipe.margin, thresholds: recipe.thresholds ?? [] } }),
+    ...(recipe && { cost: { items, margin: recipe.margin, thresholds: recipe.thresholds ?? [] } }),
     price: priced ? price : null, pricingMode: breaks.length && priced ? 'tiered' : 'exact',
     priceTiers: breaks.length && priced ? [{ minQty: 1, priceEach: price }, ...breaks] : [],
     ...(!priced && (!product.status || product.status === 'published') ? { status: 'draft' } : {}) };
