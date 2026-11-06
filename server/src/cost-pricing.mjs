@@ -6,7 +6,7 @@ export function invalidPrice(message) {
 }
 
 export function validMargin(value) {
-  return Number.isFinite(value) && value >= 0 && value < 100;
+  return Number.isFinite(value) && value >= 0;
 }
 
 export function materialInput(body, existing) {
@@ -45,7 +45,7 @@ export function pricedProduct(product, inputs, previous = product) {
     if (recipe.adjustment !== undefined && !Number.isFinite(recipe.adjustment)) invalidPrice('Enter a finite ETB adjustment.');
     if (recipe.roundUp != null && (!Number.isFinite(recipe.roundUp) || recipe.roundUp <= 0)) invalidPrice('Enter a positive round-up increment or leave it blank.');
     if (!validMargin(recipe.margin))
-      invalidPrice('Margin must be at least zero and below 100%.');
+      invalidPrice('Margin percentage must be a finite number of zero or more.');
     if (!Array.isArray(recipe.items) || !recipe.items.length) invalidPrice('Choose at least one cost input.');
     // Only rows already assigned this material without an option may retain its old rate.
     const baseRows = (previous?.cost?.items || []).filter(row => !row.optionId);

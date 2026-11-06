@@ -73,9 +73,10 @@ export function MaterialsAdmin() {
     <p className="text-xs text-muted">Changing a unit cost updates the price of every product that uses it.</p>
     <details className="rounded border border-edge bg-surface p-2 text-xs">
       <summary className="cursor-pointer font-semibold">Margin choices</summary>
+      <p className="my-2">Each percentage is added to input cost. For example, 100 ETB plus 25% is 125 ETB.</p>
       <p className="my-2">{margins?.map(n => n + '%').join(', ')}</p>
       <form className="flex items-end gap-2" onSubmit={addMargin}>
-        <label>Additional margin (%)<input className="field" type="number" required min="0" max="100" step="any" value={percent} onChange={e => setPercent(e.target.value)} /></label>
+        <label>Additional margin (%)<input className="field" type="number" required min="0" step="any" value={percent} onChange={e => setPercent(e.target.value)} /></label>
         <Button type="submit" busy={savingMargin} disabled={!online}>Add margin</Button>
       </form>
     </details>

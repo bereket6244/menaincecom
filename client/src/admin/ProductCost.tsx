@@ -61,6 +61,7 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
       <div className="grid grid-cols-2 gap-2">
         <label>Margin<select className="field" value={cost.margin} onChange={e => change({ ...product, cost: { ...cost, margin: Number(e.target.value) } })}>{margins.map(n => <option key={n} value={n}>{n}%</option>)}</select></label>
       </div>
+      <p className="text-xs text-muted">Price after margin = input cost + (input cost x selected percentage).</p>
       <div className="grid gap-2 sm:grid-cols-2">
         <label>Adjustment per item (ETB)<input className="field" type="number" step="any" value={cost.adjustment ?? 0}
           onChange={e => change({ ...product, cost: { ...cost, adjustment: Number(e.target.value) } })} /></label>

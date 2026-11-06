@@ -737,7 +737,7 @@ async function marginChoices() {
 api.get('/admin/cost-margins', requireAdmin, dbRoute(async (_req, res) => res.json(await marginChoices())));
 api.post('/admin/cost-margins', requireAdmin, dbRoute(async (req, res) => {
   const percent = req.body?.percent;
-  if (!validMargin(percent)) invalidPrice('Margin must be at least zero and below 100%.');
+  if (!validMargin(percent)) invalidPrice('Margin percentage must be a finite number of zero or more.');
   const choices = await marginChoices();
   if (!choices.includes(percent)) await records.insert('cost_margins', { percent });
   res.json(await marginChoices());

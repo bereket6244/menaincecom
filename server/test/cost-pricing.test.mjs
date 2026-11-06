@@ -10,14 +10,14 @@ const card = { price: 999, cost: {
   margin: 25, thresholds: [{ minQty: 50, margin: 10 }],
 } };
 
-test('shared inputs and true margin produce exact all-unit prices', () => {
+test('shared inputs and percentage added to cost produce exact all-unit prices', () => {
   const priced = pricedProduct(card, inputs);
-  assert.equal(priced.price, 16);
-  assert.equal(tieredLineTotal(priced.priceTiers, 49), 784);
-  assert.equal(tieredLineTotal(priced.priceTiers, 50), 666.5);
-  assert.equal(tieredLineTotal(priced.priceTiers, 51), 679.83);
+  assert.equal(priced.price, 15);
+  assert.equal(tieredLineTotal(priced.priceTiers, 49), 735);
+  assert.equal(tieredLineTotal(priced.priceTiers, 50), 660);
+  assert.equal(tieredLineTotal(priced.priceTiers, 51), 673.2);
   assert.equal(publicProduct(priced).cost, undefined);
-  assert.equal(pricedProduct(card, [{ ...inputs[0], unitCost: 11 }, inputs[1]]).priceTiers[1].priceEach, 16.67);
+  assert.equal(pricedProduct(card, [{ ...inputs[0], unitCost: 11 }, inputs[1]]).priceTiers[1].priceEach, 16.5);
   assert.throws(() => pricedProduct(card, []), /cost input/);
 });
 
@@ -40,9 +40,9 @@ test('selected material option sets the product rate before margins and quantity
   const product = { cost: { items: [{ inputId: glass.id, optionId: 'm', quantity: 0.5 }],
     margin: 20, thresholds: [{ minQty: 50, margin: 10 }] } };
   const priced = pricedProduct(product, [glass]);
-  assert.equal(priced.price, 15);
-  assert.equal(tieredLineTotal(priced.priceTiers, 49), 735);
-  assert.equal(tieredLineTotal(priced.priceTiers, 50), 666.5);
+  assert.equal(priced.price, 14.4);
+  assert.equal(tieredLineTotal(priced.priceTiers, 49), 705.6);
+  assert.equal(tieredLineTotal(priced.priceTiers, 50), 660);
   assert.equal(publicProduct(priced).cost, undefined);
   for (const optionId of [undefined, 'unknown']) {
     const cost = { ...product.cost, items: [{ inputId: glass.id, optionId, quantity: 1 }] };
@@ -59,7 +59,7 @@ test('adding options to a plain material preserves the base cost for existing re
   const converted = [{ ...updated, id: paper.id }, inputs[1]];
   assert.equal(updated.unitCost, null);
   assert.equal(updated.legacyUnitCost, 8);
-  assert.equal(pricedProduct(card, converted).price, 16);
+  assert.equal(pricedProduct(card, converted).price, 15);
   assert.equal(pricedProduct(card, converted, card).cost.items[0].legacyBaseCost, 8);
   assert.throws(() => pricedProduct(card, converted, null), /valid option/);
   assert.throws(() => pricedProduct({ cost: { ...card.cost, items: [...card.cost.items, card.cost.items[0]] } }, converted, card), /valid option/);
