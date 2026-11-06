@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Navigate, Routes, Route } from 'react-router-dom';
 import { Shell } from './components/Shell';
 import { Loader2 } from 'lucide-react';
@@ -23,6 +23,7 @@ const BusinessAdmin = lazy(() => import('./admin/BusinessAdmin').then((m) => ({ 
 const StorefrontAdAdmin = lazy(() => import('./admin/StorefrontAdAdmin').then((m) => ({ default: m.StorefrontAdAdmin })));
 const DigitalInvitationsAdmin = lazy(() => import('./admin/DigitalInvitationsAdmin').then((m) => ({ default: m.DigitalInvitationsAdmin })));
 const LeadsAdmin = lazy(() => import('./admin/LeadsAdmin').then((m) => ({ default: m.LeadsAdmin })));
+const PriceCalculator = lazy(() => import('./admin/PriceCalculator').then((m) => ({ default: m.PriceCalculator })));
 const MaterialsAdmin = lazy(() => import('./admin/MaterialsAdmin').then((m) => ({ default: m.MaterialsAdmin })));
 const AdminsAdmin = lazy(() => import('./admin/AdminsAdmin').then((m) => ({ default: m.AdminsAdmin })));
 
@@ -36,6 +37,24 @@ function RouteFallback() {
 }
 
 export default function App() {
+  useEffect(() => {
+    if (!window.location.pathname.endsWith('/admin/price-calculator') || !new URLSearchParams(window.location.search).has('telegram')) return;
+    const ready = () => {
+      const telegram = (window as Window & { Telegram?: { WebApp?: { ready: () => void; expand: () => void } } }).Telegram;
+      telegram?.WebApp?.ready();
+      telegram?.WebApp?.expand();
+    };
+    let script = document.querySelector<HTMLScriptElement>('script[data-telegram-calculator]');
+    if (!script) {
+      script = document.createElement('script');
+      script.src = 'https://telegram.org/js/telegram-web-app.js';
+      script.dataset.telegramCalculator = 'true';
+      document.head.appendChild(script);
+    }
+    script.addEventListener('load', ready);
+    ready();
+    return () => script.removeEventListener('load', ready);
+  }, []);
   return (
     <Suspense fallback={<RouteFallback />}>
       <Routes>
@@ -50,6 +69,7 @@ export default function App() {
           <Route path="storefront-ad" element={<StorefrontAdAdmin />} />
           <Route path="leads" element={<LeadsAdmin />} />
           <Route path="materials" element={<MaterialsAdmin />} />
+          <Route path="price-calculator" element={<PriceCalculator />} />
           <Route path="admins" element={<AdminsAdmin />} />
         </Route>
         <Route

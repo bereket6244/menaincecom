@@ -9,10 +9,10 @@ const displayAmount = (value: number) => Number.isFinite(value) ? value.toFixed(
 
 type Draft = Omit<Product, 'id'> & { id?: string };
 
-export function ProductCost({ product, change }: { product: Draft; change: (next: Draft) => void }) {
+export function ProductCost({ product, change, standalone = false }: { product: Draft; change: (next: Draft) => void; standalone?: boolean }) {
   const marginList = useId();
-  const [previewQty, setPreviewQty] = useState(11);
-  const { data } = useData<CostInput[]>('/admin/cost-inputs');
+  const [previewQty, setPreviewQty] = useState(standalone ? 1 : 11);
+  const { data, loading, error, reload } = useData<CostInput[]>('/admin/cost-inputs');
   const { data: savedMargins } = useData<number[]>('/admin/cost-margins');
   const margins = savedMargins || [25, 10, 5];
   const inputs = data || [];
@@ -21,8 +21,8 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
   const subtotal = cost?.items.reduce((sum, row) => {
     const input = inputs.find(i => i.id === row.inputId);
     const rate = row.optionId ? input?.options?.find(o => o.id === row.optionId)?.unitCost : input?.options?.length ? row.legacyBaseCost : input?.unitCost;
-    return sum + (rate ?? 0) * row.quantity;
-  }, 0) || 0;
+    return sum + (Number.isFinite(rate) && (rate ?? 0) > 0 && Number.isFinite(row.quantity) && row.quantity > 0 ? rate! * row.quantity : NaN);
+  }, 0) ?? 0;
   const sellingPrice = (margin: number) => calculateSellingPrice(subtotal, margin, cost?.adjustment, cost?.roundUp, cost?.roundDirection);
   const profitPerItem = (margin: number) => Math.round((sellingPrice(margin) - subtotal + Number.EPSILON) * 100) / 100;
   const price = cost ? sellingPrice(cost.margin) : product.price;
@@ -47,9 +47,12 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
 
   return <section className="space-y-3 rounded-xl border border-edge bg-surface2 p-4">
     <h3 className="font-bold">Cost</h3>
-    <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!cost}
+    {loading && <p role="status" className="text-xs text-muted">Loading materials...</p>}
+    {error && <p role="alert" className="text-sm">{error} <button type="button" className="underline" onClick={reload}>Retry</button></p>}
+    {!loading && !error && inputs.length === 0 && <p className="text-xs text-muted">Add materials in the Materials tab to calculate input costs.</p>}
+    {!standalone && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!cost}
       onChange={e => change({ ...product, price, priceTiers: cost ? costBreaks : [], cost: e.target.checked ? { items: [], margin: 25 } : null })} />
-      Calculate selling price from input costs</label>
+      Calculate selling price from input costs</label>}
     {cost && <>
       {cost.items.map((row, index) => {
         const material = inputs.find(i => i.id === row.inputId);
@@ -65,7 +68,7 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
           <button type="button" className="h-9" aria-label={`Remove material ${index + 1}`} onClick={() => change({ ...product, cost: { ...cost, items: cost.items.filter((_, i) => i !== index) } })}>&times;</button>
         </div>;
       })}
-      <button type="button" onClick={() => change({ ...product, cost: { ...cost, items: [...cost.items, { inputId: '', quantity: 1 }] } })}>+ Add input to product</button>
+      <button type="button" onClick={() => change({ ...product, cost: { ...cost, items: [...cost.items, { inputId: '', quantity: 1 }] } })}>{standalone ? '+ Add material' : '+ Add input to product'}</button>
       <div className="grid grid-cols-2 gap-2">
         <label>Margin (%)<input className="field" type="number" min="0" step="any" list={marginList} value={Number.isFinite(cost.margin) ? cost.margin : ''} placeholder="Choose or type percentage" onChange={e => change({ ...product, cost: { ...cost, margin: e.target.value === '' ? NaN : Number(e.target.value) } })} /></label>
       </div>
@@ -81,7 +84,7 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
       <p className="text-xs text-muted">Positive adjustment adds birr; negative subtracts. Margin, then adjustment, then selected rounding, then two decimals. Leave the rounding multiple blank to turn it off. Applies to every quantity tier.</p>
       {(!Number.isFinite(price) || costBreaks.some(t => !Number.isFinite(t.priceEach))) && <p role="alert" className="text-sm">Enter valid amounts that give a positive selling price for every tier.</p>}
       <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
-        <span>Input cost per item (ETB)<br /><strong>{subtotal.toFixed(2)}</strong></span>
+        <span>Input cost per item (ETB)<br /><strong>{displayAmount(subtotal)}</strong></span>
         <span>Selling price per item (ETB)<br /><strong>{displayAmount(sellingPrice(cost.margin))}</strong></span>
         <span>Profit per item (ETB)<br /><strong>{displayAmount(profitPerItem(cost.margin))}</strong></span>
       </div>
@@ -110,7 +113,7 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
     })}
     <button type="button" onClick={addThreshold}>+ Add quantity threshold</button>
     <div className="space-y-2 rounded border border-edge p-3" aria-live="polite">
-      <label>Preview order quantity<input className="field" type="number" min="1" step="1" value={previewQty || ''} onChange={e => setPreviewQty(Number(e.target.value))} /></label>
+      <label>{standalone ? 'Requested quantity' : 'Preview order quantity'}<input className="field" type="number" min="1" step="1" value={previewQty || ''} onChange={e => setPreviewQty(Number(e.target.value))} /></label>
       {previewQty > 0 && Number.isSafeInteger(previewQty) && <p className="text-sm">Total: <strong>{displayAmount(previewTotal ?? NaN)} ETB</strong> &middot; Average per item: <strong>{displayAmount(previewEach ?? NaN)} ETB</strong>{cost && <> &middot; Average profit per item: <strong>{displayAmount((previewEach ?? NaN) - subtotal)} ETB</strong></>}</p>}
       <p className="text-xs text-muted">Average prices are displayed to two decimals. The total uses the exact quantity breakdown.</p>
     </div>

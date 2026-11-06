@@ -22,9 +22,14 @@ const corsOrigins = (process.env.CORS_ORIGIN || '').split(',').map((s) => s.trim
 app.use(cors({ origin: corsOrigins.length ? corsOrigins : false }));
 app.use(compression({ threshold: 1024 }));
 
-app.use((_req, res, next) => {
+app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
+  // Only the calculator can be embedded by Telegram Web; admin/API authentication still applies.
+  if (/^(?:\/shop)?\/admin\/price-calculator\/?$/.test(req.path)) {
+    res.setHeader('Content-Security-Policy', "frame-ancestors 'self' https://web.telegram.org https://*.web.telegram.org");
+  } else {
+    res.setHeader('X-Frame-Options', 'DENY');
+  }
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   next();

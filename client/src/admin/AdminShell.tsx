@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet, Link } from 'react-router-dom';
 import {
-  Inbox, Package, FolderTree, Images, Users, ShieldCheck, Bell, ExternalLink, LogOut, Building2, Gift, Globe, Megaphone, Layers,
+  Inbox, Package, FolderTree, Images, Users, ShieldCheck, Bell, ExternalLink, LogOut, Building2, Gift, Globe, Megaphone, Layers, Calculator,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { apiGet, apiSend } from '../lib/api';
@@ -12,6 +12,7 @@ import { cx } from '../lib/utils';
 const TABS = [
   { to: '/admin', label: 'Orders', icon: Inbox, end: true },
   { to: '/admin/products', label: 'Products', icon: Package },
+  { to: '/admin/price-calculator', label: 'Price Calculator', icon: Calculator },
   { to: '/admin/complimentary-items', label: 'Free Items', icon: Gift },
   { to: '/admin/categories', label: 'Categories', icon: FolderTree },
   { to: '/admin/gallery', label: 'Gallery', icon: Images },
