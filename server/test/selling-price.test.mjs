@@ -23,7 +23,7 @@ test('adjustment and upward rounding follow margin and precede currency rounding
   }
 });
 
-test('product and all-unit tiers retain adjustments across shared cost updates', () => {
+test('product and progressive tiers retain adjustments across shared cost updates', () => {
   const product = { cost: { items: [{ inputId: 'paper', quantity: 0.5 }], margin: 20,
     adjustment: 2, roundUp: 5, thresholds: [{ minQty: 50, margin: 10 }] } };
   const priced = pricedProduct(product, [{ id: 'paper', unitCost: 24 }]);
@@ -46,6 +46,6 @@ test('product and all-unit tiers retain adjustments across shared cost updates',
   const result = pricedProduct({ cost }, [{ id: 'paper', unitCost: 100 }]);
   assert.equal(result.price, 125);
   assert.equal(result.cost.roundDirection, 'down');
-  assert.equal(tieredLineTotal(result.priceTiers, 50), 5500);
+  assert.equal(tieredLineTotal(result.priceTiers, 50), 6250);
   assert.throws(() => pricedProduct({ cost: { ...cost, roundDirection: 'invalid' } }, [{ id: 'paper', unitCost: 100 }]), /round up or round down/);
 });

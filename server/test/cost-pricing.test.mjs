@@ -10,12 +10,12 @@ const card = { price: 999, cost: {
   margin: 25, thresholds: [{ minQty: 50, margin: 10 }],
 } };
 
-test('shared inputs and percentage added to cost produce exact all-unit prices', () => {
+test('shared inputs and percentage added to cost produce progressive totals', () => {
   const priced = pricedProduct(card, inputs);
   assert.equal(priced.price, 15);
   assert.equal(tieredLineTotal(priced.priceTiers, 49), 735);
-  assert.equal(tieredLineTotal(priced.priceTiers, 50), 660);
-  assert.equal(tieredLineTotal(priced.priceTiers, 51), 673.2);
+  assert.equal(tieredLineTotal(priced.priceTiers, 50), 750);
+  assert.equal(tieredLineTotal(priced.priceTiers, 51), 763.2);
   assert.equal(publicProduct(priced).cost, undefined);
   assert.equal(pricedProduct(card, [{ ...inputs[0], unitCost: 11 }, inputs[1]]).priceTiers[1].priceEach, 16.5);
   assert.throws(() => pricedProduct(card, []), /cost input/);
@@ -42,7 +42,7 @@ test('selected material option sets the product rate before margins and quantity
   const priced = pricedProduct(product, [glass]);
   assert.equal(priced.price, 14.4);
   assert.equal(tieredLineTotal(priced.priceTiers, 49), 705.6);
-  assert.equal(tieredLineTotal(priced.priceTiers, 50), 660);
+  assert.equal(tieredLineTotal(priced.priceTiers, 50), 720);
   assert.equal(publicProduct(priced).cost, undefined);
   for (const optionId of [undefined, 'unknown']) {
     const cost = { ...product.cost, items: [{ inputId: glass.id, optionId, quantity: 1 }] };

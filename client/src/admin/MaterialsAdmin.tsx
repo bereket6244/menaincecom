@@ -107,13 +107,13 @@ export function MaterialsAdmin() {
     </Modal>
     <Modal open={draft !== null} title={draft?.id ? 'Edit material' : 'New material'} onClose={() => { if (!busy) setDraft(null); }}>
       {draft && <form onSubmit={save} className="space-y-3">
-        <label className="block">Material name<input className="field mt-1" required value={draft.name || ''}
+        <label className="block">Material name<input autoFocus onFocus={e => e.currentTarget.select()} className="field mt-1" required value={draft.name || ''}
           onChange={e => setDraft({ ...draft, name: e.target.value })} /></label>
         {!draft.options?.length && <label className="block">Unit cost (ETB)<input className="field mt-1" type="number" required min="0" step="any"
           value={draft.unitCost ?? ''} onChange={e => setDraft({ ...draft, unitCost: e.target.value === '' ? undefined : Number(e.target.value) })} /></label>}
         <fieldset className="space-y-2"><legend className="font-semibold">Priced options</legend>
           {(draft.options || []).map(o => <div key={o.id} className="grid grid-cols-2 gap-2">
-            <label>Option name<input className="field" required value={o.name} onChange={e => updateOption(o.id, { name: e.target.value })} /></label>
+            <label>Option name<input autoFocus={!o.name} className="field" required value={o.name} onChange={e => updateOption(o.id, { name: e.target.value })} /></label>
             <label>Option cost (ETB)<input className="field" required type="number" min="0" step="any" value={o.unitCost || ''} onChange={e => updateOption(o.id, { unitCost: Number(e.target.value) })} /></label>
             <button type="button" className="text-left text-xs" onClick={() => setDraft({ ...draft, options: draft.options?.filter(item => item.id !== o.id) })}>Remove option</button>
           </div>)}

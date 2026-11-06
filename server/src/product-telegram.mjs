@@ -24,10 +24,11 @@ function productPrice(product) {
     if (!tiers.length) return 'Price: Request a quote';
     const ranges = tiers.map((tier, index) => {
       const next = tiers[index + 1];
-      const range = next ? `${tier.minQty}-${next.minQty - 1}` : `${tier.minQty}+`;
+      const start = index === 0 ? 1 : tier.minQty + 1;
+      const range = next ? `${start}-${next.minQty}` : `${start}+`;
       return `${range}: ${Number(tier.priceEach).toLocaleString('en-US')} ETB each`;
     });
-    return `Quantity pricing:\n${ranges.join('\n')}`;
+    return `Quantity pricing (total averaged across all items):\n${ranges.join('\n')}`;
   }
   const amount = `${Number(product.price).toLocaleString('en-US')} ETB`;
   return `Price: ${amount}`;

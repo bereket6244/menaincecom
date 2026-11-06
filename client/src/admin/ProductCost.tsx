@@ -1,4 +1,5 @@
-import { useId } from 'react';
+import { tieredLineTotal, tieredUnitPrice } from '../lib/tieredPricing';
+import { useId, useState } from 'react';
 import { SearchChoice } from './SearchChoice';
 import { sellingPrice as calculateSellingPrice } from '../../../server/src/selling-price.mjs';
 import type { CostInput, Product } from '../lib/types';
@@ -10,12 +11,13 @@ type Draft = Omit<Product, 'id'> & { id?: string };
 
 export function ProductCost({ product, change }: { product: Draft; change: (next: Draft) => void }) {
   const marginList = useId();
+  const [previewQty, setPreviewQty] = useState(11);
   const { data } = useData<CostInput[]>('/admin/cost-inputs');
   const { data: savedMargins } = useData<number[]>('/admin/cost-margins');
   const margins = savedMargins || [25, 10, 5];
   const inputs = data || [];
   const cost = product.cost;
-  const breaks = product.priceTiers || [];
+  const breaks = (product.priceTiers || []).filter(t => t.minQty > 1);
   const subtotal = cost?.items.reduce((sum, row) => {
     const input = inputs.find(i => i.id === row.inputId);
     const rate = row.optionId ? input?.options?.find(o => o.id === row.optionId)?.unitCost : input?.options?.length ? row.legacyBaseCost : input?.unitCost;
@@ -26,6 +28,11 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
   const price = cost ? sellingPrice(cost.margin) : product.price;
   const thresholds = cost?.thresholds || [];
   const costBreaks = thresholds.map(t => ({ ...t, priceEach: sellingPrice(t.margin) }));
+  const previewTiers = [{ minQty: 1, priceEach: price ?? 0 }, ...(cost ? costBreaks : breaks)];
+  const previewValid = previewTiers.every(t => Number.isFinite(t.priceEach) && t.priceEach > 0 && Number.isSafeInteger(t.minQty) && t.minQty > 0)
+    && new Set(previewTiers.map(t => t.minQty)).size === previewTiers.length;
+  const previewTotal = previewValid ? tieredLineTotal(previewTiers, previewQty) : null;
+  const previewEach = previewValid ? tieredUnitPrice(previewTiers, previewQty) : null;
   const setThresholds = (rows: typeof thresholds) => cost && change({ ...product, cost: { ...cost, thresholds: rows } });
   const updateBreaks = (rows: typeof breaks) => change({ ...product, pricingMode: rows.length ? 'tiered' : 'exact', priceTiers: rows });
   function addThreshold() {
@@ -48,9 +55,9 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
         const material = inputs.find(i => i.id === row.inputId);
         const update = (patch: Partial<typeof row>) => change({ ...product, cost: { ...cost, items: cost.items.map((item, i) => i === index ? { ...item, ...patch } : item) } });
         return <div key={index} className={`grid items-end gap-2 ${material?.options?.length ? 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_4.5rem_2rem]' : 'grid-cols-[minmax(0,1fr)_4.5rem_2rem]'}`}>
-          <SearchChoice label="Material" value={row.inputId} options={inputs.map(i => ({ value: i.id, label: i.name + (i.options?.length ? '' : ` (${i.unitCost} ETB)`) }))}
+          <SearchChoice autoFocus={!row.inputId} label="Material" value={row.inputId} options={inputs.map(i => ({ value: i.id, label: i.name + (i.options?.length ? '' : ` (${i.unitCost} ETB)`) }))}
             onChange={inputId => update({ inputId, optionId: undefined, legacyBaseCost: undefined })} />
-          {!!material?.options?.length && <SearchChoice label="Option" value={row.optionId || ''}
+          {!!material?.options?.length && <SearchChoice autoFocus={!row.optionId && row.legacyBaseCost == null} label="Option" value={row.optionId || ''}
             placeholder={row.legacyBaseCost == null ? 'Search options' : `Previous rate (${row.legacyBaseCost} ETB)`}
             options={material.options.map(o => ({ value: o.id, label: `${o.name} (${o.unitCost} ETB)` }))}
             onChange={optionId => update({ optionId, legacyBaseCost: undefined })} />}
@@ -81,26 +88,31 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
     </>}
     {!cost && <label className="block">Exact selling price (ETB)<input className="field" type="number" min="0.01" step=".01" value={product.price ?? ''} onChange={e => change({ ...product, price: e.target.value === '' ? null : Number(e.target.value) })} /></label>}
     <h4 className="font-semibold">Quantity pricing</h4>
-    <p className="text-xs">At each threshold, the new unit price applies to every item.</p>
+    <p className="text-xs">The new rate applies only to items above the threshold. The total is divided equally across all items of this product.</p>
     {!cost && breaks.map((tier, index) => {
       const update = (patch: Partial<typeof tier>) => updateBreaks(breaks.map((t, i) => i === index ? { ...t, ...patch } : t));
       return <div key={index} className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
-        <label>Minimum quantity<input type="number" min="2" className="field" value={tier.minQty || ''} onChange={e => update({ minQty: Number(e.target.value) })} /></label>
+        <label>Above quantity<input type="number" min="2" className="field" value={tier.minQty || ''} onChange={e => update({ minQty: Number(e.target.value) })} /></label>
         <label>ETB each<input type="number" min=".01" step=".01" className="field" value={tier.priceEach || ''} onChange={e => update({ priceEach: Number(e.target.value) })} /></label>
         <button type="button" onClick={() => updateBreaks(breaks.filter((_, i) => i !== index)) } aria-label="Remove quantity threshold">&times;</button>
       </div>;
     })}
     {cost && thresholds.map((tier, index) => {
       const update = (patch: Partial<typeof tier>) => setThresholds(thresholds.map((t, i) => i === index ? { ...t, ...patch } : t));
-      const previous = costBreaks.filter(t => t.minQty < tier.minQty).sort((a,b) => b.minQty - a.minQty)[0]?.priceEach ?? price ?? 0;
+
       return <div key={index} className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
-        <label>Minimum quantity<input type="number" min="2" className="field" value={tier.minQty || ''} onChange={e => update({ minQty: Number(e.target.value) })} /></label>
+        <label>Above quantity<input type="number" min="2" className="field" value={tier.minQty || ''} onChange={e => update({ minQty: Number(e.target.value) })} /></label>
         <label>Tier margin (%)<input className="field" type="number" min="0" step="any" list={marginList} value={Number.isFinite(tier.margin) ? tier.margin : ''} placeholder="Choose or type percentage" onChange={e => update({ margin: e.target.value === '' ? NaN : Number(e.target.value) })} /></label>
         <button type="button" onClick={() => setThresholds(thresholds.filter((_, i) => i !== index)) } aria-label="Remove quantity threshold">&times;</button>
-        <p className="col-span-3 text-xs">Profit per item (ETB) <strong>{displayAmount(profitPerItem(tier.margin))}</strong></p>
-        {tier.minQty > 1 && Number.isFinite(sellingPrice(tier.margin)) && Number.isFinite(previous) && <p className="col-span-3 text-xs">{tier.minQty - 1} &times; {previous} = {((tier.minQty - 1) * previous).toFixed(2)} ETB &middot; {tier.minQty} &times; {sellingPrice(tier.margin)} = {(tier.minQty * sellingPrice(tier.margin)).toFixed(2)} ETB</p>}
+        <p className="col-span-3 text-xs">Rate for items above {tier.minQty}: <strong>{displayAmount(sellingPrice(tier.margin))} ETB</strong>. Profit on those items (ETB) <strong>{displayAmount(profitPerItem(tier.margin))}</strong></p>
+        {previewValid && tier.minQty > 1 && <p className="col-span-3 text-xs">At {tier.minQty} items: {displayAmount(tieredLineTotal(previewTiers, tier.minQty) ?? NaN)} ETB total. At {tier.minQty + 1} items: {displayAmount(tieredLineTotal(previewTiers, tier.minQty + 1) ?? NaN)} ETB total, averaging {displayAmount(tieredUnitPrice(previewTiers, tier.minQty + 1) ?? NaN)} ETB each.</p>}
       </div>;
     })}
     <button type="button" onClick={addThreshold}>+ Add quantity threshold</button>
+    <div className="space-y-2 rounded border border-edge p-3" aria-live="polite">
+      <label>Preview order quantity<input className="field" type="number" min="1" step="1" value={previewQty || ''} onChange={e => setPreviewQty(Number(e.target.value))} /></label>
+      {previewQty > 0 && Number.isSafeInteger(previewQty) && <p className="text-sm">Total: <strong>{displayAmount(previewTotal ?? NaN)} ETB</strong> &middot; Average per item: <strong>{displayAmount(previewEach ?? NaN)} ETB</strong>{cost && <> &middot; Average profit per item: <strong>{displayAmount((previewEach ?? NaN) - subtotal)} ETB</strong></>}</p>}
+      <p className="text-xs text-muted">Average prices are displayed to two decimals. The total uses the exact quantity breakdown.</p>
+    </div>
   </section>;
 }

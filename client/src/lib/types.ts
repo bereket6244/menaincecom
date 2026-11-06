@@ -58,7 +58,7 @@ export interface Product {
   photos: string[];
   pricingMode: PricingMode;
   price: number | null; // ETB; used by 'exact' and 'starting'
-  priceTiers?: PriceTier[]; // all-unit quantity thresholds when pricingMode is 'tiered'
+  priceTiers?: PriceTier[]; // inclusive quantity caps; rates above each cap are blended across the line
   maxOrderQty?: number | null; // blank means unlimited
   variants: VariantGroup[];
   isAddon: boolean; // complimentary/add-on item (entrance cards, schedule cards…)

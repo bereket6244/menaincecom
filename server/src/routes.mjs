@@ -451,7 +451,7 @@ api.post('/orders', orderLimiter, optionalAuth, dbRoute(async (req, res) => {
     0
   );
   const estimatedTotal = priced.length || extraTotal > 0
-    ? Math.round(priced.reduce((sum, i) => sum + i.priceEach * i.qty, extraTotal) * 100) / 100
+    ? Math.round(priced.reduce((sum, i) => sum + Math.round(i.priceEach * i.qty * 100) / 100, extraTotal) * 100) / 100
     : null;
 
   const orderCustomer = {

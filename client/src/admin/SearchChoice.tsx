@@ -1,8 +1,8 @@
 import { useId, useState } from 'react';
 
-export function SearchChoice({ label, value, options, placeholder = 'Search…', onChange }: {
+export function SearchChoice({ label, value, options, placeholder = 'Search…', autoFocus = false, onChange }: {
   label: string; value: string; options: { value: string; label: string }[];
-  placeholder?: string; onChange: (value: string) => void;
+  placeholder?: string; autoFocus?: boolean; onChange: (value: string) => void;
 }) {
   const id = useId();
   const [query, setQuery] = useState<string | null>(null);
@@ -11,7 +11,7 @@ export function SearchChoice({ label, value, options, placeholder = 'Search…',
   const filtered = options.filter(option => option.label.toLowerCase().includes((query || '').toLowerCase()));
   const choose = (next: string) => { onChange(next); setQuery(null); setActive(0); };
   return <label className="relative block min-w-0">{label}
-    <input className="field min-w-0" role="combobox" autoComplete="off" placeholder={placeholder}
+    <input className="field min-w-0" role="combobox" autoFocus={autoFocus} autoComplete="off" placeholder={placeholder}
       aria-expanded={query !== null} aria-controls={id} aria-autocomplete="list"
       aria-activedescendant={query !== null && filtered[active] ? `${id}-${active}` : undefined}
       value={query ?? selected} onFocus={() => { setQuery(''); setActive(0); }}

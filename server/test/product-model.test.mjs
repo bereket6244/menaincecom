@@ -120,7 +120,7 @@ test('Telegram product caption mentions complimentary items', () => {
   assert.ok(caption.length <= 1024);
 });
 
-test('Telegram product caption explains all-unit quantity ranges', () => {
+test('Telegram product caption explains progressive quantity ranges', () => {
   const caption = formatProductCaption({
     id: 'tiered-product',
     name: 'Tiered Card',
@@ -134,8 +134,8 @@ test('Telegram product caption explains all-unit quantity ranges', () => {
     ],
   });
 
-  assert.match(caption, /Quantity pricing:/);
-  assert.match(caption, /1-10: 10 ETB each/);
-  assert.match(caption, /11-20: 9 ETB each/);
-  assert.match(caption, /21\+: 8 ETB each/);
+  assert.match(caption, /Quantity pricing \(total averaged across all items\):/);
+  assert.match(caption, /1-11: 10 ETB each/);
+  assert.match(caption, /12-21: 9 ETB each/);
+  assert.match(caption, /22\+: 8 ETB each/);
 });

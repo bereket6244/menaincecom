@@ -234,7 +234,7 @@ export function DesktopProductDetail() {
               <div className="mt-3 flex flex-wrap gap-2">
                 {(product.priceTiers || []).map((tier, index, tiers) => (
                   <span key={tier.minQty} className="rounded-full border border-edge bg-surface2 px-3 py-1.5 text-[11px] font-semibold text-muted">
-                    {tiers[index + 1] ? `${tier.minQty.toLocaleString()}–${(tiers[index + 1].minQty - 1).toLocaleString()}` : `${tier.minQty.toLocaleString()}+`}: {tier.priceEach.toLocaleString()} ETB
+                    {tiers[index + 1] ? `${(index === 0 ? 1 : tier.minQty + 1).toLocaleString()}–${tiers[index + 1].minQty.toLocaleString()}` : `${(index === 0 ? 1 : tier.minQty + 1).toLocaleString()}+`}: {tier.priceEach.toLocaleString()} ETB per item in this range
                   </span>
                 ))}
               </div>

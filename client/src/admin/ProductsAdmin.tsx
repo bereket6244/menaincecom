@@ -1330,7 +1330,7 @@ export function ProductsAdmin() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <SysLabel>Name</SysLabel>
-                <input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} className="field mt-1" />
+                <input autoFocus onFocus={e => e.currentTarget.select()} value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} className="field mt-1" />
               </div>
               <div>
                 <SysLabel>Category</SysLabel>

@@ -10,20 +10,24 @@ export function normalizePriceTiers(tiers) {
     .sort((a, b) => a.minQty - b.minQty);
 }
 
-export function tieredUnitPrice(tiers, quantity) {
+/** Thresholds are inclusive caps: a threshold of 10 changes the rate for item 11 onward. */
+export function tieredLineTotal(tiers, quantity) {
   const clean = normalizePriceTiers(tiers);
   const qty = Math.max(1, Math.floor(Number(quantity) || 1));
   if (clean[0]?.minQty !== 1) return null;
-  let rate = clean[0].priceEach;
-  for (const tier of clean) {
-    if (tier.minQty > qty) break;
-    rate = tier.priceEach;
+  let totalCents = 0;
+  for (let index = 0; index < clean.length; index++) {
+    const start = index === 0 ? 0 : clean[index].minQty;
+    const end = Math.min(qty, clean[index + 1]?.minQty ?? qty);
+    if (end > start) totalCents += (end - start) * Math.round(clean[index].priceEach * 100);
+    if (end === qty) break;
   }
-  return Math.round(rate * 100) / 100;
+  return totalCents / 100;
 }
 
-export function tieredLineTotal(tiers, quantity) {
+/** Keep the full blended rate; rounding it before multiplication changes the order total. */
+export function tieredUnitPrice(tiers, quantity) {
   const qty = Math.max(1, Math.floor(Number(quantity) || 1));
-  const rate = tieredUnitPrice(tiers, qty);
-  return rate == null ? null : Math.round(rate * 100) * qty / 100;
+  const total = tieredLineTotal(tiers, qty);
+  return total == null ? null : total / qty;
 }

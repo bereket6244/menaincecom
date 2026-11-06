@@ -24,7 +24,7 @@ export function formatOrderMessage(order) {
       .map(([k, v]) => `${k}: ${v}`)
       .join(', ');
     const from = item.pricingMode === 'starting' ? 'from ' : '';
-    const lineTotal = item.priceEach == null ? null : item.priceEach * item.qty;
+    const lineTotal = item.priceEach == null ? null : Math.round(item.priceEach * item.qty * 100) / 100;
     lines.push(`• ${item.qty} × ${item.name}${item.isAddon ? ' (add-on)' : ''}${variants ? ` [${variants}]` : ''}${lineTotal != null ? ` — ${from}${lineTotal.toLocaleString('en-US')} ETB` : ' — quote'}`);
     const freebies = (item.complimentaryItems || [])
       .filter((freeItem) => freeItem?.qty > 0 && freeItem?.name)
