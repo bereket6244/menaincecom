@@ -1,5 +1,8 @@
+import { sellingPrice as calculateSellingPrice } from '../../../server/src/selling-price.mjs';
 import type { CostInput, Product } from '../lib/types';
 import { useData } from '../lib/useData';
+
+const displayAmount = (value: number) => Number.isFinite(value) ? value.toFixed(2) : 'Invalid';
 
 type Draft = Omit<Product, 'id'> & { id?: string };
 
@@ -15,7 +18,7 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
     const rate = row.optionId ? input?.options?.find(o => o.id === row.optionId)?.unitCost : input?.options?.length ? row.legacyBaseCost : input?.unitCost;
     return sum + (rate ?? 0) * row.quantity;
   }, 0) || 0;
-  const sellingPrice = (margin: number) => Math.round((subtotal / (1 - margin / 100) + Number.EPSILON) * 100) / 100;
+  const sellingPrice = (margin: number) => calculateSellingPrice(subtotal, margin, cost?.adjustment, cost?.roundUp);
   const profitPerItem = (margin: number) => Math.round((sellingPrice(margin) - subtotal + Number.EPSILON) * 100) / 100;
   const price = cost ? sellingPrice(cost.margin) : product.price;
   const thresholds = cost?.thresholds || [];
@@ -58,10 +61,18 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
       <div className="grid grid-cols-2 gap-2">
         <label>Margin<select className="field" value={cost.margin} onChange={e => change({ ...product, cost: { ...cost, margin: Number(e.target.value) } })}>{margins.map(n => <option key={n} value={n}>{n}%</option>)}</select></label>
       </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <label>Adjustment per item (ETB)<input className="field" type="number" step="any" value={cost.adjustment ?? 0}
+          onChange={e => change({ ...product, cost: { ...cost, adjustment: Number(e.target.value) } })} /></label>
+        <label>Round up to multiple (ETB)<input className="field" type="number" step="any" min="0" placeholder="Off"
+          value={cost.roundUp ?? ''} onChange={e => change({ ...product, cost: { ...cost, roundUp: e.target.value === '' ? null : Number(e.target.value) } })} /></label>
+      </div>
+      <p className="text-xs text-muted">Positive adjustment adds birr; negative subtracts. Margin, then adjustment, then round up, then two decimals. Applies to every quantity tier.</p>
+      {(!Number.isFinite(price) || costBreaks.some(t => !Number.isFinite(t.priceEach))) && <p role="alert" className="text-sm">Enter valid amounts that give a positive selling price for every tier.</p>}
       <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
         <span>Input cost per item (ETB)<br /><strong>{subtotal.toFixed(2)}</strong></span>
-        <span>Selling price per item (ETB)<br /><strong>{sellingPrice(cost.margin).toFixed(2)}</strong></span>
-        <span>Profit per item (ETB)<br /><strong>{profitPerItem(cost.margin).toFixed(2)}</strong></span>
+        <span>Selling price per item (ETB)<br /><strong>{displayAmount(sellingPrice(cost.margin))}</strong></span>
+        <span>Profit per item (ETB)<br /><strong>{displayAmount(profitPerItem(cost.margin))}</strong></span>
       </div>
     </>}
     {!cost && <label className="block">Exact selling price (ETB)<input className="field" type="number" min="0.01" step=".01" value={product.price ?? ''} onChange={e => change({ ...product, price: e.target.value === '' ? null : Number(e.target.value) })} /></label>}
@@ -82,8 +93,8 @@ export function ProductCost({ product, change }: { product: Draft; change: (next
         <label>Minimum quantity<input type="number" min="2" className="field" value={tier.minQty || ''} onChange={e => update({ minQty: Number(e.target.value) })} /></label>
         <label>Tier margin<select className="field" value={tier.margin} onChange={e => update({ margin: Number(e.target.value) })}>{margins.map(n => <option key={n} value={n}>{n}%</option>)}</select></label>
         <button type="button" onClick={() => setThresholds(thresholds.filter((_, i) => i !== index))}>Remove</button>
-        <p className="col-span-3 text-xs">Profit per item (ETB) <strong>{profitPerItem(tier.margin).toFixed(2)}</strong></p>
-        {tier.minQty > 1 && <p className="col-span-3 text-xs">{tier.minQty - 1} &times; {previous} = {((tier.minQty - 1) * previous).toFixed(2)} ETB &middot; {tier.minQty} &times; {sellingPrice(tier.margin)} = {(tier.minQty * sellingPrice(tier.margin)).toFixed(2)} ETB</p>}
+        <p className="col-span-3 text-xs">Profit per item (ETB) <strong>{displayAmount(profitPerItem(tier.margin))}</strong></p>
+        {tier.minQty > 1 && Number.isFinite(sellingPrice(tier.margin)) && Number.isFinite(previous) && <p className="col-span-3 text-xs">{tier.minQty - 1} &times; {previous} = {((tier.minQty - 1) * previous).toFixed(2)} ETB &middot; {tier.minQty} &times; {sellingPrice(tier.margin)} = {(tier.minQty * sellingPrice(tier.margin)).toFixed(2)} ETB</p>}
       </div>;
     })}
     <button type="button" onClick={addThreshold}>+ Add quantity threshold</button>

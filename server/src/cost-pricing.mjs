@@ -1,3 +1,4 @@
+import { sellingPrice } from './selling-price.mjs';
 import { normalizePriceTiers } from './tiered-pricing.mjs';
 
 export function invalidPrice(message) {
@@ -41,6 +42,8 @@ export function pricedProduct(product, inputs, previous = product) {
   let price = product.price == null ? null : money(Number(product.price));
   const items = [];
   if (recipe) {
+    if (recipe.adjustment !== undefined && !Number.isFinite(recipe.adjustment)) invalidPrice('Enter a finite ETB adjustment.');
+    if (recipe.roundUp != null && (!Number.isFinite(recipe.roundUp) || recipe.roundUp <= 0)) invalidPrice('Enter a positive round-up increment or leave it blank.');
     if (!validMargin(recipe.margin))
       invalidPrice('Margin must be at least zero and below 100%.');
     if (!Array.isArray(recipe.items) || !recipe.items.length) invalidPrice('Choose at least one cost input.');
@@ -65,13 +68,13 @@ export function pricedProduct(product, inputs, previous = product) {
         ...(legacyBaseCost != null && { legacyBaseCost }) });
       cost += unitCost * item.quantity;
     }
-    const sellingPrice = margin => money(cost / (1 - margin / 100));
-    price = sellingPrice(recipe.margin);
+    const calculatePrice = margin => sellingPrice(cost, margin, recipe.adjustment, recipe.roundUp);
+    price = calculatePrice(recipe.margin);
     const thresholds = recipe.thresholds ?? [];
     if (!Array.isArray(thresholds) || thresholds.some(t => !Number.isSafeInteger(t?.minQty) || t.minQty < 2
       || !validMargin(t.margin)) || new Set(thresholds.map(t => t.minQty)).size !== thresholds.length)
       invalidPrice('Use distinct whole quantities above one and an allowed margin at each threshold.');
-    tiers = thresholds.map(t => ({ minQty: t.minQty, priceEach: sellingPrice(t.margin) })).sort((a,b) => a.minQty - b.minQty);
+    tiers = thresholds.map(t => ({ minQty: t.minQty, priceEach: calculatePrice(t.margin) })).sort((a,b) => a.minQty - b.minQty);
     if (tiers.some(t => !Number.isFinite(t.priceEach) || t.priceEach <= 0)) invalidPrice('Every threshold must have a positive selling price.');
     if (!Number.isFinite(price) || price <= 0) invalidPrice('Calculated price must be at least 0.01 ETB.');
   } else if (product.pricingMode === 'tiered' && tiers[0]?.minQty === 1) {
@@ -80,7 +83,7 @@ export function pricedProduct(product, inputs, previous = product) {
   const breaks = tiers.filter((tier) => tier.minQty > 1);
   const priced = price > 0 && Number.isFinite(price);
   return { ...product,
-    ...(recipe && { cost: { items, margin: recipe.margin, thresholds: recipe.thresholds ?? [] } }),
+    ...(recipe && { cost: { items, margin: recipe.margin, adjustment: recipe.adjustment ?? 0, roundUp: recipe.roundUp ?? null, thresholds: recipe.thresholds ?? [] } }),
     price: priced ? price : null, pricingMode: breaks.length && priced ? 'tiered' : 'exact',
     priceTiers: breaks.length && priced ? [{ minQty: 1, priceEach: price }, ...breaks] : [],
     ...(!priced && (!product.status || product.status === 'published') ? { status: 'draft' } : {}) };
