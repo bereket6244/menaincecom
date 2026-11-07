@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Plus, Trash2, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import watermarkImage from '../assets/mena-watermark-tile.png';
 import { useData } from '../lib/useData';
@@ -7,22 +7,25 @@ import type { GalleryItem } from '../lib/types';
 import { Button, EmptyState, Spinner } from '../components/ui';
 import { acceptedImageFiles, compressImage, IMAGE_UPLOAD_ACCEPT } from '../lib/utils';
 import { useApp } from '../store/AppContext';
+import { PhotoDropZone } from '../components/PhotoDropZone';
 
 export function GalleryAdmin() {
   const { data: items, loading, reload } = useData<GalleryItem[]>('/admin/gallery');
   const { toast, online } = useApp();
   const [uploading, setUploading] = useState(false);
+  const uploadInProgress = useRef(false);
   const [addWatermark, setAddWatermark] = useState(false);
 
   const sorted = [...(items || [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
   const upload = async (files: FileList | null) => {
-    if (!files?.length) return;
+    if (!files?.length || uploadInProgress.current || !online) return;
     const imageFiles = acceptedImageFiles(files);
     if (imageFiles.length !== files.length) {
       toast('error', 'Please choose photos only. Video uploads are not supported.');
       return;
     }
+    uploadInProgress.current = true;
     setUploading(true);
     try {
       const compressed = await Promise.all(
@@ -39,6 +42,7 @@ export function GalleryAdmin() {
     } catch (err) {
       toast('error', (err as Error).message);
     } finally {
+      uploadInProgress.current = false;
       setUploading(false);
     }
   };
@@ -81,6 +85,7 @@ export function GalleryAdmin() {
 
   return (
     <div className="space-y-2">
+      <PhotoDropZone onFiles={upload} disabled={uploading || !online}>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-sm font-bold">Gallery / Portfolio</h1>
@@ -101,10 +106,11 @@ export function GalleryAdmin() {
               {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
               Upload photos
             </span>
-            <input type="file" accept={IMAGE_UPLOAD_ACCEPT} multiple hidden disabled={uploading} onChange={(e) => upload(e.target.files)} />
+            <input type="file" accept={IMAGE_UPLOAD_ACCEPT} multiple hidden disabled={uploading || !online} onChange={(e) => { void upload(e.target.files); e.target.value = ''; }} />
           </label>
         </div>
       </div>
+      </PhotoDropZone>
 
       {loading && !items ? (
         <div className="flex justify-center py-16"><Spinner /></div>

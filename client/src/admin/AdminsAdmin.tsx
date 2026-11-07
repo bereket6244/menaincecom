@@ -116,6 +116,7 @@ export function AdminsAdmin() {
               <SysLabel>Email or phone</SysLabel>
               <input
                 value={draft.identifier}
+                spellCheck={false}
                 onChange={(e) => setDraft({ ...draft, identifier: e.target.value })}
                 className="field mt-1"
                 placeholder="manager@example.com"

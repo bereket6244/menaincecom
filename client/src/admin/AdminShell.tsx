@@ -106,7 +106,7 @@ export function AdminShell() {
   }
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-bg">
+    <div spellCheck lang="en" className="flex h-dvh flex-col overflow-hidden bg-bg">
       <StatusBanners />
       <Toasts />
 

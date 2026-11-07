@@ -4,6 +4,7 @@ import watermarkImage from '../assets/mena-watermark-tile.png';
 import { apiUpload } from '../lib/api';
 import { acceptedImageFiles, compressImage, IMAGE_UPLOAD_ACCEPT } from '../lib/utils';
 import { useApp } from '../store/AppContext';
+import { PhotoDropZone } from '../components/PhotoDropZone';
 
 const move = (list: string[], from: number, to: number) => {
   const next = [...list];
@@ -37,8 +38,9 @@ export function PhotoUpload({
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const uploading = useRef(false);
   const [addWatermark, setAddWatermark] = useState(false);
-  const { toast } = useApp();
+  const { toast, online } = useApp();
 
   // Live preview of the reordered list while a drag is in progress.
   const [preview, setPreview] = useState<string[] | null>(null);
@@ -59,13 +61,24 @@ export function PhotoUpload({
   }, [!!lift]);
 
   const pick = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0 || uploading.current || !online) return;
+    const remaining = (single ? 1 : max) - photos.length;
+    if (remaining <= 0) {
+      toast('error', 'Remove a photo before adding another.');
+      return;
+    }
     const imageFiles = acceptedImageFiles(files);
     if (imageFiles.length !== files.length) {
       toast('error', 'Please choose photos only. Video uploads are not supported.');
       if (input.current) input.current.value = '';
       return;
     }
+    if (imageFiles.length > remaining) {
+      toast('error', `You can add ${remaining} more photo(s). Please choose fewer photos.`);
+      if (input.current) input.current.value = '';
+      return;
+    }
+    uploading.current = true;
     setBusy(true);
     try {
       const compressed = await Promise.all(
@@ -76,6 +89,7 @@ export function PhotoUpload({
     } catch (err) {
       toast('error', (err as Error).message);
     } finally {
+      uploading.current = false;
       setBusy(false);
       if (input.current) input.current.value = '';
     }
@@ -156,6 +170,7 @@ export function PhotoUpload({
   };
 
   const nudge = (index: number, delta: number) => {
+    if (busy) return;
     const target = index + delta;
     if (target < 0 || target >= photos.length) return;
     onChange(move(photos, index, target));
@@ -175,6 +190,7 @@ export function PhotoUpload({
           Add watermark
         </label>
       )}
+      <PhotoDropZone onFiles={pick} disabled={busy || !online}>
       <div className="flex flex-wrap gap-2">
         {list.map((p, index) => {
           const held = dragIndex === index;
@@ -220,6 +236,7 @@ export function PhotoUpload({
               {!lift && (
                 <button
                   type="button"
+                  disabled={busy}
                   onClick={() => onChange(photos.filter((x) => x !== p))}
                   className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-black/70 text-white hover:bg-rose-600"
                   aria-label="Remove photo"
@@ -234,7 +251,7 @@ export function PhotoUpload({
           <button
             type="button"
             onClick={() => input.current?.click()}
-            disabled={busy}
+            disabled={busy || !online}
             className="flex h-16 w-20 flex-col items-center justify-center gap-1 rounded border border-dashed border-edge text-muted hover:border-pink/50 hover:text-ink disabled:opacity-50"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
@@ -247,9 +264,11 @@ export function PhotoUpload({
           accept={IMAGE_UPLOAD_ACCEPT}
           multiple={!single}
           hidden
+          disabled={busy || !online}
           onChange={(e) => pick(e.target.files)}
         />
       </div>
+      </PhotoDropZone>
       {sortable && (
         <p className="text-[10px] text-muted">Drag a photo to reorder. The first photo is the cover.</p>
       )}
