@@ -615,6 +615,7 @@ function cleanProductInput(input, { includeDefaultLimit = false } = {}) {
 
 function telegramErrorPatch(error) {
   return {
+    ...error?.telegramPatch,
     telegramSyncStatus: 'error',
     telegramSyncError: error?.telegram || {
       message: error?.message || 'Telegram product synchronization failed.',
@@ -633,7 +634,9 @@ async function resolveTelegramProduct(product) {
 async function syncProductPublicationTransition(previous, next) {
   if (shouldUpdateTelegramPost(previous, next)) {
     try {
-      const patch = await updateTelegramProductPost(await resolveTelegramProduct(next));
+      const patch = await updateTelegramProductPost(await resolveTelegramProduct(next), {
+        persist: (patch) => records.update('products', next.id, patch),
+      });
       return await records.update('products', next.id, patch) || { ...next, ...patch };
     } catch (error) {
       const patch = telegramErrorPatch(error);

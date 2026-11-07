@@ -171,7 +171,7 @@ async function appendPhoto(form, field, photo) {
   if (local) {
     const data = await fs.readFile(local.filePath);
     form.set(field, new Blob([data], { type: imageMime(local.filename) }), local.filename);
-    return;
+    return `attach://${field}`;
   }
 
   const url = String(photo || '').trim();
@@ -181,10 +181,11 @@ async function appendPhoto(form, field, photo) {
     const contentType = response.headers.get('content-type') || 'image/jpeg';
     const buffer = await response.arrayBuffer();
     form.set(field, new Blob([buffer], { type: contentType }), path.basename(new URL(url).pathname) || `${field}.jpg`);
-    return;
+    return `attach://${field}`;
   }
 
   form.set(field, url);
+  return url;
 }
 
 async function telegramMultipart(token, method, form) {
@@ -204,10 +205,10 @@ async function telegramMultipart(token, method, form) {
 
 async function sendProductPost(product) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = configuredChannelId();
+  const chatId = product.telegramChannelId || configuredChannelId();
   if (!token || !chatId) throw new Error('Telegram product synchronization is not configured.');
   const caption = formatProductCaption(product);
-  const photos = (product.photos || []).filter(Boolean).slice(0, TELEGRAM_ALBUM_LIMIT);
+  const photos = syncedPhotos(product);
 
   if (photos.length === 0) {
     return [await telegramApi(token, 'sendMessage', { chat_id: chatId, text: caption })];
@@ -226,8 +227,8 @@ async function sendProductPost(product) {
   const media = [];
   for (let index = 0; index < photos.length; index += 1) {
     const field = `photo${index}`;
-    await appendPhoto(form, field, photos[index]);
-    media.push({ type: 'photo', media: `attach://${field}`, ...(index === 0 ? { caption } : {}) });
+    const reference = await appendPhoto(form, field, photos[index]);
+    media.push({ type: 'photo', media: reference, ...(index === 0 ? { caption } : {}) });
   }
   form.set('media', JSON.stringify(media));
   return telegramMultipart(token, 'sendMediaGroup', form);
@@ -240,9 +241,13 @@ export async function createTelegramProductPost(product) {
     const username = channelUsername();
     const photos = (product.photos || []).filter(Boolean).slice(0, TELEGRAM_ALBUM_LIMIT);
     return {
-      telegramChannelId: configuredChannelId(),
+      telegramChannelId: product.telegramChannelId || configuredChannelId(),
       telegramMessageId: first.message_id,
       telegramMessageIds: messages.map((message) => message.message_id),
+      telegramPostVerified: messages.length === Math.max(1, photos.length)
+        && messages.every((message) => Number.isInteger(message.message_id) && message.message_id > 0)
+        && (!photos.length || messages.every((message) => message.photo?.length > 0))
+        && (photos.length ? first.caption : first.text) === formatProductCaption(product),
       telegramPostUrl: username ? `https://t.me/${username}/${first.message_id}` : null,
       telegramPostType: photos.length === 0 ? 'text' : photos.length === 1 ? 'photo' : 'album',
       telegramSyncedPhotos: photos,
@@ -250,6 +255,7 @@ export async function createTelegramProductPost(product) {
       telegramSyncError: null,
       telegramSyncedVersion: Math.max(1, Number(product.contentVersion) || 1),
       telegramLastSyncedAt: new Date().toISOString(),
+      telegramPostedAt: first.date ? new Date(first.date * 1000).toISOString() : new Date().toISOString(),
       originalPublishedAt: product.originalPublishedAt || new Date().toISOString(),
     };
   } catch (error) {
@@ -263,7 +269,9 @@ function isNotModified(error) {
 }
 
 function syncedPhotos(product) {
-  return (product.photos || []).filter(Boolean).slice(0, TELEGRAM_ALBUM_LIMIT);
+  const photos = (product.photos || []).filter(Boolean);
+  if (photos.length > TELEGRAM_ALBUM_LIMIT) throw new Error('Telegram supports up to 10 photos per product album. No photos were silently omitted.');
+  return photos;
 }
 
 function telegramPostType(product) {
@@ -281,8 +289,8 @@ async function editSinglePhotoPost(token, chatId, messageId, product, caption) {
   const form = new FormData();
   form.set('chat_id', chatId);
   form.set('message_id', String(messageId));
-  form.set('media', JSON.stringify({ type: 'photo', media: 'attach://photo', caption }));
-  await appendPhoto(form, 'photo', syncedPhotos(product)[0]);
+  const reference = await appendPhoto(form, 'photo', syncedPhotos(product)[0]);
+  form.set('media', JSON.stringify({ type: 'photo', media: reference, caption }));
   return telegramMultipart(token, 'editMessageMedia', form);
 }
 
@@ -293,10 +301,10 @@ async function editAlbumPhotos(token, chatId, product, photos, caption) {
     const form = new FormData();
     form.set('chat_id', chatId);
     form.set('message_id', String(messageIds[index]));
+    const reference = await appendPhoto(form, 'photo', photos[index]);
     form.set('media', JSON.stringify({
-      type: 'photo', media: 'attach://photo', ...(index === 0 ? { caption } : {}),
+      type: 'photo', media: reference, ...(index === 0 ? { caption } : {}),
     }));
-    await appendPhoto(form, 'photo', photos[index]);
     try {
       await telegramMultipart(token, 'editMessageMedia', form);
     } catch (error) {
@@ -306,7 +314,55 @@ async function editAlbumPhotos(token, chatId, product, photos, caption) {
   return true;
 }
 
-export async function updateTelegramProductPost(product) {
+async function replaceTelegramProductPost(product, persist) {
+  if (!persist) throw new Error('Telegram replacement requires durable product storage.');
+  const postedAt = Date.parse(product.telegramPostedAt || product.originalPublishedAt || '');
+  // Leave a safety margin for upload and storage before Telegram's deletion deadline.
+  if (!Number.isFinite(postedAt) || postedAt > Date.now() || Date.now() - postedAt >= 47 * 60 * 60 * 1000) {
+    throw new Error('A channel admin must remove the old Telegram post before republishing: its age is unknown or exceeds the bot deletion window. No replacement was published.');
+  }
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = product.telegramChannelId || configuredChannelId();
+  const bot = await telegramApi(token, 'getMe');
+  const member = await telegramApi(token, 'getChatMember', { chat_id: chatId, user_id: bot.id });
+  if (member.status !== 'creator' && !(member.status === 'administrator' && member.can_delete_messages)) {
+    throw new Error('A channel admin must grant the bot Delete messages permission before replacing this post. No replacement was published.');
+  }
+  const replacement = await createTelegramProductPost(product);
+  const pending = {
+    ...replacement,
+    telegramSupersededMessageIds: telegramMessageIds(product),
+    telegramCleanupStatus: 'pending',
+  };
+  let saved;
+  try {
+    saved = await persist(pending);
+  } catch (error) {
+    error.telegramPatch = pending;
+    throw error;
+  }
+  if (!saved || saved.telegramChannelId !== replacement.telegramChannelId
+    || saved.telegramMessageId !== replacement.telegramMessageId
+    || !samePhotoList(saved.telegramMessageIds, replacement.telegramMessageIds)
+    || !samePhotoList(saved.telegramSyncedPhotos, replacement.telegramSyncedPhotos)
+    || saved.telegramSyncedVersion !== replacement.telegramSyncedVersion) {
+    const error = new Error('Telegram replacement linkage could not be verified; old messages were preserved.');
+    error.telegramPatch = pending;
+    throw error;
+  }
+  await cleanupSupersededPosts(saved);
+  return { ...pending, telegramCleanupStatus: 'complete' };
+}
+
+async function cleanupSupersededPosts(product) {
+  if (!product.telegramPostVerified) throw new Error('Replacement content and photos could not be verified; old Telegram messages were preserved for review.');
+  const current = new Set(telegramMessageIds(product));
+  const oldIds = (product.telegramSupersededMessageIds || []).filter((id) => !current.has(Number(id)));
+  if (!oldIds.length) throw new Error('Superseded Telegram message IDs are missing; cleanup requires review.');
+  await deleteTelegramProductPost({ ...product, telegramMessageId: null, telegramMessageIds: oldIds });
+}
+
+export async function updateTelegramProductPost(product, { persist } = {}) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = product.telegramChannelId || configuredChannelId();
   const messageId = Number(product.telegramMessageId);
@@ -319,10 +375,17 @@ export async function updateTelegramProductPost(product) {
   const currentMessageCount = telegramMessageIds(product).length;
 
   try {
-    if ((product.telegramPostType && product.telegramPostType !== nextPostType)
+    if (product.telegramCleanupStatus === 'pending') {
+      await cleanupSupersededPosts(product);
+      if (!persist || !await persist({ telegramCleanupStatus: 'complete' })) {
+        throw new Error('Could not save Telegram cleanup status.');
+      }
+    }
+    if ((product.telegramPostType && product.telegramPostType !== nextPostType
+        && !(product.telegramPostType === 'text' && nextPostType === 'photo'))
       || (currentMessageCount > 1 && currentMessageCount !== photos.length)
       || (currentMessageCount === 1 && photos.length > 1)) {
-      throw new Error('Telegram post format changed. A channel admin must verify the replacement and its saved message IDs before removing the old post.');
+      return await replaceTelegramProductPost(product, persist);
     }
 
     if (photos.length === 1) {
@@ -390,7 +453,8 @@ export async function deleteTelegramProductPost(product) {
     const failures = [];
     for (const messageId of messageIds) {
       try {
-        await telegramApi(token, 'deleteMessage', { chat_id: chatId, message_id: messageId });
+        const deleted = await telegramApi(token, 'deleteMessage', { chat_id: chatId, message_id: messageId });
+        if (deleted !== true) throw new Error(`Telegram did not confirm deletion of message ${messageId}.`);
       } catch (error) {
         if (!isAlreadyDeleted(error)) failures.push(error);
       }

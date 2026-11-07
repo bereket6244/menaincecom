@@ -1192,13 +1192,19 @@ export function ProductsAdmin() {
           : cleanComplimentaryItems(editing.complimentaryItems),
         universalComplimentaryItemIds: editing.isAddon ? [] : editing.universalComplimentaryItemIds || [],
       };
-      const saved = await apiSend<{ status?: string; telegramMessageId?: number; telegramSyncStatus?: string }>(
+      const saved = await apiSend<{
+        status?: string; telegramMessageId?: number; telegramSyncStatus?: string;
+        telegramSyncError?: { message?: string }; telegramCleanupStatus?: string;
+      }>(
         editing.id ? 'PUT' : 'POST',
         editing.id ? `/admin/products/${editing.id}` : '/admin/products',
         payload,
       );
       if (saved.status === 'published' && (!saved.telegramMessageId || saved.telegramSyncStatus === 'error')) {
-        toast('error', 'Product saved on the website. Check Telegram synchronization in the channel.');
+        const detail = saved.telegramSyncError?.message || 'Check Telegram synchronization in the channel.';
+        toast('error', `Product saved on the website. ${saved.telegramCleanupStatus === 'pending' ? 'Old Telegram post cleanup is pending. ' : ''}${detail}`);
+      } else if (saved.telegramCleanupStatus === 'complete') {
+        toast('success', 'Product saved and synchronized to Telegram. Old post cleanup is complete.');
       } else {
         toast('success', 'Product saved.');
       }
