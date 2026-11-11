@@ -23,13 +23,14 @@ interface Props<T extends { id: string }> {
   deleteConfirmation?: string | ((ids: string[]) => string);
   bulkActions?: (ids: string[], clearSelection: () => void) => ReactNode;
   toolbar?: ReactNode;
+  showSortControl?: boolean;
   emptyMessage?: string;
 }
 
 /** Dense spreadsheet-style table: search, sorting, selection, bulk actions. */
 export function DataTable<T extends { id: string }>({
   rows, columns, searchText, searchPlaceholder = 'Search…', loading,
-  onRowClick, onBulkDelete, deleteConfirmation, bulkActions, toolbar, emptyMessage = 'No records.',
+  onRowClick, onBulkDelete, deleteConfirmation, bulkActions, toolbar, showSortControl = false, emptyMessage = 'No records.',
 }: Props<T>) {
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState<string | null>(null);
@@ -95,6 +96,31 @@ export function DataTable<T extends { id: string }>({
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={searchPlaceholder} className="field pl-8" />
         </div>
         <span className="syslabel hidden sm:inline">{visible.length} rows</span>
+        {showSortControl && columns.some((column) => column.sortValue) && (
+          <div className="flex items-center gap-1.5">
+            <span className="hidden text-[10px] font-bold uppercase tracking-wide text-muted md:inline">Sort</span>
+            <select
+              value={sortKey || ''}
+              onChange={(event) => { setSortKey(event.target.value || null); setSortDir(1); }}
+              className="field w-32 py-1 text-[11px]"
+              aria-label="Sort products by"
+            >
+              <option value="">Default order</option>
+              {columns.filter((column) => column.sortValue).map((column) => (
+                <option key={column.key} value={column.key}>{column.label || column.key}</option>
+              ))}
+            </select>
+            <button
+              type="button"
+              disabled={!sortKey}
+              onClick={() => setSortDir((direction) => direction === 1 ? -1 : 1)}
+              className="field w-20 py-1 text-[11px] disabled:opacity-40"
+              aria-label="Toggle sort direction"
+            >
+              {sortDir === 1 ? 'Ascending' : 'Descending'}
+            </button>
+          </div>
+        )}
         {selected.size > 0 && bulkActions?.(selectedIds, clearSelection)}
         {onBulkDelete && selected.size > 0 && (
           <Button variant="danger" onClick={confirmAndDelete}>

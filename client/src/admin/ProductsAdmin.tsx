@@ -1333,6 +1333,7 @@ export function ProductsAdmin() {
       <DataTable
         rows={filteredProducts}
         columns={columns}
+        showSortControl
         loading={loading}
         searchText={(p) => `${p.name} ${p.description} ${catLabel(p)}`}
         onRowClick={(p) => setEditing({ ...p, priceTiers: (p.priceTiers || []).filter(t => t.minQty > 1) })}
