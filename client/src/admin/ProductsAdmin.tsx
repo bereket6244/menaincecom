@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Check, GripVertical, MoreHorizontal, Pencil, Plus, Search, SlidersHorizontal, Star, Tags, X } from 'lucide-react';
+import { Check, Filter, GripVertical, MoreHorizontal, Pencil, Plus, Search, SlidersHorizontal, Star, Tags, X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import { apiSend } from '../lib/api';
-import type { Category, Product, UniversalComplimentaryItem, VariantGroup } from '../lib/types';
+import type { Category, CostInput, Product, UniversalComplimentaryItem, VariantGroup } from '../lib/types';
 import { DataTable } from './DataTable';
 import type { Column } from './DataTable';
 import { Button, IconButton, Modal, SysLabel } from '../components/ui';
@@ -1121,14 +1121,35 @@ export function ProductsAdmin() {
   const { data: products, loading, reload, setData } = useData<Product[]>('/admin/products');
   const { data: categories } = useData<Category[]>('/categories');
   const { data: universalComplimentaryItems } = useData<UniversalComplimentaryItem[]>('/admin/complimentary-items');
+  const { data: costInputs } = useData<CostInput[]>('/admin/cost-inputs');
   const { toast, online } = useApp();
   const [editing, setEditing] = useState<Draft | null>(null);
   const [bulkEditingIds, setBulkEditingIds] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState({ marginMin: '', marginMax: '', profitMin: '', profitMax: '', officeMin: '', officeMax: '' });
 
   const optionLibrary = useOptionLibrary(products);
   const catNames = (product: Pick<Product, 'categoryId' | 'categoryIds'>) => productCategoryNames(product, categories || []);
   const catLabel = (product: Pick<Product, 'categoryId' | 'categoryIds'>) => catNames(product).join(', ') || '—';
+  const officeCost = (product: Product) => {
+    if (!product.cost) return 0;
+    return product.cost.items.reduce((sum, row) => {
+      const input = costInputs?.find((item) => item.id === row.inputId);
+      const unitCost = row.optionId
+        ? input?.options?.find((option) => option.id === row.optionId)?.unitCost
+        : input?.options?.length ? row.legacyBaseCost : input?.unitCost;
+      return sum + (Number.isFinite(unitCost) && Number.isFinite(row.quantity) ? (unitCost || 0) * row.quantity : 0);
+    }, 0);
+  };
+  const profitPerCard = (product: Product) => (product.price ?? 0) - officeCost(product);
+  const inRange = (value: number, min: string, max: string) =>
+    (!min || value >= Number(min)) && (!max || value <= Number(max));
+  const filteredProducts = (products || []).filter((product) => inRange(product.cost?.margin ?? 0, filters.marginMin, filters.marginMax)
+    && inRange(profitPerCard(product), filters.profitMin, filters.profitMax)
+    && inRange(officeCost(product), filters.officeMin, filters.officeMax));
+  const activeFilterCount = Object.values(filters).filter(Boolean).length;
+  const clearFilters = () => setFilters({ marginMin: '', marginMax: '', profitMin: '', profitMax: '', officeMin: '', officeMax: '' });
   const addonOptions = (products || []).filter((p) => p.isAddon && p.id !== editing?.id);
   const editingCategoryIds = editing ? productCategoryIds(editing) : [];
   const toggleEditingCategory = (id: string) => {
@@ -1274,6 +1295,21 @@ export function ProductsAdmin() {
       ),
       sortValue: (p) => p.price ?? -1,
     },
+    {
+      key: 'margin', label: 'Margin',
+      render: (p) => p.cost ? `${p.cost.margin}%` : '—',
+      sortValue: (p) => p.cost?.margin ?? -1,
+    },
+    {
+      key: 'profit', label: 'Profit / card',
+      render: (p) => p.cost ? `${profitPerCard(p).toFixed(2)} ETB` : '—',
+      sortValue: profitPerCard,
+    },
+    {
+      key: 'officeCost', label: 'Office cost',
+      render: (p) => p.cost ? `${officeCost(p).toFixed(2)} ETB` : '—',
+      sortValue: officeCost,
+    },
     { key: 'variants', label: 'Variants', render: (p) => p.variants.length || '—' },
     {
       key: 'limit',
@@ -1295,7 +1331,7 @@ export function ProductsAdmin() {
     <div className="flex h-full min-h-0 flex-1 flex-col gap-2 overflow-hidden">
       <h1 className="text-sm font-bold">Products</h1>
       <DataTable
-        rows={products}
+        rows={filteredProducts}
         columns={columns}
         loading={loading}
         searchText={(p) => `${p.name} ${p.description} ${catLabel(p)}`}
@@ -1310,12 +1346,44 @@ export function ProductsAdmin() {
           `Delete ${ids.length} product${ids.length === 1 ? '' : 's'}?\n\nThis hides ${ids.length === 1 ? 'it' : 'them'} from the website. This cannot be undone from the admin table.`
         }
         toolbar={
-          <Button onClick={() => setEditing({ ...EMPTY })} disabled={!online}>
-            <Plus className="h-3.5 w-3.5" /> New product
-          </Button>
+          <>
+            <Button variant={filtersOpen || activeFilterCount ? 'outline' : 'ghost'} onClick={() => setFiltersOpen((open) => !open)}>
+              <Filter className="h-3.5 w-3.5" /> Filters{activeFilterCount ? ` (${activeFilterCount})` : ''}
+            </Button>
+            <Button onClick={() => setEditing({ ...EMPTY })} disabled={!online}>
+              <Plus className="h-3.5 w-3.5" /> New product
+            </Button>
+          </>
         }
         emptyMessage="No products yet — add the first design."
       />
+
+      {filtersOpen && (
+        <div className="order-first rounded-md border border-edge bg-surface2 p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-extrabold text-ink">Filter products</p>
+              <p className="text-[10px] text-muted">Use minimum and maximum values. Office cost means the recipe input cost per card.</p>
+            </div>
+            {activeFilterCount > 0 && <Button variant="ghost" onClick={clearFilters}>Clear</Button>}
+          </div>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {([
+              ['margin', 'Profit margin (%)', 'marginMin', 'marginMax'],
+              ['profit', 'Profit amount / card (ETB)', 'profitMin', 'profitMax'],
+              ['office', 'Office cost / card (ETB)', 'officeMin', 'officeMax'],
+            ] as const).map(([, label, minKey, maxKey]) => (
+              <div key={minKey}>
+                <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-muted">{label}</span>
+                <div className="grid grid-cols-2 gap-1">
+                  <input type="number" step="any" placeholder="Min" value={filters[minKey]} onChange={(e) => setFilters({ ...filters, [minKey]: e.target.value })} className="field py-1 text-[11px]" />
+                  <input type="number" step="any" placeholder="Max" value={filters[maxKey]} onChange={(e) => setFilters({ ...filters, [maxKey]: e.target.value })} className="field py-1 text-[11px]" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <BulkEditProductsModal
         open={bulkEditingIds.length > 0}
