@@ -1127,7 +1127,9 @@ export function ProductsAdmin() {
   const [bulkEditingIds, setBulkEditingIds] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filters, setFilters] = useState({ marginMin: '', marginMax: '', profitMin: '', profitMax: '', officeMin: '', officeMax: '' });
+  const [filters, setFilters] = useState({ marginMin: '', marginMax: '', profitMin: '', profitMax: '' });
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const [selectedMaterialIds, setSelectedMaterialIds] = useState<string[]>([]);
 
   const optionLibrary = useOptionLibrary(products);
   const catNames = (product: Pick<Product, 'categoryId' | 'categoryIds'>) => productCategoryNames(product, categories || []);
@@ -1142,15 +1144,23 @@ export function ProductsAdmin() {
       return sum + (Number.isFinite(unitCost) && Number.isFinite(row.quantity) ? (unitCost || 0) * row.quantity : 0);
     }, 0);
   };
-  const officeCost = (product: Product) => product.cost?.adjustment ?? 0;
-  const profitPerCard = (product: Product) => (product.price ?? 0) - inputCost(product) - officeCost(product);
+  const profitPerCard = (product: Product) => (product.price ?? 0) - inputCost(product);
+  const materialCost = (product: Product, materialId: string) => {
+    const row = product.cost?.items.find((item) => item.inputId === materialId);
+    if (!row) return 0;
+    const input = costInputs?.find((item) => item.id === materialId);
+    const unitCost = row.optionId
+      ? input?.options?.find((option) => option.id === row.optionId)?.unitCost
+      : input?.options?.length ? row.legacyBaseCost : input?.unitCost;
+    return Number.isFinite(unitCost) && Number.isFinite(row.quantity) ? (unitCost || 0) * row.quantity : 0;
+  };
   const inRange = (value: number, min: string, max: string) =>
     (!min || value >= Number(min)) && (!max || value <= Number(max));
   const filteredProducts = (products || []).filter((product) => inRange(product.cost?.margin ?? 0, filters.marginMin, filters.marginMax)
     && inRange(profitPerCard(product), filters.profitMin, filters.profitMax)
-    && inRange(officeCost(product), filters.officeMin, filters.officeMax));
+    );
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
-  const clearFilters = () => setFilters({ marginMin: '', marginMax: '', profitMin: '', profitMax: '', officeMin: '', officeMax: '' });
+  const clearFilters = () => setFilters({ marginMin: '', marginMax: '', profitMin: '', profitMax: '' });
   const addonOptions = (products || []).filter((p) => p.isAddon && p.id !== editing?.id);
   const editingCategoryIds = editing ? productCategoryIds(editing) : [];
   const toggleEditingCategory = (id: string) => {
@@ -1306,11 +1316,15 @@ export function ProductsAdmin() {
       render: (p) => p.cost ? `${profitPerCard(p).toFixed(2)} ETB` : '—',
       sortValue: profitPerCard,
     },
-    {
-      key: 'officeCost', label: 'Office cost',
-      render: (p) => p.cost ? `${officeCost(p).toFixed(2)} ETB` : '—',
-      sortValue: officeCost,
-    },
+    ...selectedMaterialIds.map((materialId) => {
+      const material = costInputs?.find((input) => input.id === materialId);
+      return {
+        key: `material:${materialId}`,
+        label: material?.name || 'Material',
+        render: (p: Product) => p.cost ? `${materialCost(p, materialId).toFixed(2)} ETB` : '—',
+        sortValue: (p: Product) => materialCost(p, materialId),
+      };
+    }),
     { key: 'variants', label: 'Variants', render: (p) => p.variants.length || '—' },
     {
       key: 'limit',
@@ -1352,6 +1366,9 @@ export function ProductsAdmin() {
             <Button variant={filtersOpen || activeFilterCount ? 'outline' : 'ghost'} onClick={() => setFiltersOpen((open) => !open)}>
               <Filter className="h-3.5 w-3.5" /> Filters{activeFilterCount ? ` (${activeFilterCount})` : ''}
             </Button>
+            <Button variant={columnsOpen ? 'outline' : 'ghost'} onClick={() => setColumnsOpen((open) => !open)}>
+              <SlidersHorizontal className="h-3.5 w-3.5" /> Columns
+            </Button>
             <Button onClick={() => setEditing({ ...EMPTY })} disabled={!online}>
               <Plus className="h-3.5 w-3.5" /> New product
             </Button>
@@ -1365,15 +1382,14 @@ export function ProductsAdmin() {
           <div className="mb-2 flex items-center justify-between">
             <div>
               <p className="text-xs font-extrabold text-ink">Filter products</p>
-              <p className="text-[10px] text-muted">Use minimum and maximum values. Office cost is the per-card overhead adjustment.</p>
+              <p className="text-[10px] text-muted">Use minimum and maximum values.</p>
             </div>
             {activeFilterCount > 0 && <Button variant="ghost" onClick={clearFilters}>Clear</Button>}
           </div>
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-2">
             {([
               ['margin', 'Profit margin (%)', 'marginMin', 'marginMax'],
               ['profit', 'Profit amount / card (ETB)', 'profitMin', 'profitMax'],
-              ['office', 'Office cost / card (ETB)', 'officeMin', 'officeMax'],
             ] as const).map(([, label, minKey, maxKey]) => (
               <div key={minKey}>
                 <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-muted">{label}</span>
@@ -1383,6 +1399,29 @@ export function ProductsAdmin() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {columnsOpen && (
+        <div className="order-first rounded-md border border-edge bg-surface2 p-3">
+          <p className="text-xs font-extrabold text-ink">Material columns</p>
+          <p className="mt-0.5 text-[10px] text-muted">Choose material rows from Materials to show each product’s cost contribution.</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {(costInputs || []).map((material) => {
+              const selected = selectedMaterialIds.includes(material.id);
+              return (
+                <button
+                  key={material.id}
+                  type="button"
+                  onClick={() => setSelectedMaterialIds((ids) => selected ? ids.filter((id) => id !== material.id) : [...ids, material.id])}
+                  className={cx('rounded border px-2.5 py-1.5 text-[11px] font-semibold', selected ? 'border-pink bg-pink/15 text-ink' : 'border-edge bg-surface text-muted hover:text-ink')}
+                >
+                  {material.name}
+                </button>
+              );
+            })}
+            {!costInputs?.length && <span className="text-[11px] text-muted">No materials found.</span>}
           </div>
         </div>
       )}
