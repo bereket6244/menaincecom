@@ -1132,7 +1132,7 @@ export function ProductsAdmin() {
   const optionLibrary = useOptionLibrary(products);
   const catNames = (product: Pick<Product, 'categoryId' | 'categoryIds'>) => productCategoryNames(product, categories || []);
   const catLabel = (product: Pick<Product, 'categoryId' | 'categoryIds'>) => catNames(product).join(', ') || '—';
-  const officeCost = (product: Product) => {
+  const inputCost = (product: Product) => {
     if (!product.cost) return 0;
     return product.cost.items.reduce((sum, row) => {
       const input = costInputs?.find((item) => item.id === row.inputId);
@@ -1142,7 +1142,8 @@ export function ProductsAdmin() {
       return sum + (Number.isFinite(unitCost) && Number.isFinite(row.quantity) ? (unitCost || 0) * row.quantity : 0);
     }, 0);
   };
-  const profitPerCard = (product: Product) => (product.price ?? 0) - officeCost(product);
+  const officeCost = (product: Product) => product.cost?.adjustment ?? 0;
+  const profitPerCard = (product: Product) => (product.price ?? 0) - inputCost(product) - officeCost(product);
   const inRange = (value: number, min: string, max: string) =>
     (!min || value >= Number(min)) && (!max || value <= Number(max));
   const filteredProducts = (products || []).filter((product) => inRange(product.cost?.margin ?? 0, filters.marginMin, filters.marginMax)
@@ -1364,7 +1365,7 @@ export function ProductsAdmin() {
           <div className="mb-2 flex items-center justify-between">
             <div>
               <p className="text-xs font-extrabold text-ink">Filter products</p>
-              <p className="text-[10px] text-muted">Use minimum and maximum values. Office cost means the recipe input cost per card.</p>
+              <p className="text-[10px] text-muted">Use minimum and maximum values. Office cost is the per-card overhead adjustment.</p>
             </div>
             {activeFilterCount > 0 && <Button variant="ghost" onClick={clearFilters}>Clear</Button>}
           </div>
