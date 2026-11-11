@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Check, Filter, GripVertical, MoreHorizontal, Pencil, Plus, Search, SlidersHorizontal, Star, Tags, X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import { apiSend } from '../lib/api';
@@ -1127,9 +1127,22 @@ export function ProductsAdmin() {
   const [bulkEditingIds, setBulkEditingIds] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filters, setFilters] = useState({ marginMin: '', marginMax: '', profitMin: '', profitMax: '' });
+  const [filters, setFilters] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('mena:products:filters') || 'null') || { marginMin: '', marginMax: '', profitMin: '', profitMax: '' }; } catch { return { marginMin: '', marginMax: '', profitMin: '', profitMax: '' }; }
+  });
   const [columnsOpen, setColumnsOpen] = useState(false);
-  const [selectedMaterialIds, setSelectedMaterialIds] = useState<string[]>([]);
+  const [selectedMaterialIds, setSelectedMaterialIds] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('mena:products:material-columns') || '[]'); } catch { return []; }
+  });
+
+  useEffect(() => { localStorage.setItem('mena:products:filters', JSON.stringify(filters)); }, [filters]);
+  useEffect(() => {
+    if (!costInputs) return;
+    const validIds = new Set((costInputs || []).map((input) => input.id));
+    const validSelection = selectedMaterialIds.filter((id) => validIds.has(id));
+    if (validSelection.length !== selectedMaterialIds.length) setSelectedMaterialIds(validSelection);
+    localStorage.setItem('mena:products:material-columns', JSON.stringify(validSelection));
+  }, [costInputs, selectedMaterialIds]);
 
   const optionLibrary = useOptionLibrary(products);
   const catNames = (product: Pick<Product, 'categoryId' | 'categoryIds'>) => productCategoryNames(product, categories || []);
@@ -1349,6 +1362,7 @@ export function ProductsAdmin() {
         rows={filteredProducts}
         columns={columns}
         showSortControl
+        storageKey="mena:products"
         loading={loading}
         searchText={(p) => `${p.name} ${p.description} ${catLabel(p)}`}
         onRowClick={(p) => setEditing({ ...p, priceTiers: (p.priceTiers || []).filter(t => t.minQty > 1) })}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ArrowDown, ArrowUp, ArrowUpDown, Search, Trash2 } from 'lucide-react';
 import { Button, EmptyState, Spinner } from '../components/ui';
@@ -24,18 +24,30 @@ interface Props<T extends { id: string }> {
   bulkActions?: (ids: string[], clearSelection: () => void) => ReactNode;
   toolbar?: ReactNode;
   showSortControl?: boolean;
+  storageKey?: string;
   emptyMessage?: string;
 }
 
 /** Dense spreadsheet-style table: search, sorting, selection, bulk actions. */
 export function DataTable<T extends { id: string }>({
   rows, columns, searchText, searchPlaceholder = 'Search…', loading,
-  onRowClick, onBulkDelete, deleteConfirmation, bulkActions, toolbar, showSortControl = false, emptyMessage = 'No records.',
+  onRowClick, onBulkDelete, deleteConfirmation, bulkActions, toolbar, showSortControl = false, storageKey, emptyMessage = 'No records.',
 }: Props<T>) {
   const [query, setQuery] = useState('');
-  const [sortKey, setSortKey] = useState<string | null>(null);
-  const [sortDir, setSortDir] = useState<1 | -1>(1);
+  const [sortKey, setSortKey] = useState<string | null>(() => {
+    if (!storageKey || typeof window === 'undefined') return null;
+    try { return JSON.parse(localStorage.getItem(`${storageKey}:sort`) || 'null')?.key || null; } catch { return null; }
+  });
+  const [sortDir, setSortDir] = useState<1 | -1>(() => {
+    if (!storageKey || typeof window === 'undefined') return 1;
+    try { return JSON.parse(localStorage.getItem(`${storageKey}:sort`) || 'null')?.dir === -1 ? -1 : 1; } catch { return 1; }
+  });
   const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!storageKey || typeof window === 'undefined') return;
+    localStorage.setItem(`${storageKey}:sort`, JSON.stringify({ key: sortKey, dir: sortDir }));
+  }, [storageKey, sortKey, sortDir]);
 
   const visible = useMemo(() => {
     let list = rows || [];
