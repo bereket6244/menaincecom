@@ -105,7 +105,7 @@ export function DataTable<T extends { id: string }>({
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-0 flex-1 sm:max-w-xs">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={searchPlaceholder} className="field pl-8" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={searchPlaceholder} className="field pl-10" />
         </div>
         <span className="syslabel hidden sm:inline">{visible.length} rows</span>
         {showSortControl && columns.some((column) => column.sortValue) && (

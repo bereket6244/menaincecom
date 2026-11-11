@@ -1131,6 +1131,7 @@ export function ProductsAdmin() {
     try { return JSON.parse(localStorage.getItem('mena:products:filters') || 'null') || { marginMin: '', marginMax: '', profitMin: '', profitMax: '' }; } catch { return { marginMin: '', marginMax: '', profitMin: '', profitMax: '' }; }
   });
   const [columnsOpen, setColumnsOpen] = useState(false);
+  const [materialQuery, setMaterialQuery] = useState('');
   const [selectedMaterialIds, setSelectedMaterialIds] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('mena:products:material-columns') || '[]'); } catch { return []; }
   });
@@ -1421,8 +1422,12 @@ export function ProductsAdmin() {
         <div className="order-first rounded-md border border-edge bg-surface2 p-3">
           <p className="text-xs font-extrabold text-ink">Material columns</p>
           <p className="mt-0.5 text-[10px] text-muted">Choose material rows from Materials to show each product’s cost contribution.</p>
+          <div className="relative mt-2 max-w-sm">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
+            <input value={materialQuery} onChange={(event) => setMaterialQuery(event.target.value)} placeholder="Search materials…" className="field pl-10 py-1.5 text-[11px]" aria-label="Search materials" />
+          </div>
           <div className="mt-2 flex flex-wrap gap-2">
-            {(costInputs || []).map((material) => {
+            {(costInputs || []).filter((material) => material.name.toLowerCase().includes(materialQuery.trim().toLowerCase())).map((material) => {
               const selected = selectedMaterialIds.includes(material.id);
               return (
                 <button
