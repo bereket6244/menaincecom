@@ -1,18 +1,23 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Check, Clipboard, RotateCcw, SlidersHorizontal } from 'lucide-react';
 import { Button } from '../components/ui';
+import type { CostInput, Product } from '../lib/types';
+import { useData } from '../lib/useData';
+import { SearchChoice } from './SearchChoice';
 
-const presets = [
-  ['Box scroll card', 175], ['Acrylic card', 189.6], ['Metropolitan with paper logo', 105],
-  ['Metropolitan with wood logo', 177.6], ['Pocket card', 71], ['Amigos tracing', 59],
-  ['Hibret Bank card', 160], ['Grand opening with manila', 89], ['Qatar Embassy', 82],
-  ['Dashen Bank transparent inside', 351], ['First Lady box invitation', 1800],
-  ['Acrylic with transparent', 229], ['Etete coffee card', 91], ['Velvet with acrylic card', 340],
-  ['A5 print', 45], ['1/3 acrylic', 340], ['Golden acrylic', 340], ['Airlines velvet card', 185],
-  ['Santim Pay with transparent acrylic', 315], ['Golden acrylic (premium)', 475],
-  ['Acrylic with transparent (imported paper)', 259], ['Imported paper', 77],
-  ['Construction with golden ribbon', 80], ['Calendar', 140],
-] as const;
+function recipeCost(product: Product | undefined, inputs: CostInput[] | null): number | null {
+  if (!product?.cost?.items?.length || !inputs) return null;
+  let total = 0;
+  for (const item of product.cost.items) {
+    const input = inputs.find(candidate => candidate.id === item.inputId);
+    const unitCost = item.optionId
+      ? input?.options?.find(option => option.id === item.optionId)?.unitCost
+      : input?.options?.length ? item.legacyBaseCost : input?.unitCost;
+    if (!Number.isFinite(unitCost) || !(unitCost! > 0) || !Number.isFinite(item.quantity) || item.quantity <= 0) return null;
+    total += unitCost! * item.quantity;
+  }
+  return total;
+}
 
 type Draft = { preset: string; name: string; quantity: string; cost: string; markup: string; incomeTax: string; dividendTax: string; vat: string; rounding: string };
 const initial: Draft = { preset: '', name: '', quantity: '1', cost: '', markup: '40', incomeTax: '35', dividendTax: '15', vat: '15', rounding: 'none' };
@@ -37,14 +42,28 @@ export function calculateCorporateQuote(draft: Draft, markupOverride?: number) {
 }
 
 export function CorporateCalculator() {
+  const { data: websiteProducts, loading: catalogLoading, error: catalogError, reload: reloadCatalog } = useData<Product[]>('/products');
+  const { data: adminProducts, loading: adminLoading, error: adminError } = useData<Product[]>('/admin/products');
+  const { data: inputs, loading: inputsLoading, error: inputsError } = useData<CostInput[]>('/admin/cost-inputs');
   const [draft, setDraft] = useState<Draft>(initial);
+  const [costEdited, setCostEdited] = useState(false);
   const [advanced, setAdvanced] = useState(false);
   const [copied, setCopied] = useState(false);
   const result = useMemo(() => calculateCorporateQuote(draft), [draft]);
   const update = (field: keyof Draft, value: string) => { setDraft(previous => ({ ...previous, [field]: value })); setCopied(false); };
-  const choose = (name: string) => {
-    const preset = presets.find(item => item[0] === name);
-    setDraft(previous => ({ ...previous, preset: name, name: preset?.[0] || '', cost: preset ? String(preset[1]) : '' }));
+  const products = websiteProducts || (adminProducts || []).filter(product => !product.status || product.status === 'published');
+  const options = [{ value: '', label: 'Custom item' }, ...products.map(product => ({ value: product.id, label: product.name }))];
+  const selectedProduct = products.find(product => product.id === draft.preset);
+  useEffect(() => {
+    if (!draft.preset || costEdited) return;
+    const cost = recipeCost(adminProducts?.find(product => product.id === draft.preset), inputs);
+    if (cost != null) setDraft(previous => previous.preset === draft.preset && previous.cost === '' ? { ...previous, cost: String(cost) } : previous);
+  }, [draft.preset, costEdited, adminProducts, inputs]);
+  const choose = (id: string) => {
+    const product = products.find(item => item.id === id);
+    const cost = recipeCost(adminProducts?.find(item => item.id === id), inputs);
+    setDraft(previous => ({ ...previous, preset: id, name: product?.name || '', cost: cost == null ? '' : String(cost) }));
+    setCostEdited(false);
     setCopied(false);
   };
   const copy = async () => {
@@ -57,22 +76,20 @@ export function CorporateCalculator() {
     <div className="space-y-5">
       <section className="rounded-xl border border-edge bg-surface p-4 sm:p-5">
         <div className="mb-5 flex items-start justify-between gap-3">
-          <div><h2 className="text-base font-bold">Quote inputs</h2><p className="mt-1 text-xs text-muted">Choose a reference item or enter a custom production cost.</p></div>
-          <button type="button" onClick={() => { setDraft(initial); setCopied(false); }} className="flex shrink-0 items-center gap-1 text-xs font-semibold text-muted hover:text-ink"><RotateCcw className="h-3.5 w-3.5" /> Reset</button>
+          <div><h2 className="text-base font-bold">Quote inputs</h2><p className="mt-1 text-xs text-muted">Choose a website product or enter a custom production cost.</p></div>
+          <button type="button" onClick={() => { setDraft(initial); setCostEdited(false); setCopied(false); }} className="flex shrink-0 items-center gap-1 text-xs font-semibold text-muted hover:text-ink"><RotateCcw className="h-3.5 w-3.5" /> Reset</button>
         </div>
         <div className="space-y-4">
-          <label className="block text-sm font-medium">Reference product
-            <select className="field mt-1" value={draft.preset} onChange={event => choose(event.target.value)}>
-              <option value="">Custom item</option>
-              {presets.map(([name, cost]) => <option key={name} value={name}>{name} · {money(cost)}</option>)}
-            </select>
-          </label>
+          <SearchChoice label="Website product" value={draft.preset} options={options} placeholder="Search published products" onChange={choose} />
+          {catalogLoading && !websiteProducts && <p role="status" className="text-xs text-muted">Loading website products…</p>}
+          {catalogError && !websiteProducts && !adminProducts && <p role="alert" className="text-xs text-muted">Could not load website products. <button type="button" className="underline" onClick={reloadCatalog}>Retry</button></p>}
+          {selectedProduct && !draft.cost && <p className="text-xs text-muted">{adminLoading || inputsLoading ? 'Loading saved production cost…' : adminError || inputsError ? 'Saved production costs require an admin session. Enter the cost manually in this local preview.' : 'This product has no production cost recipe. Enter its cost below; the website selling price is not used as cost.'}</p>}
           <label className="block text-sm font-medium">Item or project name
             <input className="field mt-1" value={draft.name} onChange={event => update('name', event.target.value)} placeholder="e.g. Corporate invitation" />
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm font-medium">Production cost per item (ETB)
-              <input className="field mt-1" type="number" min="0.01" step="any" inputMode="decimal" value={draft.cost} onChange={event => update('cost', event.target.value)} placeholder="Enter cost" />
+              <input className="field mt-1" type="number" min="0.01" step="any" inputMode="decimal" value={draft.cost} onChange={event => { setCostEdited(true); update('cost', event.target.value); }} placeholder="Enter cost" />
             </label>
             <label className="block text-sm font-medium">Quantity
               <input className="field mt-1" type="number" min="1" step="1" inputMode="numeric" value={draft.quantity} onChange={event => update('quantity', event.target.value)} />
@@ -132,7 +149,7 @@ export function CorporateCalculator() {
           </button>;
         })}</div>
       </section>
-      <p className="px-1 text-xs leading-relaxed text-muted">Reference costs are a snapshot from the price calculator spreadsheet and can be changed for each quote. Tax figures are pricing assumptions; review the final quote before sharing. Nothing here changes catalog prices or publishes a product.</p>
+      <p className="px-1 text-xs leading-relaxed text-muted">Products come from the website catalog. When a product has a saved materials recipe, its current production cost fills in automatically; you can edit it for this quote. Tax figures are pricing assumptions. Nothing here changes catalog prices or publishes a product.</p>
     </div>
   </div>;
 }
