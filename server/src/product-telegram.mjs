@@ -314,7 +314,7 @@ async function editAlbumPhotos(token, chatId, product, photos, caption) {
   return true;
 }
 
-async function replaceTelegramProductPost(product, persist) {
+export async function replaceTelegramProductPost(product, persist) {
   if (!persist) throw new Error('Telegram replacement requires durable product storage.');
   const postedAt = Date.parse(product.telegramPostedAt || product.originalPublishedAt || '');
   // Leave a safety margin for upload and storage before Telegram's deletion deadline.

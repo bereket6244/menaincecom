@@ -1209,7 +1209,7 @@ export function ProductsAdmin() {
     });
   };
 
-  const save = async () => {
+  const save = async (replaceTelegram = false) => {
     if (!editing) return;
     if (!editing.name.trim()) { toast('error', 'Product name is required.'); return; }
     const selectedCategoryIds = productCategoryIds(editing);
@@ -1246,6 +1246,20 @@ export function ProductsAdmin() {
         editing.id ? `/admin/products/${editing.id}` : '/admin/products',
         payload,
       );
+      if (replaceTelegram && editing.id) {
+        const replaced = await apiSend<{ telegramCleanupStatus?: string }>(
+          'POST', `/admin/products/${editing.id}/telegram/replace`, {},
+        );
+        if (replaced.telegramCleanupStatus !== 'complete') {
+          toast('error', 'Product edits were saved, but Telegram old post cleanup is not confirmed. Check synchronization status before retrying.');
+          reload();
+          return;
+        }
+        toast('success', 'Product edits saved to Telegram. All old linked post messages were deleted and cleanup was confirmed.');
+        setEditing(null);
+        reload();
+        return;
+      }
       if (saved.status === 'published' && (!saved.telegramMessageId || saved.telegramSyncStatus === 'error')) {
         const detail = saved.telegramSyncError?.message || 'Check Telegram synchronization in the channel.';
         toast('error', `Product saved on the website. ${saved.telegramCleanupStatus === 'pending' ? 'Old Telegram post cleanup is pending. ' : ''}${detail}`);
@@ -1279,6 +1293,12 @@ export function ProductsAdmin() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const updateTelegramPost = async () => {
+    if (!editing?.id) return;
+    if (!window.confirm('This will delete all old Telegram post messages associated with this product, including every message in its current album, then publish the edited product as a new Telegram post. Continue?')) return;
+    await save(true);
   };
 
   const bulkDelete = async (ids: string[]) => {
@@ -1749,7 +1769,10 @@ export function ProductsAdmin() {
 
             <div className="flex justify-end gap-2 border-t border-edge pt-3">
               <Button variant="ghost" onClick={() => setEditing(null)}>Cancel</Button>
-              <Button onClick={save} busy={busy}>Save product</Button>
+              {editing.id && editing.status === 'published' && editing.telegramMessageId && (
+                <Button variant="outline" onClick={updateTelegramPost} busy={busy}>Update to Telegram</Button>
+              )}
+              <Button onClick={() => save()} busy={busy}>Save product</Button>
             </div>
           </div>
         )}

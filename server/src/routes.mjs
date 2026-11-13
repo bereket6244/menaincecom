@@ -26,6 +26,7 @@ import {
   shouldDeleteTelegramPost,
   shouldUpdateTelegramPost,
   updateTelegramProductPost,
+  replaceTelegramProductPost,
 } from './product-telegram.mjs';
 import { normalizePriceTiers, tieredUnitPrice } from './tiered-pricing.mjs';
 import { reconcileDeletedTelegramPost } from './product-telegram-reconcile.mjs';
@@ -839,6 +840,26 @@ api.post('/admin/products/:id/telegram/reconcile', requireAdmin, dbRoute(async (
   const result = await reconcileDeletedTelegramPost(req.params.id, { resolve: resolveTelegramProduct });
   res.status(result.status === 'not_found' ? 404 : result.status === 'blocked' ? 409 : 200)
     .json(result.status === 'blocked' ? { ...result, message: `Telegram reconciliation needs review: ${result.reason}.` } : result);
+}));
+
+api.post('/admin/products/:id/telegram/replace', requireAdmin, dbRoute(async (req, res) => {
+  if (process.env.TELEGRAM_SYNC_ENABLED !== 'true') {
+    return res.status(409).json({ status: 'blocked', reason: 'telegram_sync_disabled', message: 'Telegram product synchronization is disabled.' });
+  }
+  const product = await records.get('products', req.params.id);
+  if (!product) return res.status(404).json({ error: 'not_found' });
+  if (normalizeProductStatus(product.status) !== 'published' || !product.telegramMessageId) {
+    return res.status(409).json({ status: 'blocked', reason: 'no_linked_published_post', message: 'This product has no linked published Telegram post to replace.' });
+  }
+  try {
+    const resolved = await resolveTelegramProduct(product);
+    const replacement = await replaceTelegramProductPost(resolved, (patch) => records.update('products', product.id, patch));
+    res.json({ ...replacement, status: 'replaced' });
+  } catch (error) {
+    const patch = telegramErrorPatch(error);
+    await records.update('products', product.id, patch);
+    throw error;
+  }
 }));
 
 api.put('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {
