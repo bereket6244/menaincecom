@@ -1,5 +1,6 @@
-// A Bot API token cannot fetch an arbitrary message. This read-only MTProto
-// request uses the same bot account and requires a Telegram application ID/hash.
+// Telegram's public post embed contains an exact data-post marker for a visible
+// message. An HTTP success without that marker is treated as missing, per the
+// operator's chosen policy. Transport errors stay unknown.
 export function classifyChannelMessages(result, expectedIds) {
   const messages = result?.messages;
   if (!Array.isArray(messages) || messages.length !== expectedIds.length) {
@@ -27,34 +28,25 @@ export async function checkTelegramPostPresence(product) {
   const ids = [...new Set([...(product.telegramMessageIds || []), product.telegramMessageId]
     .map(Number).filter((id) => Number.isSafeInteger(id) && id > 0))];
   const username = String(process.env.TELEGRAM_CHANNEL_USERNAME || '').replace(/^@/, '').trim();
-  const apiId = Number(process.env.TELEGRAM_API_ID);
-  const apiHash = String(process.env.TELEGRAM_API_HASH || '').trim();
-  const botToken = String(process.env.TELEGRAM_BOT_TOKEN || '').trim();
-  if (!ids.length || !username || !Number.isSafeInteger(apiId) || apiId <= 0 || !apiHash || !botToken) {
+  if (!ids.length || !username) {
     return { state: 'unknown', reason: 'presence_check_not_configured' };
   }
-  let client;
+  const present = [];
+  const absent = [];
   try {
-    const { Api, TelegramClient } = await import('teleproto');
-    const { StringSession } = await import('teleproto/sessions');
-    client = new TelegramClient(new StringSession(''), apiId, apiHash, { connectionRetries: 1, requestRetries: 0 });
-    await client.start({ botAuthToken: botToken });
-    const peer = await client.getInputEntity(username);
-    if (peer.className !== 'InputPeerChannel') return { state: 'unknown', reason: 'not_a_channel' };
-    const savedChannel = String(product.telegramChannelId || process.env.TELEGRAM_CHANNEL_ID || '').trim();
-    const channelNumber = String(peer.channelId);
-    if (savedChannel && savedChannel !== `-100${channelNumber}` && savedChannel !== `@${username}` && savedChannel !== username) {
-      return { state: 'unknown', reason: 'channel_mismatch' };
+    for (const id of ids) {
+      const response = await fetch(`https://t.me/${encodeURIComponent(username)}/${id}?embed=1&mode=tme`, {
+        headers: { accept: 'text/html' },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!response.ok) return { state: 'unknown', reason: `telegram_http_${response.status}` };
+      const html = await response.text();
+      const marker = `data-post="${username}/${id}"`;
+      if (html.includes(marker)) present.push(id);
+      else absent.push(id);
     }
-    const channel = new Api.InputChannel({ channelId: peer.channelId, accessHash: peer.accessHash });
-    const result = await client.invoke(new Api.channels.GetMessages({
-      channel,
-      id: ids.map((id) => new Api.InputMessageID({ id })),
-    }));
-    return classifyChannelMessages(result, ids);
   } catch {
     return { state: 'unknown', reason: 'telegram_unavailable' };
-  } finally {
-    await client?.disconnect().catch(() => {});
   }
+  return { state: absent.length ? 'absent' : 'present', present, absent };
 }
