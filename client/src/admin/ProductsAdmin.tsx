@@ -1119,6 +1119,7 @@ function BulkEditProductsModal({
 
 export function ProductsAdmin() {
   const { data: products, loading, reload, setData } = useData<Product[]>('/admin/products');
+  const [telegramChecks, setTelegramChecks] = useState<Record<string, string>>({});
   const { data: categories } = useData<Category[]>('/categories');
   const { data: universalComplimentaryItems } = useData<UniversalComplimentaryItem[]>('/admin/complimentary-items');
   const { data: costInputs } = useData<CostInput[]>('/admin/cost-inputs');
@@ -1280,19 +1281,38 @@ export function ProductsAdmin() {
   const reconcileTelegram = async (product: Product) => {
     setBusy(true);
     try {
-      const result = await apiSend<{ status: string; reason?: string; presence?: { reason?: string }; cleanup?: string }>(
-        'POST', `/admin/products/${product.id}/telegram/reconcile`, {},
+      const result = await apiSend<{ status: string; reason?: string }>(
+        'POST', `/admin/products/${product.id}/telegram/check`, {},
       );
-      if (result.status === 'republished') toast('success', 'Telegram post republished. Old post cleanup confirmed.');
-      else if (result.status === 'present') toast('success', 'Telegram post is still present.');
-      else if (result.status === 'replacement_unverified') toast('error', 'Replacement was posted, but its content could not be verified. Review the saved post.');
-      else toast('error', `Telegram check: ${result.reason || result.presence?.reason || result.status}. No replacement published.`);
-      reload();
+      setTelegramChecks((current) => ({ ...current, [product.id]: result.status === 'absent' ? 'Missing — choose Repost or Delete product' : result.status === 'present' ? 'Post is present' : `Could not verify${result.reason ? `: ${result.reason}` : ''}` }));
     } catch (err) {
       toast('error', (err as Error).message);
     } finally {
       setBusy(false);
     }
+  };
+
+  const repostTelegram = async (product: Product) => {
+    setBusy(true);
+    try {
+      const result = await apiSend<{ status: string; product?: Product }>('POST', `/admin/products/${product.id}/telegram/reconcile`, {});
+      if (result.status === 'republished' && result.product) {
+        setData((current) => current?.map((item) => item.id === product.id ? result.product! : item) || current);
+        setTelegramChecks((current) => ({ ...current, [product.id]: 'Reposted; old messages removed' }));
+      } else setTelegramChecks((current) => ({ ...current, [product.id]: `Repost not completed: ${result.reason || result.status}` }));
+    } catch (err) { toast('error', (err as Error).message); }
+    finally { setBusy(false); }
+  };
+
+  const deleteMissingProduct = async (product: Product) => {
+    setBusy(true);
+    try {
+      await apiSend('DELETE', `/admin/products/${product.id}`);
+      setData((current) => current?.filter((item) => item.id !== product.id) || current);
+      setTelegramChecks((current) => { const next = { ...current }; delete next[product.id]; return next; });
+      toast('success', 'Product deleted.');
+    } catch (err) { toast('error', (err as Error).message); }
+    finally { setBusy(false); }
   };
 
   const updateTelegramPost = async () => {
@@ -1389,9 +1409,16 @@ export function ProductsAdmin() {
       render: (p) => (
         <div onClick={(e) => e.stopPropagation()}>
           {p.status === 'published' && p.telegramMessageId && (
-            <button type="button" className="mr-1 text-[10px] text-pink hover:underline disabled:opacity-50"
-              title="Check linked Telegram post and republish if deleted" disabled={busy || !online}
-              onClick={() => reconcileTelegram(p)}>Check post</button>
+            <div className="mr-2 inline-flex items-center gap-1">
+              <button type="button" className="text-[10px] text-pink hover:underline disabled:opacity-50"
+                title="Check linked Telegram post" disabled={busy || !online}
+                onClick={() => reconcileTelegram(p)}>Check post</button>
+              {telegramChecks[p.id] && <span className="text-[10px] text-muted">{telegramChecks[p.id]}</span>}
+              {telegramChecks[p.id]?.startsWith('Missing') && <>
+                <button type="button" className="text-[10px] text-pink underline disabled:opacity-50" disabled={busy || !online} onClick={() => repostTelegram(p)}>Repost</button>
+                <button type="button" className="text-[10px] text-red-600 underline disabled:opacity-50" disabled={busy || !online} onClick={() => window.confirm(`Delete ${p.name} from the website?`) && deleteMissingProduct(p)}>Delete product</button>
+              </>}
+            </div>
           )}
           <IconButton icon={<Pencil className="h-3.5 w-3.5" />} title="Edit" onClick={() => setEditing({ ...p, priceTiers: (p.priceTiers || []).filter(t => t.minQty > 1) })} />
         </div>

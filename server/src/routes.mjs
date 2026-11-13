@@ -30,6 +30,7 @@ import {
 } from './product-telegram.mjs';
 import { normalizePriceTiers, tieredUnitPrice } from './tiered-pricing.mjs';
 import { reconcileDeletedTelegramPost } from './product-telegram-reconcile.mjs';
+import { checkTelegramPostPresence } from './telegram-presence.mjs';
 
 import { invalidPrice, materialInput, pricedProduct, validMargin } from './cost-pricing.mjs';
 
@@ -840,6 +841,13 @@ api.post('/admin/products/:id/telegram/reconcile', requireAdmin, dbRoute(async (
   const result = await reconcileDeletedTelegramPost(req.params.id, { resolve: resolveTelegramProduct });
   res.status(result.status === 'not_found' ? 404 : result.status === 'blocked' ? 409 : 200)
     .json(result.status === 'blocked' ? { ...result, message: `Telegram reconciliation needs review: ${result.reason}.` } : result);
+}));
+
+api.post('/admin/products/:id/telegram/check', requireAdmin, dbRoute(async (req, res) => {
+  const product = await records.get('products', req.params.id);
+  if (!product) return res.status(404).json({ error: 'not_found' });
+  const presence = await checkTelegramPostPresence(product);
+  res.json({ status: presence.state, reason: presence.reason, present: presence.present || [], absent: presence.absent || [] });
 }));
 
 api.post('/admin/products/:id/telegram/replace', requireAdmin, dbRoute(async (req, res) => {
