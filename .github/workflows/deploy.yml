@@ -18,18 +18,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Detect server changes
         id: changes
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ -z "${BEFORE_SHA}" ] || ! git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
             echo "server_changed=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          changed_files="$(git diff --name-only HEAD^ HEAD)"
+          changed_files="$(git diff --name-only "${BEFORE_SHA}" HEAD)"
           printf '%s\n' "${changed_files}"
           if printf '%s\n' "${changed_files}" | grep -Eq '^(server/|\.github/workflows/deploy\.yml$)'; then
             echo "server_changed=true" >> "$GITHUB_OUTPUT"
@@ -452,6 +454,12 @@ jobs:
           health_json="$(curl --fail --show-error --silent https://menaincet.com/shop/api/health)"
           echo "${health_json}"
           echo "${health_json}" | jq -e '.ok == true and .writable == true and .version == "shop-backend-20260930-digital-invites"' >/dev/null
+          telegram_check_status="$(curl --silent --show-error --max-time 15 --output /dev/null --write-out '%{http_code}' \
+            --request POST https://menaincet.com/shop/api/admin/products/deploy-probe/telegram/check)"
+          if [ "${telegram_check_status}" != "401" ]; then
+            echo "Telegram Check post route returned HTTP ${telegram_check_status}; expected 401 for an unauthenticated request." >&2
+            exit 1
+          fi
           business_json="$(curl --fail --show-error --silent https://menaincet.com/shop/api/content/business)"
           echo "${business_json}" | jq -e '
             .digitalInvitations.packages |
