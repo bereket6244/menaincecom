@@ -19,8 +19,8 @@ function recipeCost(product: Product | undefined, inputs: CostInput[] | null): n
   return total;
 }
 
-type Draft = { preset: string; name: string; quantity: string; cost: string; markup: string; incomeTax: string; dividendTax: string; vat: string; rounding: string };
-const initial: Draft = { preset: '', name: '', quantity: '1', cost: '', markup: '40', incomeTax: '35', dividendTax: '15', vat: '15', rounding: 'none' };
+type Draft = { preset: string; name: string; quantity: string; cost: string; markup: string; incomeTax: string; dividendTax: string; vat: string; roundingMultiple: string; roundingDirection: 'up' | 'down' };
+const initial: Draft = { preset: '', name: '', quantity: '1', cost: '', markup: '40', incomeTax: '35', dividendTax: '15', vat: '15', roundingMultiple: '', roundingDirection: 'up' };
 const money = (value: number) => `${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB`;
 const numeric = (value: string) => value.trim() === '' ? NaN : Number(value);
 const rateOk = (value: number) => Number.isFinite(value) && value >= 0 && value <= 100;
@@ -28,16 +28,23 @@ const rateOk = (value: number) => Number.isFinite(value) && value >= 0 && value 
 export function calculateCorporateQuote(draft: Draft, markupOverride?: number) {
   const quantity = numeric(draft.quantity), cost = numeric(draft.cost), markup = markupOverride ?? numeric(draft.markup);
   const incomeRate = numeric(draft.incomeTax), dividendRate = numeric(draft.dividendTax), vatRate = numeric(draft.vat);
+  const multiple = draft.roundingMultiple.trim() === '' ? null : numeric(draft.roundingMultiple);
+  const multipleCents = multiple === null ? null : Math.round(multiple * 100);
   if (!Number.isSafeInteger(quantity) || quantity < 1 || !Number.isFinite(cost) || cost <= 0 ||
-    !Number.isFinite(markup) || markup < 0 || markup > 1000 || !rateOk(incomeRate) || !rateOk(dividendRate) || !rateOk(vatRate)) return null;
+    !Number.isFinite(markup) || markup < 0 || markup > 1000 || !rateOk(incomeRate) || !rateOk(dividendRate) || !rateOk(vatRate) ||
+    (multiple !== null && (!Number.isFinite(multiple) || multiple <= 0 || !Number.isSafeInteger(multipleCents) || Math.abs(multiple * 100 - multipleCents!) > 1e-8))) return null;
   const profit = cost * markup / 100;
   const incomeTax = profit * incomeRate / 100;
   const dividendTax = (profit - incomeTax) * dividendRate / 100;
   const beforeVat = cost + profit + incomeTax + dividendTax;
   const vat = beforeVat * vatRate / 100;
   const exactUnit = beforeVat + vat;
-  const multiple = draft.rounding === 'whole' ? 1 : draft.rounding === 'ten' ? 10 : 0;
-  const unit = multiple ? Math.ceil((exactUnit - 1e-9) / multiple) * multiple : Math.round((exactUnit + Number.EPSILON) * 100) / 100;
+  const unit = multipleCents === null
+    ? Math.round((exactUnit + Number.EPSILON) * 100) / 100
+    : (draft.roundingDirection === 'up'
+      ? Math.ceil(exactUnit * 100 / multipleCents - 1e-9)
+      : Math.floor(exactUnit * 100 / multipleCents + 1e-9)) * multipleCents / 100;
+  if (!Number.isFinite(unit) || unit <= 0) return null;
   return { quantity, cost, markup, profit, incomeTax, dividendTax, beforeVat, vat, exactUnit, unit, total: unit * quantity };
 }
 
@@ -112,11 +119,15 @@ export function CorporateCalculator() {
         {advanced && <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {([['incomeTax', 'Income tax (%)'], ['dividendTax', 'Dividend tax (%)'], ['vat', 'VAT (%)']] as const).map(([field, label]) =>
             <label key={field} className="text-sm font-medium">{label}<input className="field mt-1" type="number" min="0" max="100" step="any" value={draft[field]} onChange={event => update(field, event.target.value)} /></label>)}
-          <label className="text-sm font-medium">Round unit quote up to
-            <select className="field mt-1" value={draft.rounding} onChange={event => update('rounding', event.target.value)}>
-              <option value="none">No rounding</option><option value="whole">1 ETB</option><option value="ten">10 ETB</option>
+          <label className="text-sm font-medium">Rounding multiple (ETB)
+            <input className="field mt-1" type="number" min="0.01" step="0.01" inputMode="decimal" placeholder="Off — e.g. 2.50" value={draft.roundingMultiple} onChange={event => update('roundingMultiple', event.target.value)} />
+          </label>
+          <label className="text-sm font-medium">Rounding direction
+            <select className="field mt-1" value={draft.roundingDirection} onChange={event => update('roundingDirection', event.target.value)}>
+              <option value="up">Round up</option><option value="down">Round down</option>
             </select>
           </label>
+          <p className="text-xs text-muted sm:col-span-2">Enter any positive ETB multiple to the cent, or leave blank for no rounding. Applied to the VAT-inclusive unit price before multiplying by quantity.</p>
         </div>}
       </section>
     </div>
@@ -126,7 +137,7 @@ export function CorporateCalculator() {
         {result ? <>
           <p className="text-xs text-muted">Total for {result.quantity.toLocaleString()} {result.quantity === 1 ? 'item' : 'items'}</p>
           <div className="mt-1 text-3xl font-bold tracking-tight text-ink">{money(result.total)}</div>
-          <p className="mt-1 text-sm text-muted">{money(result.unit)} per item{draft.rounding !== 'none' ? ' after rounding' : ''}</p>
+          <p className="mt-1 text-sm text-muted">{money(result.unit)} per item{draft.roundingMultiple.trim() !== '' ? ' after rounding' : ''}</p>
           <div className="mt-5 space-y-2 border-t border-edge pt-4 text-sm">
             <div className="flex justify-between gap-3"><span>Production cost</span><strong>{money(result.cost)}</strong></div>
             <div className="flex justify-between gap-3"><span>Target markup ({result.markup}%)</span><strong>{money(result.profit)}</strong></div>
@@ -134,10 +145,10 @@ export function CorporateCalculator() {
             <div className="flex justify-between gap-3"><span>Estimated dividend tax</span><strong>{money(result.dividendTax)}</strong></div>
             <div className="flex justify-between gap-3 border-t border-edge pt-2"><span>Unit price before VAT</span><strong>{money(result.beforeVat)}</strong></div>
             <div className="flex justify-between gap-3"><span>VAT</span><strong>{money(result.vat)}</strong></div>
-            {draft.rounding !== 'none' && <div className="flex justify-between gap-3"><span>Rounding adjustment</span><strong>{money(result.unit - result.exactUnit)}</strong></div>}
+            {draft.roundingMultiple.trim() !== '' && <div className="flex justify-between gap-3"><span>Rounding adjustment</span><strong>{money(result.unit - result.exactUnit)}</strong></div>}
           </div>
           <Button type="button" onClick={copy} className="mt-5 flex w-full items-center justify-center gap-2"><span>{copied ? 'Copied quote' : 'Copy quote'}</span>{copied ? <Check className="h-4 w-4" /> : <Clipboard className="h-4 w-4" />}</Button>
-        </> : <p role="status" className="rounded-lg bg-surface2 p-4 text-sm text-muted">Enter a cost above zero and a whole-number quantity. Tax rates must be 0–100%; markup must be 0–1,000%.</p>}
+        </> : <p role="status" className="rounded-lg bg-surface2 p-4 text-sm text-muted">Enter a cost above zero and a whole-number quantity. Tax rates must be 0–100%, markup 0–1,000%, and the rounding multiple must be positive, to the cent, and leave a positive unit price.</p>}
       </section>
       <section className="rounded-xl border border-edge bg-surface p-4 sm:p-5">
         <h2 className="text-sm font-bold">Compare markup options</h2>
