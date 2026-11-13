@@ -1280,13 +1280,13 @@ export function ProductsAdmin() {
   const reconcileTelegram = async (product: Product) => {
     setBusy(true);
     try {
-      const result = await apiSend<{ status: string; reason?: string; cleanup?: string }>(
+      const result = await apiSend<{ status: string; reason?: string; presence?: { reason?: string }; cleanup?: string }>(
         'POST', `/admin/products/${product.id}/telegram/reconcile`, {},
       );
       if (result.status === 'republished') toast('success', 'Telegram post republished. Old post cleanup confirmed.');
       else if (result.status === 'present') toast('success', 'Telegram post is still present.');
       else if (result.status === 'replacement_unverified') toast('error', 'Replacement was posted, but its content could not be verified. Review the saved post.');
-      else toast('error', `Telegram check: ${result.reason || result.status}. No replacement published.`);
+      else toast('error', `Telegram check: ${result.reason || result.presence?.reason || result.status}. No replacement published.`);
       reload();
     } catch (err) {
       toast('error', (err as Error).message);

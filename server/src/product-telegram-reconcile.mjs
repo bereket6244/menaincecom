@@ -16,7 +16,7 @@ export async function reconcileDeletedTelegramPost(id, { check = checkTelegramPo
   if (product.telegramCleanupStatus === 'pending') return { status: 'blocked', reason: 'previous_cleanup_pending' };
   if (product.telegramReconcileClaim) return { status: 'blocked', reason: 'reconciliation_claim_pending' };
   const first = await check(product);
-  if (first.state !== 'absent') return { status: first.state === 'present' ? 'present' : 'unverified', presence: first };
+  if (first.state !== 'absent') return { status: first.state === 'present' ? 'present' : 'unverified', reason: first.reason || null, presence: first };
 
   const claim = { token: crypto.randomUUID(), at: new Date().toISOString() };
   if (!await records.claimTelegramReconcile(id, product.telegramMessageId, claim)) {
@@ -32,7 +32,7 @@ export async function reconcileDeletedTelegramPost(id, { check = checkTelegramPo
     }
     const second = await check(current);
     if (second.state !== 'absent') {
-      return { status: second.state === 'present' ? 'present' : 'unverified', presence: second };
+      return { status: second.state === 'present' ? 'present' : 'unverified', reason: second.reason || null, presence: second };
     }
     const oldIds = [...new Set([...(current.telegramMessageIds || []), current.telegramMessageId]
       .map(Number).filter((value) => Number.isSafeInteger(value) && value > 0))];
