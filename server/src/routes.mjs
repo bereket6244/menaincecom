@@ -28,6 +28,7 @@ import {
   updateTelegramProductPost,
 } from './product-telegram.mjs';
 import { normalizePriceTiers, tieredUnitPrice } from './tiered-pricing.mjs';
+import { reconcileDeletedTelegramPost } from './product-telegram-reconcile.mjs';
 
 import { invalidPrice, materialInput, pricedProduct, validMargin } from './cost-pricing.mjs';
 
@@ -829,6 +830,15 @@ api.post('/admin/products', requireAdmin, dbRoute(async (req, res) => {
     contentVersion: Math.max(1, Number(input.contentVersion) || 1),
   });
   res.status(201).json(await syncProductPublicationTransition(null, product));
+}));
+
+api.post('/admin/products/:id/telegram/reconcile', requireAdmin, dbRoute(async (req, res) => {
+  if (process.env.TELEGRAM_SYNC_ENABLED !== 'true') {
+    return res.status(409).json({ status: 'blocked', reason: 'telegram_sync_disabled', message: 'Telegram product synchronization is disabled.' });
+  }
+  const result = await reconcileDeletedTelegramPost(req.params.id, { resolve: resolveTelegramProduct });
+  res.status(result.status === 'not_found' ? 404 : result.status === 'blocked' ? 409 : 200)
+    .json(result.status === 'blocked' ? { ...result, message: `Telegram reconciliation needs review: ${result.reason}.` } : result);
 }));
 
 api.put('/admin/products/:id', requireAdmin, dbRoute(async (req, res) => {

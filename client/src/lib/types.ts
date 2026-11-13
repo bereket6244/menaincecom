@@ -68,6 +68,7 @@ export interface Product {
   featured: boolean;
   needsReview?: boolean;
   telegramPostUrl?: string;
+  telegramMessageId?: number;
   createdAt?: string;
 }
 

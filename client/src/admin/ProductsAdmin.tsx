@@ -1263,6 +1263,24 @@ export function ProductsAdmin() {
     }
   };
 
+  const reconcileTelegram = async (product: Product) => {
+    setBusy(true);
+    try {
+      const result = await apiSend<{ status: string; reason?: string; cleanup?: string }>(
+        'POST', `/admin/products/${product.id}/telegram/reconcile`, {},
+      );
+      if (result.status === 'republished') toast('success', 'Telegram post republished. Old post cleanup confirmed.');
+      else if (result.status === 'present') toast('success', 'Telegram post is still present.');
+      else if (result.status === 'replacement_unverified') toast('error', 'Replacement was posted, but its content could not be verified. Review the saved post.');
+      else toast('error', `Telegram check: ${result.reason || result.status}. No replacement published.`);
+      reload();
+    } catch (err) {
+      toast('error', (err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const bulkDelete = async (ids: string[]) => {
     try {
       await Promise.all(ids.map((id) => apiSend('DELETE', `/admin/products/${id}`)));
@@ -1347,9 +1365,14 @@ export function ProductsAdmin() {
       sortValue: (p) => p.maxOrderQty ?? 1e9,
     },
     {
-      key: 'actions', label: '', width: '40px',
+      key: 'actions', label: '', width: '80px',
       render: (p) => (
         <div onClick={(e) => e.stopPropagation()}>
+          {p.status === 'published' && p.telegramMessageId && (
+            <button type="button" className="mr-1 text-[10px] text-pink hover:underline disabled:opacity-50"
+              title="Check linked Telegram post and republish if deleted" disabled={busy || !online}
+              onClick={() => reconcileTelegram(p)}>Check post</button>
+          )}
           <IconButton icon={<Pencil className="h-3.5 w-3.5" />} title="Edit" onClick={() => setEditing({ ...p, priceTiers: (p.priceTiers || []).filter(t => t.minQty > 1) })} />
         </div>
       ),

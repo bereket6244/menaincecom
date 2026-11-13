@@ -181,6 +181,46 @@ async function mutateLocalStore(mutator) {
 }
 
 export const records = {
+  async claimTelegramReconcile(id, messageId, claim) {
+    const isClaimable = (doc) => Number(doc?.telegramMessageId) === Number(messageId)
+      && !doc.telegramReconcileClaim;
+    const localOperation = () => mutateLocalStore((store) => {
+      const doc = (store.products || []).find((item) => item.id === id);
+      if (!doc || !isClaimable(doc)) return false;
+      doc.telegramReconcileClaim = claim;
+      return true;
+    });
+    return withDbFallback(async () => {
+      const [result] = await pool.query(`
+        UPDATE app_records SET data = JSON_SET(data, '$.telegramReconcileClaim', JSON_EXTRACT(?, '$'))
+        WHERE collection = 'products' AND id = ?
+          AND JSON_UNQUOTE(JSON_EXTRACT(data, '$.telegramMessageId')) = ?
+          AND JSON_EXTRACT(data, '$.telegramReconcileClaim') IS NULL
+      `, [JSON.stringify(claim), id, String(messageId)]);
+      return result.affectedRows === 1;
+    }, localOperation);
+  },
+
+  async finishTelegramReconcile(id, token, patch) {
+    const localOperation = () => mutateLocalStore((store) => {
+      const doc = (store.products || []).find((item) => item.id === id);
+      if (doc?.telegramReconcileClaim?.token !== token) return null;
+      Object.assign(doc, patch);
+      delete doc.telegramReconcileClaim;
+      doc.updatedAt = new Date().toISOString();
+      return localDoc(doc);
+    });
+    return withDbFallback(async () => {
+      const [result] = await pool.query(`
+        UPDATE app_records
+        SET data = JSON_REMOVE(JSON_MERGE_PATCH(data, JSON_EXTRACT(?, '$')), '$.telegramReconcileClaim')
+        WHERE collection = 'products' AND id = ?
+          AND JSON_UNQUOTE(JSON_EXTRACT(data, '$.telegramReconcileClaim.token')) = ?
+      `, [JSON.stringify(patch), id, token]);
+      return result.affectedRows === 1 ? this.get('products', id) : null;
+    }, localOperation);
+  },
+
   async list(collection) {
     const localOperation = async () => {
       const store = await readLocalStore();

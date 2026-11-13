@@ -429,10 +429,6 @@ export async function updateTelegramProductPost(product, { persist } = {}) {
   }
 }
 
-function isAlreadyDeleted(error) {
-  return error?.code === 400 && /message to delete not found/i.test(String(error.message || ''));
-}
-
 function telegramMessageIds(product) {
   return [...new Set([
     ...(Array.isArray(product.telegramMessageIds) ? product.telegramMessageIds : []),
@@ -456,7 +452,7 @@ export async function deleteTelegramProductPost(product) {
         const deleted = await telegramApi(token, 'deleteMessage', { chat_id: chatId, message_id: messageId });
         if (deleted !== true) throw new Error(`Telegram did not confirm deletion of message ${messageId}.`);
       } catch (error) {
-        if (!isAlreadyDeleted(error)) failures.push(error);
+        failures.push(error);
       }
     }
     if (failures.length) throw failures[0];
