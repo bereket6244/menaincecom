@@ -1295,7 +1295,7 @@ export function ProductsAdmin() {
   const repostTelegram = async (product: Product) => {
     setBusy(true);
     try {
-      const result = await apiSend<{ status: string; product?: Product }>('POST', `/admin/products/${product.id}/telegram/reconcile`, {});
+      const result = await apiSend<{ status: string; reason?: string; product?: Product }>('POST', `/admin/products/${product.id}/telegram/reconcile`, {});
       if (result.status === 'republished' && result.product) {
         setData((current) => current?.map((item) => item.id === product.id ? result.product! : item) || current);
         setTelegramChecks((current) => ({ ...current, [product.id]: 'Reposted; old messages removed' }));
