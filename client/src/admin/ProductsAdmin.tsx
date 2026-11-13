@@ -1120,6 +1120,8 @@ function BulkEditProductsModal({
 export function ProductsAdmin() {
   const { data: products, loading, reload, setData } = useData<Product[]>('/admin/products');
   const [telegramChecks, setTelegramChecks] = useState<Record<string, string>>({});
+  const [telegramCheckProgress, setTelegramCheckProgress] = useState<{ checked: number; total: number } | null>(null);
+  const linkedTelegramProducts = (products || []).filter((product) => product.status === 'published' && product.telegramMessageId);
   const { data: categories } = useData<Category[]>('/categories');
   const { data: universalComplimentaryItems } = useData<UniversalComplimentaryItem[]>('/admin/complimentary-items');
   const { data: costInputs } = useData<CostInput[]>('/admin/cost-inputs');
@@ -1278,16 +1280,34 @@ export function ProductsAdmin() {
     }
   };
 
-  const reconcileTelegram = async (product: Product) => {
-    setBusy(true);
+  const checkTelegramPost = async (product: Product) => {
+    let message: string;
     try {
       const result = await apiSend<{ status: string; reason?: string }>(
         'POST', `/admin/products/${product.id}/telegram/check`, {},
       );
-      setTelegramChecks((current) => ({ ...current, [product.id]: result.status === 'absent' ? 'Missing — choose Repost or Delete product' : result.status === 'present' ? 'Post is present' : `Could not verify${result.reason ? `: ${result.reason}` : ''}` }));
+      if (result.status === 'absent') message = 'Missing — choose Repost or Delete product';
+      else if (result.status === 'present') message = 'Post is present';
+      else message = `Could not verify${result.reason ? `: ${result.reason}` : ''}`;
     } catch (err) {
-      toast('error', (err as Error).message);
+      message = `Could not verify: ${(err as Error).message}`;
+    }
+    setTelegramChecks((current) => ({ ...current, [product.id]: message }));
+  };
+
+  const checkTelegramPosts = async (targets: Product[], showProgress = false) => {
+    setBusy(true);
+    const total = targets.length;
+    if (showProgress) setTelegramCheckProgress({ checked: 0, total });
+    try {
+      let checked = 0;
+      for (const product of targets) {
+        await checkTelegramPost(product);
+        checked++;
+        if (showProgress) setTelegramCheckProgress({ checked, total });
+      }
     } finally {
+      setTelegramCheckProgress(null);
       setBusy(false);
     }
   };
@@ -1412,7 +1432,7 @@ export function ProductsAdmin() {
             <div className="mr-2 inline-flex items-center gap-1">
               <button type="button" className="text-[10px] text-pink hover:underline disabled:opacity-50"
                 title="Check linked Telegram post" disabled={busy || !online}
-                onClick={() => reconcileTelegram(p)}>Check post</button>
+                onClick={() => checkTelegramPosts([p])}>Check post</button>
               {telegramChecks[p.id] && <span className="text-[10px] text-muted">{telegramChecks[p.id]}</span>}
               {telegramChecks[p.id]?.startsWith('Missing') && <>
                 <button type="button" className="text-[10px] text-pink underline disabled:opacity-50" disabled={busy || !online} onClick={() => repostTelegram(p)}>Repost</button>
@@ -1428,7 +1448,16 @@ export function ProductsAdmin() {
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-      <h1 className="text-sm font-bold">Products</h1>
+      <div className="flex items-center gap-2">
+        <h1 className="text-sm font-bold">Products</h1>
+        <Button variant="outline" disabled={busy || !online || linkedTelegramProducts.length === 0}
+          onClick={() => checkTelegramPosts(linkedTelegramProducts, true)}>Check all posts</Button>
+        {telegramCheckProgress && (
+          <span role="status" className="text-xs text-muted">
+            Checked {telegramCheckProgress.checked} of {telegramCheckProgress.total}
+          </span>
+        )}
+      </div>
       <DataTable
         rows={filteredProducts}
         columns={columns}
