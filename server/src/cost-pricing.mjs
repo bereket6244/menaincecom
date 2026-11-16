@@ -1,4 +1,5 @@
 import { sellingPrice } from './selling-price.mjs';
+import { corporatePrice } from './corporate-pricing.mjs';
 import { normalizePriceTiers } from './tiered-pricing.mjs';
 
 export function invalidPrice(message) {
@@ -69,7 +70,11 @@ export function pricedProduct(product, inputs, previous = product) {
       cost += unitCost * item.quantity;
     }
     if (recipe.roundDirection !== undefined && !['up', 'down'].includes(recipe.roundDirection)) invalidPrice('Choose round up or round down.');
-    const calculatePrice = margin => sellingPrice(cost, margin, recipe.adjustment, recipe.roundUp, recipe.roundDirection);
+    if (recipe.corporatePricing && !corporatePrice(cost, recipe.margin, recipe.corporatePricing, recipe.adjustment, recipe.roundUp, recipe.roundDirection))
+      invalidPrice('Enter valid corporate tax rates, adjustment, and a positive rounding multiple to the cent.');
+    const calculatePrice = margin => recipe.corporatePricing
+      ? corporatePrice(cost, margin, recipe.corporatePricing, recipe.adjustment, recipe.roundUp, recipe.roundDirection)?.unit ?? NaN
+      : sellingPrice(cost, margin, recipe.adjustment, recipe.roundUp, recipe.roundDirection);
     price = calculatePrice(recipe.margin);
     const thresholds = recipe.thresholds ?? [];
     if (!Array.isArray(thresholds) || thresholds.some(t => !Number.isSafeInteger(t?.minQty) || t.minQty < 2
@@ -84,7 +89,7 @@ export function pricedProduct(product, inputs, previous = product) {
   const breaks = tiers.filter((tier) => tier.minQty > 1);
   const priced = price > 0 && Number.isFinite(price);
   return { ...product,
-    ...(recipe && { cost: { items, margin: recipe.margin, adjustment: recipe.adjustment ?? 0, roundUp: recipe.roundUp ?? null, roundDirection: recipe.roundDirection ?? 'up', thresholds: recipe.thresholds ?? [] } }),
+    ...(recipe && { cost: { items, margin: recipe.margin, adjustment: recipe.adjustment ?? 0, roundUp: recipe.roundUp ?? null, roundDirection: recipe.roundDirection ?? 'up', thresholds: recipe.thresholds ?? [], ...(recipe.corporatePricing && { corporatePricing: recipe.corporatePricing }) } }),
     price: priced ? price : null, pricingMode: breaks.length && priced ? 'tiered' : 'exact',
     priceTiers: breaks.length && priced ? [{ minQty: 1, priceEach: price }, ...breaks] : [],
     ...(!priced && (!product.status || product.status === 'published') ? { status: 'draft' } : {}) };

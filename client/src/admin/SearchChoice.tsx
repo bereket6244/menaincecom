@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { Search } from 'lucide-react';
 
 export function SearchChoice({ label, value, options, placeholder = 'Search…', autoFocus = false, onChange }: {
   label: string; value: string; options: { value: string; label: string }[];
@@ -11,7 +12,8 @@ export function SearchChoice({ label, value, options, placeholder = 'Search…',
   const filtered = options.filter(option => option.label.toLowerCase().includes((query || '').toLowerCase()));
   const choose = (next: string) => { onChange(next); setQuery(null); setActive(0); };
   return <label className="relative block min-w-0">{label}
-    <input className="field min-w-0" role="combobox" autoFocus={autoFocus} autoComplete="off" placeholder={placeholder}
+    <span className="relative block"><Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted" />
+    <input className="field min-w-0" style={{ paddingLeft: '2.25rem' }} role="combobox" autoFocus={autoFocus} autoComplete="off" placeholder={placeholder}
       aria-expanded={query !== null} aria-controls={id} aria-autocomplete="list"
       aria-activedescendant={query !== null && filtered[active] ? `${id}-${active}` : undefined}
       value={query ?? selected} onFocus={() => { setQuery(''); setActive(0); }}
@@ -23,7 +25,7 @@ export function SearchChoice({ label, value, options, placeholder = 'Search…',
           setActive(index => Math.max(0, Math.min(filtered.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1))));
         }
         if (event.key === 'Enter' && query !== null) { event.preventDefault(); if (filtered[active]) choose(filtered[active].value); }
-      }} />
+      }} /></span>
     {query !== null && <ul id={id} role="listbox" className="absolute z-50 max-h-48 w-full overflow-auto rounded border border-edge bg-surface shadow-lg">
       {filtered.map((option, index) => <li id={`${id}-${index}`} key={option.value} role="option"
         aria-selected={index === active} className={`cursor-pointer px-2 py-2 text-sm ${index === active ? 'bg-surface2' : ''}`}

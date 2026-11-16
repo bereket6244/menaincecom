@@ -54,6 +54,7 @@ export function CorporateCalculator() {
   const { data: inputs, loading: inputsLoading, error: inputsError } = useData<CostInput[]>('/admin/cost-inputs');
   const [draft, setDraft] = useState<Draft>(initial);
   const [costEdited, setCostEdited] = useState(false);
+  const [markupEdited, setMarkupEdited] = useState(false);
   const [advanced, setAdvanced] = useState(false);
   const [copied, setCopied] = useState(false);
   const result = useMemo(() => calculateCorporateQuote(draft), [draft]);
@@ -61,16 +62,23 @@ export function CorporateCalculator() {
   const products = websiteProducts || (adminProducts || []).filter(product => !product.status || product.status === 'published');
   const options = [{ value: '', label: 'Custom item' }, ...products.map(product => ({ value: product.id, label: product.name }))];
   const selectedProduct = products.find(product => product.id === draft.preset);
+  const selectedRecipe = adminProducts?.find(product => product.id === draft.preset)?.cost;
   useEffect(() => {
     if (!draft.preset || costEdited) return;
-    const cost = recipeCost(adminProducts?.find(product => product.id === draft.preset), inputs);
-    if (cost != null) setDraft(previous => previous.preset === draft.preset && previous.cost === '' ? { ...previous, cost: String(cost) } : previous);
-  }, [draft.preset, costEdited, adminProducts, inputs]);
+    const savedProduct = adminProducts?.find(product => product.id === draft.preset);
+    const cost = recipeCost(savedProduct, inputs);
+    if (cost != null) setDraft(previous => previous.preset === draft.preset && previous.cost === '' ? {
+      ...previous, cost: String(cost), ...(!markupEdited && savedProduct?.cost && { markup: String(savedProduct.cost.margin) }),
+    } : previous);
+  }, [draft.preset, costEdited, markupEdited, adminProducts, inputs]);
   const choose = (id: string) => {
     const product = products.find(item => item.id === id);
-    const cost = recipeCost(adminProducts?.find(item => item.id === id), inputs);
-    setDraft(previous => ({ ...previous, preset: id, name: product?.name || '', cost: cost == null ? '' : String(cost) }));
+    const savedProduct = adminProducts?.find(item => item.id === id);
+    const cost = recipeCost(savedProduct, inputs);
+    setDraft(previous => ({ ...previous, preset: id, name: product?.name || '', cost: cost == null ? '' : String(cost),
+      markup: savedProduct?.cost ? String(savedProduct.cost.margin) : initial.markup }));
     setCostEdited(false);
+    setMarkupEdited(false);
     setCopied(false);
   };
   const copy = async () => {
@@ -84,13 +92,14 @@ export function CorporateCalculator() {
       <section className="rounded-xl border border-edge bg-surface p-4 sm:p-5">
         <div className="mb-5 flex items-start justify-between gap-3">
           <div><h2 className="text-base font-bold">Quote inputs</h2><p className="mt-1 text-xs text-muted">Choose a website product or enter a custom production cost.</p></div>
-          <button type="button" onClick={() => { setDraft(initial); setCostEdited(false); setCopied(false); }} className="flex shrink-0 items-center gap-1 text-xs font-semibold text-muted hover:text-ink"><RotateCcw className="h-3.5 w-3.5" /> Reset</button>
+          <button type="button" onClick={() => { setDraft(initial); setCostEdited(false); setMarkupEdited(false); setCopied(false); }} className="flex shrink-0 items-center gap-1 text-xs font-semibold text-muted hover:text-ink"><RotateCcw className="h-3.5 w-3.5" /> Reset</button>
         </div>
         <div className="space-y-4">
-          <SearchChoice label="Website product" value={draft.preset} options={options} placeholder="Search published products" onChange={choose} />
+          <SearchChoice label="Search website cards" value={draft.preset} options={options} placeholder="Click and type a card name" onChange={choose} />
           {catalogLoading && !websiteProducts && <p role="status" className="text-xs text-muted">Loading website products…</p>}
           {catalogError && !websiteProducts && !adminProducts && <p role="alert" className="text-xs text-muted">Could not load website products. <button type="button" className="underline" onClick={reloadCatalog}>Retry</button></p>}
           {selectedProduct && !draft.cost && <p className="text-xs text-muted">{adminLoading || inputsLoading ? 'Loading saved production cost…' : adminError || inputsError ? 'Saved production costs require an admin session. Enter the cost manually in this local preview.' : 'This product has no production cost recipe. Enter its cost below; the website selling price is not used as cost.'}</p>}
+          {selectedProduct && selectedRecipe && draft.cost && !costEdited && <p className="text-xs text-muted">Using raw material cost and {markupEdited ? 'your chosen markup' : `the saved ${selectedRecipe.margin}% markup`} once. The website selling price is never used as cost.</p>}
           <label className="block text-sm font-medium">Item or project name
             <input className="field mt-1" value={draft.name} onChange={event => update('name', event.target.value)} placeholder="e.g. Corporate invitation" />
           </label>
@@ -104,8 +113,8 @@ export function CorporateCalculator() {
           </div>
           <div><label className="block text-sm font-medium" htmlFor="corporate-markup">Markup on cost (%)</label>
             <div className="mt-1 grid grid-cols-[repeat(3,minmax(0,1fr))_minmax(90px,1fr)] gap-2">
-              {[40, 45, 50].map(rate => <button key={rate} type="button" onClick={() => update('markup', String(rate))} aria-pressed={numeric(draft.markup) === rate} className={`rounded-md border px-2 py-2 text-sm font-semibold ${numeric(draft.markup) === rate ? 'border-pink bg-pink/10 text-pink' : 'border-edge bg-surface2 text-ink hover:border-pink'}`}>{rate}%</button>)}
-              <input id="corporate-markup" aria-label="Custom markup percentage" className="field text-center" type="number" min="0" max="1000" step="any" inputMode="decimal" value={draft.markup} onChange={event => update('markup', event.target.value)} />
+              {[40, 45, 50].map(rate => <button key={rate} type="button" onClick={() => { setMarkupEdited(true); update('markup', String(rate)); }} aria-pressed={numeric(draft.markup) === rate} className={`rounded-md border px-2 py-2 text-sm font-semibold ${numeric(draft.markup) === rate ? 'border-pink bg-pink/10 text-pink' : 'border-edge bg-surface2 text-ink hover:border-pink'}`}>{rate}%</button>)}
+              <input id="corporate-markup" aria-label="Custom markup percentage" className="field text-center" type="number" min="0" max="1000" step="any" inputMode="decimal" value={draft.markup} onChange={event => { setMarkupEdited(true); update('markup', event.target.value); }} />
             </div><p className="mt-1.5 text-xs text-muted">Markup is a percentage of production cost, matching the spreadsheet.</p>
           </div>
         </div>

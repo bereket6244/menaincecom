@@ -39,6 +39,7 @@ export interface ComplimentaryCartItem {
 export interface MaterialOption { id: string; name: string; unitCost: number }
 export interface CostInput { id: string; name: string; unitCost: number | null; options?: MaterialOption[] }
 export interface ProductCost {
+  corporatePricing?: { incomeTaxRate: number; dividendTaxRate: number; vatRate: number };
   adjustment?: number;
   roundUp?: number | null;
   roundDirection?: 'up' | 'down';
