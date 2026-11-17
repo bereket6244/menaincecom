@@ -37,6 +37,38 @@ export function materialInput(body, existing) {
 
 const money = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
 
+/**
+ * Material cost of one unit from a product's saved recipe, with a line per
+ * material. Uses the same rates `pricedProduct` uses to set the price
+ * (including the legacy base rate for rows saved before a material had
+ * options). Returns null when there is no recipe or a row no longer resolves,
+ * so callers show "no cost yet" instead of a wrong number.
+ */
+export function recipeCost(product, inputs) {
+  const rows = product?.cost?.items;
+  if (!Array.isArray(rows) || !rows.length) return null;
+  const lines = [];
+  let total = 0;
+  for (const row of rows) {
+    const input = inputs.find((item) => item.id === row.inputId);
+    const option = row.optionId ? input?.options?.find((item) => item.id === row.optionId) : null;
+    const unitCost = row.optionId
+      ? option?.unitCost
+      : input?.options?.length ? input.legacyUnitCost ?? input.unitCost : input?.unitCost;
+    const quantity = Number(row.quantity);
+    if (!input || !(Number.isFinite(unitCost) && unitCost > 0) || !(Number.isFinite(quantity) && quantity > 0)) return null;
+    total += unitCost * quantity;
+    lines.push({
+      inputId: input.id,
+      name: option ? `${input.name} (${option.name})` : input.name,
+      quantity,
+      unitCost,
+      lineCost: money(unitCost * quantity),
+    });
+  }
+  return { unitCost: money(total), lines };
+}
+
 export function pricedProduct(product, inputs, previous = product) {
   const recipe = product.cost;
   let tiers = normalizePriceTiers(product.priceTiers);

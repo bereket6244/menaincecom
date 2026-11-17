@@ -33,6 +33,9 @@ import { reconcileDeletedTelegramPost } from './product-telegram-reconcile.mjs';
 import { checkTelegramPostPresence } from './telegram-presence.mjs';
 
 import { invalidPrice, materialInput, pricedProduct, validMargin } from './cost-pricing.mjs';
+import {
+  dashboardCatalog, draftProductFrom, requireIntegrationToken, requireIntegrationWrite, shopCostFromRecipe,
+} from './integration.mjs';
 
 const costInputs = () => records.list('cost_inputs');
 async function catalogProducts() {
@@ -754,6 +757,46 @@ async function priceForSave(input, previous = null) {
   if (price == null && normalizeProductStatus(input.status) === 'published') invalidPrice('Enter an exact selling price before publishing.');
   return { price, pricingMode, priceTiers, ...(cost && { cost }) };
 }
+
+// Read-only catalog with costs for the operations dashboard (server-to-server).
+api.get('/integration/catalog', requireIntegrationToken, dbRoute(async (_req, res) => {
+  const [products, inputs] = await Promise.all([catalogProducts(), costInputs()]);
+  res.set('Cache-Control', 'no-store');
+  res.json(dashboardCatalog(products, inputs));
+}));
+
+// Dashboard: turn a variation into its own shop item. Always a draft, so
+// nothing is published (or posted to Telegram) until an admin publishes it.
+api.post('/integration/products', requireIntegrationWrite, dbRoute(async (req, res) => {
+  const { name, recipe, baseProductId, variationId, actor } = req.body || {};
+  const inputs = await costInputs();
+  const cost = shopCostFromRecipe(recipe, inputs);
+  const cleanName = String(name || '').trim().toLowerCase();
+  const duplicate = (await records.list('products')).find((p) => !p.deletedAt && String(p.name || '').trim().toLowerCase() === cleanName);
+  if (duplicate) return res.status(409).json({ error: 'duplicate', message: `The shop already has "${duplicate.name}".`, id: duplicate.id });
+  const base = baseProductId ? await records.get('products', String(baseProductId)) : null;
+  const input = cleanProductInput(draftProductFrom({ name, base: base?.deletedAt ? null : base, cost, actor, variationId }), { includeDefaultLimit: true });
+  Object.assign(input, await priceForSave(input));
+  const product = await records.insert('products', { ...input, contentVersion: 1 });
+  res.status(201).json(pricedProduct(product, inputs));
+}));
+
+// Dashboard: change a product's recipe for the whole shop. The website price
+// follows the recipe, and a published product's Telegram post is edited in
+// place, exactly as when the recipe is changed in the shop admin.
+api.put('/integration/products/:id/recipe', requireIntegrationWrite, dbRoute(async (req, res) => {
+  const existing = await records.get('products', req.params.id);
+  if (!existing || existing.deletedAt) return res.status(404).json({ error: 'not_found', message: 'That shop item no longer exists.' });
+  const cost = shopCostFromRecipe(req.body?.recipe, await costInputs());
+  const nextVersion = Math.max(1, Number(existing.contentVersion) || 1) + 1;
+  const doc = await records.update('products', existing.id, {
+    ...await priceForSave({ ...existing, cost }, existing),
+    contentVersion: nextVersion,
+    lastCostEdit: { source: 'dashboard', by: String(req.body?.actor || '').slice(0, 100) || null, at: new Date().toISOString() },
+  });
+  const synced = await syncProductPublicationTransition(existing, doc);
+  res.json({ previousPrice: existing.price ?? null, product: pricedProduct(synced, await costInputs()) });
+}));
 
 api.get('/admin/cost-inputs', requireAdmin, dbRoute(async (_req, res) => res.json(await costInputs())));
 api.delete('/admin/cost-inputs/:id', requireAdmin, dbRoute(async (req, res) => {
