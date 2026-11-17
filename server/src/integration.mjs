@@ -79,18 +79,24 @@ const NOT_COPIED = new Set([
   'telegramSyncError', 'telegramLastSyncedAt', 'telegramDeletedAt', 'telegramReconcileClaim', 'importAction',
 ]);
 
-/** A new draft product built from a base product (category, photos, details) and a recipe. */
-export function draftProductFrom({ name, base, cost, actor, variationId }) {
+/**
+ * A new unpublished product built from a base product (category, photos,
+ * details) and a recipe. `hidden` makes it archived: priced in the shop but
+ * never shown on the website or Telegram, for items sold only in person.
+ * Otherwise it is a draft, waiting for an admin to publish it.
+ */
+export function draftProductFrom({ name, base, cost, actor, variationId, hidden = false }) {
   const cleanName = String(name || '').trim().slice(0, 120);
   if (!cleanName) badRequest('Enter a name for the new shop item.');
   const copied = Object.fromEntries(Object.entries(base || {}).filter(([key]) => !NOT_COPIED.has(key) && !key.startsWith('telegram')));
   return {
     ...copied,
     name: cleanName,
-    status: 'draft',
+    status: hidden ? 'archived' : 'draft',
     cost,
     createdFrom: {
       source: 'dashboard',
+      ...(hidden && { purpose: 'hidden-item' }),
       ...(base?.id && { baseProductId: base.id }),
       ...(variationId && { variationId: String(variationId).slice(0, 100) }),
       ...(actor && { by: String(actor).slice(0, 100) }),

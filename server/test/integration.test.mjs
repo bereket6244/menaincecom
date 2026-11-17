@@ -78,6 +78,9 @@ test('a new item from a variation is a draft that keeps the base details but non
   assert.equal(draft.createdFrom.baseProductId, 'b');
   assert.equal(draft.createdFrom.by, 'Bereket');
   assert.throws(() => draftProductFrom({ name: '  ', cost: {} }), /name/);
+  const hidden = draftProductFrom({ name: 'Wax seal', cost: { items: [] }, hidden: true });
+  assert.equal(hidden.status, 'archived');
+  assert.equal(hidden.createdFrom.purpose, 'hidden-item');
 });
 
 test('dashboard writes need the token and the shop switch', () => {

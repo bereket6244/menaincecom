@@ -765,17 +765,18 @@ api.get('/integration/catalog', requireIntegrationToken, dbRoute(async (_req, re
   res.json(dashboardCatalog(products, inputs));
 }));
 
-// Dashboard: turn a variation into its own shop item. Always a draft, so
-// nothing is published (or posted to Telegram) until an admin publishes it.
+// Dashboard: turn a variation into its own shop item (a draft), or add an item
+// sold only in person (hidden = archived). Either way nothing is published or
+// posted to Telegram from here.
 api.post('/integration/products', requireIntegrationWrite, dbRoute(async (req, res) => {
-  const { name, recipe, baseProductId, variationId, actor } = req.body || {};
+  const { name, recipe, baseProductId, variationId, actor, hidden } = req.body || {};
   const inputs = await costInputs();
   const cost = shopCostFromRecipe(recipe, inputs);
   const cleanName = String(name || '').trim().toLowerCase();
   const duplicate = (await records.list('products')).find((p) => !p.deletedAt && String(p.name || '').trim().toLowerCase() === cleanName);
   if (duplicate) return res.status(409).json({ error: 'duplicate', message: `The shop already has "${duplicate.name}".`, id: duplicate.id });
   const base = baseProductId ? await records.get('products', String(baseProductId)) : null;
-  const input = cleanProductInput(draftProductFrom({ name, base: base?.deletedAt ? null : base, cost, actor, variationId }), { includeDefaultLimit: true });
+  const input = cleanProductInput(draftProductFrom({ name, base: base?.deletedAt ? null : base, cost, actor, variationId, hidden: hidden === true }), { includeDefaultLimit: true });
   Object.assign(input, await priceForSave(input));
   const product = await records.insert('products', { ...input, contentVersion: 1 });
   res.status(201).json(pricedProduct(product, inputs));
