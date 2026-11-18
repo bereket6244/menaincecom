@@ -10,6 +10,7 @@ import { mobileProductTint } from '../components/MobileProductCard';
 import { ProductImageFrame } from '../components/ProductImageFrame';
 import { ProtectedImage } from '../components/ProtectedImage';
 import { ShareProductButton } from '../components/ShareProductButton';
+import { ProductLikeButton } from '../components/ProductLikeButton';
 import { COMPLIMENTARY_EXTRA_MAX_QTY, complimentaryAllowanceText, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
 import { cartPriceEach, cleanDescription, cx, cssColor, formatPrice, isColorGroupName, withDefaultVariantSelections } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
@@ -210,13 +211,12 @@ export function MobileProductDetail() {
   };
 
   return (
-    <div className="min-h-dvh bg-bg pb-44">
+    <div className="min-h-dvh bg-bg pb-[calc(env(safe-area-inset-bottom)+19rem)]">
       <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-edge bg-surface px-3">
         <button type="button" onClick={goBack} aria-label="Back" className="mena-press flex h-10 w-10 items-center justify-center rounded-xl text-ink hover:bg-surface2">
           <ChevronLeft className="h-5.5 w-5.5" />
         </button>
         <div className="min-w-0 flex-1 truncate text-sm font-semibold text-muted">{categoryName}</div>
-        <ShareProductButton name={product.name} version={product.updatedAt || product.createdAt} compact />
         <div ref={contactRef} className="relative">
           <button
             type="button"
@@ -395,40 +395,41 @@ export function MobileProductDetail() {
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[430px] border-t border-edge bg-white/95 px-3.5 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-8px_24px_rgba(28,26,25,0.07)] backdrop-blur">
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="text-[11px] text-muted">Amount</div>
-              <div className="text-sm font-semibold text-ink">{qty.toLocaleString()} item(s)</div>
+        <div className="space-y-2">
+          <div className="flex items-end justify-between gap-3 pb-1">
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] text-muted">Price each</div>
+              <div className="truncate text-[19px] font-extrabold text-[#ee0a24]">{formatPrice(product, qty)}</div>
             </div>
-            <QuantityPicker size="sm" value={qty} onChange={setLimitedQty} max={maxOrderQty} />
+            <div className="shrink-0">
+              <div className="mb-1 text-[11px] text-muted">Quantity</div>
+              <QuantityPicker size="sm" value={qty} onChange={setLimitedQty} max={maxOrderQty} />
+            </div>
           </div>
-          <div className="flex items-center gap-2.5">
-            <div className="min-w-0 shrink">
-            <div className="text-[11px] text-muted">Price each</div>
-            <div className="truncate text-[19px] font-extrabold text-[#ee0a24]">{formatPrice(product, qty)}</div>
-            </div>
-            <button
-              type="button"
-              onClick={(event) => addFrom(event.currentTarget)}
-              disabled={actionState !== 'idle'}
-              aria-busy={actionState === 'adding'}
-              className="btn-outline h-10 min-w-0 flex-1 px-2 text-xs"
-            >
-              {actionState === 'adding' && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              {actionState === 'added' && <Check className="h-3.5 w-3.5" />}
-              {actionState === 'adding' ? 'Adding...' : actionState === 'added' ? 'Added' : 'Add to cart'}
-            </button>
-            <button
-              type="button"
-              onClick={buyNow}
-              disabled={actionState !== 'idle'}
-              aria-busy={actionState === 'buying'}
-              className="btn-primary h-10 min-w-0 flex-1 px-2 text-xs"
-            >
-              {actionState === 'buying' && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              {actionState === 'buying' ? 'Opening...' : 'Buy now'}
-            </button>
+          <button
+            type="button"
+            onClick={buyNow}
+            disabled={actionState !== 'idle'}
+            aria-busy={actionState === 'buying'}
+            className="btn-primary product-action h-12 w-full text-sm"
+          >
+            {actionState === 'buying' && <Loader2 className="h-4 w-4 animate-spin" />}
+            {actionState === 'buying' ? 'Opening...' : 'Buy now'}
+          </button>
+          <button
+            type="button"
+            onClick={(event) => addFrom(event.currentTarget)}
+            disabled={actionState !== 'idle'}
+            aria-busy={actionState === 'adding'}
+            className="btn-outline product-action h-12 w-full text-sm"
+          >
+            {actionState === 'adding' && <Loader2 className="h-4 w-4 animate-spin" />}
+            {actionState === 'added' && <Check className="h-4 w-4" />}
+            {actionState === 'adding' ? 'Adding...' : actionState === 'added' ? 'Added' : 'Add to cart'}
+          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <ShareProductButton name={product.name} version={product.updatedAt || product.createdAt} />
+            <ProductLikeButton productId={product.id} name={product.name} />
           </div>
         </div>
       </div>

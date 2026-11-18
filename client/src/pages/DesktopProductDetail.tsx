@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Check, ChevronLeft, Clock, Loader2, ShoppingBag, X } from 'lucide-react';
+import { Check, ChevronLeft, Clock, Loader2, X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { Product, UniversalComplimentaryItem } from '../lib/types';
 import { useApp } from '../store/AppContext';
@@ -9,6 +9,7 @@ import { QuantityPicker } from '../components/QuantityPicker';
 import { ProductImageFrame } from '../components/ProductImageFrame';
 import { ProtectedImage } from '../components/ProtectedImage';
 import { ShareProductButton } from '../components/ShareProductButton';
+import { ProductLikeButton } from '../components/ProductLikeButton';
 import {
   COMPLIMENTARY_EXTRA_MAX_QTY,
   complimentaryAllowanceText,
@@ -19,9 +20,6 @@ import {
 import { cartPriceEach, cleanDescription, cx, cssColor, formatPrice, isColorGroupName, withDefaultVariantSelections } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
 import { clampOrderQty, productLimitText, productMaxOrderQty } from '../lib/orderLimits';
-
-const ADD_TO_CART_BUTTON = 'btn-outline min-w-[180px]';
-const BUY_NOW_BUTTON = 'btn-primary min-w-[180px]';
 
 export function DesktopProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -167,12 +165,11 @@ export function DesktopProductDetail() {
 
   return (
     <div className="mx-auto max-w-[1360px] px-10 py-9 pb-24 2xl:px-12">
-      <div className="mb-5 flex items-center justify-between gap-4">
+      <div className="mb-5 flex items-center gap-4">
         <button onClick={goBack} className="mena-press inline-flex min-h-10 items-center gap-1.5 text-[13.5px] font-bold text-muted hover:text-ink">
           <ChevronLeft className="h-4 w-4" />
           Back to catalog
         </button>
-        <ShareProductButton name={product.name} version={product.updatedAt || product.createdAt} />
       </div>
 
       <div className="grid grid-cols-[minmax(0,1fr)_480px] items-start gap-16">
@@ -286,15 +283,20 @@ export function DesktopProductDetail() {
             </div>
           )}
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            <button type="button" onClick={handleAdd} disabled={actionState !== 'idle'} aria-busy={actionState === 'adding'} className={ADD_TO_CART_BUTTON}>
-              {actionState === 'adding' ? <Loader2 className="h-4 w-4 animate-spin" /> : actionState === 'added' ? <Check className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}
-              {actionState === 'adding' ? 'Adding...' : actionState === 'added' ? 'Added' : 'Add to cart'}
-            </button>
-            <button type="button" onClick={handleBuy} disabled={actionState !== 'idle'} aria-busy={actionState === 'buying'} className={BUY_NOW_BUTTON}>
+          <div className="mt-8 space-y-3">
+            <button type="button" onClick={handleBuy} disabled={actionState !== 'idle'} aria-busy={actionState === 'buying'} className="btn-primary product-action h-14 w-full text-base">
               {actionState === 'buying' && <Loader2 className="h-4 w-4 animate-spin" />}
               {actionState === 'buying' ? 'Opening...' : 'Buy now'}
             </button>
+            <button type="button" onClick={handleAdd} disabled={actionState !== 'idle'} aria-busy={actionState === 'adding'} className="btn-outline product-action h-14 w-full text-base">
+              {actionState === 'adding' && <Loader2 className="h-4 w-4 animate-spin" />}
+              {actionState === 'added' && <Check className="h-4 w-4" />}
+              {actionState === 'adding' ? 'Adding...' : actionState === 'added' ? 'Added' : 'Add to cart'}
+            </button>
+            <div className="grid grid-cols-2 gap-3">
+              <ShareProductButton name={product.name} version={product.updatedAt || product.createdAt} />
+              <ProductLikeButton productId={product.id} name={product.name} />
+            </div>
           </div>
           {!online && <p className="mt-3 text-[12px] font-semibold text-amber-700">You are offline - sending an order requires a connection.</p>}
 

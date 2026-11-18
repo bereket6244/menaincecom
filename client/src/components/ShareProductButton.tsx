@@ -4,11 +4,10 @@ import { useApp } from '../store/AppContext';
 
 interface ShareProductButtonProps {
   name: string;
-  compact?: boolean;
   version?: string;
 }
 
-export function ShareProductButton({ name, compact = false, version }: ShareProductButtonProps) {
+export function ShareProductButton({ name, version }: ShareProductButtonProps) {
   const { toast } = useApp();
   const previewVersion = version ? String(Date.parse(version) || 1) : '1';
 
@@ -43,14 +42,11 @@ export function ShareProductButton({ name, compact = false, version }: ShareProd
     <button
       type="button"
       onClick={share}
-      aria-label={compact ? `Share ${name}` : undefined}
-      title={compact ? 'Share product' : undefined}
-      className={compact
-        ? 'mena-press flex h-10 w-10 items-center justify-center rounded-xl text-ink hover:bg-surface2 focus-visible:outline-2 focus-visible:outline-pink'
-        : 'mena-press inline-flex min-h-10 items-center gap-2 px-1 text-[13.5px] font-bold text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-pink'}
+      aria-label={`Share ${name}`}
+      className="product-utility-action"
     >
-      <Share2 className={compact ? 'h-4.5 w-4.5' : 'h-4 w-4'} aria-hidden="true" />
-      {!compact && <span>Share</span>}
+      <Share2 className="h-5 w-5" aria-hidden="true" />
+      <span>Share</span>
     </button>
   );
 }
