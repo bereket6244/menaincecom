@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { ArrowUpDown, Check, ChevronDown, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { Category, Product } from '../lib/types';
@@ -16,6 +16,7 @@ import { FilterOverlay } from '../components/FilterOverlay';
 import { PriceRangeFilter } from '../components/PriceRangeFilter';
 import { useResultAnimation } from '../lib/useResultAnimation';
 import { productCategoryIds, productCategoryNames } from '../lib/productCategories';
+import { useQuickAdd } from '../lib/useQuickAdd';
 
 const CIRCLE_TINTS = ['#f3e7ea', '#efe9df', '#e7ecef', '#efe3d6', '#e9f0ec'];
 const SORTS = [
@@ -47,7 +48,7 @@ function productSearchText(product: Product, categories: Category[]): string {
 }
 
 export function MobileCatalog() {
-  const navigate = useNavigate();
+  const quickAdd = useQuickAdd();
   const { data: categories } = useData<Category[]>('/categories');
   const { data: products, loading } = useData<Product[]>('/products');
   const [params, setParams] = useSearchParams();
@@ -317,7 +318,7 @@ export function MobileCatalog() {
               key={product.id}
               product={product}
               priority={index < 4}
-              onQuickAdd={(item) => navigate(`/product/${item.id}`)}
+              onQuickAdd={quickAdd}
             />
           ))}
         </div>

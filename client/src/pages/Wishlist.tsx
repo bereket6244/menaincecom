@@ -5,10 +5,12 @@ import type { Product } from '../lib/types';
 import { ProductCard } from '../components/ProductCard';
 import { EmptyState, Spinner } from '../components/ui';
 import { useApp } from '../store/AppContext';
+import { useQuickAdd } from '../lib/useQuickAdd';
 
 export function Wishlist() {
   const navigate = useNavigate();
   const { wishlistProductIds } = useApp();
+  const quickAdd = useQuickAdd();
   const { data: products, loading } = useData<Product[]>('/products');
   const liked = (products || []).filter((product) => wishlistProductIds.includes(product.id));
 
@@ -35,7 +37,7 @@ export function Wishlist() {
         <div className="border-t border-edge bg-white lg:border-0 lg:bg-transparent lg:p-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-x-5 lg:gap-y-8 xl:grid-cols-4">
             {liked.map((product, i) => (
-              <ProductCard key={product.id} product={product} priority={i < 4} />
+              <ProductCard key={product.id} product={product} priority={i < 4} onQuickAdd={quickAdd} />
             ))}
           </div>
         </div>

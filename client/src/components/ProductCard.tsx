@@ -4,7 +4,11 @@ import { MobileProductCard } from './MobileProductCard';
 import { useIsDesktop } from '../lib/useIsDesktop';
 import { useNavigate } from 'react-router-dom';
 
-export function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
+export function ProductCard({ product, priority = false, onQuickAdd }: {
+  product: Product;
+  priority?: boolean;
+  onQuickAdd: (product: Product, selectedPhoto?: string | null) => void;
+}) {
   const isDesktop = useIsDesktop();
   const navigate = useNavigate();
   return isDesktop ? (
@@ -12,10 +16,9 @@ export function ProductCard({ product, priority = false }: { product: Product; p
       product={product}
       priority={priority}
       onOpen={(p) => navigate(`/product/${p.id}`)}
-      onQuickAdd={(p) => navigate(`/product/${p.id}`)}
-      quickAction="view"
+      onQuickAdd={onQuickAdd}
     />
   ) : (
-    <MobileProductCard product={product} priority={priority} />
+    <MobileProductCard product={product} priority={priority} onQuickAdd={onQuickAdd} />
   );
 }

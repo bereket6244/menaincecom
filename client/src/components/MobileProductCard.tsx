@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Heart, Loader2 } from 'lucide-react';
+import { Check, Heart, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import type { Product } from '../lib/types';
 import { cleanDescription, colorOptions, cx, formatPrice } from '../lib/utils';
@@ -18,7 +18,7 @@ export function mobileProductTint(product: Pick<Product, 'id' | 'name'>): string
 export function MobileProductCard({ product, priority = false, onQuickAdd }: {
   product: Product;
   priority?: boolean;
-  onQuickAdd?: (product: Product) => void;
+  onQuickAdd: (product: Product, selectedPhoto?: string | null) => void;
 }) {
   const navigate = useNavigate();
   const { wishlistProductIds, toggleWishlist } = useApp();
@@ -28,6 +28,7 @@ export function MobileProductCard({ product, priority = false, onQuickAdd }: {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [pickedColorPhoto, setPickedColorPhoto] = useState<string | null>(null);
   const [wishlistBusy, setWishlistBusy] = useState(false);
+  const [quickState, setQuickState] = useState<'idle' | 'added'>('idle');
   const selectedPhoto = pickedColorPhoto || product.photos[photoIndex] || product.photos[0];
   const hasMultiplePhotos = product.photos.length > 1;
   const selectedPhotoIndex = product.photos.indexOf(selectedPhoto || '');
@@ -112,10 +113,19 @@ export function MobileProductCard({ product, priority = false, onQuickAdd }: {
           {limitText && <div className="mt-0.5 text-xs leading-tight text-muted">{limitText}</div>}
           <button
             type="button"
-            onClick={() => onQuickAdd ? onQuickAdd(product) : open()}
-            className="mena-press mt-2.5 flex min-h-11 w-full items-center justify-center rounded-full bg-pink px-3 text-sm font-bold text-white hover:bg-pink-dim focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink"
+            onClick={() => {
+              if (quickState !== 'idle') return;
+              onQuickAdd(product, selectedPhoto);
+              setQuickState('added');
+              window.setTimeout(() => setQuickState('idle'), 900);
+            }}
+            disabled={quickState !== 'idle'}
+            className="mena-press -ml-1 mt-1.5 flex h-11 items-center px-1 focus-visible:rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink disabled:cursor-wait"
           >
-            View product
+            <span className="flex h-9 min-w-[112px] items-center justify-center gap-1.5 rounded-full bg-pink px-4 text-[13px] font-semibold text-white hover:bg-pink-dim">
+              {quickState === 'added' && <Check className="h-3.5 w-3.5" />}
+              {quickState === 'added' ? 'Added' : 'Add to cart'}
+            </span>
           </button>
         </div>
       </div>
