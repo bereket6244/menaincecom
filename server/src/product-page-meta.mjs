@@ -18,7 +18,7 @@ function publicImageUrl(photo, origin, basePath) {
   }
 }
 
-export function productPageMeta(product, pageUrl, origin, basePath = '/') {
+export function productPageMeta(product, pageUrl, origin, basePath = '/', canonicalUrl = pageUrl) {
   const title = `${product.name} | mena inc`;
   const description = String(product.description || '').replace(/\s+/g, ' ').trim().slice(0, 240)
     || `View ${product.name} at mena inc.`;
@@ -27,7 +27,7 @@ export function productPageMeta(product, pageUrl, origin, basePath = '/') {
   return [
     `<title>${escapeHtml(title)}</title>`,
     tag('description', description),
-    `<link rel="canonical" href="${escapeHtml(pageUrl)}" />`,
+    `<link rel="canonical" href="${escapeHtml(canonicalUrl)}" />`,
     tag('og:type', 'product', true),
     tag('og:site_name', 'mena inc', true),
     tag('og:title', title, true),
@@ -54,9 +54,11 @@ export function productPageMiddleware({ clientIndex, basePath, getProduct, publi
       const product = await getProduct(id);
       if (!product || !isPublicProduct(product)) return next();
       const origin = publicShopUrl ? new URL(publicShopUrl).origin : `${req.protocol}://${req.get('host')}`;
-      const pageUrl = `${origin}${basePath === '/' ? '' : basePath}/product/${encodeURIComponent(id)}`;
+      const canonicalUrl = `${origin}${basePath === '/' ? '' : basePath}/product/${encodeURIComponent(id)}`;
+      const version = typeof req.query.v === 'string' && /^[\w-]{1,40}$/.test(req.query.v) ? req.query.v : '';
+      const pageUrl = version ? `${canonicalUrl}?v=${encodeURIComponent(version)}` : canonicalUrl;
       const html = await fs.readFile(clientIndex, 'utf8');
-      const metadata = productPageMeta(product, pageUrl, origin, basePath);
+      const metadata = productPageMeta(product, pageUrl, origin, basePath, canonicalUrl);
       const rendered = html
         .replace(/<title>[^<]*<\/title>/i, '')
         .replace(/<meta name="description"[^>]*>/i, '')

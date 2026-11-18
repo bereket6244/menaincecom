@@ -71,6 +71,7 @@ export interface Product {
   telegramPostUrl?: string;
   telegramMessageId?: number;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Category {

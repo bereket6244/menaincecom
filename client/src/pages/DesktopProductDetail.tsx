@@ -167,10 +167,13 @@ export function DesktopProductDetail() {
 
   return (
     <div className="mx-auto max-w-[1360px] px-10 py-9 pb-24 2xl:px-12">
-      <button onClick={goBack} className="mena-press mb-5 inline-flex items-center gap-1.5 text-[13.5px] font-bold text-muted hover:text-ink">
-        <ChevronLeft className="h-4 w-4" />
-        Back to catalog
-      </button>
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <button onClick={goBack} className="mena-press inline-flex min-h-10 items-center gap-1.5 text-[13.5px] font-bold text-muted hover:text-ink">
+          <ChevronLeft className="h-4 w-4" />
+          Back to catalog
+        </button>
+        <ShareProductButton name={product.name} version={product.updatedAt || product.createdAt} />
+      </div>
 
       <div className="grid grid-cols-[minmax(0,1fr)_480px] items-start gap-16">
         <div className="sticky top-[176px] space-y-4">
@@ -217,10 +220,7 @@ export function DesktopProductDetail() {
 
         <div className="mena-fade-up">
           <div className="text-[12px] font-bold uppercase tracking-[0.1em] text-muted">{product.isAddon ? 'Add-on item' : 'Design'}</div>
-          <div className="mt-1.5 flex items-start justify-between gap-4">
-            <h1 className="font-sans text-[42px] font-semibold leading-[1.05]">{product.name}</h1>
-            <ShareProductButton name={product.name} />
-          </div>
+          <h1 className="mt-1.5 font-sans text-[42px] font-semibold leading-[1.05]">{product.name}</h1>
           <div className="mt-3 text-[30px] font-extrabold text-[#ee0a24]">
             {formatPrice(product, qty)}
             {!isQuote && <span className="ml-2 text-sm font-medium text-muted">each</span>}

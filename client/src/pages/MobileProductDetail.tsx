@@ -216,7 +216,7 @@ export function MobileProductDetail() {
           <ChevronLeft className="h-5.5 w-5.5" />
         </button>
         <div className="min-w-0 flex-1 truncate text-sm font-semibold text-muted">{categoryName}</div>
-        <ShareProductButton name={product.name} compact />
+        <ShareProductButton name={product.name} version={product.updatedAt || product.createdAt} compact />
         <div ref={contactRef} className="relative">
           <button
             type="button"

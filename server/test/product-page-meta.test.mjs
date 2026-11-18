@@ -39,6 +39,9 @@ test('product links render public product photo metadata for link crawlers', asy
     assert.match(html, /<title>Rose &amp; Ivory \| mena inc<\/title>/);
     assert.doesNotMatch(html, /<title>Store<\/title>/);
   }
+  const versioned = await (await fetch(`${base}/shop/product/photo-1?v=123`)).text();
+  assert.match(versioned, /<meta property="og:url" content="https:\/\/menaincet\.com\/shop\/product\/photo-1\?v=123"/);
+  assert.match(versioned, /<link rel="canonical" href="https:\/\/menaincet\.com\/shop\/product\/photo-1"/);
   assert.equal((await fetch(`${base}/shop/product/draft`)).status, 404);
   assert.equal((await fetch(`${base}/shop/product/missing`)).status, 404);
 });
