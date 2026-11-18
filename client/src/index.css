@@ -11,11 +11,11 @@
   --color-surface: #ffffff;
   --color-surface2: #f4f0ec;
   --color-edge: #ece7e2;
-  --color-pink: #ee317b;
+  --color-pink: #d91c68;
   --color-pink-dim: #c2185b;
   --color-green: #5a9e2e;
   --color-ink: #1c1a19;
-  --color-muted: #8a8580;
+  --color-muted: #6f6964;
   --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-dancing: "Dancing Script", "Brush Script MT", cursive;
 }

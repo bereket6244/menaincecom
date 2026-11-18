@@ -15,12 +15,14 @@ export function DesktopProductCard({
   index = 0,
   onOpen,
   onQuickAdd,
+  quickAction = 'add',
 }: {
   product: Product;
   priority?: boolean;
   index?: number;
   onOpen: (product: Product) => void;
   onQuickAdd: (product: Product) => void;
+  quickAction?: 'add' | 'view';
 }) {
   const { wishlistProductIds, toggleWishlist } = useApp();
   const wished = wishlistProductIds.includes(product.id);
@@ -143,6 +145,7 @@ export function DesktopProductCard({
           <button
             type="button"
             onClick={() => {
+              if (quickAction === 'view') { onQuickAdd(product); return; }
               if (quickState !== 'idle') return;
               setQuickState('adding');
               window.setTimeout(() => {
@@ -151,13 +154,13 @@ export function DesktopProductCard({
                 window.setTimeout(() => setQuickState('idle'), 750);
               }, 140);
             }}
-            disabled={quickState !== 'idle'}
-            aria-busy={quickState === 'adding'}
+            disabled={quickAction === 'add' && quickState !== 'idle'}
+            aria-busy={quickAction === 'add' && quickState === 'adding'}
             className="mena-press flex h-11 w-full items-center justify-center gap-2 rounded-full bg-pink px-3 text-[13px] font-semibold text-white hover:bg-pink-dim disabled:cursor-wait disabled:opacity-80"
           >
-            {quickState === 'adding' && <Loader2 className="h-4 w-4 animate-spin" />}
-            {quickState === 'added' && <Check className="h-4 w-4" />}
-            {quickState === 'adding' ? 'Adding...' : quickState === 'added' ? 'Added' : isQuote ? 'Request Quote' : 'Add to Cart'}
+            {quickAction === 'add' && quickState === 'adding' && <Loader2 className="h-4 w-4 animate-spin" />}
+            {quickAction === 'add' && quickState === 'added' && <Check className="h-4 w-4" />}
+            {quickAction === 'view' ? 'View product' : quickState === 'adding' ? 'Adding...' : quickState === 'added' ? 'Added' : isQuote ? 'Request Quote' : 'Add to Cart'}
           </button>
         </div>
       </div>

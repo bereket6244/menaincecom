@@ -311,7 +311,7 @@ export function MobileCatalog() {
           <EmptyState>No designs found{query ? ` for "${query}"` : ''}.</EmptyState>
         </div>
       ) : (
-        <div ref={gridRef} className="grid grid-cols-2 gap-x-3.5 gap-y-6 px-4 pt-3">
+        <div ref={gridRef} className="border-y border-edge bg-white">
           {visible.map((product, index) => (
             <MobileProductCard
               key={product.id}

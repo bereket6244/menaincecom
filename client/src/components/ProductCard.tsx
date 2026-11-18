@@ -13,6 +13,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
       priority={priority}
       onOpen={(p) => navigate(`/product/${p.id}`)}
       onQuickAdd={(p) => navigate(`/product/${p.id}`)}
+      quickAction="view"
     />
   ) : (
     <MobileProductCard product={product} priority={priority} />

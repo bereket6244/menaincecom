@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 
 export function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(() =>
-    typeof window !== 'undefined' ? window.matchMedia('(min-width: 768px)').matches : false
+    typeof window !== 'undefined' ? window.matchMedia('(min-width: 1024px)').matches : false
   );
 
   useEffect(() => {
-    const query = window.matchMedia('(min-width: 768px)');
+    const query = window.matchMedia('(min-width: 1024px)');
     const update = () => setIsDesktop(query.matches);
     update();
     query.addEventListener('change', update);

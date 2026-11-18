@@ -286,7 +286,7 @@ export function MobileOrderSummary() {
             <ChevronLeft className="h-5.5 w-5.5" />
           </button>
           <div className="flex-1 font-sans text-[22px] font-semibold">Checkout</div>
-          <div className="pr-1 text-[12.5px] text-muted">{selectedItems.length} items</div>
+          <div className="pr-1 text-sm text-muted">{selectedItems.length} {selectedItems.length === 1 ? 'item' : 'items'}</div>
         </header>
 
         <div className="space-y-4 px-4 py-4">
@@ -311,7 +311,7 @@ export function MobileOrderSummary() {
                       </div>
                     )}
                     <div className="mt-1 flex items-center justify-between gap-2">
-                      <span className="text-sm font-extrabold text-[#ee0a24]">{formatLineTotal(item)}</span>
+                      <span className="text-sm font-extrabold text-pink">{formatLineTotal(item)}</span>
                       <span className="text-[12px] text-muted">x{item.qty}</span>
                     </div>
                   </div>
@@ -388,11 +388,11 @@ export function MobileOrderSummary() {
             <div className="grid grid-cols-2 gap-3">
               <div className="min-w-0">
               <div className="text-[11px] text-muted">Amount</div>
-              <div className="truncate text-sm font-semibold text-ink">{selectedQty.toLocaleString()} item(s)</div>
+              <div className="truncate text-sm font-semibold text-ink">{selectedQty.toLocaleString()} {selectedQty === 1 ? 'item' : 'items'}</div>
               </div>
               <div className="min-w-0 text-right">
               <div className="text-[11px] text-muted">Total</div>
-              <div className="truncate text-lg font-extrabold text-[#ee0a24]">{formatCartTotal(selectedTotal, { hasQuote: hasQuoteItems })}</div>
+              <div className="truncate text-lg font-extrabold text-pink">{formatCartTotal(selectedTotal, { hasQuote: hasQuoteItems })}</div>
               </div>
             </div>
             <button type="button" onClick={() => void submitOrder()} disabled={!online || sending !== null} aria-busy={sending !== null} className="btn-primary btn-order-gradient h-12 w-full px-5">
@@ -412,7 +412,7 @@ export function MobileOrderSummary() {
           <ChevronLeft className="h-5.5 w-5.5" />
         </button>
         <div className="flex-1 font-sans text-[22px] font-semibold">Your cart</div>
-        <div className="pr-1 text-[12.5px] text-muted">{cartQty.toLocaleString()} items</div>
+        <div className="pr-1 text-sm text-muted">{cartQty.toLocaleString()} {cartQty === 1 ? 'item' : 'items'}</div>
       </header>
 
       <div className="px-4 pt-1">
@@ -436,9 +436,8 @@ export function MobileOrderSummary() {
                 {item.photo ? <ProtectedImage src={item.photo} alt="" className="h-full w-full object-cover" /> : <div className="h-full w-full" style={{ background: mobileProductTint({ id: item.productId, name: item.name }) }} />}
               </Link>
               <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="truncate text-[15px] font-extrabold">{item.name}</div>
+                <div>
+                    <div className="line-clamp-2 text-[15px] font-extrabold leading-snug">{item.name}</div>
                     {Object.keys(item.variantSelections).length > 0 && (
                       <div className="mt-1 truncate text-[12px] text-muted">
                         {Object.entries(item.variantSelections).map(([key, value]) => `${key}: ${value}`).join(' · ')}
@@ -449,9 +448,8 @@ export function MobileOrderSummary() {
                         Complimentary: {complimentarySummary(freebiesFor(item))}
                       </div>
                     )}
-                    {limitText && <div className="mt-1 text-[12px] font-semibold text-[#ee0a24]">{limitText}</div>}
-                  </div>
-                  <div className="shrink-0 text-right text-[15px] font-extrabold text-[#ee0a24]">
+                    {limitText && <div className="mt-1 text-xs font-semibold text-pink">{limitText}</div>}
+                  <div className="mt-1 text-[15px] font-extrabold text-pink">
                     {formatLineTotal(item)}
                   </div>
                 </div>
@@ -494,14 +492,15 @@ export function MobileOrderSummary() {
       {suggestions.length > 0 && (
         <section className="px-4 pt-5">
           <h2 className="font-sans text-2xl font-semibold">Complete the suite</h2>
-          <div className="mena-scroll mt-3 flex gap-3 overflow-x-auto pb-1">
+          <div className="mt-3 space-y-3">
             {suggestions.map((product) => (
-              <div key={product.id} className="w-32 shrink-0 rounded-2xl border border-edge bg-surface p-2.5">
-                <Link to={`/product/${product.id}`} className="block aspect-square overflow-hidden rounded-xl bg-surface2" style={{ background: product.photos[0] ? undefined : mobileProductTint(product) }}>
-                  {product.photos[0] ? <ProtectedImage src={product.photos[0]} alt={product.name} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center px-2 text-center font-sans text-2xl text-pink">{product.name}</div>}
+              <div key={product.id} className="flex items-center gap-3 rounded-2xl border border-edge bg-surface p-2.5">
+                <Link to={`/product/${product.id}`} className="block h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-surface2" style={{ background: product.photos[0] ? undefined : mobileProductTint(product) }}>
+                  {product.photos[0] ? <ProtectedImage src={product.photos[0]} alt={product.name} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center px-2 text-center font-sans text-sm leading-tight text-pink"><span className="line-clamp-3">{product.name}</span></div>}
                 </Link>
-                <div className="mt-2 truncate text-sm font-extrabold">{product.name}</div>
-                <div className="text-[12px] font-bold text-[#ee0a24]">{formatPrice(product)}</div>
+                <div className="min-w-0 flex-1">
+                <div className="line-clamp-2 text-sm font-extrabold leading-5">{product.name}</div>
+                <div className="mt-0.5 text-sm font-bold text-pink">{formatPrice(product)}</div>
                 <button
                   type="button"
                   onClick={() => {
@@ -535,11 +534,12 @@ export function MobileOrderSummary() {
                   }}
                   disabled={addingSuggestion.has(product.id)}
                   aria-busy={addingSuggestion.has(product.id)}
-                  className="btn-primary mt-2 h-9 w-full px-3 py-0 text-[12px]"
+                  className="btn-primary mt-2 h-10 w-full px-3 py-0 text-sm"
                 >
                   {addingSuggestion.has(product.id) ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PlusCircle className="h-3.5 w-3.5" />}
                   {addingSuggestion.has(product.id) ? 'Adding...' : 'Add'}
                 </button>
+                </div>
               </div>
             ))}
           </div>
@@ -557,11 +557,11 @@ export function MobileOrderSummary() {
             </button>
             <div className="min-w-0">
               <div className="text-[11px] text-muted">Amount</div>
-              <div className="truncate text-sm font-semibold text-ink">{selectedQty.toLocaleString()} item(s)</div>
+              <div className="truncate text-sm font-semibold text-ink">{selectedQty.toLocaleString()} {selectedQty === 1 ? 'item' : 'items'}</div>
             </div>
             <div className="min-w-0 text-right">
               <div className="text-[11px] text-muted">Total</div>
-              <div className="truncate text-lg font-extrabold text-[#ee0a24]">{formatCartTotal(selectedTotal, { hasQuote: hasQuoteItems })}</div>
+              <div className="truncate text-lg font-extrabold text-pink">{formatCartTotal(selectedTotal, { hasQuote: hasQuoteItems })}</div>
             </div>
           </div>
           <button type="button" onClick={goCheckout} disabled={!selectedItems.length || checkoutPending} aria-busy={checkoutPending} className="btn-primary h-12 w-full px-5">

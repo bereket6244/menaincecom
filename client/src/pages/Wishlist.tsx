@@ -32,8 +32,8 @@ export function Wishlist() {
           </EmptyState>
         </div>
       ) : (
-        <div className="p-4">
-          <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:gap-x-6 lg:grid-cols-4">
+        <div className="border-t border-edge bg-white lg:border-0 lg:bg-transparent lg:p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-x-5 lg:gap-y-8 xl:grid-cols-4">
             {liked.map((product, i) => (
               <ProductCard key={product.id} product={product} priority={i < 4} />
             ))}

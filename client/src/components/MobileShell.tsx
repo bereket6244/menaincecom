@@ -129,6 +129,17 @@ export function MobileShell({ children }: { children: ReactNode }) {
                   className="h-7 w-7 object-contain mix-blend-multiply"
                 />
               </Link>
+              {location.pathname === '/catalog' && (
+                <button
+                  type="button"
+                  onClick={() => setFabOpen((open) => !open)}
+                  aria-label="Contact options"
+                  aria-expanded={fabOpen}
+                  className="mena-press flex h-10 w-10 items-center justify-center rounded-xl text-ink hover:bg-surface2"
+                >
+                  <Send className="h-5 w-5" />
+                </button>
+              )}
               <Link
                 id="mena-cart-icon"
                 to="/order"
@@ -159,7 +170,8 @@ export function MobileShell({ children }: { children: ReactNode }) {
                       navigate(`/catalog${q ? `?q=${encodeURIComponent(q)}` : ''}`, { replace: true });
                     }}
                     placeholder="Search designs, colors, prices..."
-                    className="w-full rounded-full border border-edge bg-white py-3 pl-10 pr-11 text-sm text-ink outline-none placeholder:text-muted/70 focus:border-pink"
+                    aria-label="Search designs, colors, and prices"
+                    className="w-full rounded-full border border-edge bg-white py-3 pl-10 pr-11 text-base text-ink outline-none placeholder:text-muted focus:border-pink"
                   />
                   {search && (
                     <button
@@ -192,6 +204,8 @@ export function MobileShell({ children }: { children: ReactNode }) {
         onClick={() => setDrawerOpen(false)}
       />
       <aside
+        inert={!drawerOpen}
+        aria-hidden={!drawerOpen}
         className={cx(
           'fixed bottom-0 left-0 top-0 z-[71] flex w-[300px] max-w-[82vw] flex-col bg-surface shadow-[8px_0_30px_rgba(0,0,0,0.18)] transition-transform duration-300 ease-out',
           drawerOpen ? 'translate-x-0' : '-translate-x-full'
@@ -280,7 +294,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {!hasBottomCta && showCatalogHeader && location.pathname !== '/digital-invitations' && !inviteDismissed && !drawerOpen && !fabOpen && (
+      {!hasBottomCta && showCatalogHeader && !['/catalog', '/contact', '/digital-invitations'].includes(location.pathname) && !inviteDismissed && !drawerOpen && !fabOpen && (
         <div ref={inviteFloatRef} className={cx('invite-float invite-float-mobile', inviteFlying && 'invite-float-flying')}>
           <button type="button" className="invite-float-close" onClick={dismissInvite} aria-label="Dismiss Digital Invites button">
             <X aria-hidden="true" className="h-3.5 w-3.5" />
@@ -292,7 +306,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      {!hasBottomCta && (
+      {!hasBottomCta && location.pathname !== '/contact' && (location.pathname !== '/catalog' || fabOpen) && (
         <div ref={fabRef} className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
           {fabOpen && (
             <>

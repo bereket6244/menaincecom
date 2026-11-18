@@ -211,7 +211,7 @@ export function MobileProductDetail() {
   };
 
   return (
-    <div className="min-h-dvh bg-bg pb-[calc(env(safe-area-inset-bottom)+19rem)]">
+    <div className="min-h-dvh bg-bg pb-[calc(env(safe-area-inset-bottom)+9rem)]">
       <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-edge bg-surface px-3">
         <button type="button" onClick={goBack} aria-label="Back" className="mena-press flex h-10 w-10 items-center justify-center rounded-xl text-ink hover:bg-surface2">
           <ChevronLeft className="h-5.5 w-5.5" />
@@ -294,13 +294,17 @@ export function MobileProductDetail() {
         <section className="px-[18px] pb-2 pt-[18px]">
           <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">{product.isAddon ? 'Add-on item' : categoryName}</div>
           <h1 className="mt-1 font-sans text-[30px] font-semibold leading-[1.15]">{product.name}</h1>
-          <div className="mt-2 text-[26px] font-extrabold text-[#ee0a24]">
+          <div className="mt-2 text-[26px] font-extrabold text-pink">
             {formatPrice(product, qty)}
             {!isQuote && <span className="ml-1 text-[13px] font-medium text-muted">each</span>}
             {qty > 1 && <div className="mt-1 text-sm font-semibold">Total for {qty}: {((cartPriceEach(product, qty) || 0) * qty).toLocaleString(undefined, { maximumFractionDigits: 2 })} ETB</div>}
           </div>
-          {limitText && <div className="mt-2 text-[13px] font-extrabold text-[#ee0a24]">{limitText}</div>}
+          {limitText && <div className="mt-2 text-[13px] font-extrabold text-pink">{limitText}</div>}
           {description && <p className="mt-3 whitespace-pre-line text-[14.5px] leading-[1.5] text-ink/70">{description}</p>}
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <ShareProductButton name={product.name} version={product.updatedAt || product.createdAt} />
+            <ProductLikeButton productId={product.id} name={product.name} />
+          </div>
         </section>
 
         <section className="space-y-4 px-[18px] pt-2">
@@ -394,42 +398,34 @@ export function MobileProductDetail() {
         )}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[430px] border-t border-edge bg-white/95 px-3.5 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-8px_24px_rgba(28,26,25,0.07)] backdrop-blur">
-        <div className="space-y-2">
-          <div className="flex items-end justify-between gap-3 pb-1">
-            <div className="min-w-0 flex-1">
-              <div className="text-[11px] text-muted">Price each</div>
-              <div className="truncate text-[19px] font-extrabold text-[#ee0a24]">{formatPrice(product, qty)}</div>
-            </div>
-            <div className="shrink-0">
-              <div className="mb-1 text-[11px] text-muted">Quantity</div>
-              <QuantityPicker size="sm" value={qty} onChange={setLimitedQty} max={maxOrderQty} />
-            </div>
+      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[430px] border-t border-edge bg-white px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-2.5 shadow-[0_-8px_24px_rgba(28,26,25,0.07)]">
+        <div>
+          <div className="mb-2 flex items-baseline justify-between gap-3">
+            <div className="text-sm font-semibold text-muted">Price each</div>
+            <div className="truncate text-xl font-extrabold text-pink">{formatPrice(product, qty)}</div>
           </div>
-          <button
-            type="button"
-            onClick={buyNow}
-            disabled={actionState !== 'idle'}
-            aria-busy={actionState === 'buying'}
-            className="btn-primary product-action h-12 w-full text-sm"
-          >
-            {actionState === 'buying' && <Loader2 className="h-4 w-4 animate-spin" />}
-            {actionState === 'buying' ? 'Opening...' : 'Buy now'}
-          </button>
-          <button
-            type="button"
-            onClick={(event) => addFrom(event.currentTarget)}
-            disabled={actionState !== 'idle'}
-            aria-busy={actionState === 'adding'}
-            className="btn-outline product-action h-12 w-full text-sm"
-          >
-            {actionState === 'adding' && <Loader2 className="h-4 w-4 animate-spin" />}
-            {actionState === 'added' && <Check className="h-4 w-4" />}
-            {actionState === 'adding' ? 'Adding...' : actionState === 'added' ? 'Added' : 'Add to cart'}
-          </button>
           <div className="grid grid-cols-2 gap-2">
-            <ShareProductButton name={product.name} version={product.updatedAt || product.createdAt} />
-            <ProductLikeButton productId={product.id} name={product.name} />
+            <button
+              type="button"
+              onClick={buyNow}
+              disabled={actionState !== 'idle'}
+              aria-busy={actionState === 'buying'}
+              className="btn-primary product-action h-11 w-full px-2 text-sm"
+            >
+              {actionState === 'buying' && <Loader2 className="h-4 w-4 animate-spin" />}
+              {actionState === 'buying' ? 'Opening...' : 'Buy now'}
+            </button>
+            <button
+              type="button"
+              onClick={(event) => addFrom(event.currentTarget)}
+              disabled={actionState !== 'idle'}
+              aria-busy={actionState === 'adding'}
+              className="btn-outline product-action h-11 w-full px-2 text-sm"
+            >
+              {actionState === 'adding' && <Loader2 className="h-4 w-4 animate-spin" />}
+              {actionState === 'added' && <Check className="h-4 w-4" />}
+              {actionState === 'adding' ? 'Adding...' : actionState === 'added' ? 'Added' : 'Add to cart'}
+            </button>
           </div>
         </div>
       </div>
@@ -439,6 +435,8 @@ export function MobileProductDetail() {
         onClick={() => setSheetOpen(false)}
       />
       <section
+        inert={!sheetOpen}
+        aria-hidden={!sheetOpen}
         className={cx(
           'fixed inset-x-0 bottom-0 z-[51] mx-auto max-h-[88dvh] max-w-[430px] overflow-y-auto rounded-t-3xl bg-surface shadow-[0_-12px_40px_rgba(0,0,0,.2)] transition-transform duration-[340ms]',
           sheetOpen ? 'translate-y-0' : 'translate-y-[110%]'
@@ -477,7 +475,7 @@ export function MobileProductDetail() {
             const isColor = isColorGroupName(group.name);
             return (
               <div key={group.name}>
-                <h3 className="mb-3 text-lg font-extrabold text-ink">{group.name}: {selections[group.name] || 'Select'}</h3>
+                <h2 className="mb-3 text-lg font-extrabold text-ink">{group.name}: {selections[group.name] || 'Select'}</h2>
                 <div className="flex flex-wrap gap-2.5">
                   {group.options.map((option) => {
                     const active = selections[group.name] === option.label;
@@ -506,7 +504,7 @@ export function MobileProductDetail() {
           })}
 
           <div>
-            <h3 className="mb-3 text-lg font-extrabold text-ink">Qty</h3>
+            <h2 className="mb-3 text-lg font-extrabold text-ink">Qty</h2>
             <QuantityPicker value={qty} onChange={setLimitedQty} max={maxOrderQty} presets={[100, 250, 500, 1000]} />
           </div>
         </div>

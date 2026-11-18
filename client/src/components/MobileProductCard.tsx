@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Check, Heart, Loader2 } from 'lucide-react';
+import { Heart, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import type { Product } from '../lib/types';
 import { cleanDescription, colorOptions, cx, formatPrice } from '../lib/utils';
@@ -15,11 +15,7 @@ export function mobileProductTint(product: Pick<Product, 'id' | 'name'>): string
   return TINTS[seed % TINTS.length];
 }
 
-export function MobileProductCard({
-  product,
-  priority = false,
-  onQuickAdd,
-}: {
+export function MobileProductCard({ product, priority = false, onQuickAdd }: {
   product: Product;
   priority?: boolean;
   onQuickAdd?: (product: Product) => void;
@@ -32,20 +28,17 @@ export function MobileProductCard({
   const [photoIndex, setPhotoIndex] = useState(0);
   const [pickedColorPhoto, setPickedColorPhoto] = useState<string | null>(null);
   const [wishlistBusy, setWishlistBusy] = useState(false);
-  const [quickState, setQuickState] = useState<'idle' | 'opening' | 'added'>('idle');
   const selectedPhoto = pickedColorPhoto || product.photos[photoIndex] || product.photos[0];
   const hasMultiplePhotos = product.photos.length > 1;
   const selectedPhotoIndex = product.photos.indexOf(selectedPhoto || '');
   const activePhotoIndex = selectedPhotoIndex >= 0 ? selectedPhotoIndex : photoIndex;
   const limitText = productPreviewLimitText(product);
-  const colors = colorOptions(product).slice(0, 6);
-  const showColors = colors.length > 1;
-  const isQuote = product.pricingMode === 'quote' || product.price == null;
+  const colors = colorOptions(product).slice(0, 5);
   const description = cleanDescription(product.description, product.name);
 
   return (
-    <article className="mena-fade-up flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-edge/60 bg-white p-1.5 shadow-[0_4px_18px_rgba(28,26,25,0.05)]">
-      <div className="relative">
+    <article className="mena-fade-up grid min-w-0 grid-cols-[minmax(0,42%)_minmax(0,1fr)] gap-3 border-b border-edge bg-white px-4 py-4 last:border-b-0">
+      <div className="relative min-w-0 self-start">
         <ProductImageFrame
           src={selectedPhoto}
           alt={product.name}
@@ -64,7 +57,7 @@ export function MobileProductCard({
             setPhotoIndex((current) => (current + 1) % product.photos.length);
           }}
           preloadSrcs={product.photos}
-          className="mena-press aspect-[1/1.18] w-full rounded-[16px] text-left"
+          className="mena-press aspect-[4/5] w-full rounded-lg text-left"
           placeholder={
             <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center" style={{ background: tint }}>
               <span className="font-sans text-[20px] font-semibold leading-tight text-pink">{product.name}</span>
@@ -72,94 +65,57 @@ export function MobileProductCard({
             </div>
           }
         />
+        <button
+          type="button"
+          onClick={async (event) => {
+            if (wishlistBusy) return;
+            if (!wished) flyToLiked(event.currentTarget);
+            setWishlistBusy(true);
+            try { await toggleWishlist(product.id); }
+            finally { setWishlistBusy(false); }
+          }}
+          disabled={wishlistBusy}
+          aria-busy={wishlistBusy}
+          aria-label={wished ? 'Remove from liked items' : 'Save to liked items'}
+          className="mena-press absolute right-2 top-2 z-30 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-ink/70 shadow-sm disabled:cursor-wait disabled:opacity-70"
+        >
+          {wishlistBusy ? <Loader2 className="h-4 w-4 animate-spin text-pink" /> : <Heart className={cx('h-4 w-4', wished && 'fill-pink text-pink')} />}
+        </button>
+      </div>
 
-        {showColors && (
-          <div className={cx(
-            'absolute left-2 right-2 z-30 flex max-w-full gap-1 overflow-hidden rounded-full bg-white/90 px-1.5 py-1.5 shadow-sm backdrop-blur',
-            hasMultiplePhotos ? 'bottom-8' : 'bottom-2'
-          )}>
+      <div className="flex min-w-0 flex-col items-start">
+        <button type="button" onClick={open} className="line-clamp-2 w-full text-left font-sans text-[16px] font-semibold leading-[1.3] text-ink focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-pink">
+          {product.name}
+        </button>
+        {description && <p className="mt-1.5 line-clamp-2 w-full text-sm leading-[1.4] text-ink/75">{description}</p>}
+        {colors.length > 1 && (
+          <div className="mt-2 flex max-w-full flex-wrap gap-1.5" aria-label="Available colors">
             {colors.map((color) => {
-              const active = color.photo && selectedPhoto === color.photo;
+              const active = Boolean(color.photo && selectedPhoto === color.photo);
               return (
                 <button
                   key={color.label}
                   type="button"
                   title={color.photo ? `Show ${color.label}` : color.label}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    if (color.photo) setPickedColorPhoto(color.photo);
-                  }}
-                  className={cx(
-                    'mena-press flex h-6 w-6 shrink-0 items-center justify-center rounded-full border bg-white',
-                    active ? 'border-pink ring-2 ring-pink/25' : 'border-white'
-                  )}
+                  onClick={() => { if (color.photo) setPickedColorPhoto(color.photo); }}
+                  className={cx('mena-press flex h-9 w-9 items-center justify-center rounded-full border bg-white', active ? 'border-pink ring-2 ring-pink/25' : 'border-edge')}
                   aria-label={color.photo ? `Show ${color.label} photo` : `${color.label} color`}
                 >
-                  <span
-                    className="h-[18px] w-[18px] rounded-full ring-1 ring-black/15"
-                    style={{ background: color.swatch || '#f4f0ec' }}
-                  />
+                  <span className="h-5 w-5 rounded-full ring-1 ring-black/15" style={{ background: color.swatch || '#f4f0ec' }} />
                 </button>
               );
             })}
           </div>
         )}
-        <button
-          type="button"
-          onClick={async (e) => {
-            if (wishlistBusy) return;
-            if (!wished) flyToLiked(e.currentTarget);
-            setWishlistBusy(true);
-            try {
-              await toggleWishlist(product.id);
-            } finally {
-              setWishlistBusy(false);
-            }
-          }}
-          disabled={wishlistBusy}
-          aria-busy={wishlistBusy}
-          aria-label={wished ? 'Remove from liked items' : 'Save to liked items'}
-          className="mena-press absolute right-2 top-2 z-30 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-ink/70 shadow-sm disabled:cursor-wait disabled:opacity-70"
-        >
-          {wishlistBusy ? <Loader2 className="h-4 w-4 animate-spin text-pink" /> : <Heart className={cx('h-4 w-4', wished ? 'fill-pink text-pink' : '')} />}
-        </button>
-      </div>
-
-      <div className="flex flex-1 flex-col px-0.5 pb-0.5">
-        <button type="button" onClick={open} className="mt-2 line-clamp-2 min-h-[42px] text-left font-sans text-[16px] font-semibold leading-[1.3] text-ink">
-          {product.name}
-        </button>
-        <p className="mt-1 line-clamp-2 min-h-[36px] text-[12px] font-normal leading-[1.45] text-ink/65">
-          {description || '\u00a0'}
-        </p>
-        <div className="mt-auto pt-2">
-          <div className="flex min-h-[26px] items-end justify-between gap-2">
-            <div className="text-[19px] font-bold leading-none text-pink">{formatPrice(product)}</div>
-            {limitText ? (
-              <div className="max-w-[76px] text-right text-[10px] font-medium leading-tight text-muted">{limitText}</div>
-            ) : (
-              <div className="h-0 max-w-[76px]" aria-hidden="true" />
-            )}
-          </div>
+        <div className="mt-auto w-full pt-3">
+          <div className="text-[20px] font-bold leading-tight text-pink">{formatPrice(product)}</div>
+          {limitText && <div className="mt-0.5 text-xs leading-tight text-muted">{limitText}</div>}
           <button
             type="button"
-            onClick={() => {
-              if (quickState !== 'idle') return;
-              setQuickState('opening');
-              window.setTimeout(() => {
-                if (onQuickAdd) onQuickAdd(product);
-                else open();
-                setQuickState('added');
-                window.setTimeout(() => setQuickState('idle'), 700);
-              }, 140);
-            }}
-            disabled={quickState !== 'idle'}
-            aria-busy={quickState === 'opening'}
-            className="mena-press mt-2 flex h-9 w-full items-center justify-center gap-1.5 rounded-full bg-pink px-2 text-[12px] font-semibold text-white hover:bg-pink-dim disabled:cursor-wait disabled:opacity-80"
+            onClick={() => onQuickAdd ? onQuickAdd(product) : open()}
+            className="mena-press mt-2.5 flex min-h-11 w-full items-center justify-center rounded-full bg-pink px-3 text-sm font-bold text-white hover:bg-pink-dim focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink"
           >
-            {quickState === 'opening' && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            {quickState === 'added' && <Check className="h-3.5 w-3.5" />}
-            {quickState === 'opening' ? 'Opening...' : quickState === 'added' ? 'Added' : isQuote ? 'Request Quote' : 'Add to Cart'}
+            View product
           </button>
         </div>
       </div>

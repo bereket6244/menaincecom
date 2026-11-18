@@ -1,7 +1,8 @@
-import { MapPin, Phone, Mail, Clock } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, MessageCircle, Send } from 'lucide-react';
 import { useData } from '../lib/useData';
 import type { BusinessSettings } from '../lib/types';
 import { SysLabel } from '../components/ui';
+import { telegramContactUrl, whatsappContactUrl } from '../lib/share';
 
 export function Contact() {
   const { data: business } = useData<BusinessSettings>('/content/business');
@@ -14,30 +15,35 @@ export function Contact() {
   ];
 
   return (
-    <div className="mx-auto max-w-lg space-y-4">
-      <div>
-        <h1 className="text-base font-bold">Contact</h1>
-        <p className="text-xs text-muted">
+    <div className="mx-auto max-w-lg space-y-7 px-4 py-8 sm:py-12">
+      <div className="space-y-3">
+        <h1 className="font-sans text-3xl font-semibold leading-tight text-ink">Contact Mena</h1>
+        <p className="text-base leading-relaxed text-muted">
           Questions about a design, timeline or bulk pricing? Reach us directly — or build an order summary and send it
           via WhatsApp or Telegram in one tap.
         </p>
       </div>
-      <div className="divide-y divide-edge rounded-lg border border-edge bg-surface">
+      <div className="grid grid-cols-2 gap-3">
+        <a href={whatsappContactUrl(business)} target="_blank" rel="noreferrer" className="btn-primary min-h-12 px-3 text-sm">
+          <MessageCircle className="h-4 w-4" /> WhatsApp
+        </a>
+        <a href={telegramContactUrl(business)} target="_blank" rel="noreferrer" className="btn-outline min-h-12 px-3 text-sm">
+          <Send className="h-4 w-4" /> Telegram
+        </a>
+      </div>
+      <div className="divide-y divide-edge rounded-xl border border-edge bg-surface">
         {rows.map(({ icon: Icon, label, value, href }) => (
-          <div key={label} className="flex items-center gap-3 p-3">
-            <Icon className="h-4 w-4 shrink-0 text-pink" />
-            <div>
+          <div key={label} className="flex items-start gap-4 p-4">
+            <Icon className="mt-1 h-5 w-5 shrink-0 text-pink" />
+            <div className="min-w-0 space-y-1">
               <SysLabel>{label}</SysLabel>
-              <div className="whitespace-pre-line text-sm">
-                {href ? <a href={href} className="hover:text-pink">{value}</a> : value}
+              <div className="whitespace-pre-line break-words text-base leading-relaxed text-ink">
+                {href ? <a href={href} className="hover:text-pink focus-visible:outline-2 focus-visible:outline-pink">{value}</a> : value}
               </div>
             </div>
           </div>
         ))}
       </div>
-      <p className="text-[10px] text-muted">
-        Mena INK Trading PLC. These details are editable from Admin → Business.
-      </p>
     </div>
   );
 }
