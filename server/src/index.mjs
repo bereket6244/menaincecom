@@ -10,6 +10,7 @@ import { ensureSchema, records } from './db.mjs';
 import { ensureAdminSeed } from './auth.mjs';
 import { api } from './routes.mjs';
 import { imageVariants } from './image-variants.mjs';
+import { productPageMiddleware } from './product-page-meta.mjs';
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const app = express();
@@ -58,6 +59,12 @@ if (mountPath !== '/') app.use(`${mountPath}/api`, api);
 
 // Production: serve the built client if present.
 const clientDist = process.env.CLIENT_DIST_DIR || path.resolve(serverRoot, '../client/dist');
+app.use(productPageMiddleware({
+  clientIndex: path.join(clientDist, 'index.html'),
+  basePath: mountPath,
+  getProduct: (id) => records.get('products', id),
+  publicShopUrl: process.env.PUBLIC_SHOP_URL || 'https://menaincet.com/shop',
+}));
 const staticOptions = {
   maxAge: '1y',
   immutable: true,

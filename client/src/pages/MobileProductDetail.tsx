@@ -9,6 +9,7 @@ import { QuantityPicker } from '../components/QuantityPicker';
 import { mobileProductTint } from '../components/MobileProductCard';
 import { ProductImageFrame } from '../components/ProductImageFrame';
 import { ProtectedImage } from '../components/ProtectedImage';
+import { ShareProductButton } from '../components/ShareProductButton';
 import { COMPLIMENTARY_EXTRA_MAX_QTY, complimentaryAllowanceText, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
 import { cartPriceEach, cleanDescription, cx, cssColor, formatPrice, isColorGroupName, withDefaultVariantSelections } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
@@ -215,6 +216,7 @@ export function MobileProductDetail() {
           <ChevronLeft className="h-5.5 w-5.5" />
         </button>
         <div className="min-w-0 flex-1 truncate text-sm font-semibold text-muted">{categoryName}</div>
+        <ShareProductButton name={product.name} compact />
         <div ref={contactRef} className="relative">
           <button
             type="button"
