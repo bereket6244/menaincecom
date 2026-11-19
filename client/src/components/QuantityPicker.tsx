@@ -16,7 +16,7 @@ export function QuantityPicker({
   value: number;
   onChange: (qty: number) => void;
   presets?: number[];
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'bar' | 'md';
   className?: string;
   min?: number;
   max?: number;
@@ -96,7 +96,7 @@ export function QuantityPicker({
             onFocus={(e) => e.target.select()}
             className={cx(
               'rounded-md bg-white/80 text-center font-bold text-ink outline-none ring-1 ring-edge/80 transition-shadow placeholder:text-muted/60 focus:ring-2 focus:ring-pink',
-              size === 'sm' ? 'mx-0.5 h-7 w-12 text-sm' : 'mx-1 h-9 w-20 text-[15px]'
+              size === 'sm' ? 'mx-0.5 h-7 w-12 text-sm' : size === 'bar' ? 'mx-0.5 h-9 w-12 text-base' : 'mx-1 h-9 w-20 text-[15px]'
             )}
             aria-label="Quantity. You can type the amount directly."
           />

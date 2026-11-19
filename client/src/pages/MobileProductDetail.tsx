@@ -11,12 +11,13 @@ import { ProductImageFrame } from '../components/ProductImageFrame';
 import { ProtectedImage } from '../components/ProtectedImage';
 import { ShareProductButton } from '../components/ShareProductButton';
 import { ProductLikeButton } from '../components/ProductLikeButton';
-import { COMPLIMENTARY_EXTRA_MAX_QTY, complimentaryAllowanceText, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
+import { COMPLIMENTARY_EXTRA_MAX_QTY, complimentaryAllowanceText, complimentaryExtraTotal, complimentaryForProduct, complimentarySummary, productWithResolvedComplimentary } from '../lib/complimentary';
 import { cartPriceEach, cleanDescription, cx, cssColor, formatPrice, isColorGroupName, withDefaultVariantSelections } from '../lib/utils';
 import type { AddToCartResult } from '../store/AppContext';
 import { buildProductInquiryMessage, smsContactUrl, telegramContactUrl, whatsappContactUrl } from '../lib/share';
 import { productCategoryNames } from '../lib/productCategories';
 import { clampOrderQty, productLimitText, productMaxOrderQty } from '../lib/orderLimits';
+import { formatEtbAmount } from '../lib/tieredPricing';
 
 type SheetMode = 'add' | 'buy';
 
@@ -141,6 +142,9 @@ export function MobileProductDetail() {
   const isQuote = product.pricingMode === 'quote';
   const complimentaryItems = complimentaryForProduct(product, qty, complimentarySelections);
   const complimentaryText = complimentarySummary(complimentaryItems);
+  const unitPrice = cartPriceEach(product, qty);
+  const totalPrice = unitPrice == null ? null : Math.round((unitPrice * qty + complimentaryExtraTotal(complimentaryItems)) * 100) / 100;
+  const totalPriceText = totalPrice == null ? 'Price needed' : `${formatEtbAmount(totalPrice)} ETB`;
   const maxOrderQty = productMaxOrderQty(product);
   const limitText = productLimitText(product);
   const setLimitedQty = (nextQty: number) => setQty(clampOrderQty(nextQty, product));
@@ -211,7 +215,7 @@ export function MobileProductDetail() {
   };
 
   return (
-    <div className="min-h-dvh bg-bg pb-[calc(env(safe-area-inset-bottom)+9rem)]">
+    <div className="min-h-dvh bg-bg pb-[calc(env(safe-area-inset-bottom)+11rem)]">
       <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-edge bg-surface px-3">
         <button type="button" onClick={goBack} aria-label="Back" className="mena-press flex h-10 w-10 items-center justify-center rounded-xl text-ink hover:bg-surface2">
           <ChevronLeft className="h-5.5 w-5.5" />
@@ -297,7 +301,7 @@ export function MobileProductDetail() {
           <div className="mt-2 text-[26px] font-extrabold text-pink">
             {formatPrice(product, qty)}
             {!isQuote && <span className="ml-1 text-[13px] font-medium text-muted">each</span>}
-            {qty > 1 && <div className="mt-1 text-sm font-semibold">Total for {qty}: {((cartPriceEach(product, qty) || 0) * qty).toLocaleString(undefined, { maximumFractionDigits: 2 })} ETB</div>}
+            {qty > 1 && <div className="mt-1 text-sm font-semibold">Total for {qty}: {totalPriceText}</div>}
           </div>
           {limitText && <div className="mt-2 text-[13px] font-extrabold text-pink">{limitText}</div>}
           {description && <p className="mt-3 whitespace-pre-line text-[14.5px] leading-[1.5] text-ink/70">{description}</p>}
@@ -400,9 +404,16 @@ export function MobileProductDetail() {
 
       <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[430px] border-t border-edge bg-white px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-2.5 shadow-[0_-8px_24px_rgba(28,26,25,0.07)]">
         <div>
-          <div className="mb-2 flex items-baseline justify-between gap-3">
-            <div className="text-sm font-semibold text-muted">Price each</div>
-            <div className="truncate text-xl font-extrabold text-pink">{formatPrice(product, qty)}</div>
+          <div className="mb-2 flex items-end justify-between gap-3">
+            <div className="shrink-0">
+              <div className="mb-1 text-xs font-semibold text-muted">Amount</div>
+              <QuantityPicker size="bar" value={qty} onChange={setLimitedQty} max={maxOrderQty} />
+            </div>
+            <div className="min-w-0 pb-1 text-right" aria-live="polite">
+              <div className="text-xs font-semibold text-muted">Total</div>
+              <div className="text-[clamp(1rem,5vw,1.25rem)] font-extrabold leading-tight text-pink">{totalPriceText}</div>
+              {unitPrice != null && <div className="text-xs text-muted">{formatPrice(product, qty)} each</div>}
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <button
