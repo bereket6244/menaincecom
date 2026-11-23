@@ -80,7 +80,8 @@ test('reconciliation blocks when the second read changes or cleanup fails', asyn
   assert.equal(finished, 1);
   checks = 0;
   result = await reconcileDeletedTelegramPost('p2', { check: async () => [absent, { state: 'absent', present: [8], absent: [7] }][checks++] });
-  assert.equal(result.status, 'unverified');
+  assert.equal(result.status, 'blocked');
+  assert.equal(result.reason, 'reconciliation_failed');
   assert.equal(finished, 2);
 });
 
@@ -104,4 +105,40 @@ test('a competing reconciliation claim prevents publication', async (t) => {
     check: async () => ({ state: 'absent', present: [], absent: [7] }),
   });
   assert.deepEqual(result, { status: 'blocked', reason: 'product_changed_or_claimed' });
+});
+
+test('a definitive Telegram rejection releases the claim for a later repost', async (t) => {
+  const oldToken = process.env.TELEGRAM_BOT_TOKEN;
+  process.env.TELEGRAM_BOT_TOKEN = 'test-token';
+  t.after(() => oldToken === undefined ? delete process.env.TELEGRAM_BOT_TOKEN : process.env.TELEGRAM_BOT_TOKEN = oldToken);
+  let product = {
+    id: 'p4', status: 'published', name: 'Card', price: 50, photos: [],
+    telegramChannelId: '-1001', telegramMessageId: 7, telegramMessageIds: [7],
+  };
+  t.mock.method(records, 'get', async () => structuredClone(product));
+  t.mock.method(records, 'claimTelegramReconcile', async (_id, _messageId, claim) => {
+    if (product.telegramReconcileClaim) return false;
+    product.telegramReconcileClaim = claim;
+    return true;
+  });
+  t.mock.method(records, 'finishTelegramReconcile', async (_id, _token, patch) => {
+    product = { ...product, ...patch };
+    delete product.telegramReconcileClaim;
+    return structuredClone(product);
+  });
+  let reject = true;
+  t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify(reject
+    ? { ok: false, error_code: 403, description: 'Forbidden: bot is not a channel administrator' }
+    : { ok: true, result: { message_id: 50, text: formatProductCaption(product) } }),
+  { status: reject ? 403 : 200 }));
+  const check = async () => ({ state: 'absent', present: [], absent: [7] });
+  let result = await reconcileDeletedTelegramPost('p4', { check });
+  assert.equal(result.reason, 'telegram_rejected_post');
+  assert.match(result.message, /administrator/);
+  assert.equal(product.telegramReconcileClaim, undefined);
+  assert.equal(product.telegramMessageId, 7);
+  reject = false;
+  result = await reconcileDeletedTelegramPost('p4', { check });
+  assert.equal(result.status, 'republished');
+  assert.equal(product.telegramMessageId, 50);
 });

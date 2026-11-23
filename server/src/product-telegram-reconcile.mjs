@@ -23,6 +23,7 @@ export async function reconcileDeletedTelegramPost(id, { check = checkTelegramPo
     return { status: 'blocked', reason: 'product_changed_or_claimed' };
   }
   let sent = false;
+  let definitiveRejection = false;
   try {
     const current = await records.get('products', id);
     if (!current || current.telegramReconcileClaim?.token !== claim.token
@@ -70,13 +71,17 @@ export async function reconcileDeletedTelegramPost(id, { check = checkTelegramPo
       cleanup: 'confirmed_absent',
       product: saved,
     };
-  } catch {
-    if (sent) {
+  } catch (error) {
+    // A Bot API 4xx response confirms that Telegram did not publish a post.
+    // Release the claim so the admin can retry after fixing permissions or media.
+    definitiveRejection = sent && [400, 401, 403, 404, 413, 429].includes(Number(error?.code));
+    if (sent && !definitiveRejection) {
       // Preserve the claim after a send/storage failure. A retry must not create a duplicate.
       return { status: 'blocked', reason: 'publication_or_storage_uncertain' };
     }
-    return { status: 'unverified', reason: 'reconciliation_failed' };
+    return { status: 'blocked', reason: definitiveRejection ? 'telegram_rejected_post' : 'reconciliation_failed',
+      message: error?.telegram?.message || error?.message || 'Telegram reconciliation failed.' };
   } finally {
-    if (!sent) await records.finishTelegramReconcile(id, claim.token, {}).catch(() => {});
+    if (!sent || definitiveRejection) await records.finishTelegramReconcile(id, claim.token, {}).catch(() => {});
   }
 }

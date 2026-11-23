@@ -31,7 +31,9 @@ test('product admin syncs publication transitions and edits to linked published 
   try {
     assert.equal(shouldCreateTelegramPost(null, { status: 'published' }), true);
     assert.equal(shouldCreateTelegramPost({ status: 'draft' }, { status: 'published' }), true);
-    assert.equal(shouldCreateTelegramPost({ status: 'published' }, { status: 'published' }), false);
+    assert.equal(shouldCreateTelegramPost({ status: 'published' }, { status: 'published' }), true);
+    assert.equal(shouldCreateTelegramPost({ status: 'published' }, { status: 'published', deletedAt: '2026-10-12' }), false);
+    assert.equal(shouldCreateTelegramPost({ status: 'published' }, { status: 'published', telegramChannelId: '-1001', telegramMessageId: 42 }), false);
     assert.equal(shouldCreateTelegramPost(
       { status: 'draft' },
       { status: 'published', telegramChannelId: '-1001', telegramMessageId: 42 }

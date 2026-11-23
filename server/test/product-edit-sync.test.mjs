@@ -37,9 +37,12 @@ test('admin saves update linked Telegram posts and retain failed edits for retry
     const body = options.body instanceof FormData
       ? Object.fromEntries(options.body.entries()) : JSON.parse(options.body);
     calls.push({ method, body });
+    const successResult = method === 'sendPhoto'
+      ? { message_id: 42, caption: body.caption, photo: [{ file_id: 'photo-id' }], date: Math.floor(Date.now() / 1000) }
+      : { message_id: 42 };
     return new Response(JSON.stringify(failure
       ? { ok: false, error_code: 403, description: 'Forbidden: missing channel permissions' }
-      : { ok: true, result: { message_id: 42 } }), { status: failure ? 403 : 200 });
+      : { ok: true, result: successResult }), { status: failure ? 403 : 200 });
   });
   t.mock.method(console, 'error', () => {});
   const app = express();
@@ -125,4 +128,17 @@ test('admin saves update linked Telegram posts and retain failed edits for retry
   assert.equal(result.telegramSyncStatus, 'synced');
   assert.equal(result.telegramSyncError, null);
   assert.equal(result.telegramSyncedVersion, 4);
+
+  calls.length = 0;
+  product = { ...initialProduct(), telegramChannelId: null, telegramMessageId: null, telegramMessageIds: [], telegramSyncStatus: 'error' };
+  failure = true;
+  result = await save({ price: 450 });
+  assert.equal(result.telegramSyncStatus, 'error');
+  assert.equal(result.telegramMessageId, null);
+  failure = false;
+  result = await save({ price: 450 });
+  assert.equal(result.telegramSyncStatus, 'synced');
+  assert.equal(result.telegramMessageId, 42);
+  assert.equal(result.telegramPostVerified, true);
+  assert.deepEqual(calls.map((call) => call.method), ['sendPhoto', 'sendPhoto']);
 });

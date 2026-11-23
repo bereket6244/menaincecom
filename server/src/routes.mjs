@@ -899,7 +899,7 @@ api.post('/admin/products/:id/telegram/reconcile', requireAdmin, dbRoute(async (
   }
   const result = await reconcileDeletedTelegramPost(req.params.id, { resolve: resolveTelegramProduct });
   res.status(result.status === 'not_found' ? 404 : result.status === 'blocked' ? 409 : 200)
-    .json(result.status === 'blocked' ? { ...result, message: `Telegram reconciliation needs review: ${result.reason}.` } : result);
+    .json(result.status === 'blocked' ? { ...result, message: result.message || `Telegram reconciliation needs review: ${result.reason}.` } : result);
 }));
 
 api.post('/admin/products/:id/telegram/check', requireAdmin, dbRoute(async (req, res) => {

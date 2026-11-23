@@ -127,9 +127,12 @@ export function formatProductCaption(product) {
 
 export function shouldCreateTelegramPost(previous, next) {
   if (process.env.TELEGRAM_SYNC_ENABLED !== 'true') return false;
+  if (!next || next.deletedAt || normalizeProductStatus(next.status) !== 'published') return false;
+  // A failed first publish leaves the product published without a Telegram ID.
+  // Allow the next admin save to retry it, while never creating over a known post.
+  if (!telegramMessageIds(next).length) return true;
   const previousStatus = previous ? normalizeProductStatus(previous.status) : 'draft';
-  return previousStatus !== 'published' && normalizeProductStatus(next?.status) === 'published'
-    && (!telegramProductIdentity(next) || !!next.telegramDeletedAt);
+  return previousStatus !== 'published' && !!next.telegramDeletedAt;
 }
 
 export function shouldUpdateTelegramPost(previous, next) {
@@ -240,19 +243,20 @@ export async function createTelegramProductPost(product) {
     const first = messages[0];
     const username = channelUsername();
     const photos = (product.photos || []).filter(Boolean).slice(0, TELEGRAM_ALBUM_LIMIT);
+    const verified = messages.length === Math.max(1, photos.length)
+      && messages.every((message) => Number.isInteger(message.message_id) && message.message_id > 0)
+      && (!photos.length || messages.every((message) => message.photo?.length > 0))
+      && (photos.length ? first.caption : first.text) === formatProductCaption(product);
     return {
       telegramChannelId: product.telegramChannelId || configuredChannelId(),
       telegramMessageId: first.message_id,
       telegramMessageIds: messages.map((message) => message.message_id),
-      telegramPostVerified: messages.length === Math.max(1, photos.length)
-        && messages.every((message) => Number.isInteger(message.message_id) && message.message_id > 0)
-        && (!photos.length || messages.every((message) => message.photo?.length > 0))
-        && (photos.length ? first.caption : first.text) === formatProductCaption(product),
+      telegramPostVerified: verified,
       telegramPostUrl: username ? `https://t.me/${username}/${first.message_id}` : null,
       telegramPostType: photos.length === 0 ? 'text' : photos.length === 1 ? 'photo' : 'album',
       telegramSyncedPhotos: photos,
-      telegramSyncStatus: 'synced',
-      telegramSyncError: null,
+      telegramSyncStatus: verified ? 'synced' : 'error',
+      telegramSyncError: verified ? null : { message: 'Telegram returned a post, but its content or photos could not be verified. Review the linked post before retrying.' },
       telegramSyncedVersion: Math.max(1, Number(product.contentVersion) || 1),
       telegramLastSyncedAt: new Date().toISOString(),
       telegramPostedAt: first.date ? new Date(first.date * 1000).toISOString() : new Date().toISOString(),
