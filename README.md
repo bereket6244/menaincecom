@@ -7,6 +7,12 @@ the chosen channel, and can trigger an admin push notification.
 
 ## Stack
 
+GuestLink administrators can update credentials for a customer already linked
+to GuestLink. `PATCH /shop/api/auth/guestlink/accounts/:id/credentials` verifies
+the GuestLink admin session and exact linked shop user ID through the fixed
+GuestLink API before changing this store's login record. It cannot change shop
+administrator accounts. A credential version invalidates earlier shop sessions.
+
 | Layer | Tech |
 | --- | --- |
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS v4, Lucide, Framer Motion |

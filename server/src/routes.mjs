@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { normalizeStorefrontAd } from './storefront-ad.mjs';
 import { googleAuthRouter } from './google-auth.mjs';
+import { updateGuestlinkShopCredentials } from './guestlink-credentials.mjs';
 import { telegramAuthRouter } from './telegram-auth.mjs';
 import { emailSignupRouter } from './email-verification.mjs';
 import multer from 'multer';
@@ -155,6 +156,20 @@ api.get('/auth/me', optionalAuth, dbRoute(async (req, res) => {
   const user = await records.get('users', req.auth.id);
   if (!user) return res.status(401).json({ error: 'unauthorized' });
   res.json({ user: publicUser(user) });
+}));
+
+// GuestLink administrators can reset credentials only for an account already linked to GuestLink.
+// This endpoint calls GuestLink to verify the admin JWT and resolve the exact shop user ID.
+api.patch('/auth/guestlink/accounts/:accountId/credentials', loginLimiter, dbRoute(async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  const result = await updateGuestlinkShopCredentials({
+    accountId: req.params.accountId,
+    token,
+    username: req.body?.username,
+    password: req.body?.password,
+  });
+  res.status(result.status).json(result.ok ? { ok: true } : { message: result.message });
 }));
 
 /* -------------------------------- wishlist -------------------------------- */

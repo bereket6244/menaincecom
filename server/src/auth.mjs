@@ -18,7 +18,7 @@ if (PLACEHOLDER_SECRETS.has(envSecret)) {
 const FAKE_HASH = bcrypt.hashSync(crypto.randomBytes(16).toString('hex'), 10);
 
 export function signToken(user) {
-  return jwt.sign({ id: user.id, role: user.role }, SECRET, { expiresIn: '30d' });
+  return jwt.sign({ id: user.id, role: user.role, credentialsVersion: Number(user.credentialsVersion) || 0 }, SECRET, { expiresIn: '30d' });
 }
 
 export function publicUser(user) {
@@ -41,7 +41,12 @@ export function requireAuth(req, res, next) {
   if (!token) return res.status(401).json({ error: 'unauthorized' });
   try {
     req.auth = jwt.verify(token, SECRET);
-    next();
+    records.get('users', req.auth.id).then((user) => {
+      if (!user || user.role !== req.auth.role || (Number(user.credentialsVersion) || 0) !== (Number(req.auth.credentialsVersion) || 0)) {
+        return res.status(401).json({ error: 'unauthorized' });
+      }
+      next();
+    }).catch(next);
   } catch {
     res.status(401).json({ error: 'unauthorized' });
   }
@@ -65,7 +70,14 @@ export function optionalAuth(req, _res, next) {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
   if (token) {
-    try { req.auth = jwt.verify(token, SECRET); } catch { /* guest */ }
+    try {
+      const claims = jwt.verify(token, SECRET);
+      records.get('users', claims.id).then((user) => {
+        if (user && user.role === claims.role && (Number(user.credentialsVersion) || 0) === (Number(claims.credentialsVersion) || 0)) req.auth = claims;
+        next();
+      }).catch(next);
+      return;
+    } catch { /* guest */ }
   }
   next();
 }
