@@ -136,7 +136,7 @@ function buildPackageMessage(pkg: DigitalInvitePackage) {
 
 function callUrl(business: BusinessSettings | null) {
   const number = (business?.phone || business?.whatsappNumber || '').replace(/[^\d+]/g, '');
-  return number ? `tel:${number.startsWith('+') ? number : `+${number}`}` : 'tel:+251929639939';
+  return number ? `tel:${number.startsWith('+') ? number : `+${number}`}` : 'tel:+251942125568';
 }
 
 function initials(title: string) {

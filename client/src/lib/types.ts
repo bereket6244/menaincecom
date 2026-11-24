@@ -183,7 +183,7 @@ export interface BusinessSettings {
   email: string;
   address: string;
   hours: string;
-  whatsappNumber: string; // digits with country code, e.g. 251929639939
+  whatsappNumber: string; // digits with country code, e.g. 251942125568
   telegramHandle: string; // @username or +2519… phone
   paymentAccountName: string;
   paymentAccountNumber: string;

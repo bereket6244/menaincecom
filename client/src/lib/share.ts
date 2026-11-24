@@ -3,8 +3,8 @@ import { complimentarySummary } from './complimentary';
 import { cartLineTotal } from './utils';
 import { formatEtbAmount } from './tieredPricing';
 
-const FALLBACK_WHATSAPP = '251929639939';
-const TELEGRAM_ORDER_URL = 'https://t.me/+251929639939';
+const FALLBACK_WHATSAPP = '251942125568';
+const TELEGRAM_ORDER_URL = 'https://t.me/+251942125568';
 
 const digitsOnly = (value: string) => (value || '').replace(/\D/g, '');
 

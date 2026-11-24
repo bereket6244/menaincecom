@@ -8,7 +8,7 @@ export function Contact() {
   const { data: business } = useData<BusinessSettings>('/content/business');
 
   const rows = [
-    { icon: Phone, label: 'Phone', value: business?.phone || '+251 92 963 9939', href: `tel:${(business?.phone || '+251929639939').replace(/\s/g, '')}` },
+    { icon: Phone, label: 'Phone', value: business?.phone || '+251 94 212 5568', href: `tel:${(business?.phone || '+251942125568').replace(/\s/g, '')}` },
     { icon: Mail, label: 'Email', value: business?.email || 'hello@menainc.com', href: `mailto:${business?.email || 'hello@menainc.com'}` },
     { icon: MapPin, label: 'Studio', value: business?.address || 'Reality Plaza, 1st Floor, Office No. 104, Bole (next to Yougo Church), Addis Ababa' },
     { icon: Clock, label: 'Hours', value: business?.hours || 'Mon–Sat, 9:00–18:00' },

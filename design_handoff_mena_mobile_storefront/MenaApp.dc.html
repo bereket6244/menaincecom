@@ -373,7 +373,7 @@
       </sc-for>
       <div style="margin-top:22px;padding-top:18px;border-top:1px solid #ece7e2;font-size:12.5px;line-height:1.7;color:#8a8580;">
         <div style="font-weight:700;color:#1c1a19;margin-bottom:4px;">Mena INK Trading PLC</div>
-        Reality Plaza, 1st Floor, Office 104<br/>Bole, Addis Ababa<br/>+251 92 963 9939
+        Reality Plaza, 1st Floor, Office 104<br/>Bole, Addis Ababa<br/>+251 94 212 5568
       </div>
     </div>
   </aside>
@@ -620,9 +620,9 @@ class Component extends DCLogic {
     if (this.state.note.trim()) msg += '\n\nNote: ' + this.state.note.trim();
     const enc = encodeURIComponent(msg);
     const ch = this.state.channel;
-    const url = ch === 'whatsapp' ? 'https://wa.me/251929639939?text=' + enc
-      : ch === 'telegram' ? 'https://t.me/+251929639939?text=' + enc
-      : 'sms:+251929639939?body=' + enc;
+    const url = ch === 'whatsapp' ? 'https://wa.me/251942125568?text=' + enc
+      : ch === 'telegram' ? 'https://t.me/+251942125568?text=' + enc
+      : 'sms:+251942125568?body=' + enc;
     this.setState({ sentUrl: url, screen: 'success' });
   };
   finishOrder = () => {

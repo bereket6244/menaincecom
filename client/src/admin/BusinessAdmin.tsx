@@ -78,7 +78,7 @@ export function BusinessAdmin() {
       <div className="space-y-3 rounded-lg border border-edge bg-surface p-4">
         <SysLabel>Contact page</SysLabel>
         <div className="grid gap-3 sm:grid-cols-2">
-          {field('Phone', 'phone', { placeholder: '+251 92 963 9939', hint: 'Also the number customers\' SMS orders are sent to.' })}
+          {field('Phone', 'phone', { placeholder: '+251 94 212 5568', hint: 'Also the number customers\' SMS orders are sent to.' })}
           {field('Email', 'email', { placeholder: 'hello@menainc.com' })}
         </div>
         {field('Studio address', 'address', { textarea: true })}
@@ -89,11 +89,11 @@ export function BusinessAdmin() {
         <SysLabel>Order forwarding</SysLabel>
         <div className="grid gap-3 sm:grid-cols-2">
           {field('WhatsApp number', 'whatsappNumber', {
-            placeholder: '251929639939',
+            placeholder: '251942125568',
             hint: 'Digits only, with country code — customers\' orders open a wa.me chat to this number.',
           })}
           {field('Telegram handle or phone', 'telegramHandle', {
-            placeholder: '@menainc or +251929639939',
+            placeholder: '@menainc or +251942125568',
             hint: 'A @username is most reliable; phone numbers only work if the account is discoverable by phone.',
           })}
         </div>

@@ -294,12 +294,12 @@ async function seed() {
   if (!business) {
     await records.insert('content', {
       key: 'business',
-      phone: '+251 92 963 9939',
+      phone: '+251 94 212 5568',
       email: 'hello@menainc.com',
       address: 'Reality Plaza, 1st Floor, Office No. 104, Bole (next to Yougo Church), Addis Ababa',
       hours: 'Mon-Sat, 9:00-18:00',
-      whatsappNumber: '251929639939',
-      telegramHandle: '+251929639939',
+      whatsappNumber: '251942125568',
+      telegramHandle: '+251942125568',
       paymentAccountName: '',
       paymentAccountNumber: '',
       pickupLocation: 'Reality Plaza, 1st Floor, Office No. 104\nBole, next to Yougo Church',
