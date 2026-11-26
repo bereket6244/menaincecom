@@ -43,7 +43,7 @@ export interface ProductCost {
   adjustment?: number;
   roundUp?: number | null;
   roundDirection?: 'up' | 'down';
-  thresholds?: { minQty: number; margin: number; roundDirection?: 'up' | 'down' }[];
+  thresholds?: { minQty: number; margin: number; roundDirection?: 'up' | 'down'; roundUp?: number | null }[];
   items: { inputId: string; optionId?: string; legacyBaseCost?: number; quantity: number }[];
   margin: number;
 }

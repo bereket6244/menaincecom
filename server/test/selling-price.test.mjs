@@ -62,3 +62,18 @@ test('each quantity threshold can override the product rounding direction', () =
   assert.throws(() => pricedProduct({ cost: { ...cost, thresholds: [{ minQty: 10, margin: 10, roundDirection: 'sideways' }] } },
     [{ id: 'paper', unitCost: 100 }]), /threshold/);
 });
+
+test('each quantity threshold can use a different rounding multiple or turn it off', () => {
+  const cost = { items: [{ inputId: 'paper', quantity: 1 }], margin: 27.75,
+    roundUp: 5, roundDirection: 'up', thresholds: [
+      { minQty: 10, margin: 13.7, roundDirection: 'down', roundUp: 10 },
+      { minQty: 20, margin: 13.7, roundUp: 2 },
+      { minQty: 30, margin: 13.7, roundUp: null },
+      { minQty: 40, margin: 13.7 },
+    ] };
+  const result = pricedProduct({ cost }, [{ id: 'paper', unitCost: 100 }]);
+  assert.deepEqual(result.priceTiers.map(t => t.priceEach), [130, 110, 114, 113.7, 115]);
+  assert.equal(result.cost.thresholds[2].roundUp, null);
+  assert.throws(() => pricedProduct({ cost: { ...cost, thresholds: [{ minQty: 10, margin: 10, roundUp: 0 }] } },
+    [{ id: 'paper', unitCost: 100 }]), /rounding multiple/);
+});

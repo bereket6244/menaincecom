@@ -61,7 +61,8 @@ export function shopCostFromRecipe(recipe, inputs) {
     roundUp: recipe.roundUp == null ? null : Number(recipe.roundUp),
     roundDirection: recipe.roundDirection === 'down' ? 'down' : 'up',
     thresholds: (recipe.thresholds || []).map((t) => ({ minQty: Number(t.minQty), margin: Number(t.markupPercent),
-      ...(t.roundDirection !== undefined && { roundDirection: t.roundDirection }) })),
+      ...(t.roundDirection !== undefined && { roundDirection: t.roundDirection }),
+      ...(t.roundUp !== undefined && { roundUp: t.roundUp == null ? null : Number(t.roundUp) }) })),
   };
   if (recipe.corporatePricing) {
     cost.corporatePricing = {
@@ -157,7 +158,8 @@ export function dashboardCatalog(products, inputs, now = new Date()) {
             roundUp: product.cost.roundUp ?? null,
             roundDirection: product.cost.roundDirection === 'down' ? 'down' : 'up',
             thresholds: (product.cost.thresholds || []).map((t) => ({ minQty: t.minQty, markupPercent: t.margin,
-              ...(t.roundDirection !== undefined && { roundDirection: t.roundDirection }) })),
+              ...(t.roundDirection !== undefined && { roundDirection: t.roundDirection }),
+              ...(t.roundUp !== undefined && { roundUp: t.roundUp }) })),
             // Corporate pricing adds estimated income and dividend tax, then VAT,
             // and rounds the VAT-inclusive price (see corporate-pricing.mjs).
             ...(product.cost.corporatePricing && { corporatePricing: {
