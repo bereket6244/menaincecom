@@ -20,4 +20,8 @@ test('corporate rounding follows direction and checks the cent precision', () =>
   assert.equal(corporatePrice(100, 40, rates, 0, 2.5, 'up').unit, 182.5);
   assert.equal(corporatePrice(100, 40, rates, 0, 0.001), null);
   assert.equal(corporatePrice(100, 40, { ...rates, vatRate: 101 }), null);
+  const priced = pricedProduct({ cost: { items: [{ inputId: 'paper', quantity: 1 }], margin: 40,
+    corporatePricing: rates, roundUp: 5, roundDirection: 'up',
+    thresholds: [{ minQty: 10, margin: 40, roundDirection: 'down' }] } }, [{ id: 'paper', unitCost: 100 }]);
+  assert.deepEqual(priced.priceTiers.map(t => t.priceEach), [185, 180]);
 });

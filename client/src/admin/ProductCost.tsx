@@ -25,12 +25,12 @@ export function ProductCost({ product, change, standalone = false }: { product: 
     return sum + (Number.isFinite(rate) && (rate ?? 0) > 0 && Number.isFinite(row.quantity) && row.quantity > 0 ? rate! * row.quantity : NaN);
   }, 0) ?? 0;
   const corporate = cost?.corporatePricing;
-  const corporateResult = (margin: number) => corporate ? corporatePrice(subtotal, margin, corporate, cost?.adjustment, cost?.roundUp, cost?.roundDirection) : null;
-  const sellingPrice = (margin: number) => corporate ? corporateResult(margin)?.unit ?? NaN : calculateSellingPrice(subtotal, margin, cost?.adjustment, cost?.roundUp, cost?.roundDirection);
-  const profitPerItem = (margin: number) => Math.round((sellingPrice(margin) - subtotal + Number.EPSILON) * 100) / 100;
+  const corporateResult = (margin: number, direction = cost?.roundDirection) => corporate ? corporatePrice(subtotal, margin, corporate, cost?.adjustment, cost?.roundUp, direction) : null;
+  const sellingPrice = (margin: number, direction = cost?.roundDirection) => corporate ? corporateResult(margin, direction)?.unit ?? NaN : calculateSellingPrice(subtotal, margin, cost?.adjustment, cost?.roundUp, direction);
+  const profitPerItem = (margin: number, direction = cost?.roundDirection) => Math.round((sellingPrice(margin, direction) - subtotal + Number.EPSILON) * 100) / 100;
   const price = cost ? sellingPrice(cost.margin) : product.price;
   const thresholds = cost?.thresholds || [];
-  const costBreaks = thresholds.map(t => ({ ...t, priceEach: sellingPrice(t.margin) }));
+  const costBreaks = thresholds.map(t => ({ ...t, priceEach: sellingPrice(t.margin, t.roundDirection ?? cost?.roundDirection) }));
   const previewTiers = [{ minQty: 1, priceEach: price ?? 0 }, ...(cost ? costBreaks : breaks)];
   const previewValid = previewTiers.every(t => Number.isFinite(t.priceEach) && t.priceEach > 0 && Number.isSafeInteger(t.minQty) && t.minQty > 0)
     && new Set(previewTiers.map(t => t.minQty)).size === previewTiers.length;
@@ -41,7 +41,7 @@ export function ProductCost({ product, change, standalone = false }: { product: 
   function addThreshold() {
     if (cost) {
       const minQty = thresholds.length ? Math.max(...thresholds.map(t => t.minQty)) + 1 : 50;
-      setThresholds([...thresholds, { minQty, margin: 10 }]);
+      setThresholds([...thresholds, { minQty, margin: 10, roundDirection: cost.roundDirection ?? 'up' }]);
     } else {
       const minQty = breaks.length ? Math.max(...breaks.map(t => t.minQty)) + 1 : 50;
       updateBreaks([...breaks, { minQty, priceEach: price || 0 }]);
@@ -96,7 +96,7 @@ export function ProductCost({ product, change, standalone = false }: { product: 
         <label>Round to multiple (ETB)<input className="field" type="number" step={corporate ? '0.01' : 'any'} min={corporate ? '0.01' : '0'} placeholder="Off"
           value={cost.roundUp ?? ''} onChange={e => change({ ...product, cost: { ...cost, roundUp: e.target.value === '' ? null : Number(e.target.value) } })} /></label>
       </div>
-      <p className="text-xs text-muted">{corporate ? 'Adjustment changes the price before VAT. Rounding applies to the VAT-inclusive unit price; use a positive multiple to the cent or leave it blank. Applies to every quantity tier.' : 'Positive adjustment adds birr; negative subtracts. Margin, then adjustment, then selected rounding, then two decimals. Leave the rounding multiple blank to turn it off. Applies to every quantity tier.'}</p>
+      <p className="text-xs text-muted">{corporate ? 'Adjustment changes the price before VAT. Rounding applies to the VAT-inclusive unit price; use a positive multiple to the cent or leave it blank. Each quantity threshold can choose its own direction.' : 'Positive adjustment adds birr; negative subtracts. Margin, then adjustment, then selected rounding, then two decimals. Leave the rounding multiple blank to turn it off. Each quantity threshold can choose its own direction.'}</p>
       {(!Number.isFinite(price) || costBreaks.some(t => !Number.isFinite(t.priceEach))) && <p role="alert" className="text-sm">Enter valid amounts that give a positive selling price for every tier.</p>}
       <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
         <span>Input cost per item (ETB)<br /><strong>{displayAmount(subtotal)}</strong></span>
@@ -124,12 +124,14 @@ export function ProductCost({ product, change, standalone = false }: { product: 
     {cost && thresholds.map((tier, index) => {
       const update = (patch: Partial<typeof tier>) => setThresholds(thresholds.map((t, i) => i === index ? { ...t, ...patch } : t));
 
-      return <div key={index} className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
+      const direction = tier.roundDirection ?? cost.roundDirection ?? 'up';
+      return <div key={index} className="grid grid-cols-[1fr_1fr_auto] items-end gap-2 sm:grid-cols-[1fr_1fr_1fr_auto]">
         <label>Above quantity<input type="number" min="2" className="field" value={tier.minQty || ''} onChange={e => update({ minQty: Number(e.target.value) })} /></label>
         <label>{corporate ? 'Tier markup (%)' : 'Tier margin (%)'}<input className="field" type="number" min="0" step="any" list={marginList} value={Number.isFinite(tier.margin) ? tier.margin : ''} placeholder="Choose or type percentage" onChange={e => update({ margin: e.target.value === '' ? NaN : Number(e.target.value) })} /></label>
+        <label className="col-span-2 sm:col-span-1">Rounding<select className="field" aria-label={`Rounding above quantity ${tier.minQty}`} value={direction} onChange={e => update({ roundDirection: e.target.value as 'up' | 'down' })}><option value="up">Round up</option><option value="down">Round down</option></select></label>
         <button type="button" onClick={() => setThresholds(thresholds.filter((_, i) => i !== index)) } aria-label="Remove quantity threshold">&times;</button>
-        <p className="col-span-3 text-xs">Rate for items above {tier.minQty}: <strong>{displayAmount(sellingPrice(tier.margin))} ETB</strong>. {corporate ? 'Target markup' : 'Profit'} on those items (ETB) <strong>{displayAmount(corporate ? corporateResult(tier.margin)?.profit ?? NaN : profitPerItem(tier.margin))}</strong></p>
-        {previewValid && tier.minQty > 1 && <p className="col-span-3 text-xs">At {tier.minQty} items: {displayAmount(tieredLineTotal(previewTiers, tier.minQty) ?? NaN)} ETB total. At {tier.minQty + 1} items: {displayAmount(tieredLineTotal(previewTiers, tier.minQty + 1) ?? NaN)} ETB total, averaging {displayAmount(tieredUnitPrice(previewTiers, tier.minQty + 1) ?? NaN)} ETB each.</p>}
+        <p className="col-span-3 text-xs sm:col-span-4">Rate for items above {tier.minQty}: <strong>{displayAmount(sellingPrice(tier.margin, direction))} ETB</strong>. {corporate ? 'Target markup' : 'Profit'} on those items (ETB) <strong>{displayAmount(corporate ? corporateResult(tier.margin, direction)?.profit ?? NaN : profitPerItem(tier.margin, direction))}</strong></p>
+        {previewValid && tier.minQty > 1 && <p className="col-span-3 text-xs sm:col-span-4">At {tier.minQty} items: {displayAmount(tieredLineTotal(previewTiers, tier.minQty) ?? NaN)} ETB total. At {tier.minQty + 1} items: {displayAmount(tieredLineTotal(previewTiers, tier.minQty + 1) ?? NaN)} ETB total, averaging {displayAmount(tieredUnitPrice(previewTiers, tier.minQty + 1) ?? NaN)} ETB each.</p>}
       </div>;
     })}
     <button type="button" onClick={addThreshold}>+ Add quantity threshold</button>

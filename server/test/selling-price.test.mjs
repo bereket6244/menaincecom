@@ -49,3 +49,16 @@ test('product and progressive tiers retain adjustments across shared cost update
   assert.equal(tieredLineTotal(result.priceTiers, 50), 6250);
   assert.throws(() => pricedProduct({ cost: { ...cost, roundDirection: 'invalid' } }, [{ id: 'paper', unitCost: 100 }]), /round up or round down/);
 });
+
+test('each quantity threshold can override the product rounding direction', () => {
+  const cost = { items: [{ inputId: 'paper', quantity: 1 }], margin: 27.75,
+    roundUp: 5, roundDirection: 'up', thresholds: [
+      { minQty: 10, margin: 13.7, roundDirection: 'down' },
+      { minQty: 20, margin: 13.7 },
+    ] };
+  const result = pricedProduct({ cost }, [{ id: 'paper', unitCost: 100 }]);
+  assert.deepEqual(result.priceTiers.map(t => t.priceEach), [130, 110, 115]);
+  assert.equal(result.cost.thresholds[0].roundDirection, 'down');
+  assert.throws(() => pricedProduct({ cost: { ...cost, thresholds: [{ minQty: 10, margin: 10, roundDirection: 'sideways' }] } },
+    [{ id: 'paper', unitCost: 100 }]), /threshold/);
+});

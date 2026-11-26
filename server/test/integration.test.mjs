@@ -64,6 +64,17 @@ test('a dashboard recipe converts to the shop recipe and rejects lines the shop 
   assert.throws(() => shopCostFromRecipe({ ...recipe, items: [{ inputId: 'paper', quantity: 0 }] }, inputs), /positive quantity/);
 });
 
+test('dashboard recipes preserve per-threshold rounding directions', () => {
+  const product = { id: 'rounded', name: 'Rounded', price: 130, cost: {
+    items: [{ inputId: 'paper', quantity: 1 }], margin: 25, roundDirection: 'up', roundUp: 5,
+    thresholds: [{ minQty: 10, margin: 13.7, roundDirection: 'down' }],
+  } };
+  const recipe = dashboardCatalog([product], inputs).products[0].recipe;
+  assert.equal(recipe.thresholds[0].roundDirection, 'down');
+  assert.deepEqual(shopCostFromRecipe(recipe, inputs).thresholds,
+    [{ minQty: 10, margin: 13.7, roundDirection: 'down' }]);
+});
+
 test('a new item from a variation is a draft that keeps the base details but none of its Telegram post', () => {
   const base = { id: 'b', name: 'Velvet', categoryId: 'c1', photos: ['/u/v.jpg'], status: 'published', price: 50, telegramMessageId: 9, telegramChannelId: '-100', contentVersion: 4 };
   const draft = draftProductFrom({ name: ' Velvet – foil ', base, cost: { items: [] }, actor: 'Bereket', variationId: 'v1' });

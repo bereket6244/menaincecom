@@ -104,15 +104,16 @@ export function pricedProduct(product, inputs, previous = product) {
     if (recipe.roundDirection !== undefined && !['up', 'down'].includes(recipe.roundDirection)) invalidPrice('Choose round up or round down.');
     if (recipe.corporatePricing && !corporatePrice(cost, recipe.margin, recipe.corporatePricing, recipe.adjustment, recipe.roundUp, recipe.roundDirection))
       invalidPrice('Enter valid corporate tax rates, adjustment, and a positive rounding multiple to the cent.');
-    const calculatePrice = margin => recipe.corporatePricing
-      ? corporatePrice(cost, margin, recipe.corporatePricing, recipe.adjustment, recipe.roundUp, recipe.roundDirection)?.unit ?? NaN
-      : sellingPrice(cost, margin, recipe.adjustment, recipe.roundUp, recipe.roundDirection);
+    const calculatePrice = (margin, roundDirection = recipe.roundDirection) => recipe.corporatePricing
+      ? corporatePrice(cost, margin, recipe.corporatePricing, recipe.adjustment, recipe.roundUp, roundDirection)?.unit ?? NaN
+      : sellingPrice(cost, margin, recipe.adjustment, recipe.roundUp, roundDirection);
     price = calculatePrice(recipe.margin);
     const thresholds = recipe.thresholds ?? [];
     if (!Array.isArray(thresholds) || thresholds.some(t => !Number.isSafeInteger(t?.minQty) || t.minQty < 2
-      || !validMargin(t.margin)) || new Set(thresholds.map(t => t.minQty)).size !== thresholds.length)
+      || !validMargin(t.margin) || (t.roundDirection !== undefined && !['up', 'down'].includes(t.roundDirection)))
+      || new Set(thresholds.map(t => t.minQty)).size !== thresholds.length)
       invalidPrice('Use distinct whole quantities above one and an allowed margin at each threshold.');
-    tiers = thresholds.map(t => ({ minQty: t.minQty, priceEach: calculatePrice(t.margin) })).sort((a,b) => a.minQty - b.minQty);
+    tiers = thresholds.map(t => ({ minQty: t.minQty, priceEach: calculatePrice(t.margin, t.roundDirection ?? recipe.roundDirection) })).sort((a,b) => a.minQty - b.minQty);
     if (tiers.some(t => !Number.isFinite(t.priceEach) || t.priceEach <= 0)) invalidPrice('Every threshold must have a positive selling price.');
     if (!Number.isFinite(price) || price <= 0) invalidPrice('Calculated price must be at least 0.01 ETB.');
   } else if (product.pricingMode === 'tiered' && tiers[0]?.minQty === 1) {
